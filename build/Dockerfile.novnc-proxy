@@ -1,0 +1,39 @@
+#################
+# Compile image #
+#################
+FROM golang:1.14-alpine as builder
+
+RUN apk --update-cache add upx
+
+# Setup build directory
+RUN mkdir -p /build
+WORKDIR /build
+
+# Go build options
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+# Fetch deps first as they don't change frequently
+COPY go.mod /build/go.mod
+COPY go.sum /build/go.sum
+RUN go mod download
+
+# Copy go code
+COPY version/         /build/version
+COPY pkg/             /build/pkg
+COPY cmd/novnc-proxy  /build/cmd/novnc-proxy
+
+# Build the binary
+RUN go build \
+  -o /tmp/novnc-proxy \
+  ./cmd/novnc-proxy && upx /tmp/novnc-proxy
+
+###############
+# Final Image #
+###############
+FROM scratch
+
+COPY --from=builder /tmp/novnc-proxy /novnc-proxy
+
+EXPOSE 8443
+ENTRYPOINT ["/novnc-proxy"]

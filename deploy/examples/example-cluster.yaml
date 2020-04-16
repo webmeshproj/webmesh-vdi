@@ -1,0 +1,12 @@
+apiVersion: kvdi.io/v1alpha1
+kind: VDICluster
+metadata:
+  name: example-vdicluster
+spec:
+  appNamespace: default
+  certManagerNamespace: cert-manager
+  app:
+    externalHostname: "kvdi.kind.local"
+    allowAnonymous: true
+    replicas: 1
+    corsEnabled: true

@@ -1,0 +1,5 @@
+ui/app/node_modules/
+ui/app-quasar/node_modules
+_bin/
+hack/
+deploy/

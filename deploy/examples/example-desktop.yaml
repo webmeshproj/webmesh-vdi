@@ -1,0 +1,7 @@
+apiVersion: kvdi.io/v1alpha1
+kind: Desktop
+metadata:
+  name: example-desktop
+spec:
+  vdiCluster: example-vdicluster
+  template: example-desktop-template

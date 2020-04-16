@@ -1,0 +1,9 @@
+[group:y]
+programs=kde
+
+[program:kde]
+priority=2
+directory=%HOME%
+command=/usr/bin/startplasma-x11
+user=%USER%
+environment=DISPLAY=":10",HOME="%HOME%",USER="%USER%"

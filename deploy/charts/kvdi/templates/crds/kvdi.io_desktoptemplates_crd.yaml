@@ -1,0 +1,122 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: desktoptemplates.kvdi.io
+spec:
+  group: kvdi.io
+  names:
+    kind: DesktopTemplate
+    listKind: DesktopTemplateList
+    plural: desktoptemplates
+    singular: desktoptemplate
+  scope: Cluster
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: DesktopTemplate is the Schema for the desktoptemplates API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: DesktopTemplateSpec defines the desired state of DesktopTemplate
+          properties:
+            config:
+              description: Configuration options for the instances. This is highly
+                dependant on using the Dockerfiles (or close derivitives) provided
+                in this repository.
+              properties:
+                allowRoot:
+                  description: AllowRoot will pass the ENABLE_ROOT envvar to the container.
+                    In the Dockerfiles in this repository, this will add the user
+                    to the sudo group and ability to sudo with no password.
+                  type: boolean
+                capabilities:
+                  description: Extra system capabilities to add to desktops booted
+                    from this template.
+                  items:
+                    description: Capability represent POSIX capabilities type
+                    type: string
+                  type: array
+                enableSound:
+                  description: Whether the sound device should be mounted inside the
+                    container. Note that this also requires the image do proper setup
+                    if /dev/snd is present.
+                  type: boolean
+                serviceAccount:
+                  description: 'A service account to tie to desktops booted from this
+                    template. TODO: This should really be per-desktop and by user-grants.'
+                  type: string
+                socketAddr:
+                  description: The address the VNC server listens on inside the image.
+                    This defaults to the UNIX socket /var/run/kvdi/vnc.sock. The novnc-proxy
+                    sidecar will forward websockify requests validated by mTLS to
+                    this socket. Must be in the format of `tcp://{host}:{port}` or
+                    `unix://{path}`.
+                  type: string
+              type: object
+            image:
+              description: The docker repository and tag to use for desktops booted
+                from this template.
+              type: string
+            imagePullPolicy:
+              description: The pull policy to use when pulling the container image.
+              type: string
+            imagePullSecrets:
+              description: Any pull secrets required for pulling the container image.
+              items:
+                description: LocalObjectReference contains enough information to let
+                  you locate the referenced object inside the same namespace.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+              type: array
+            resources:
+              description: Resource requirements to apply to desktops booted from
+                this template.
+              properties:
+                limits:
+                  additionalProperties:
+                    type: string
+                  description: 'Limits describes the maximum amount of compute resources
+                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                  type: object
+                requests:
+                  additionalProperties:
+                    type: string
+                  description: 'Requests describes the minimum amount of compute resources
+                    required. If Requests is omitted for a container, it defaults
+                    to Limits if that is explicitly specified, otherwise to an implementation-defined
+                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                  type: object
+              type: object
+            tags:
+              additionalProperties:
+                type: string
+              description: Arbitrary tags for displaying in the app UI.
+              type: object
+          required:
+          - image
+          type: object
+        status:
+          description: DesktopTemplateStatus defines the observed state of DesktopTemplate
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

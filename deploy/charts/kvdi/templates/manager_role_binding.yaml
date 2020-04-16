@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "kvdi.fullname" . }}-manager
+subjects:
+- kind: ServiceAccount
+  name: {{ include "kvdi.serviceAccountName" . }}-manager
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "kvdi.fullname" . }}-manager
+  apiGroup: rbac.authorization.k8s.io
