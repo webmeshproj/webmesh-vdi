@@ -7,6 +7,8 @@ spec:
   certManagerNamespace: cert-manager
   app:
     externalHostname: "kvdi.kind.local"
-    allowAnonymous: true
     replicas: 1
     corsEnabled: true
+  auth:
+    allowAnonymous: true
+    localAuth: {}

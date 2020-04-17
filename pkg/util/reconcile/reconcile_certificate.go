@@ -24,6 +24,7 @@ func ReconcileCertificate(reqLogger logr.Logger, c client.Client, cert *cm.Certi
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		}
+		reqLogger.Info("Creating new certificate", "Certificate.Name", cert.Name, "Certificate.Namespace", cert.Namespace)
 		// Create the certificate
 		if err := c.Create(context.TODO(), cert); err != nil {
 			return err

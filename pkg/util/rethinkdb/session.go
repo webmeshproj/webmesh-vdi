@@ -5,10 +5,21 @@ import (
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+var rdbLogger = logf.Log.WithName("rethinkdb")
+
 type RethinkDBSession interface {
-	Migrate(replicas, shards int32) error
+	Migrate(adminPass string, replicas, shards int32) error
+	GetAllUsers() ([]User, error)
+	GetUser(id string) (*User, error)
+	CreateUser(*User) error
+	SetUserPassword(*User, string) error
+	GetRole(string) (*Role, error)
+	CreateRole(*Role) error
+	GetUserSession(id string) (*UserSession, error)
+	CreateUserSession(*User) (*UserSession, error)
 	Close() error
 }
 

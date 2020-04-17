@@ -1,20 +1,26 @@
 package util
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -111,4 +117,37 @@ func StatefulSetDNSNames(svcName, svcNamespace string, replicas int32) []string 
 
 func DesktopShortURL(desktop *v1alpha1.Desktop) string {
 	return fmt.Sprintf("%s.%s.%s", desktop.GetName(), desktop.GetName(), desktop.GetNamespace())
+}
+
+func LookupClusterByName(c client.Client, name string) (*v1alpha1.VDICluster, error) {
+	found := &v1alpha1.VDICluster{}
+	return found, c.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: metav1.NamespaceAll}, found)
+}
+
+func GeneratePassword(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789")
+	buf := make([]rune, length)
+	for i := range buf {
+		buf[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(buf)
+}
+
+func HashPassword(passw string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(passw), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func PasswordMatchesHash(passw, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(passw))
+	if err != nil {
+		return false
+	}
+	return true
 }

@@ -76,7 +76,7 @@ func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest) *v1alpha1.Des
 			Namespace: req.GetNamespace(),
 		},
 		Spec: v1alpha1.DesktopSpec{
-			VDICluster: d.vdiCluster,
+			VDICluster: d.vdiCluster.GetName(),
 			Template:   req.GetTemplate(),
 			User:       req.GetUser(),
 		},

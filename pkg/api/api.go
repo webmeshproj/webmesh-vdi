@@ -2,15 +2,20 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util"
 
 	"github.com/gorilla/mux"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var apiLogger = logf.Log.WithName("api")
 
 // DesktopAPI serves HTTP requests for the /api resource
 type DesktopAPI interface {
@@ -21,33 +26,35 @@ type DesktopAPI interface {
 type desktopAPI struct {
 	client     client.Client
 	router     *mux.Router
-	vdiCluster string
+	vdiCluster *v1alpha1.VDICluster
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
 // and vdi cluster name.
-// TODO: The manager init is hacky right now, and really we should be pulling
-// the entire VDICluster object into memory.
 func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
-	mgr, err := manager.New(cfg, manager.Options{
-		Namespace:      metav1.NamespaceAll,
-		LeaderElection: false,
+	scheme := runtime.NewScheme()
+	if err := apis.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	client, err := client.New(cfg, client.Options{
+		Scheme: scheme,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		return nil, err
-	}
-	go func() {
-		if err := mgr.Start(nil); err != nil {
-			panic(err)
+	apiLogger.Info("Retrieving VDICluster configuration")
+	var found *v1alpha1.VDICluster
+	for found == nil {
+		if found, err = util.LookupClusterByName(client, vdiCluster); err != nil {
+			apiLogger.Error(err, "Failed to retrieve VDICluster configuration, retrying in 2 seconds...")
+			found = nil
+			time.Sleep(time.Duration(2) * time.Second)
 		}
-	}()
-	api := &desktopAPI{
-		client:     mgr.GetClient(),
-		vdiCluster: vdiCluster,
 	}
-	api.buildRouter()
-	return api, nil
+	api := &desktopAPI{
+		client:     client,
+		vdiCluster: found,
+	}
+
+	return api, api.buildRouter()
 }

@@ -45,11 +45,16 @@ func (r *RethinkDBReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha
 		return err
 	}
 
+	adminPass, err := r.reconcileAdminSecret(reqLogger, instance)
+	if err != nil {
+		return err
+	}
+
 	sess, err := rdbutil.NewFromSecret(r.client, rdbutil.RDBAddrForCR(instance), instance.GetRethinkDBClientName(), instance.GetCoreNamespace())
 	if err != nil {
 		return err
 	}
 	defer sess.Close()
 
-	return sess.Migrate(*instance.GetRethinkDBReplicas(), *instance.GetRethinkDBShards())
+	return sess.Migrate(adminPass, *instance.GetRethinkDBReplicas(), *instance.GetRethinkDBShards())
 }

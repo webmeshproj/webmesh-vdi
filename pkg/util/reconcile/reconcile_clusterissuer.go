@@ -25,6 +25,7 @@ func ReconcileClusterIssuer(reqLogger logr.Logger, c client.Client, issuer *cm.C
 			return err
 		}
 		// Create the issuer
+		reqLogger.Info("Creating new cluster issuer", "ClusterIssuer.Name", issuer.Name, "ClusterIssuer.Namespace", issuer.Namespace)
 		if err := c.Create(context.TODO(), issuer); err != nil {
 			return err
 		}

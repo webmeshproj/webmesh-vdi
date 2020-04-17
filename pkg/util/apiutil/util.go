@@ -6,8 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
+
+type AuthProvider interface {
+	Setup(*v1alpha1.VDICluster) error
+	Authenticate(w http.ResponseWriter, r *http.Request)
+}
 
 func WriteOrLogError(out []byte, w http.ResponseWriter) {
 	w.Header().Add("Content-Type", "application/json")
