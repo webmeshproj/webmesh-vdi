@@ -48,7 +48,6 @@ FROM scratch
 
 COPY --from=builder /tmp/app /app
 COPY --from=ui-builder /build/dist/spa /static
-COPY ui/novnc /static
 
 EXPOSE 8443
 ENTRYPOINT ["/app"]

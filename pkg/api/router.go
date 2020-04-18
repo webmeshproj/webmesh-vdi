@@ -1,13 +1,17 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/tinyzimmer/kvdi/pkg/auth"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
+
+const TokenHeader = "X-Session-Token"
 
 func (d *desktopAPI) buildRouter() error {
 	r := mux.NewRouter()
@@ -37,30 +41,30 @@ func (d *desktopAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("X-Session-Token")
+		token := r.Header.Get(TokenHeader)
 		if token == "" && !d.vdiCluster.AnonymousAllowed() {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			apiutil.ReturnAPIForbidden(errors.New("No token and allowAnonymous is false"), w)
 			return
 		}
 		sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
 		if err != nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			apiutil.ReturnAPIForbidden(err, w)
 			return
 		}
 		defer sess.Close()
 		if token == "" && d.vdiCluster.AnonymousAllowed() {
 			newSession, err := sess.CreateUserSession(&rethinkdb.User{Name: "anonymous"})
 			if err != nil {
-				http.Error(w, "Forbidden", http.StatusForbidden)
+				apiutil.ReturnAPIForbidden(err, w)
 				return
 			}
-			r.Header.Set("X-Session-Token", newSession.ID)
-			w.Header().Set("X-Session-Token", newSession.ID)
+			r.Header.Set(TokenHeader, newSession.ID)
+			w.Header().Set(TokenHeader, newSession.ID)
 			next.ServeHTTP(w, r)
 			return
 		}
 		if _, err := sess.GetUserSession(token); err != nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			apiutil.ReturnAPIForbidden(err, w)
 			return
 		}
 		next.ServeHTTP(w, r)

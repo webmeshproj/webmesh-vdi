@@ -3,3 +3,4 @@ ui/app-quasar/node_modules
 _bin/
 hack/
 deploy/
+doc/

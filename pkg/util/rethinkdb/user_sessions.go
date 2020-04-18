@@ -19,7 +19,14 @@ func (d *rethinkDBSession) GetUserSession(id string) (*UserSession, error) {
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(id).Do(func(row rdb.Term) interface{} {
 		return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
 			return map[string]interface{}{
-				"user_id": rdb.DB(kvdiDB).Table(usersTable).Get(plan.Field("user_id")),
+				"user_id": rdb.DB(kvdiDB).Table(usersTable).Get(plan.Field("user_id")).Do(
+					func(row rdb.Term) interface{} {
+						return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
+							return map[string]interface{}{
+								"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(plan.Field("role_ids"))).CoerceTo("array"),
+							}
+						}), nil)
+					}),
 			}
 		}), nil)
 	}).Run(d.session)

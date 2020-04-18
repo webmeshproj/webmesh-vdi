@@ -2,12 +2,13 @@ package apiutil
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	verrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 type AuthProvider interface {
@@ -24,8 +25,13 @@ func WriteOrLogError(out []byte, w http.ResponseWriter) {
 
 func ReturnAPIError(err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusBadRequest)
-	fmt.Println("API Error:", err.Error())
-	WriteOrLogError(errors.ToAPIError(err).JSON(), w)
+	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
+}
+
+func ReturnAPIForbidden(err error, w http.ResponseWriter) {
+	fmt.Println("Forbidden request due to:", err.Error())
+	w.WriteHeader(http.StatusForbidden)
+	WriteOrLogError(verrors.ToAPIError(errors.New("Forbidden")).JSON(), w)
 }
 
 func WriteJSON(i interface{}, w http.ResponseWriter) {

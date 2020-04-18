@@ -177,6 +177,9 @@ get-app-secret:
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
+get-admin-password:
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-admin-secret -o json | jq -r .data.password | base64 -d && echo
+
 cycle-cluster: clean-cluster build-all load-all restart-manager example-vdi
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
