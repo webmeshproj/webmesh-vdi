@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -63,8 +64,12 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if _, err := sess.GetUserSession(token); err != nil {
+		if sess, err := sess.GetUserSession(token); err != nil {
 			apiutil.ReturnAPIForbidden(err, w)
+			return
+		} else if sess.ExpiresAt.Before(time.Now()) {
+			// TODO cleanup the session (maybe a seperate reaper process)
+			apiutil.ReturnAPIForbidden(errors.New("Your session has expired"), w)
 			return
 		}
 		next.ServeHTTP(w, r)
