@@ -2,7 +2,6 @@ package apiutil
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -28,10 +27,12 @@ func ReturnAPIError(err error, w http.ResponseWriter) {
 	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
 }
 
-func ReturnAPIForbidden(err error, w http.ResponseWriter) {
-	fmt.Println("Forbidden request due to:", err.Error())
+func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
+	if err != nil {
+		fmt.Println("Forbidden request due to:", err.Error())
+	}
 	w.WriteHeader(http.StatusForbidden)
-	WriteOrLogError(verrors.ToAPIError(errors.New("Forbidden")).JSON(), w)
+	WriteOrLogError(verrors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w)
 }
 
 func WriteJSON(i interface{}, w http.ResponseWriter) {

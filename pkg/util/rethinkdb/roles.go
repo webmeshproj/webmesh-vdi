@@ -2,13 +2,15 @@ package rethinkdb
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 
 type Role struct {
-	Name   string      `rethinkdb:"id" json:"name"`
-	Grants []RoleGrant `rethinkdb:"grants" json:"grants"`
+	Name       string           `rethinkdb:"id" json:"name"`
+	Grants     grants.RoleGrant `rethinkdb:"grants" json:"-"`
+	GrantNames []string         `rethinkdb:"-" json:"grants"`
 }
 
 func (d *rethinkDBSession) GetRole(name string) (*Role, error) {
@@ -20,6 +22,7 @@ func (d *rethinkDBSession) GetRole(name string) (*Role, error) {
 		return nil, errors.NewRoleNotFoundError(name)
 	}
 	role := &Role{}
+	role.GrantNames = role.Grants.Names()
 	return role, cursorIntoObj(cursor, role)
 }
 

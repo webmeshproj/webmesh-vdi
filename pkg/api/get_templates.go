@@ -6,6 +6,8 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -13,6 +15,10 @@ import (
 // GetDesktopTemplates mirrors an API call to list all the available desktop
 // templates back to the caller.
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {
+	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.ReadTemplates) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have ReadTemplates grant", w)
+		return
+	}
 	tmpls, err := d.getAllDesktopTemplates()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)

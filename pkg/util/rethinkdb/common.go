@@ -10,18 +10,14 @@ const (
 	userSessionTable     = "userSessions"
 	desktopSessionsTable = "desktopSessions"
 
-	adminUser = "admin"
-	adminRole = "admin"
+	adminUser          = "admin"
+	adminRole          = "admin"
+	anonymousUser      = "anonymous"
+	launchTemplateRole = "launch-templates"
 )
 
 var allTables = []string{usersTable, rolesTable, userSessionTable, desktopSessionsTable}
 
-type RoleGrant string
-
 const (
-	GrantAll RoleGrant = "All"
-)
-
-var (
 	DefaultSessionLength = time.Duration(8) * time.Hour
 )

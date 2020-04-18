@@ -7,6 +7,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/gophercloud/gophercloud v0.3.0 // indirect
+	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2

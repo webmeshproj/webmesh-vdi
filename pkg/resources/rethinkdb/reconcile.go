@@ -56,5 +56,5 @@ func (r *RethinkDBReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha
 	}
 	defer sess.Close()
 
-	return sess.Migrate(adminPass, *instance.GetRethinkDBReplicas(), *instance.GetRethinkDBShards())
+	return sess.Migrate(adminPass, *instance.GetRethinkDBReplicas(), *instance.GetRethinkDBShards(), instance.AnonymousAllowed())
 }

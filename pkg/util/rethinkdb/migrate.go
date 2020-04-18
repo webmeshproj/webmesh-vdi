@@ -3,11 +3,12 @@ package rethinkdb
 import (
 	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 
-func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredShards int32) error {
+func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredShards int32, allowAnonymous bool) error {
 	// Setup DBs
 	dbs, err := r.listDBs()
 	if err != nil {
@@ -63,7 +64,21 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 		rdbLogger.Info("Creating new 'admin' role...")
 		if err := r.CreateRole(&Role{
 			Name:   adminRole,
-			Grants: []RoleGrant{GrantAll},
+			Grants: grants.All,
+		}); err != nil {
+			return err
+		}
+	}
+
+	// Ensure a launch template role
+	if _, err := r.GetRole(launchTemplateRole); err != nil {
+		if !errors.IsRoleNotFoundError(err) {
+			return err
+		}
+		rdbLogger.Info("Creating new 'launch-templates' role...")
+		if err := r.CreateRole(&Role{
+			Name:   launchTemplateRole,
+			Grants: grants.LaunchTemplates | grants.ReadTemplates | grants.ReadDesktopSessions,
 		}); err != nil {
 			return err
 		}
@@ -74,13 +89,35 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 		if !errors.IsUserNotFoundError(err) {
 			return err
 		}
-		rdbLogger.Info("Creating 'admin' user...")
-		if err := r.CreateUser(&User{Name: adminUser, Password: adminPass, Roles: []Role{{Name: "admin"}}}); err != nil {
+		rdbLogger.Info("Creating new 'admin' user...")
+		if err := r.CreateUser(&User{Name: adminUser, Password: adminPass, Roles: []*Role{{Name: adminRole}}}); err != nil {
 			return err
 		}
 	} else if user.PasswordSalt == "" || !util.PasswordMatchesHash(adminPass, user.PasswordSalt) {
 		rdbLogger.Info("Admin password salt in database doesn't match provided password, updating...")
 		if err := r.SetUserPassword(user, adminPass); err != nil {
+			return err
+		}
+	}
+
+	// Ensure anonymous user status
+	if allowAnonymous {
+		if _, err := r.GetUser(anonymousUser); err != nil {
+			if !errors.IsUserNotFoundError(err) {
+				return err
+			}
+			rdbLogger.Info("Creating new 'anonymous' user...")
+			if err := r.CreateUser(&User{Name: anonymousUser, Password: "", Roles: []*Role{{Name: launchTemplateRole}}}); err != nil {
+				return err
+			}
+		}
+	} else {
+		if _, err := r.GetUser(anonymousUser); err == nil {
+			rdbLogger.Info("Deleting 'anonymous' user...")
+			if err := r.DeleteUser(anonymousUser); err != nil {
+				return err
+			}
+		} else if !errors.IsUserNotFoundError(err) {
 			return err
 		}
 	}

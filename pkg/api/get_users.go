@@ -5,10 +5,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
+	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.ReadUsers) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have ReadUsers grant", w)
+		return
+	}
 	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
@@ -24,6 +29,10 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
+	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.ReadUsers) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have ReadUsers grant", w)
+		return
+	}
 	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)

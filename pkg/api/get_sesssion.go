@@ -8,6 +8,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	"github.com/gorilla/mux"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,6 +24,10 @@ func getNamespacedNameFromRequest(r *http.Request) types.NamespacedName {
 // GetSessionStatus returns to the caller whether the instance is running and
 // resolveable inside the cluster.
 func (d *desktopAPI) GetSessionStatus(w http.ResponseWriter, r *http.Request) {
+	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.ReadDesktopSessions) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have ReadDesktopSessions grant", w)
+		return
+	}
 	nn := getNamespacedNameFromRequest(r)
 	found := &v1alpha1.Desktop{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +19,6 @@ import (
 type PostSessionsRequest struct {
 	Template  string `json:"template"`
 	Namespace string `json:"namespace,omitempty"`
-	User      string `json:"user,omitempty"`
 }
 
 func (p *PostSessionsRequest) GetTemplate() string {
@@ -32,13 +32,6 @@ func (p *PostSessionsRequest) GetNamespace() string {
 	return "default"
 }
 
-func (p *PostSessionsRequest) GetUser() string {
-	if p.User != "" {
-		return p.User
-	}
-	return "anonymous"
-}
-
 type PostSessionsResponse struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
@@ -46,6 +39,11 @@ type PostSessionsResponse struct {
 }
 
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
+	sess := GetRequestUserSession(r)
+	if sess == nil || !sess.User.HasGrant(grants.LaunchTemplates) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have LaunchTemplates grant", w)
+		return
+	}
 	req := PostSessionsRequest{}
 	if err := apiutil.UnmarshalRequest(r, &req); err != nil {
 		apiutil.ReturnAPIError(err, w)
@@ -56,7 +54,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	desktop := d.newDesktopForRequest(req)
+	desktop := d.newDesktopForRequest(req, sess.User.Name)
 	if err := d.client.Create(context.TODO(), desktop); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -69,7 +67,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	}, w)
 }
 
-func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest) *v1alpha1.Desktop {
+func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),
@@ -78,7 +76,7 @@ func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest) *v1alpha1.Des
 		Spec: v1alpha1.DesktopSpec{
 			VDICluster: d.vdiCluster.GetName(),
 			Template:   req.GetTemplate(),
-			User:       req.GetUser(),
+			User:       username,
 		},
 	}
 }
