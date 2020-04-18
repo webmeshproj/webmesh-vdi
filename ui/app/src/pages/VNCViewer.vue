@@ -14,8 +14,8 @@ initLogging('debug')
 
 let currentEndpoint
 
-function getWebsockifyAddr (endpoint) {
-  return `${window.location.origin.replace('https', 'wss')}/websockify/${endpoint}`
+function getWebsockifyAddr (endpoint, token) {
+  return `${window.location.origin.replace('https', 'wss')}/api/websockify/${endpoint}?token=${token}`
 }
 
 export function setEndpoint (ep) {
@@ -52,7 +52,7 @@ export default {
     createConnection () {
       let rfb
       try {
-        const url = getWebsockifyAddr(currentEndpoint)
+        const url = getWebsockifyAddr(currentEndpoint, this.$userStore.getters.token)
         rfb = new RFB(document.getElementById('view'), url)
         rfb.addEventListener('connect', this.connectedToServer)
         rfb.addEventListener('desktopname', this.updateDesktopName)

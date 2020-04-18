@@ -10,9 +10,15 @@ import (
 
 func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get(TokenHeader)
-		if token == "" && !d.vdiCluster.AnonymousAllowed() {
-			apiutil.ReturnAPIForbidden(nil, "No token and allowAnonymous is false", w)
+		var token string
+		keys, ok := r.URL.Query()["token"]
+		if ok {
+			token = keys[0]
+		} else {
+			token = r.Header.Get(TokenHeader)
+		}
+		if token == "" {
+			apiutil.ReturnAPIForbidden(nil, "No token provided in request", w)
 			return
 		}
 		sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
@@ -21,17 +27,6 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			return
 		}
 		defer sess.Close()
-		if token == "" && d.vdiCluster.AnonymousAllowed() {
-			newSession, err := sess.CreateUserSession(&rethinkdb.User{Name: "anonymous"})
-			if err != nil {
-				apiutil.ReturnAPIForbidden(err, "Could not create new user session", w)
-				return
-			}
-			SetRequestUserSession(r, newSession)
-			w.Header().Set(TokenHeader, newSession.ID)
-			next.ServeHTTP(w, r)
-			return
-		}
 		userSess, err := sess.GetUserSession(token)
 		if err != nil {
 			apiutil.ReturnAPIForbidden(err, "Could not retrieve user session", w)

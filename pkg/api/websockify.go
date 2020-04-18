@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"crypto/tls"
@@ -32,7 +32,7 @@ var upgrader = websocket.Upgrader{
 func mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 
 	endpointURL := getEndpointURL(r)
-	applogger.Info(fmt.Sprintf("Starting new mTLS websocket proxy with %s", endpointURL))
+	apiLogger.Info(fmt.Sprintf("Starting new mTLS websocket proxy with %s", endpointURL))
 	proxy := websocketproxy.NewProxy(endpointURL)
 	proxy.Dialer = &websocket.Dialer{
 		TLSClientConfig: clientTLSConfig,

@@ -1,4 +1,5 @@
 import MainLayout from 'layouts/MainLayout.vue'
+import Login from 'pages/Login.vue'
 import DesktopTemplates from 'pages/DesktopTemplates.vue'
 // import VNCIframe from 'pages/VNCIframe.vue'
 import VNCViewer from 'pages/VNCViewer.vue'
@@ -10,9 +11,29 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      { path: '', component: DesktopTemplates },
-      { path: 'templates', component: DesktopTemplates },
-      { path: 'vnc', component: VNCViewer },
+      {
+        path: '',
+        name: 'templates',
+        component: DesktopTemplates,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'login',
+        name: 'login',
+        component: Login
+      },
+      {
+        path: 'templates',
+        name: 'templates',
+        component: DesktopTemplates,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'vnc',
+        name: 'vnc',
+        component: VNCViewer,
+        meta: { requiresAuth: true }
+      },
       { path: '*', component: Error404 }
     ]
   }

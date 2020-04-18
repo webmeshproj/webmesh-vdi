@@ -3,13 +3,12 @@ package grants
 type RoleGrant int
 
 const (
-	_ RoleGrant = 1 << iota
-
-	ReadUsers
+	ReadUsers RoleGrant = 1 << iota
 	WriteUsers
 	ReadRoles
 	WriteRoles
 	ReadTemplates
+	WriteTemplates
 	LaunchTemplates
 	ReadDesktopSessions
 )
@@ -17,8 +16,8 @@ const (
 const (
 	All RoleGrant = ReadUsers | WriteUsers |
 		ReadRoles | WriteRoles |
-		ReadTemplates | LaunchTemplates |
-		ReadDesktopSessions
+		ReadTemplates | WriteTemplates |
+		LaunchTemplates | ReadDesktopSessions
 )
 
 var grantNames = []string{
@@ -27,6 +26,7 @@ var grantNames = []string{
 	"ReadRoles",
 	"WriteRoles",
 	"ReadTemplates",
+	"WriteTemplates",
 	"LaunchTemplates",
 	"ReadDesktopSessions",
 }

@@ -22,5 +22,5 @@ func GetRequestUserSession(r *http.Request) *rethinkdb.UserSession {
 
 func (d *desktopAPI) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	session := GetRequestUserSession(r)
-	apiutil.WriteJSON(session.User, w)
+	apiutil.WriteJSON(session, w)
 }

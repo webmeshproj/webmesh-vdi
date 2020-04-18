@@ -10,7 +10,7 @@ import (
 )
 
 type UserSession struct {
-	ID        string    `rethinkdb:"id" json:"id"`
+	Token     string    `rethinkdb:"id" json:"token"`
 	ExpiresAt time.Time `rethinkdb:"expires_at" json:"expiresAt"`
 	User      *User     `rethinkdb:"user_id,reference" rethinkdb_ref:"id" json:"user"`
 }
@@ -48,7 +48,7 @@ func (d *rethinkDBSession) GetUserSession(id string) (*UserSession, error) {
 
 func (d *rethinkDBSession) CreateUserSession(user *User) (*UserSession, error) {
 	session := &UserSession{
-		ID:        uuid.New().String(),
+		Token:     uuid.New().String(),
 		ExpiresAt: time.Now().Add(DefaultSessionLength),
 		User:      user,
 	}

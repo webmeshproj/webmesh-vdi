@@ -14,9 +14,9 @@ module.exports = function (/* ctx */) {
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/cli-documentation/boot-files
     boot: [
+      'axios',
       'initVuex',
-      'stores',
-      'axios'
+      'stores'
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -59,7 +59,8 @@ module.exports = function (/* ctx */) {
 
       // Quasar plugins
       plugins: [
-        'AppFullscreen'
+        'AppFullscreen',
+        'Notify'
       ]
     },
 
@@ -100,7 +101,15 @@ module.exports = function (/* ctx */) {
     devServer: {
       https: false,
       port: 8080,
-      open: true // opens browser window automatically
+      open: true, // opens browser window automatically
+      proxy: {
+        // proxy all requests starting with /api to jsonplaceholder
+        '/api': {
+          target: 'https://localhost:8443',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
 
     // animations: 'all', // --- includes all animations
