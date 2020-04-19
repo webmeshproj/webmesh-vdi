@@ -61,3 +61,11 @@ func (d *rethinkDBSession) CreateUserSession(user *User) (*UserSession, error) {
 	}
 	return session, cursor.Err()
 }
+
+func (d *rethinkDBSession) DeleteUserSession(session *UserSession) error {
+	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(session.Token).Delete().Run(d.session)
+	if err != nil {
+		return err
+	}
+	return cursor.Err()
+}

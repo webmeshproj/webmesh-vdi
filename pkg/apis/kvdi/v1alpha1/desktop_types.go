@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,7 +19,8 @@ type DesktopSpec struct {
 // DesktopStatus defines the observed state of Desktop
 type DesktopStatus struct {
 	// Whether the instance is running and resolvable within the cluster.
-	Running bool `json:"running,omitempty"`
+	Running  bool            `json:"running,omitempty"`
+	PodPhase corev1.PodPhase `json:"podPhase,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

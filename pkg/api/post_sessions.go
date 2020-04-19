@@ -72,6 +72,7 @@ func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest, username stri
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),
 			Namespace: req.GetNamespace(),
+			Labels:    d.vdiCluster.GetUserDesktopLabels(username),
 		},
 		Spec: v1alpha1.DesktopSpec{
 			VDICluster: d.vdiCluster.GetName(),

@@ -78,7 +78,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 		rdbLogger.Info("Creating new 'launch-templates' role...")
 		if err := r.CreateRole(&Role{
 			Name:   launchTemplateRole,
-			Grants: grants.LaunchTemplates | grants.ReadTemplates | grants.ReadDesktopSessions,
+			Grants: grants.LaunchTemplatesGrant,
 		}); err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 	} else {
 		if _, err := r.GetUser(anonymousUser); err == nil {
 			rdbLogger.Info("Deleting 'anonymous' user...")
-			if err := r.DeleteUser(anonymousUser); err != nil {
+			if err := r.DeleteUser(&User{Name: anonymousUser}); err != nil {
 				return err
 			}
 		} else if !errors.IsUserNotFoundError(err) {

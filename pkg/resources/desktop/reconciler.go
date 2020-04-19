@@ -58,9 +58,12 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	if err := f.client.Get(context.TODO(), nn, desktopPod); err != nil {
 		return err
 	}
+	if desktopPod.Status.Phase != corev1.PodRunning {
+		return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop pod is not in running phase")
+	}
 	for _, status := range desktopPod.Status.ContainerStatuses {
 		if status.State.Running == nil {
-			return errors.NewRequeueError("Desktop instance is not yet running", 3)
+			return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop instance is not yet running")
 		}
 	}
 
@@ -69,10 +72,11 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	reqLogger.Info(fmt.Sprintf("Checking if %s resolves to desktop instance", addr))
 	if _, err := net.LookupHost(addr); err != nil {
 		reqLogger.Info(err.Error())
-		return errors.NewRequeueError("DNS not yet resolving to desktop instance", 3)
+		return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "DNS not yet resolving to desktop instance")
 	}
 
 	if !instance.Status.Running {
+		instance.Status.PodPhase = desktopPod.Status.Phase
 		instance.Status.Running = true
 		if err := f.client.Status().Update(context.TODO(), instance); err != nil {
 			return err
@@ -80,4 +84,13 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	}
 
 	return nil
+}
+
+func (f *DesktopReconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.Desktop, pod *corev1.Pod, msg string) error {
+	instance.Status.Running = false
+	instance.Status.PodPhase = pod.Status.Phase
+	if err := f.client.Status().Update(context.TODO(), instance); err != nil {
+		return err
+	}
+	return errors.NewRequeueError(msg, 3)
 }

@@ -100,8 +100,8 @@ func (d *rethinkDBSession) SetUserPassword(user *User, password string) error {
 	return cursor.Err()
 }
 
-func (d *rethinkDBSession) DeleteUser(name string) error {
-	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(name).Delete().Run(d.session)
+func (d *rethinkDBSession) DeleteUser(user *User) error {
+	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Delete().Run(d.session)
 	if err != nil {
 		return err
 	}

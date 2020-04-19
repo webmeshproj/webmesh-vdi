@@ -10,5 +10,5 @@ spec:
     replicas: 1
     corsEnabled: true
   auth:
-    allowAnonymous: true
+    allowAnonymous: false
     localAuth: {}

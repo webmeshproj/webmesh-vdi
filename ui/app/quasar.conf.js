@@ -103,7 +103,12 @@ module.exports = function (/* ctx */) {
       port: 8080,
       open: true, // opens browser window automatically
       proxy: {
-        // proxy all requests starting with /api to jsonplaceholder
+        '/api/websockify': {
+          target: 'wss://localhost:8443',
+          changeOrigin: true,
+          ws: true,
+          secure: false
+        },
         '/api': {
           target: 'https://localhost:8443',
           changeOrigin: true,

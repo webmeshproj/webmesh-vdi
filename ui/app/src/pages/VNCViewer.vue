@@ -15,7 +15,7 @@ initLogging('debug')
 let currentEndpoint
 
 function getWebsockifyAddr (endpoint, token) {
-  return `${window.location.origin.replace('https', 'wss')}/api/websockify/${endpoint}?token=${token}`
+  return `${window.location.origin.replace('http', 'ws')}/api/websockify/${endpoint}?token=${token}`
 }
 
 export function setEndpoint (ep) {

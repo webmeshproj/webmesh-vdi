@@ -23,7 +23,7 @@ func getNamespacedNameFromRequest(r *http.Request) types.NamespacedName {
 
 // GetSessionStatus returns to the caller whether the instance is running and
 // resolveable inside the cluster.
-func (d *desktopAPI) GetSessionStatus(w http.ResponseWriter, r *http.Request) {
+func (d *desktopAPI) GetDesktopSessionStatus(w http.ResponseWriter, r *http.Request) {
 	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.ReadDesktopSessions) {
 		apiutil.ReturnAPIForbidden(nil, "User does not have ReadDesktopSessions grant", w)
 		return
@@ -36,10 +36,29 @@ func (d *desktopAPI) GetSessionStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	res := make(map[string]interface{})
 	res["running"] = found.Status.Running
+	res["podPhase"] = found.Status.PodPhase
 	if _, err := net.LookupHost(util.DesktopShortURL(found)); err == nil {
 		res["resolvable"] = true
 	} else {
 		res["resolvable"] = false
 	}
 	apiutil.WriteJSON(res, w)
+}
+
+func (d *desktopAPI) DeleteDesktopSession(w http.ResponseWriter, r *http.Request) {
+	if sess := GetRequestUserSession(r); sess == nil || !sess.User.HasGrant(grants.WriteDesktopSessions) {
+		apiutil.ReturnAPIForbidden(nil, "User does not have WriteDesktopSessions grant", w)
+		return
+	}
+	nn := getNamespacedNameFromRequest(r)
+	found := &v1alpha1.Desktop{}
+	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	if err := d.client.Delete(context.TODO(), found); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	apiutil.WriteJSON(map[string]bool{"ok": true}, w)
 }

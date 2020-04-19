@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (c *VDICluster) GetCoreNamespace() string {
@@ -24,6 +25,20 @@ func (c *VDICluster) GetComponentLabels(component string) map[string]string {
 	labels[VDIClusterLabel] = c.GetName()
 	labels[ComponentLabel] = component
 	return labels
+}
+
+func (c *VDICluster) GetUserDesktopsSelector(username string) client.MatchingLabels {
+	return client.MatchingLabels{
+		UserLabel:       username,
+		VDIClusterLabel: c.GetName(),
+	}
+}
+
+func (c *VDICluster) GetUserDesktopLabels(username string) map[string]string {
+	return map[string]string{
+		UserLabel:       username,
+		VDIClusterLabel: c.GetName(),
+	}
 }
 
 func (c *VDICluster) GetDesktopLabels(desktop *Desktop) map[string]string {

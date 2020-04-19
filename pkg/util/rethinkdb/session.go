@@ -16,11 +16,12 @@ type RethinkDBSession interface {
 	GetUser(id string) (*User, error)
 	CreateUser(*User) error
 	SetUserPassword(*User, string) error
-	DeleteUser(string) error
+	DeleteUser(*User) error
 	GetRole(string) (*Role, error)
 	CreateRole(*Role) error
 	GetUserSession(id string) (*UserSession, error)
 	CreateUserSession(*User) (*UserSession, error)
+	DeleteUserSession(*UserSession) error
 	Close() error
 }
 

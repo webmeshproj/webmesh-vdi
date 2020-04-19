@@ -13,7 +13,7 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'templates',
+        name: '',
         component: DesktopTemplates,
         meta: { requiresAuth: true }
       },
@@ -29,8 +29,8 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
-        path: 'vnc',
-        name: 'vnc',
+        path: 'control',
+        name: 'control',
         component: VNCViewer,
         meta: { requiresAuth: true }
       },

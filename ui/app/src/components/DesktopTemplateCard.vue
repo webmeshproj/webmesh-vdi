@@ -132,7 +132,7 @@ export default {
     connectToDesktop () {
       console.log(`Connecting to destkop from template ${this.metadata.name}`)
       this.$root.$emit('set-active-title', 'Control')
-      this.$router.push('vnc')
+      this.$router.push('control')
     },
 
     async createNewSession () {

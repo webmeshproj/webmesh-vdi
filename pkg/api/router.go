@@ -18,12 +18,14 @@ func (d *desktopAPI) buildRouter() error {
 	r.PathPrefix("/api/login").HandlerFunc(loginHandler.Authenticate).Methods("POST")
 
 	protected := r.PathPrefix("/api").Subrouter()
+	protected.HandleFunc("/logout", d.Logout).Methods("POST")
 	protected.HandleFunc("/whoami", d.WhoAmI).Methods("GET")
 	protected.HandleFunc("/users", d.GetUsers).Methods("GET")
 	protected.HandleFunc("/users/{user}", d.GetUser).Methods("GET")
 	protected.HandleFunc("/templates", d.GetDesktopTemplates).Methods("GET")
 	protected.HandleFunc("/sessions", d.StartDesktopSession).Methods("POST")
-	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetSessionStatus).Methods("GET")
+	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET")
+	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE")
 	protected.HandleFunc("/websockify/{endpoint}", mtlsWebsockify)
 
 	protected.Use(d.ValidateUserSession)

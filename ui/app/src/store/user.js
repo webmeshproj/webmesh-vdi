@@ -16,10 +16,13 @@ export const UserStore = new Vuex.Store({
       state.status = 'loading'
     },
 
-    auth_success (state, token, user) {
+    auth_got_user (state, user) {
+      state.user = user
+    },
+
+    auth_success (state, token) {
       state.status = 'success'
       state.token = token
-      state.user = user
     },
 
     auth_error (state) {
@@ -28,6 +31,7 @@ export const UserStore = new Vuex.Store({
 
     logout (state) {
       state.status = ''
+      state.user = ''
       state.token = ''
     }
 
@@ -48,7 +52,8 @@ export const UserStore = new Vuex.Store({
         try {
           console.log('Retrieving user information')
           const res = await Vue.prototype.$axios.get('/api/whoami')
-          commit('auth_success', res.data.token, res.data.user)
+          commit('auth_got_user', res.data.user)
+          commit('auth_success', res.data.token)
           console.log(`Resuming session as ${res.data.user.name}`)
         } catch (err) {
           console.log('Could not fetch user information')
@@ -68,7 +73,8 @@ export const UserStore = new Vuex.Store({
         const user = res.data.user
         localStorage.setItem('token', token)
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
-        commit('auth_success', token, user)
+        commit('auth_got_user', user)
+        commit('auth_success', token)
       } catch (err) {
         commit('auth_error')
         localStorage.removeItem('token')
@@ -79,7 +85,14 @@ export const UserStore = new Vuex.Store({
     async logout ({ commit }) {
       commit('logout')
       localStorage.removeItem('token')
-      delete Vue.prototype.$axios.defaults.headers.common['X-Session-Token']
+      try {
+        const res = await Vue.prototype.$axios.post('/api/logout')
+        delete Vue.prototype.$axios.defaults.headers.common['X-Session-Token']
+        return res
+      } catch (err) {
+        console.error(err)
+        throw err
+      }
     }
 
   },
@@ -90,6 +103,7 @@ export const UserStore = new Vuex.Store({
     username: state => state.user.name,
     token: state => state.token
   }
+
 })
 
 export default UserStore

@@ -1,39 +1,33 @@
 <template>
   <div class="fixed-center text-center">
+    <div class="text-h6"><q-icon name="error_outline" color="primary" x-large />&nbsp;&nbsp;Please login to use kVDI</div>
+    <br />
     <q-form
       @submit="onSubmit"
       @reset="onReset"
-      class="q-gutter-md"
     >
       <q-input
-        filled
-        rounded
-        outlined
+        :loading="loading"
+        input-style="width: 300px;"
+        rounded standout
         v-model="username"
         label="Username"
         lazy-rules
         :rules="[ val => val && val.length > 0 || 'Username cannot be blank']"
       />
-
       <q-input
-        filled
-        rounded
-        outlined
+        rounded standout
         type="password"
         v-model="password"
         label="Password"
-
         lazy-rules
         :rules="[
           val => val !== null && val !== '' || 'Password cannot be blank',
         ]"
       />
-      <div>
-        <q-btn label="Login" type="submit" color="primary"/>
-        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
-      </div>
+      <q-btn label="Login" type="submit" color="primary"/>
+      <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
     </q-form>
-
   </div>
 </template>
 
@@ -44,24 +38,45 @@ export default {
   data () {
     return {
       username: null,
-      password: null
+      password: null,
+      loading: false
     }
   },
 
   methods: {
-    onSubmit () {
-      this.$q.notify({
-        color: 'green-4',
-        textColor: 'white',
-        icon: 'cloud_done',
-        message: 'Submitted'
-      })
+    async onSubmit () {
+      try {
+        await this.$userStore.dispatch('login', { username: this.username, password: this.password })
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'cloud_done',
+          message: `Logged in as ${this.username}`
+        })
+        this.$root.$emit('set-logged-in', this.username)
+        this.$root.$emit('set-active-title', 'Desktop Templates')
+        this.$router.push('templates')
+      } catch (err) {
+        console.log(err)
+        this.$q.notify({
+          color: 'red-4',
+          textColor: 'black',
+          icon: 'error',
+          message: err.response.data.error
+        })
+      }
     },
 
     onReset () {
       this.username = null
       this.password = null
     }
+  },
+
+  mounted () {
+    this.$nextTick().then(() => {
+      this.$root.$emit('set-active-title', 'Login')
+    })
   }
 }
 </script>

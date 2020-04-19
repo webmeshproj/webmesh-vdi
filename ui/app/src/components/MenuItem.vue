@@ -1,47 +1,48 @@
 <template>
-  <q-item
-    v-if="children === undefined || children.length === 0"
-    clickable
-    tag="a"
-    :href="`#/${link}`"
-    :active="active"
-    :dense="isChild"
-    @click="onClick()"
-  >
-    <q-item-section v-if="icon" avatar>
-      <q-icon :name="icon" />
-    </q-item-section>
+  <div v-if="hidden !== true">
+    <q-item
+      v-if="children === undefined || children.length === 0"
+      clickable
+      tag="a"
+      :href="`#/${link}`"
+      :active="active"
+      :dense="isChild"
+      @click="onClick()"
+    >
+      <q-item-section v-if="icon" avatar>
+        <q-icon :name="icon" />
+      </q-item-section>
 
-    <q-item-section>
-      <q-item-label>{{ title }}</q-item-label>
-      <q-item-label caption>{{ caption }}</q-item-label>
-    </q-item-section>
+      <q-item-section>
+        <q-item-label>{{ title }}</q-item-label>
+        <q-item-label caption>{{ caption }}</q-item-label>
+      </q-item-section>
 
-  </q-item>
+    </q-item>
 
-  <q-expansion-item
-    v-else
-    v-model="active"
-    :label="title"
-    :caption="caption"
-    :icon="icon"
-    :to="link"
-    :active="active"
-    group="menu"
-    :content-inset-level="0.2"
-    @click="onClick()"
-  >
-  <q-list>
-    <MenuItem
-      v-for="link in children"
-      :key="link.title"
-      v-bind="link"
-      :isChild="true"
-      :onClick="link.onClick"
-    />
-  </q-list>
-  </q-expansion-item>
-
+    <q-expansion-item
+      v-else
+      v-model="active"
+      :label="title"
+      :caption="caption"
+      :icon="icon"
+      :to="link"
+      :active="active"
+      group="menu"
+      :content-inset-level="0.2"
+      @click="onClick()"
+    >
+    <q-list>
+      <MenuItem
+        v-for="link in children"
+        :key="link.title"
+        v-bind="link"
+        :isChild="true"
+        :onClick="link.onClick"
+      />
+    </q-list>
+    </q-expansion-item>
+  </div>
 </template>
 
 <script>
@@ -85,6 +86,11 @@ export default {
     },
 
     isChild: {
+      type: Boolean,
+      default: false
+    },
+
+    hidden: {
       type: Boolean,
       default: false
     }

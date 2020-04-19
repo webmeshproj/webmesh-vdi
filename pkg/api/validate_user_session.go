@@ -10,12 +10,11 @@ import (
 
 func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var token string
-		keys, ok := r.URL.Query()["token"]
-		if ok {
-			token = keys[0]
-		} else {
-			token = r.Header.Get(TokenHeader)
+		token := r.Header.Get(TokenHeader)
+		if token == "" {
+			if keys, ok := r.URL.Query()["token"]; ok {
+				token = keys[0]
+			}
 		}
 		if token == "" {
 			apiutil.ReturnAPIForbidden(nil, "No token provided in request", w)
