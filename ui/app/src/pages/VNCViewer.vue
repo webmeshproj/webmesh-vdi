@@ -25,8 +25,8 @@ import { init_logging as initLogging } from '@novnc/novnc/core/util/logging.js'
 
 initLogging('info')
 
-function getWebsockifyAddr (endpoint, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/websockify/${endpoint}?token=${token}`
+function getWebsockifyAddr (namespace, name, token) {
+  return `${window.location.origin.replace('http', 'ws')}/api/websockify/${namespace}/${name}?token=${token}`
 }
 
 export default {
@@ -53,28 +53,23 @@ export default {
   },
 
   methods: {
+
     handleSessionsChange (mutation, state) {
       const currentSession = this.$desktopSessions.getters.activeSession
       if (currentSession === undefined) {
         this.currentSession = null
         this.disconnect()
       } else {
-        if (currentSession.endpoint !== this.currentSession.endpoint) {
-          this.disconnect().then(() => {
-            this.currentSession = currentSession
-            this.checkStatusLoop()
-              .then((cont) => {
-                if (cont) {
-                  this.createConnection()
-                }
-              })
-              .catch((err) => {
-                this.$root.$emit('notify-error', err)
-              })
-          })
+        if (this.sessionIsActiveSession(currentSession)) {
+          return
         }
+        this.disconnect().then(() => {
+          this.currentSession = currentSession
+          this.checkStatusAndConnect()
+        })
       }
     },
+
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
@@ -82,13 +77,23 @@ export default {
         this.className = 'no-margin to-header-height'
       }
     },
+
+    async checkStatusAndConnect () {
+      try {
+        await this.checkStatusLoop()
+        this.createConnection()
+      } catch (err) {
+        this.$root.$emit('notify-error', err)
+      }
+    },
+
     async checkStatusLoop () {
       let podPhase
       let running
       let resolvable
       let loopCount = 0
       const currentSession = this.currentSession
-      while (this.$desktopSessions.getters.activeSession !== undefined && this.$desktopSessions.getters.activeSession === currentSession) {
+      while (this.sessionIsActiveSession(currentSession)) {
         const status = await this.$desktopSessions.getters.sessionStatus(this.currentSession)
         console.log(status)
         if (this.statusIsReady(status) && loopCount === 0) {
@@ -104,14 +109,14 @@ export default {
           } else if (status.podPhase === 'Running') {
             this.statusLines.push('Container has started')
           }
-        } else if (status.running !== running) {
+        } else if (status.podPhase === 'Running' && status.running !== running) {
           running = status.running
           if (!running) {
             this.statusLines.push('Waiting for desktop to finish booting...')
           } else {
             this.statusLines.push('Desktop has finished booting')
           }
-        } else if (status.resolvable !== resolvable) {
+        } else if (status.podPhase === 'Running' && running && status.resolvable !== resolvable) {
           resolvable = status.resolvable
           if (!resolvable) {
             this.statusLines.push('Waiting for desktop to be reachable...')
@@ -128,23 +133,30 @@ export default {
       }
 
       // Extra check to see if we were cancelled wrongly
-      if (this.$desktopSessions.getters.activeSession === undefined || this.$desktopSessions.getters.activeSession !== currentSession) {
+      if (!this.sessionIsActiveSession(currentSession)) {
         return false
       }
 
       return true
     },
+
+    sessionIsActiveSession (statusSession) {
+      return this.$desktopSessions.getters.activeSession !== undefined && this.$desktopSessions.getters.activeSession === statusSession
+    },
+
     statusIsReady (status) {
       return status.podPhase === 'Running' && status.running && status.resolvable
     },
+
     createConnection () {
       let rfb
       try {
-        const url = getWebsockifyAddr(this.currentSession.endpoint, this.$userStore.getters.token)
+        const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
         rfb = new RFB(document.getElementById('view'), url)
         rfb.addEventListener('connect', this.connectedToServer)
         rfb.addEventListener('disconnect', this.disconnectedFromServer)
         rfb.resizeSession = true
+        rfb.autoreconnect = true
       } catch (err) {
         console.error(`Unable to create RFB client: ${err}`)
         this.disconnectedFromServer({ detail: { clean: false } })
@@ -154,11 +166,13 @@ export default {
       this.className = 'no-margin to-header-height'
       this.rfb = rfb
     },
+
     connectedToServer () {
       this.rfb.scaleViewport = true
       this.rfb.resizeSession = true
       this.rfb._requestRemoteResize()
     },
+
     disconnectedFromServer (e) {
       if (e.detail.clean) {
         console.log('Disconnected')
@@ -167,6 +181,7 @@ export default {
       }
       this.disconnect()
     },
+
     async disconnect () {
       this.connecting = false
       this.connected = false
@@ -186,15 +201,7 @@ export default {
         return
       }
       this.currentSession = currentSession
-      this.checkStatusLoop()
-        .then((cont) => {
-          if (cont) {
-            this.createConnection()
-          }
-        })
-        .catch((err) => {
-          this.$root.$emit('notify-error', err)
-        })
+      this.checkStatusAndConnect()
     })
   }
 }

@@ -29,6 +29,8 @@ type AppConfig struct {
 	ExternalHostname string `json:"externalHostname,omitempty"`
 	// Whether to add CORS headers to API requests
 	CORSEnabled bool `json:"corsEnabled,omitempty"`
+	// Whether to log auditing events to stdout
+	AuditLog bool `json:"auditLog,omitempty"`
 	// The number of app replicas to run
 	Replicas int32 `json:"replicas,omitempty"`
 	// Resource requirements to place on the app pods

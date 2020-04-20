@@ -10,7 +10,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,10 +39,6 @@ type PostSessionsResponse struct {
 
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
 	sess := GetRequestUserSession(r)
-	if sess == nil || !sess.User.HasGrant(grants.LaunchTemplates) {
-		apiutil.ReturnAPIForbidden(nil, "User does not have LaunchTemplates grant", w)
-		return
-	}
 	req := PostSessionsRequest{}
 	if err := apiutil.UnmarshalRequest(r, &req); err != nil {
 		apiutil.ReturnAPIError(err, w)

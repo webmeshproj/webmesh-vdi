@@ -9,7 +9,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/koding/websocketproxy"
 )
@@ -30,8 +29,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-func mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
-
+func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 	endpointURL := getEndpointURL(r)
 	apiLogger.Info(fmt.Sprintf("Starting new mTLS websocket proxy with %s", endpointURL))
 	proxy := websocketproxy.NewProxy(endpointURL)
@@ -45,8 +43,7 @@ func mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 }
 
 func getEndpointURL(r *http.Request) *url.URL {
-	vars := mux.Vars(r)
-	endpoint := vars["endpoint"]
-	url, _ := url.Parse(fmt.Sprintf("wss://%s:%d", endpoint, v1alpha1.WebPort))
+	nn := getNamespacedNameFromRequest(r)
+	url, _ := url.Parse(fmt.Sprintf("wss://%s.%s.%s:%d", nn.Name, nn.Name, nn.Namespace, v1alpha1.WebPort))
 	return url
 }

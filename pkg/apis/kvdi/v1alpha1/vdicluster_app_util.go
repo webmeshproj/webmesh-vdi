@@ -52,3 +52,10 @@ func (c *VDICluster) EnableCORS() bool {
 	}
 	return false
 }
+
+func (c *VDICluster) AuditLogEnabled() bool {
+	if c.Spec.App != nil {
+		return c.Spec.App.AuditLog
+	}
+	return false
+}

@@ -12,16 +12,17 @@ const (
 	LaunchTemplates
 	ReadDesktopSessions
 	WriteDesktopSessions
+	UseDesktopSessions
 )
 
 const (
 	All RoleGrant = ReadUsers | WriteUsers |
 		ReadRoles | WriteRoles |
 		ReadTemplates | WriteTemplates |
-		LaunchTemplates | ReadDesktopSessions | WriteDesktopSessions
+		ReadDesktopSessions | WriteDesktopSessions |
+		LaunchTemplates | UseDesktopSessions
 
-	LaunchTemplatesGrant RoleGrant = ReadTemplates | LaunchTemplates |
-		ReadDesktopSessions | WriteDesktopSessions
+	LaunchTemplatesGrant RoleGrant = ReadTemplates | LaunchTemplates
 )
 
 var grantNames = []string{
@@ -34,6 +35,7 @@ var grantNames = []string{
 	"LaunchTemplates",
 	"ReadDesktopSessions",
 	"WriteDesktopSessions",
+	"UseDesktopSessions",
 }
 
 func (r RoleGrant) Has(grant RoleGrant) bool { return r&grant != 0 }

@@ -12,7 +12,9 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/resources/rethinkdb"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
+	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,6 +60,42 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to secondary resource Deployments and requeue the owner VDICluster
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.VDICluster{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource StatefulSets and requeue the owner VDICluster
+	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.VDICluster{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Certificates and requeue the owner VDICluster
+	err = c.Watch(&source.Kind{Type: &cm.Certificate{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.VDICluster{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Secrets and requeue the owner VDICluster
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.VDICluster{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Services and requeue the owner VDICluster
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.VDICluster{},
 	})

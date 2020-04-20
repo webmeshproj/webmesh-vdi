@@ -10,6 +10,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/resources/desktop"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
+	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -57,6 +58,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
 	// Watch for changes to secondary resource Pods and requeue the owner Desktop
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Desktop{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Certificates and requeue the owner Desktop
+	err = c.Watch(&source.Kind{Type: &cm.Certificate{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.Desktop{},
 	})

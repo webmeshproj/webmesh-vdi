@@ -9,6 +9,7 @@ spec:
     externalHostname: "kvdi.kind.local"
     replicas: 1
     corsEnabled: true
+    auditLog: true
   auth:
     allowAnonymous: true
     localAuth: {}

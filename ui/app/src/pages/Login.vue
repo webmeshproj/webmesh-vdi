@@ -21,6 +21,7 @@
         v-model="password"
         label="Password"
       />
+      <br />
       <q-btn label="Login" type="submit" color="primary"/>
       <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
     </q-form>

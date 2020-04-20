@@ -34,6 +34,9 @@ spec:
             app:
               description: App configurations.
               properties:
+                auditLog:
+                  description: Whether to log auditing events to stdout
+                  type: boolean
                 corsEnabled:
                   description: Whether to add CORS headers to API requests
                   type: boolean

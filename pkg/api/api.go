@@ -10,8 +10,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	cutil "sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -24,24 +27,36 @@ type DesktopAPI interface {
 
 // desktopAPI implements the DesktopAPI interface
 type desktopAPI struct {
-	client     client.Client
-	router     *mux.Router
+	// easy for quick read/write operators
+	client client.Client
+	// config for building rest clients if needed
+	restConfig *rest.Config
+	// scheme for building rest clients
+	scheme *runtime.Scheme
+	// the router interface
+	router *mux.Router
+	// our parent vdi cluster
 	vdiCluster *v1alpha1.VDICluster
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
 // and vdi cluster name.
 func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
+	// build our scheme
 	scheme := runtime.NewScheme()
 	if err := apis.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
+
+	// build a client
 	client, err := client.New(cfg, client.Options{
 		Scheme: scheme,
 	})
 	if err != nil {
 		return nil, err
 	}
+
+	// retrieve the vdicluster we are working for
 	apiLogger.Info("Retrieving VDICluster configuration")
 	var found *v1alpha1.VDICluster
 	for found == nil {
@@ -51,10 +66,17 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 			time.Sleep(time.Duration(2) * time.Second)
 		}
 	}
+
 	api := &desktopAPI{
 		client:     client,
+		restConfig: cfg,
+		scheme:     scheme,
 		vdiCluster: found,
 	}
 
 	return api, api.buildRouter()
+}
+
+func (d *desktopAPI) getRestClientForGVK(gvk schema.GroupVersionKind) (rest.Interface, error) {
+	return cutil.RESTClientForGVK(gvk, d.restConfig, serializer.NewCodecFactory(d.scheme))
 }

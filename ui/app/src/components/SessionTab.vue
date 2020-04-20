@@ -56,8 +56,8 @@ export default {
   methods: {
     onConnect () {
       this.$desktopSessions.dispatch('setActiveSession', this)
-      this.$root.$emit('set-active-title', 'Control')
-      if (this.$router.currentRoute !== '/control') {
+      if (this.$router.currentRoute.name !== 'control') {
+        this.$root.$emit('set-active-title', 'Control')
         this.$router.push('control')
       }
     },
