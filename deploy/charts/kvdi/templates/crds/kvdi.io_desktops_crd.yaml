@@ -48,6 +48,10 @@ spec:
         status:
           description: DesktopStatus defines the observed state of Desktop
           properties:
+            podPhase:
+              description: PodPhase is a label for the condition of a pod at the current
+                time.
+              type: string
             running:
               description: Whether the instance is running and resolvable within the
                 cluster.

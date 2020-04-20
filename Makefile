@@ -44,7 +44,7 @@ run-desktop:
 
 push: build-manager push-manager push-novnc-proxy
 
-push-all: push-manager push-app
+push-all: push-manager push-app push-novnc-proxy
 
 push-manager: build-manager
 	docker push ${MANAGER_IMAGE}
@@ -144,24 +144,31 @@ test-ingress: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} create secret generic -n metallb-system memberlist --from-literal=secretkey="`openssl rand -base64 128`" || echo
 	echo "$$METALLB_CONFIG" | ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply -f -
 
-test-certmanager: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} wait pod -l app=webhook -n cert-manager --for=condition=Ready --timeout=300s
+test-certmanager: ${KUBECTL} ${HELM}
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} create namespace cert-manager
+	${HELM} repo add jetstack https://charts.jetstack.io && ${HELM} repo update
+	${HELM} --kubeconfig ${KIND_KUBECONFIG} install \
+		cert-manager jetstack/cert-manager \
+		--namespace cert-manager \
+		--version ${CERT_MANAGER_VERSION} \
+		--set extraArgs[0]="--enable-certificate-owner-ref=true" \
+		--wait
 
-example-vdi:
+example-vdi: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply \
 		-f deploy/examples/example-cluster.yaml \
 		-f deploy/examples/example-desktop-template.yaml
 
 full-test-cluster: test-cluster test-ingress test-certmanager
 
-restart-manager:
+restart-manager: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete pod -l component=kvdi-manager
 
-restart-app:
+restart-app: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete pod -l vdiComponent=app
 
-clean-cluster: ${KIND}
+clean-cluster: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found -f deploy/examples
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found certificate --all
 
@@ -169,23 +176,23 @@ remove-cluster: ${KIND}
 	${KIND} delete cluster --name ${CLUSTER_NAME}
 	rm -f ${KIND_KUBECONFIG}
 
-forward-app:
+forward-app: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get pod | grep app | awk '{print$$1}' | xargs -I% ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} port-forward % 8443
 
-get-app-secret:
+get-app-secret: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
-get-admin-password:
+get-admin-password: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-admin-secret -o json | jq -r .data.password | base64 -d && echo
 
 cycle-cluster: clean-cluster build-all load-all restart-manager example-vdi
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
 .PHONY: deploy
-deploy:
-	helm upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME} ${HELM_ARGS} --wait
+deploy: ${HELM}
+	${HELM} upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME} ${HELM_ARGS} --wait
 
 ## Doc generation
 

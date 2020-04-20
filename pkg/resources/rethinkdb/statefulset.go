@@ -13,44 +13,35 @@ import (
 // rethinkDBStartScript is the start script used on rethinkdb cluster nodes
 var rethinkDBStartScript = `
 set -exo pipefail
+
 ORDINAL=$(echo "${POD_NAME}" | rev | cut -d "-" -f1 | rev)
-if [[ "${ORDINAL}" != "0" ]]; then
-  while ! getent hosts ${SERVICE_NAME}.${POD_NAMESPACE} ; do sleep 3 ; done
-  ENDPOINT="${SERVICE_NAME}-0.${SERVICE_NAME}.${POD_NAMESPACE}.svc.${CLUSTER_SUFFIX}:29015"
-  echo "Join to ${SERVICE_NAME} on ${ENDPOINT}"
-  exec rethinkdb \
-    --bind all \
-    --directory /data/rethinkdb_data \
-    --join ${ENDPOINT} \
-    --server-name ${POD_NAME} \
-    --server-tag ${POD_NAME} \
-    --server-tag ${NODE_NAME} \
-    --canonical-address ${POD_IP} \
-    --http-tls-key ${TLS_KEY} \
-    --http-tls-cert ${TLS_CERT} \
-    --driver-tls-key ${TLS_KEY} \
-    --driver-tls-cert ${TLS_CERT} \
-    --driver-tls-ca ${TLS_CA_CERT} \
-    --cluster-tls-key ${TLS_KEY} \
-    --cluster-tls-cert ${TLS_CERT} \
-    --cluster-tls-ca ${TLS_CA_CERT}
+
+ARGS="
+--bind all \
+--bind-http 127.0.0.1 \
+--directory /data/rethinkdb_data \
+--server-name ${POD_NAME} \
+--server-tag ${POD_NAME} \
+--server-tag ${NODE_NAME} \
+--canonical-address ${POD_IP} \
+--http-tls-key ${TLS_KEY} \
+--http-tls-cert ${TLS_CERT} \
+--driver-tls-key ${TLS_KEY} \
+--driver-tls-cert ${TLS_CERT} \
+--driver-tls-ca ${TLS_CA_CERT} \
+--cluster-tls-key ${TLS_KEY} \
+--cluster-tls-cert ${TLS_CERT} \
+--cluster-tls-ca ${TLS_CA_CERT}
+"
+
+if [[ "${ORDINAL}" == "0" ]]; then
+	echo "Start single/master instance"
+	exec rethinkdb ${ARGS}
 else
-  echo "Start single/master instance"
-  exec rethinkdb \
-    --bind all \
-    --directory /data/rethinkdb_data \
-    --server-name ${POD_NAME} \
-    --server-tag ${POD_NAME} \
-    --server-tag ${NODE_NAME} \
-    --canonical-address ${POD_IP} \
-		--http-tls-key ${TLS_KEY} \
-    --http-tls-cert ${TLS_CERT} \
-    --driver-tls-key ${TLS_KEY} \
-    --driver-tls-cert ${TLS_CERT} \
-    --driver-tls-ca ${TLS_CA_CERT} \
-    --cluster-tls-key ${TLS_KEY} \
-    --cluster-tls-cert ${TLS_CERT} \
-    --cluster-tls-ca ${TLS_CA_CERT}
+	while ! getent hosts ${SERVICE_NAME}.${POD_NAMESPACE} ; do sleep 3 ; done
+	ENDPOINT="${SERVICE_NAME}-0.${SERVICE_NAME}.${POD_NAMESPACE}.svc.${CLUSTER_SUFFIX}:29015"
+	echo "Join to ${SERVICE_NAME} on ${ENDPOINT}"
+	exec rethinkdb --join ${ENDPOINT} ${ARGS}
 fi
 `
 
@@ -92,10 +83,6 @@ func newStatefulSetForCR(cr *v1alpha1.VDICluster) *appsv1.StatefulSet {
 							Args:         []string{rethinkDBStartScript},
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "admin-port",
-									ContainerPort: v1alpha1.RethinkDBAdminPort,
-								},
-								{
 									Name:          "driver-port",
 									ContainerPort: v1alpha1.RethinkDBDriverPort,
 								},
@@ -105,10 +92,13 @@ func newStatefulSetForCR(cr *v1alpha1.VDICluster) *appsv1.StatefulSet {
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
+								InitialDelaySeconds: 5,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+								PeriodSeconds:       10,
 								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Scheme: "HTTPS",
-										Port:   intstr.Parse("admin-port"),
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.Parse("cluster-port"),
 									},
 								},
 							},

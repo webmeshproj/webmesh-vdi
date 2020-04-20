@@ -32,7 +32,7 @@ export default {
         const response = await this.$axios.get('/api/templates')
         this.items = response.data
       } catch (err) {
-        console.error(err)
+        this.$root.$emit('notify-error', err)
       }
     }
   },

@@ -1,37 +1,90 @@
+import Vue from 'vue'
 import Vuex from 'vuex'
 
-export const DesktopStore = new Vuex.Store({
-  state: {},
+const equal = function (o1, o2) {
+  return o1.name === o2.name && o1.namespace === o2.namespace
+}
+
+export const DesktopSessions = new Vuex.Store({
+
+  state: {
+    sessions: []
+  },
+
   mutations: {
 
-    SETBOOTED (state, template) {
-      if (state[template] === undefined) {
-        state[template] = { booted: true }
-      } else {
-        state[template].booted = true
-      }
+    new_session (state, data) {
+      data.active = true
+      state.sessions.push(data)
     },
 
-    SETSHUTDOWN (state, template) {
-      if (state[template] === undefined) {
-        state[template] = { booted: false }
-      } else {
-        state[template].booted = false
+    set_active_session (state, data) {
+      const newSessions = []
+      state.sessions.forEach((val) => {
+        if (equal(val, data)) {
+          val.active = true
+        } else {
+          val.active = false
+        }
+        newSessions.push(val)
+      })
+      state.sessions = newSessions
+    },
+
+    delete_session (state, data) {
+      state.sessions = state.sessions.filter((val) => {
+        return !equal(val, data)
+      })
+      if (state.sessions.length !== 0) {
+        state.sessions[0].active = true
+      }
+    }
+
+  },
+
+  actions: {
+    async newSession ({ commit }, tmpl) {
+      try {
+        const session = await Vue.prototype.$axios.post('/api/sessions', { template: tmpl })
+        commit('new_session', session.data)
+        commit('set_active_session', session.data)
+      } catch (err) {
+        console.log(`Failed to launch new session from ${tmpl}`)
+        console.error(err)
+        throw err
+      }
+    },
+    setActiveSession ({ commit }, data) {
+      commit('set_active_session', data)
+    },
+    async deleteSession ({ commit }, data) {
+      await Vue.prototype.$axios.delete(`/api/sessions/${data.namespace}/${data.name}`)
+      commit('delete_session', data)
+    },
+    async clearSessions ({ commit }) {
+      this.getters.sessions.forEach(async (session) => {
+        await this.dispatch('deleteSession', session)
+      })
+    }
+  },
+
+  getters: {
+    sessions: state => state.sessions,
+    activeSession: state => state.sessions.filter(sess => sess.active)[0],
+    sessionStatus: (state) => async (data) => {
+      try {
+        const res = await Vue.prototype.$axios.get(
+          `/api/sessions/${data.namespace}/${data.name}`
+        )
+        return res.data
+      } catch (err) {
+        console.log(`Failed to fetch session status for ${data.namespace}/${data.name}`)
+        console.error(err)
+        throw err
       }
     }
   }
+
 })
 
-export const setTemplateBooted = function (template) {
-  console.log(`Setting ${template} as booted`)
-  DesktopStore.commit('SETBOOTED', template)
-}
-
-export const templateIsBooted = function (template) {
-  if (DesktopStore.state[this.metadata.name] === undefined) {
-    return false
-  }
-  return DesktopStore.state[this.metadata.name].booted === true
-}
-
-export default DesktopStore
+export default DesktopSessions

@@ -38,6 +38,8 @@ $> make deploy example-vdi
 
 After the manager has finished spinning up the `app` instance, get the IP of its service with `kubectl get svc` to access the app interface.
 
+If not using anonymous auth, look for `example-vdicluster-admin-secret` to retrieve the `admin` password.
+
 ## Security
 
 All traffic between processes is encrypted with mTLS.

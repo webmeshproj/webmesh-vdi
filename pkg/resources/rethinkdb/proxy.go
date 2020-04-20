@@ -20,7 +20,8 @@ set -exo pipefail
 while ! getent hosts ${WAIT_SERVERS} ; do sleep 3 ; done
 exec rethinkdb proxy \
   ${JOIN_SERVERS} \
-  --bind all \
+	--bind all \
+	--bind-http 127.0.0.1 \
   --canonical-address ${POD_IP} \
   --log-file /data/rethinkdb_data/log_file \
   --http-tls-key ${TLS_KEY} \
@@ -119,10 +120,6 @@ func newProxyStatefulSetForCR(cr *v1alpha1.VDICluster, joinStr, waitStr string) 
 							}...),
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "admin-port",
-									ContainerPort: v1alpha1.RethinkDBAdminPort,
-								},
-								{
 									Name:          "driver-port",
 									ContainerPort: v1alpha1.RethinkDBDriverPort,
 								},
@@ -132,10 +129,13 @@ func newProxyStatefulSetForCR(cr *v1alpha1.VDICluster, joinStr, waitStr string) 
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
+								InitialDelaySeconds: 5,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+								PeriodSeconds:       10,
 								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Scheme: "HTTPS",
-										Port:   intstr.Parse("admin-port"),
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.Parse("cluster-port"),
 									},
 								},
 							},

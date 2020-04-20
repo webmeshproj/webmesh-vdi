@@ -57,10 +57,11 @@ export const UserStore = new Vuex.Store({
           console.log(`Resuming session as ${res.data.user.name}`)
         } catch (err) {
           console.log('Could not fetch user information')
+          console.log(err)
           commit('auth_error')
           commit('logout')
           localStorage.removeItem('token')
-          console.error(err)
+          throw err
         }
       }
     },

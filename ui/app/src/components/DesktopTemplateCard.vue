@@ -22,7 +22,7 @@
             <q-item-section avatar>
               <span>
                 <q-icon color="primary" name="volume_up" />
-                <strong>&nbsp;&nbsp;Sound:</strong>&nbsp;{{ spec.config.enableSound }}
+                <strong>&nbsp;&nbsp;Sound:</strong>&nbsp;{{ spec.config.enableSound || 'false' }}
               </span>
             </q-item-section>
           </q-item>
@@ -30,7 +30,7 @@
             <q-item-section avatar>
               <span>
                 <q-icon color="primary" name="error" />
-                <strong>&nbsp;&nbsp;Root:</strong>&nbsp;{{ spec.config.allowRoot }}
+                <strong>&nbsp;&nbsp;Root:</strong>&nbsp;{{ spec.config.allowRoot || 'false' }}
               </span>
             </q-item-section>
           </q-item>
@@ -53,26 +53,17 @@
 
     <q-card-actions>
       <q-btn
-        :loading="loading"
-        :percentage="percentage"
-        :disable="booted"
         color="primary"
-        @click="launchDesktop()"
+        @click="createNewSession()"
         style="width: 150px"
       >
         Launch Desktop
-        <template v-slot:loading>
-          <q-spinner-gears class="on-left" />
-          Booting...
-        </template>
       </q-btn>
-      <q-btn v-if="booted" color="teal" style="width: 150px" @click="connectToDesktop()">Connect</q-btn>
     </q-card-actions>
   </q-card>
 </template>
 
 <script>
-import { setEndpoint } from 'pages/VNCViewer.vue'
 
 export default {
   name: 'DesktopTemplateCard',
@@ -92,11 +83,7 @@ export default {
   },
 
   data () {
-    return {
-      loading: false,
-      percentage: 0,
-      booted: this.isBooted()
-    }
+    return {}
   },
 
   computed: {
@@ -110,67 +97,17 @@ export default {
   },
 
   methods: {
-    isBooted () {
-      return this.$templateIsBooted(this.metadata.name)
-    },
-
-    setBooted () {
-      this.$setTemplateBooted(this.metadata.name)
-      this.booted = true
-    },
-
-    setLoading () {
-      console.log(`Launching desktop template ${this.metadata.name}`)
-      this.percentage = 0
-      this.loading = true
-    },
-
-    stopLoading () {
-      this.loading = false
-    },
-
-    connectToDesktop () {
-      console.log(`Connecting to destkop from template ${this.metadata.name}`)
-      this.$root.$emit('set-active-title', 'Control')
-      this.$router.push('control')
-    },
 
     async createNewSession () {
-      const session = await this.$axios.post('/api/sessions', { template: this.metadata.name })
-      setEndpoint(session.data.endpoint)
-      return session.data
-    },
-
-    async waitForSessionReady (session) {
-      let running = false
-      let resolvable = false
-      while (!running && !resolvable) {
-        const res = await this.$axios.get(`/api/sessions/${session.namespace}/${session.name}`)
-        running = res.data.running
-        resolvable = res.data.resolvable
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        if (this.percentage >= 95) {
-          this.percentage = 95
-        } else {
-          this.percentage += 5
-        }
-      }
-    },
-
-    async launchDesktop () {
-      this.setLoading()
       try {
-        const session = await this.createNewSession()
-        this.percentage = 20
-        await this.waitForSessionReady(session)
-        this.percentage = 100
-        this.stopLoading()
-        this.setBooted()
+        await this.$desktopSessions.dispatch('newSession', this.metadata.name)
+        this.$root.$emit('set-active-title', 'Control')
+        this.$router.push('control')
       } catch (err) {
-        console.error(err)
-        this.stopLoading()
+        this.$root.$emit('notify-error', err)
       }
     }
+
   }
 }
 </script>

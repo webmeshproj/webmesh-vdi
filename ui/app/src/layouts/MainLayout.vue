@@ -13,8 +13,8 @@
         </q-toolbar-title>
       </q-toolbar>
 
-      <q-tabs align="left" v-if="controlSessions.length != 0">
-        <q-route-tab v-for="tab in controlSessions" v-bind="tab" :key="tab.name" :to="tab.route" :label="tab.name" />
+      <q-tabs align="center" v-if="controlSessions.length != 0">
+        <SessionTab v-for="tab in controlSessions" v-bind="tab" :key="tab.name" />
       </q-tabs>
     </q-header>
 
@@ -44,43 +44,27 @@
 
 <script>
 import MenuItem from 'components/MenuItem'
+import SessionTab from 'components/SessionTab'
 
 export default {
   name: 'MainLayout',
 
   components: {
-    MenuItem
+    MenuItem,
+    SessionTab
   },
 
   created () {
-    this.$root.$on('set-active-title', this.setActive)
-    this.$root.$on('set-logged-in', this.setLoggedIn)
-    this.$root.$on('set-logged-out', this.setLoggedOut)
-    this.unsubscribe = this.$userStore.subscribe((mutation, state) => {
-      if (mutation.type === 'auth_success') {
-        this.setLoggedIn(this.$userStore.getters.username)
-      }
-    })
-    document.onfullscreenchange = (event) => {
-      if (document.fullscreenElement) {
-        console.log('Entered fullscreen mode')
-        this.openDrawer = false
-        this.revealHeader = false
-        this.$root.$emit('set-fullscreen', true)
-      } else {
-        console.log('Leaving full-screen mode')
-        this.openDrawer = true
-        this.revealHeader = true
-        this.$root.$emit('set-fullscreen', false)
-      }
-    }
+    this.subscribeToBuses()
+    document.onfullscreenchange = this.handleFullScreenChange
+    this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
+    this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
   },
 
   beforeDestroy () {
-    this.$root.$off('set-active-title', this.setActive)
-    this.$root.$off('set-logged-in', this.setLoggedIn)
-    this.$root.$off('set-logged-out', this.setLoggedOut)
-    this.unsubscribe()
+    this.unsubscribeFromBuses()
+    this.unsubscribeUsers()
+    this.unsubscribeSessions()
   },
 
   data () {
@@ -105,7 +89,7 @@ export default {
             {
               title: 'Fullscreen',
               icon: 'fullscreen',
-              link: 'vnc',
+              link: 'control',
               onClick: () => {
                 this.$root.$emit('set-active-title', 'Control')
                 this.$q.fullscreen.request()
@@ -139,6 +123,7 @@ export default {
               icon: 'desktop_access_disabled',
               onClick: () => {
                 this.$userStore.dispatch('logout')
+                this.$desktopSessions.dispatch('clearSessions')
                 this.$root.$emit('set-logged-out')
               }
             }
@@ -149,6 +134,59 @@ export default {
   },
 
   methods: {
+
+    subscribeToBuses () {
+      this.$root.$on('set-active-title', this.setActive)
+      this.$root.$on('set-logged-in', this.setLoggedIn)
+      this.$root.$on('set-logged-out', this.setLoggedOut)
+      this.$root.$on('notify-error', this.notifyError)
+    },
+
+    unsubscribeFromBuses () {
+      this.$root.$off('set-active-title', this.setActive)
+      this.$root.$off('set-logged-in', this.setLoggedIn)
+      this.$root.$off('set-logged-out', this.setLoggedOut)
+      this.$root.$off('notify-error', this.notifyError)
+    },
+
+    handleAuthChange (mutation, state) {
+      if (mutation.type === 'auth_success') {
+        this.setLoggedIn(this.$userStore.getters.username)
+      }
+    },
+
+    handleSessionsChange (mutation, state) {
+      this.controlSessions = this.$desktopSessions.getters.sessions
+    },
+
+    notifyError (err) {
+      let error
+      if (err.response !== undefined && err.response.data !== undefined) {
+        error = err.response.data.error
+      } else {
+        error = err
+      }
+      this.$q.notify({
+        color: 'red-4',
+        textColor: 'black',
+        icon: 'error',
+        message: error
+      })
+    },
+
+    handleFullScreenChange (event) {
+      if (document.fullscreenElement) {
+        console.log('Entered fullscreen mode')
+        this.openDrawer = false
+        this.revealHeader = false
+        this.$root.$emit('set-fullscreen', true)
+      } else {
+        console.log('Leaving full-screen mode')
+        this.openDrawer = true
+        this.revealHeader = true
+        this.$root.$emit('set-fullscreen', false)
+      }
+    },
 
     setLoggedIn (username) {
       const newMenuItems = []

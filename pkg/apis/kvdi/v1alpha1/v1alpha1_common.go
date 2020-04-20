@@ -15,9 +15,9 @@ const (
 	// for the headless service selector placed in front of each pod.
 	DesktopNameLabel = "desktopName"
 	// Where server certificates get placed inside pods
-	ServerCertificateMountPath = "/etc/vdi/tls/server"
+	ServerCertificateMountPath = "/etc/kvdi/tls/server"
 	// Where client certificates get placed inside pods
-	ClientCertificateMountPath = "/etc/vdi/tls/client"
+	ClientCertificateMountPath = "/etc/kvdi/tls/client"
 	// The port that web servicees will listen on internally
 	WebPort = 8443
 	// The port for the app service

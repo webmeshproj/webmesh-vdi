@@ -20,10 +20,6 @@
         type="password"
         v-model="password"
         label="Password"
-        lazy-rules
-        :rules="[
-          val => val !== null && val !== '' || 'Password cannot be blank',
-        ]"
       />
       <q-btn label="Login" type="submit" color="primary"/>
       <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
@@ -57,13 +53,7 @@ export default {
         this.$root.$emit('set-active-title', 'Desktop Templates')
         this.$router.push('templates')
       } catch (err) {
-        console.log(err)
-        this.$q.notify({
-          color: 'red-4',
-          textColor: 'black',
-          icon: 'error',
-          message: err.response.data.error
-        })
+        this.$root.$emit('notify-error', err)
       }
     },
 

@@ -14,7 +14,6 @@ networking:
   apiServerAddress: "${API_SERVER_ADDRESS}"
 nodes:
 - role: control-plane
-- role: worker
   extraMounts:
   - hostPath: /dev/shm
     containerPath: /dev/shm
