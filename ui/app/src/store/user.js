@@ -101,7 +101,7 @@ export const UserStore = new Vuex.Store({
   getters: {
     isLoggedIn: state => !!state.token,
     authStatus: state => state.status,
-    username: state => state.user.name,
+    user: state => state.user,
     token: state => state.token
   }
 

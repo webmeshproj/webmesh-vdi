@@ -168,6 +168,8 @@ restart-manager: ${KUBECTL}
 restart-app: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete pod -l vdiComponent=app
 
+restart: restart-manager restart-app
+
 clean-cluster: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found -f deploy/examples
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found certificate --all

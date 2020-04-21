@@ -116,7 +116,7 @@ func StatefulSetDNSNames(svcName, svcNamespace string, replicas int32) []string 
 }
 
 func DesktopShortURL(desktop *v1alpha1.Desktop) string {
-	return fmt.Sprintf("%s.%s.%s", desktop.GetName(), desktop.GetName(), desktop.GetNamespace())
+	return fmt.Sprintf("%s.%s.svc", desktop.GetName(), desktop.GetNamespace())
 }
 
 func LookupClusterByName(c client.Client, name string) (*v1alpha1.VDICluster, error) {

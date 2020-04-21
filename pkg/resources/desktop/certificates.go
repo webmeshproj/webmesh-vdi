@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func newDesktopProxyCert(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *cm.Certificate {
+func newDesktopProxyCert(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop, podIP string) *cm.Certificate {
 	return &cm.Certificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
@@ -20,11 +20,12 @@ func newDesktopProxyCert(cluster *v1alpha1.VDICluster, instance *v1alpha1.Deskto
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: cm.CertificateSpec{
-			KeySize:    4096,
-			CommonName: "desktop",
-			DNSNames:   util.HeadlessDNSNames(instance.GetName(), instance.GetName(), instance.GetNamespace()),
-			SecretName: instance.GetName(),
-			Usages:     tlsutil.ServerMTLSUsages(),
+			KeySize:     4096,
+			CommonName:  podIP,
+			DNSNames:    append(util.DNSNames(instance.GetName(), instance.GetNamespace()), podIP),
+			IPAddresses: []string{podIP},
+			SecretName:  instance.GetName(),
+			Usages:      tlsutil.ServerMTLSUsages(),
 			IssuerRef: cmmeta.ObjectReference{
 				Name: cluster.GetCAName(),
 				Kind: "ClusterIssuer",

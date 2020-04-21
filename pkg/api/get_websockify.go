@@ -1,16 +1,19 @@
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	"github.com/gorilla/websocket"
 	"github.com/koding/websocketproxy"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var clientTLSConfig *tls.Config
@@ -30,7 +33,11 @@ var upgrader = websocket.Upgrader{
 }
 
 func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
-	endpointURL := getEndpointURL(r)
+	endpointURL, err := d.getEndpointURL(r)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
 	apiLogger.Info(fmt.Sprintf("Starting new mTLS websocket proxy with %s", endpointURL))
 	proxy := websocketproxy.NewProxy(endpointURL)
 	proxy.Dialer = &websocket.Dialer{
@@ -42,8 +49,13 @@ func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
-func getEndpointURL(r *http.Request) *url.URL {
+func (d *desktopAPI) getEndpointURL(r *http.Request) (*url.URL, error) {
 	nn := getNamespacedNameFromRequest(r)
-	url, _ := url.Parse(fmt.Sprintf("wss://%s.%s.%s:%d", nn.Name, nn.Name, nn.Namespace, v1alpha1.WebPort))
-	return url
+	// url, _ := url.Parse(fmt.Sprintf("wss://%s.%s.%s:%d", nn.Name, nn.Name, nn.Namespace, v1alpha1.WebPort))
+	// return url
+	found := &corev1.Service{}
+	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+		return nil, err
+	}
+	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1alpha1.WebPort))
 }

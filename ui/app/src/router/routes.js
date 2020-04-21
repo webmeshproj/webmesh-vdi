@@ -1,9 +1,9 @@
 import MainLayout from 'layouts/MainLayout.vue'
 import Login from 'pages/Login.vue'
 import DesktopTemplates from 'pages/DesktopTemplates.vue'
-// import VNCIframe from 'pages/VNCIframe.vue'
 import VNCViewer from 'pages/VNCViewer.vue'
-
+import Settings from 'pages/Settings.vue'
+import Profile from 'pages/Profile.vue'
 import Error404 from 'pages/Error404.vue'
 
 const routes = [
@@ -32,6 +32,18 @@ const routes = [
         path: 'control',
         name: 'control',
         component: VNCViewer,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'settings',
+        name: 'settings',
+        component: Settings,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: Profile,
         meta: { requiresAuth: true }
       },
       { path: '*', component: Error404 }

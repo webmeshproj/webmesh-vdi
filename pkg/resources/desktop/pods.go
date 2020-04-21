@@ -39,7 +39,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 	}
 }
 
-func newHeadlessServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *corev1.Service {
+func newServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
@@ -49,8 +49,8 @@ func newHeadlessServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.De
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: corev1.ServiceSpec{
-			ClusterIP: "None",
-			Selector:  cluster.GetDesktopLabels(instance),
+			Type:     corev1.ServiceTypeClusterIP,
+			Selector: cluster.GetDesktopLabels(instance),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "novnc-proxy",

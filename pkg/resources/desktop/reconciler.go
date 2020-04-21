@@ -2,12 +2,9 @@ package desktop
 
 import (
 	"context"
-	"fmt"
-	"net"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
@@ -33,6 +30,7 @@ func New(c client.Client, s *runtime.Scheme) resources.DesktopReconciler {
 }
 
 func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+
 	template, err := instance.GetTemplate(f.client)
 	if err != nil {
 		return err
@@ -41,14 +39,28 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	if err != nil {
 		return err
 	}
-	if err := reconcile.ReconcileCertificate(reqLogger, f.client, newDesktopProxyCert(cluster, instance), true); err != nil {
+
+	resourceNamespacedName := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
+
+	if err := reconcile.ReconcileService(reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
+		return err
+	}
+
+	// get the service IP
+	desktopSvc := &corev1.Service{}
+	if err := f.client.Get(context.TODO(), resourceNamespacedName, desktopSvc); err != nil {
+		return err
+	}
+
+	if desktopSvc.Spec.ClusterIP == "" || desktopSvc.Spec.ClusterIP == "None" {
+		return errors.NewRequeueError("Desktop service has not yet been assigned an IP", 2)
+	}
+
+	if err := reconcile.ReconcileCertificate(reqLogger, f.client, newDesktopProxyCert(cluster, instance, desktopSvc.Spec.ClusterIP), true); err != nil {
 		return err
 	}
 
 	if _, err := reconcile.ReconcilePod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance)); err != nil {
-		return err
-	}
-	if err := reconcile.ReconcileService(reqLogger, f.client, newHeadlessServiceForCR(cluster, instance)); err != nil {
 		return err
 	}
 
@@ -58,6 +70,7 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	if err := f.client.Get(context.TODO(), nn, desktopPod); err != nil {
 		return err
 	}
+
 	if desktopPod.Status.Phase != corev1.PodRunning {
 		return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop pod is not in running phase")
 	}
@@ -65,14 +78,6 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 		if status.State.Running == nil {
 			return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop instance is not yet running")
 		}
-	}
-
-	// make sure it's resolving
-	addr := util.DesktopShortURL(instance)
-	reqLogger.Info(fmt.Sprintf("Checking if %s resolves to desktop instance", addr))
-	if _, err := net.LookupHost(addr); err != nil {
-		reqLogger.Info(err.Error())
-		return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "DNS not yet resolving to desktop instance")
 	}
 
 	if !instance.Status.Running {

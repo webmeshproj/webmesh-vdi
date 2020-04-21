@@ -1,7 +1,7 @@
 <!-- WIP: I'd like to use a custom viewer component instead of the embedded noVNC html -->
 
 <template>
-  <q-page>
+  <q-page flex>
     <div id="view" :class="className">
       <div q-gutter-md row v-if="!connected && currentSession !== null">
         <q-spinner-hourglass color="grey" size="4em" />
@@ -55,16 +55,20 @@ export default {
   methods: {
 
     handleSessionsChange (mutation, state) {
-      const currentSession = this.$desktopSessions.getters.activeSession
-      if (currentSession === undefined) {
+      const activeSession = this.$desktopSessions.getters.activeSession
+      console.log(`Received a session change to ${JSON.stringify(activeSession)}`)
+      if (activeSession === undefined) {
+        console.log('There are no more active sessions, disconnecting')
         this.currentSession = null
         this.disconnect()
       } else {
-        if (this.sessionIsActiveSession(currentSession)) {
+        if (this.currentSession === activeSession) {
+          console.log(`${activeSession.namespace}/${activeSession.name} is already the active session`)
           return
         }
+        console.log(`Disconnecting from ${this.currentSession.name} and connecting to ${activeSession.name}`)
         this.disconnect().then(() => {
-          this.currentSession = currentSession
+          this.currentSession = activeSession
           this.checkStatusAndConnect()
         })
       }
@@ -73,15 +77,19 @@ export default {
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
-      } else {
+      } else if (this.connected) {
         this.className = 'no-margin to-header-height'
+      } else {
+        this.className = 'info'
       }
     },
 
     async checkStatusAndConnect () {
       try {
-        await this.checkStatusLoop()
-        this.createConnection()
+        const doConnect = await this.checkStatusLoop()
+        if (doConnect) {
+          this.createConnection()
+        }
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
@@ -90,10 +98,9 @@ export default {
     async checkStatusLoop () {
       let podPhase
       let running
-      let resolvable
       let loopCount = 0
       const currentSession = this.currentSession
-      while (this.sessionIsActiveSession(currentSession)) {
+      while (this.sessionIsActiveSession(currentSession) && this.$router.currentRoute.name === 'control') {
         const status = await this.$desktopSessions.getters.sessionStatus(this.currentSession)
         console.log(status)
         if (this.statusIsReady(status) && loopCount === 0) {
@@ -109,19 +116,14 @@ export default {
           } else if (status.podPhase === 'Running') {
             this.statusLines.push('Container has started')
           }
+        } else if (status.podPhase === 'Pending' && loopCount === 20) {
+          this.statusLines.push('This is taking a while...the server might be pulling the image for the first time')
         } else if (status.podPhase === 'Running' && status.running !== running) {
           running = status.running
           if (!running) {
             this.statusLines.push('Waiting for desktop to finish booting...')
           } else {
             this.statusLines.push('Desktop has finished booting')
-          }
-        } else if (status.podPhase === 'Running' && running && status.resolvable !== resolvable) {
-          resolvable = status.resolvable
-          if (!resolvable) {
-            this.statusLines.push('Waiting for desktop to be reachable...')
-          } else {
-            this.statusLines.push('Desktop is reachable')
           }
         }
         if (this.statusIsReady(status)) {
@@ -132,8 +134,8 @@ export default {
         await new Promise((resolve, reject) => setTimeout(resolve, 2000))
       }
 
-      // Extra check to see if we were cancelled wrongly
-      if (!this.sessionIsActiveSession(currentSession)) {
+      // Extra check to see if we were cancelled eaerly
+      if (!this.sessionIsActiveSession(currentSession || this.$router.currentRoute.name !== 'control')) {
         return false
       }
 
@@ -145,18 +147,21 @@ export default {
     },
 
     statusIsReady (status) {
-      return status.podPhase === 'Running' && status.running && status.resolvable
+      return status.podPhase === 'Running' && status.running
     },
 
     createConnection () {
       let rfb
       try {
         const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-        rfb = new RFB(document.getElementById('view'), url)
+        const target = document.getElementById('view')
+        if (target === null || target === undefined) {
+          return
+        }
+        rfb = new RFB(target, url)
         rfb.addEventListener('connect', this.connectedToServer)
         rfb.addEventListener('disconnect', this.disconnectedFromServer)
         rfb.resizeSession = true
-        rfb.autoreconnect = true
       } catch (err) {
         console.error(`Unable to create RFB client: ${err}`)
         this.disconnectedFromServer({ detail: { clean: false } })
@@ -170,23 +175,28 @@ export default {
     connectedToServer () {
       this.rfb.scaleViewport = true
       this.rfb.resizeSession = true
-      this.rfb._requestRemoteResize()
+      // this.rfb._requestRemoteResize()
     },
 
     disconnectedFromServer (e) {
       if (e.detail.clean) {
         console.log('Disconnected')
       } else {
+        this.resetStatus()
         console.log('Something went wrong, connection is closed')
+        this.checkStatusAndConnect()
       }
-      this.disconnect()
     },
 
-    async disconnect () {
+    resetStatus () {
       this.connecting = false
       this.connected = false
       this.statusLines = []
       this.className = 'info'
+    },
+
+    async disconnect () {
+      this.resetStatus()
       if (this.rfb !== null) {
         this.rfb.disconnect()
         this.rfb = null
@@ -216,8 +226,8 @@ export default {
 }
 .info {
   position: absolute;
-  top: 45%;
-  left: 45%;
+  top: 25%;
+  left: 40%;
   margin: 0 auto;
   text-align: center;
   font-size: 16px;

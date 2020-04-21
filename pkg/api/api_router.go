@@ -24,6 +24,8 @@ func (d *desktopAPI) buildRouter() error {
 	// Subrouter assumes /api prefix
 	protected.HandleFunc("/logout", d.Logout).Methods("POST")
 	protected.HandleFunc("/whoami", d.WhoAmI).Methods("GET")
+	protected.HandleFunc("/config", d.GetConfig).Methods("GET")
+	protected.HandleFunc("/grants", d.GetGrants).Methods("GET")
 
 	protected.HandleFunc("/users", d.GetUsers).Methods("GET")
 	protected.HandleFunc("/users", d.CreateUser).Methods("POST")

@@ -65,6 +65,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.Desktop{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch for changes to secondary resource Certificates and requeue the owner Desktop
 	err = c.Watch(&source.Kind{Type: &cm.Certificate{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,

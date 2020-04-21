@@ -17,38 +17,52 @@ import (
 
 type MethodPermissions struct {
 	RoleGrant      grants.RoleGrant
-	AllowOwnerFunc func(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed bool, err error)
+	AllowOwnerFunc func(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error)
 }
 
-func allowSameUser(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed bool, err error) {
+func allowSameUser(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
 	user := getUserFromRequest(r)
 	if reqUser.Name == user {
-		return true, nil
+		return true, true, nil
 	}
-	return false, nil
+	return false, false, nil
 }
 
-func allowSessionOwner(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed bool, err error) {
+func allowSessionOwner(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
 	nn := getNamespacedNameFromRequest(r)
 	found := &v1alpha1.Desktop{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
-		return false, err
+		return false, false, err
 	}
 	if !reflect.DeepEqual(found.GetLabels(), d.vdiCluster.GetUserDesktopLabels(reqUser.Name)) {
-		return false, nil
+		return false, false, nil
 	}
-	return true, nil
+	return true, true, nil
+}
+
+func allowAll(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
+	return true, false, nil
 }
 
 var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	"/api/whoami": {
 		"GET": {
-			AllowOwnerFunc: func(*desktopAPI, *rethinkdb.User, *http.Request) (bool, error) { return true, nil },
+			AllowOwnerFunc: allowAll,
 		},
 	},
 	"/api/logout": {
 		"POST": {
-			AllowOwnerFunc: func(*desktopAPI, *rethinkdb.User, *http.Request) (bool, error) { return true, nil },
+			AllowOwnerFunc: allowAll,
+		},
+	},
+	"/api/config": {
+		"GET": {
+			AllowOwnerFunc: allowAll,
+		},
+	},
+	"/api/grants": {
+		"GET": {
+			AllowOwnerFunc: allowAll,
 		},
 	},
 	"/api/users": {
@@ -141,14 +155,14 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 
 		// Check if the route supports validating resource ownership
 		if methodGrant.AllowOwnerFunc != nil {
-			if allowed, err := methodGrant.AllowOwnerFunc(d, userSession.User, r); err != nil {
+			if allowed, owner, err := methodGrant.AllowOwnerFunc(d, userSession.User, r); err != nil {
 				apiutil.ReturnAPIForbidden(err, "An error ocurred validating ownership of the requested resource", w)
 				result.Allowed = false
 				d.auditLog(result)
 				return
 			} else if allowed {
 				result.Allowed = true
-				result.FromOwner = true
+				result.FromOwner = owner
 				d.auditLog(result)
 				next.ServeHTTP(w, r)
 				return

@@ -5,7 +5,7 @@
     :flat="!active"
     dense
     auto-close stretch split
-    @click="this.onConnect"
+    @click="onConnect"
   >
     <template v-slot:label>
       <div>
@@ -19,7 +19,7 @@
     </template>
 
     <q-list>
-      <q-item clickable @click="this.onDisconnect">
+      <q-item clickable @click="onDisconnect">
         <q-item-section>Disconnect</q-item-section>
       </q-item>
     </q-list>
@@ -55,6 +55,7 @@ export default {
 
   methods: {
     onConnect () {
+      console.log(`Setting active session to ${this.namespace}/${this.name}`)
       this.$desktopSessions.dispatch('setActiveSession', this)
       if (this.$router.currentRoute.name !== 'control') {
         this.$root.$emit('set-active-title', 'Control')

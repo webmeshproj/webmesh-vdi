@@ -34,11 +34,13 @@
             if (link.onClick !== undefined) {
               link.onClick()
             } else {
-              setActive(link.title)
+              emitActive(link.title)
             }
           }"
         />
       </q-list>
+      <q-separator />
+      <UserControls />
     </q-drawer>
 
     <q-page-container>
@@ -50,6 +52,7 @@
 
 <script>
 import MenuItem from 'components/MenuItem'
+import UserControls from 'components/UserControls'
 import SessionTab from 'components/SessionTab'
 
 export default {
@@ -57,32 +60,18 @@ export default {
 
   components: {
     MenuItem,
-    SessionTab
+    SessionTab,
+    UserControls
   },
 
   created () {
     this.subscribeToBuses()
     document.onfullscreenchange = this.handleFullScreenChange
-    this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
     this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
-    this.$userStore.dispatch('initStore')
-      .then(() => {
-        if (this.$userStore.getters.isLoggedIn) {
-          this.pushIfNotCurrent('templates')
-          this.$root.$emit('set-active-title', 'Desktop Templates')
-        } else {
-          this.pushIfNotCurrent('login')
-        }
-      })
-      .catch((err) => {
-        this.notifyError(err)
-        this.pushIfNotCurrent('login')
-      })
   },
 
   beforeDestroy () {
     this.unsubscribeFromBuses()
-    this.unsubscribeUsers()
     this.unsubscribeSessions()
   },
 
@@ -119,37 +108,8 @@ export default {
         {
           title: 'Settings',
           icon: 'settings',
-          link: 'customize',
+          link: 'settings',
           active: false
-        },
-        {
-          title: 'Login',
-          icon: 'meeting_room',
-          link: 'login',
-          active: false,
-          hidden: false,
-          name: 'login'
-        },
-        {
-          title: 'Anonymous',
-          icon: 'supervisor_account',
-          active: false,
-          hidden: true,
-          name: 'user',
-          onClick: () => {},
-          children: [
-            {
-              title: 'Log out',
-              icon: 'desktop_access_disabled',
-              link: 'login',
-              onClick: () => {
-                this.$userStore.dispatch('logout')
-                this.$desktopSessions.dispatch('clearSessions')
-                this.$root.$emit('set-logged-out')
-                this.pushIfNotCurrent('login')
-              }
-            }
-          ]
         }
       ]
     }
@@ -164,27 +124,19 @@ export default {
     },
 
     subscribeToBuses () {
-      this.$root.$on('set-active-title', this.setActive)
-      this.$root.$on('set-logged-in', this.setLoggedIn)
-      this.$root.$on('set-logged-out', this.setLoggedOut)
       this.$root.$on('notify-error', this.notifyError)
     },
 
     unsubscribeFromBuses () {
-      this.$root.$off('set-active-title', this.setActive)
-      this.$root.$off('set-logged-in', this.setLoggedIn)
-      this.$root.$off('set-logged-out', this.setLoggedOut)
       this.$root.$off('notify-error', this.notifyError)
-    },
-
-    handleAuthChange (mutation, state) {
-      if (mutation.type === 'auth_success') {
-        this.setLoggedIn(this.$userStore.getters.username)
-      }
     },
 
     handleSessionsChange (mutation, state) {
       this.controlSessions = this.$desktopSessions.getters.sessions
+    },
+
+    emitActive (title) {
+      this.$root.$emit('set-active-title', title)
     },
 
     notifyError (err) {
@@ -214,50 +166,6 @@ export default {
         this.revealHeader = true
         this.$root.$emit('set-fullscreen', false)
       }
-    },
-
-    setLoggedIn (username) {
-      const newMenuItems = []
-      this.menuItems.forEach((item) => {
-        if (item.name === 'user') {
-          item.hidden = false
-          item.title = username
-        } else if (item.name === 'login') {
-          item.hidden = true
-        }
-        newMenuItems.push(item)
-      })
-      this.menuItems = newMenuItems
-    },
-
-    setLoggedOut () {
-      const newMenuItems = []
-      this.menuItems.forEach((item) => {
-        if (item.name === 'user') {
-          item.hidden = true
-        } else if (item.name === 'login') {
-          item.active = true
-          item.hidden = false
-        } else {
-          item.active = false
-        }
-        newMenuItems.push(item)
-      })
-      this.menuItems = newMenuItems
-    },
-
-    setActive (title) {
-      const newMenuItems = []
-      this.menuItems.forEach((item) => {
-        if (title === item.title) {
-          console.log(`Setting ${item.title} to active menu item`)
-          item.active = true
-        } else {
-          item.active = false
-        }
-        newMenuItems.push(item)
-      })
-      this.menuItems = newMenuItems
     }
   }
 }
