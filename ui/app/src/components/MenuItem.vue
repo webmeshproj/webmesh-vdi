@@ -22,7 +22,6 @@
 
     <q-expansion-item
       v-else
-      v-model="active"
       :label="title"
       :caption="caption"
       :icon="icon"
@@ -34,11 +33,11 @@
     >
     <q-list>
       <MenuItem
-        v-for="link in children"
-        :key="link.title"
-        v-bind="link"
+        v-for="child in children"
+        :key="child.title"
+        v-bind="child"
         :isChild="true"
-        :onClick="link.onClick"
+        :onClick="child.onClick"
       />
     </q-list>
     </q-expansion-item>

@@ -11,12 +11,12 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      {
-        path: '',
-        name: '',
-        component: DesktopTemplates,
-        meta: { requiresAuth: true }
-      },
+      // {
+      //   path: '',
+      //   name: '',
+      //   component: DesktopTemplates,
+      //   meta: { requiresAuth: true }
+      // },
       {
         path: 'login',
         name: 'login',

@@ -30,7 +30,13 @@
           v-for="link in menuItems"
           :key="link.title"
           v-bind="link"
-          :onClick="() => { setActive(link.title) }"
+          :onClick="() => {
+            if (link.onClick !== undefined) {
+              link.onClick()
+            } else {
+              setActive(link.title)
+            }
+          }"
         />
       </q-list>
     </q-drawer>
@@ -59,6 +65,19 @@ export default {
     document.onfullscreenchange = this.handleFullScreenChange
     this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
     this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
+    this.$userStore.dispatch('initStore')
+      .then(() => {
+        if (this.$userStore.getters.isLoggedIn) {
+          this.pushIfNotCurrent('templates')
+          this.$root.$emit('set-active-title', 'Desktop Templates')
+        } else {
+          this.pushIfNotCurrent('login')
+        }
+      })
+      .catch((err) => {
+        this.notifyError(err)
+        this.pushIfNotCurrent('login')
+      })
   },
 
   beforeDestroy () {
@@ -117,14 +136,17 @@ export default {
           active: false,
           hidden: true,
           name: 'user',
+          onClick: () => {},
           children: [
             {
               title: 'Log out',
               icon: 'desktop_access_disabled',
+              link: 'login',
               onClick: () => {
                 this.$userStore.dispatch('logout')
                 this.$desktopSessions.dispatch('clearSessions')
                 this.$root.$emit('set-logged-out')
+                this.pushIfNotCurrent('login')
               }
             }
           ]
@@ -134,6 +156,12 @@ export default {
   },
 
   methods: {
+
+    pushIfNotCurrent (route) {
+      if (this.$router.currentRoute.name !== route) {
+        this.$router.push(route)
+      }
+    },
 
     subscribeToBuses () {
       this.$root.$on('set-active-title', this.setActive)
@@ -208,7 +236,10 @@ export default {
         if (item.name === 'user') {
           item.hidden = true
         } else if (item.name === 'login') {
+          item.active = true
           item.hidden = false
+        } else {
+          item.active = false
         }
         newMenuItems.push(item)
       })

@@ -46,6 +46,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			AllowOwnerFunc: func(*desktopAPI, *rethinkdb.User, *http.Request) (bool, error) { return true, nil },
 		},
 	},
+	"/api/logout": {
+		"POST": {
+			AllowOwnerFunc: func(*desktopAPI, *rethinkdb.User, *http.Request) (bool, error) { return true, nil },
+		},
+	},
 	"/api/users": {
 		"GET":  {RoleGrant: grants.ReadUsers},
 		"POST": {RoleGrant: grants.WriteUsers},
