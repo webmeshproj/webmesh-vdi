@@ -39,9 +39,9 @@ type PostSessionsResponse struct {
 
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
 	sess := GetRequestUserSession(r)
-	req := PostSessionsRequest{}
-	if err := apiutil.UnmarshalRequest(r, &req); err != nil {
-		apiutil.ReturnAPIError(err, w)
+	req := GetRequestObject(r).(*PostSessionsRequest)
+	if req == nil {
+		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
 	if req.Template == "" {
@@ -50,6 +50,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	}
 
 	desktop := d.newDesktopForRequest(req, sess.User.Name)
+
 	if err := d.client.Create(context.TODO(), desktop); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -62,7 +63,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	}, w)
 }
 
-func (d *desktopAPI) newDesktopForRequest(req PostSessionsRequest, username string) *v1alpha1.Desktop {
+func (d *desktopAPI) newDesktopForRequest(req *PostSessionsRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),

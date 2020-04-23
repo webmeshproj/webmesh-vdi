@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 )
 
 func (d *desktopAPI) GetGrants(w http.ResponseWriter, r *http.Request) {

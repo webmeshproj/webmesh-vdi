@@ -3,19 +3,14 @@ package rethinkdb
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
+	"github.com/google/uuid"
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 
-type UserSession struct {
-	Token     string    `rethinkdb:"id" json:"token"`
-	ExpiresAt time.Time `rethinkdb:"expires_at" json:"expiresAt"`
-	User      *User     `rethinkdb:"user_id,reference" rethinkdb_ref:"id" json:"user"`
-}
-
-func (d *rethinkDBSession) GetUserSession(id string) (*UserSession, error) {
+func (d *rethinkDBSession) GetUserSession(id string) (*types.UserSession, error) {
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(id).Do(func(row rdb.Term) interface{} {
 		return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
 			return map[string]interface{}{
@@ -36,24 +31,24 @@ func (d *rethinkDBSession) GetUserSession(id string) (*UserSession, error) {
 	if cursor.IsNil() {
 		return nil, errors.NewUserSessionNotFoundError(id)
 	}
-	session := &UserSession{}
+	session := &types.UserSession{}
 	if err := cursorIntoObj(cursor, session); err != nil {
 		return nil, err
 	}
 	for _, role := range session.User.Roles {
-		role.GrantNames = role.Grants.Names()
+		role.GrantNames = role.RoleGrants().Names()
 	}
 	return session, nil
 }
 
-func (d *rethinkDBSession) CreateUserSession(user *User) (*UserSession, error) {
-	session := &UserSession{
+func (d *rethinkDBSession) CreateUserSession(user *types.User) (*types.UserSession, error) {
+	session := &types.UserSession{
 		Token:     uuid.New().String(),
 		ExpiresAt: time.Now().Add(DefaultSessionLength),
 		User:      user,
 	}
 	for _, role := range session.User.Roles {
-		role.GrantNames = role.Grants.Names()
+		role.GrantNames = role.RoleGrants().Names()
 	}
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Insert(session).Run(d.session)
 	if err != nil {
@@ -62,7 +57,7 @@ func (d *rethinkDBSession) CreateUserSession(user *User) (*UserSession, error) {
 	return session, cursor.Err()
 }
 
-func (d *rethinkDBSession) DeleteUserSession(session *UserSession) error {
+func (d *rethinkDBSession) DeleteUserSession(session *types.UserSession) error {
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(session.Token).Delete().Run(d.session)
 	if err != nil {
 		return err

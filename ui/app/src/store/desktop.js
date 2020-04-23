@@ -43,13 +43,15 @@ export const DesktopSessions = new Vuex.Store({
   },
 
   actions: {
-    async newSession ({ commit }, tmpl) {
+    async newSession ({ commit }, { template, namespace }) {
       try {
-        const session = await Vue.prototype.$axios.post('/api/sessions', { template: tmpl })
+        const data = { template: template, namespace: namespace }
+        console.log(data)
+        const session = await Vue.prototype.$axios.post('/api/sessions', data)
         commit('new_session', session.data)
         commit('set_active_session', session.data)
       } catch (err) {
-        console.log(`Failed to launch new session from ${tmpl}`)
+        console.log(`Failed to launch new session from ${template}`)
         console.error(err)
         throw err
       }

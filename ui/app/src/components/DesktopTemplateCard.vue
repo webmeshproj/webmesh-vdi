@@ -52,13 +52,38 @@
     <q-separator />
 
     <q-card-actions>
-      <q-btn
-        color="primary"
-        @click="createNewSession()"
-        style="width: 150px"
-      >
-        Launch Desktop
-      </q-btn>
+      <div class="wrapper">
+        <div class="namespace-select">
+          <q-select
+            filled
+            v-model="namespaceSelection"
+            use-input
+            borderless
+            dense
+            @filter="filterFn"
+            label="Namespace: (default)"
+            :options="namespaces"
+            style="width: 300px"
+          >
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">
+                  No results
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+        </div>
+        <div class="launch-button">
+          <q-btn
+            color="primary"
+            @click="createNewSession()"
+            style="width: 150px"
+          >
+            Launch Desktop
+          </q-btn>
+        </div>
+      </div>
     </q-card-actions>
   </q-card>
 </template>
@@ -83,7 +108,10 @@ export default {
   },
 
   data () {
-    return {}
+    return {
+      namespaceSelection: null,
+      namespaces: []
+    }
   },
 
   computed: {
@@ -98,9 +126,29 @@ export default {
 
   methods: {
 
+    async filterFn (val, update) {
+      try {
+        const res = await this.$axios.get('/api/namespaces')
+        if (res.data.length === 1) {
+          this.namespaceSelection = res.data[0]
+        }
+        if (val === '') {
+          update(() => {
+            this.namespaces = res.data
+          })
+        }
+        update(() => {
+          const needle = val.toLowerCase()
+          this.namespaces = res.data.filter(v => v.toLowerCase().indexOf(needle) > -1)
+        })
+      } catch (err) {
+        this.$root.$emit('notify-error', err)
+      }
+    },
+
     async createNewSession () {
       try {
-        await this.$desktopSessions.dispatch('newSession', this.metadata.name)
+        await this.$desktopSessions.dispatch('newSession', { template: this.metadata.name, namespace: this.namespaceSelection })
         this.$root.$emit('set-active-title', 'Control')
         this.$router.push('control')
       } catch (err) {
@@ -119,4 +167,17 @@ export default {
 
 .inline-tags
   display: inline
+
+.namespace-select
+  position: absolute
+  left: auto
+  height: 45px
+
+.launch-button
+  position: absolute
+  left: 325px
+
+.wrapper
+  position: relative
+  height: 45px
 </style>

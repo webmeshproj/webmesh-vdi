@@ -1,9 +1,10 @@
 package rethinkdb
 
 import (
+	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/grants"
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
@@ -62,7 +63,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 			return err
 		}
 		rdbLogger.Info("Creating new 'admin' role...")
-		if err := r.CreateRole(&Role{
+		if err := r.CreateRole(&types.Role{
 			Name:   adminRole,
 			Grants: grants.All,
 		}); err != nil {
@@ -76,7 +77,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 			return err
 		}
 		rdbLogger.Info("Creating new 'launch-templates' role...")
-		if err := r.CreateRole(&Role{
+		if err := r.CreateRole(&types.Role{
 			Name:   launchTemplateRole,
 			Grants: grants.LaunchTemplatesGrant,
 		}); err != nil {
@@ -90,7 +91,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 			return err
 		}
 		rdbLogger.Info("Creating new 'admin' user...")
-		if err := r.CreateUser(&User{Name: adminUser, Password: adminPass, Roles: []*Role{{Name: adminRole}}}); err != nil {
+		if err := r.CreateUser(&types.User{Name: adminUser, Password: adminPass, Roles: []*types.Role{{Name: adminRole}}}); err != nil {
 			return err
 		}
 	} else if user.PasswordSalt == "" || !util.PasswordMatchesHash(adminPass, user.PasswordSalt) {
@@ -107,14 +108,14 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 				return err
 			}
 			rdbLogger.Info("Creating new 'anonymous' user...")
-			if err := r.CreateUser(&User{Name: anonymousUser, Password: "", Roles: []*Role{{Name: launchTemplateRole}}}); err != nil {
+			if err := r.CreateUser(&types.User{Name: anonymousUser, Password: "", Roles: []*types.Role{{Name: launchTemplateRole}}}); err != nil {
 				return err
 			}
 		}
 	} else {
 		if _, err := r.GetUser(anonymousUser); err == nil {
 			rdbLogger.Info("Deleting 'anonymous' user...")
-			if err := r.DeleteUser(&User{Name: anonymousUser}); err != nil {
+			if err := r.DeleteUser(&types.User{Name: anonymousUser}); err != nil {
 				return err
 			}
 		} else if !errors.IsUserNotFoundError(err) {

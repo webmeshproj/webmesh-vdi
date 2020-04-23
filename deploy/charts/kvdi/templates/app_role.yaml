@@ -19,8 +19,9 @@ rules:
 - apiGroups:
   - ''
   resources:
-  - services
   - pods
+  - services
+  - namespaces
   verbs:
   - get
   - list

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/grants"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
+	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -16,8 +16,9 @@ var auditLogger = logf.Log.WithName("api_audit")
 type AuditResult struct {
 	Allowed     bool
 	FromOwner   bool
+	Resource    string
 	Grant       grants.RoleGrant
-	UserSession *rethinkdb.UserSession
+	UserSession *types.UserSession
 	Request     *http.Request
 }
 
@@ -34,6 +35,9 @@ func buildAuditMsg(result *AuditResult) string {
 		strings.Join(result.Grant.Names(), ","),
 		result.Request.URL.Path,
 	)
+	if result.Resource != "" {
+		msg = msg + fmt.Sprintf(" => %s", result.Resource)
+	}
 	if result.FromOwner {
 		msg = msg + " (OWNER)"
 	}

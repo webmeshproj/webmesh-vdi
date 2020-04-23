@@ -9,6 +9,7 @@ rules:
     - namespaces
   verbs:
     - watch
+    - get
     - list
 - apiGroups:
   - rbac.authorization.k8s.io

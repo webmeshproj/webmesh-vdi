@@ -5,6 +5,8 @@ type RoleGrant int
 const (
 	ReadUsers RoleGrant = 1 << iota
 	WriteUsers
+	ReadGroups
+	WriteGroups
 	ReadRoles
 	WriteRoles
 	ReadTemplates
@@ -17,6 +19,7 @@ const (
 
 const (
 	All RoleGrant = ReadUsers | WriteUsers |
+		ReadGroups | WriteGroups |
 		ReadRoles | WriteRoles |
 		ReadTemplates | WriteTemplates |
 		ReadDesktopSessions | WriteDesktopSessions |
@@ -28,6 +31,8 @@ const (
 var Grants = []RoleGrant{
 	ReadUsers,
 	WriteUsers,
+	ReadGroups,
+	WriteGroups,
 	ReadRoles,
 	WriteRoles,
 	ReadTemplates,
@@ -41,6 +46,8 @@ var Grants = []RoleGrant{
 var GrantNames = []string{
 	"ReadUsers",
 	"WriteUsers",
+	"ReadGroups",
+	"WriteGroups",
 	"ReadRoles",
 	"WriteRoles",
 	"ReadTemplates",
@@ -54,6 +61,9 @@ var GrantNames = []string{
 func (r RoleGrant) Has(grant RoleGrant) bool { return r&grant != 0 }
 
 func (r RoleGrant) Names() []string {
+	if r == All {
+		return []string{"ADMIN"}
+	}
 	var result []string
 	for i := 0; i < len(GrantNames); i++ {
 		if r&(1<<uint(i)) != 0 {

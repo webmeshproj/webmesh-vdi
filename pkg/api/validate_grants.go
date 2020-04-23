@@ -8,19 +8,22 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/grants"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
+type AllowFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error)
+type OverrideFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource string, err error)
+
 type MethodPermissions struct {
-	RoleGrant      grants.RoleGrant
-	AllowOwnerFunc func(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error)
+	RoleGrant    grants.RoleGrant
+	AllowFunc    AllowFunc
+	ResourceFunc OverrideFunc
 }
 
-func allowSameUser(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
+func allowSameUser(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
 	user := getUserFromRequest(r)
 	if reqUser.Name == user {
 		return true, true, nil
@@ -28,7 +31,7 @@ func allowSameUser(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (all
 	return false, false, nil
 }
 
-func allowSessionOwner(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
+func allowSessionOwner(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
 	nn := getNamespacedNameFromRequest(r)
 	found := &v1alpha1.Desktop{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
@@ -40,29 +43,43 @@ func allowSessionOwner(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) 
 	return true, true, nil
 }
 
-func allowAll(d *desktopAPI, reqUser *rethinkdb.User, r *http.Request) (allowed, owner bool, err error) {
+func allowAll(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
 	return true, false, nil
+}
+
+func checkUserLaunchRestraints(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource string, err error) {
+	reqObj := GetRequestObject(r).(*PostSessionsRequest)
+	if reqObj == nil {
+		return false, "Invalid", errors.New("PostSessionsRequest object is nil")
+	}
+	resourceName := fmt.Sprintf("%s/%s", reqObj.GetNamespace(), reqObj.GetTemplate())
+	return reqUser.CanLaunch(reqObj.GetNamespace(), reqObj.GetTemplate()), resourceName, nil
 }
 
 var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	"/api/whoami": {
 		"GET": {
-			AllowOwnerFunc: allowAll,
+			AllowFunc: allowAll,
 		},
 	},
 	"/api/logout": {
 		"POST": {
-			AllowOwnerFunc: allowAll,
+			AllowFunc: allowAll,
 		},
 	},
 	"/api/config": {
 		"GET": {
-			AllowOwnerFunc: allowAll,
+			AllowFunc: allowAll,
 		},
 	},
 	"/api/grants": {
 		"GET": {
-			AllowOwnerFunc: allowAll,
+			AllowFunc: allowAll,
+		},
+	},
+	"/api/namespaces": {
+		"GET": {
+			AllowFunc: allowAll,
 		},
 	},
 	"/api/users": {
@@ -71,12 +88,12 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/users/{user}": {
 		"GET": {
-			RoleGrant:      grants.ReadUsers,
-			AllowOwnerFunc: allowSameUser,
+			RoleGrant: grants.ReadUsers,
+			AllowFunc: allowSameUser,
 		},
 		"PUT": {
-			RoleGrant:      grants.WriteUsers,
-			AllowOwnerFunc: allowSameUser,
+			RoleGrant: grants.WriteUsers,
+			AllowFunc: allowSameUser,
 		},
 		"DELETE": {RoleGrant: grants.WriteUsers},
 	},
@@ -93,33 +110,27 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {RoleGrant: grants.ReadTemplates},
 	},
 	"/api/sessions": {
-		"POST": {RoleGrant: grants.LaunchTemplates},
+		"POST": {
+			RoleGrant:    grants.LaunchTemplates,
+			ResourceFunc: checkUserLaunchRestraints,
+		},
 	},
 	"/api/sessions/{namespace}/{name}": {
 		"GET": {
-			RoleGrant:      grants.ReadDesktopSessions,
-			AllowOwnerFunc: allowSessionOwner,
+			RoleGrant: grants.ReadDesktopSessions,
+			AllowFunc: allowSessionOwner,
 		},
 		"DELETE": {
-			RoleGrant:      grants.WriteDesktopSessions,
-			AllowOwnerFunc: allowSessionOwner,
+			RoleGrant: grants.WriteDesktopSessions,
+			AllowFunc: allowSessionOwner,
 		},
 	},
 	"/api/websockify/{namespace}/{name}": {
 		"GET": {
-			RoleGrant:      grants.UseDesktopSessions,
-			AllowOwnerFunc: allowSessionOwner,
+			RoleGrant: grants.UseDesktopSessions,
+			AllowFunc: allowSessionOwner,
 		},
 	},
-}
-
-func getGorillaPath(r *http.Request) string {
-	vars := mux.Vars(r)
-	path := strings.TrimSuffix(r.URL.Path, "/")
-	for k, v := range vars {
-		path = strings.Replace(path, v, fmt.Sprintf("{%s}", k), 1)
-	}
-	return path
 }
 
 func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
@@ -154,9 +165,9 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 		result.Grant = methodGrant.RoleGrant
 
 		// Check if the route supports validating resource ownership
-		if methodGrant.AllowOwnerFunc != nil {
-			if allowed, owner, err := methodGrant.AllowOwnerFunc(d, userSession.User, r); err != nil {
-				apiutil.ReturnAPIForbidden(err, "An error ocurred validating ownership of the requested resource", w)
+		if methodGrant.AllowFunc != nil {
+			if allowed, owner, err := methodGrant.AllowFunc(d, userSession.User, r); err != nil {
+				apiutil.ReturnAPIForbidden(err, "An error ocurred validating permission to the requested resource", w)
 				result.Allowed = false
 				d.auditLog(result)
 				return
@@ -180,6 +191,25 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 			result.Allowed = false
 			d.auditLog(result)
 			return
+		}
+
+		if methodGrant.ResourceFunc != nil {
+			if allowed, resource, err := methodGrant.ResourceFunc(d, userSession.User, r); err != nil {
+				apiutil.ReturnAPIForbidden(err, "An error ocurred validating permission to the requested resource", w)
+				result.Allowed = false
+				d.auditLog(result)
+				return
+			} else {
+				result.Resource = resource
+				if !allowed {
+					result.Allowed = false
+					names := methodGrant.RoleGrant.Names()
+					msg := fmt.Sprintf("%s cannot %s on resource %s", userSession.User.Name, strings.Join(names, ","), resource)
+					apiutil.ReturnAPIForbidden(err, msg, w)
+					d.auditLog(result)
+					return
+				}
+			}
 		}
 
 		result.Allowed = true

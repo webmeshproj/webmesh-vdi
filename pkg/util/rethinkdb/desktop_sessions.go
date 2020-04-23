@@ -1,13 +1,15 @@
 package rethinkdb
 
+import "github.com/tinyzimmer/kvdi/pkg/auth/types"
+
 // Just scaffolding - will probably stick with using the k8s api as the source
 // of truth for this.
 
 type DesktopSession struct {
-	Endpoint  string `rethinkdb:"id" json:"endpoint"`
-	Name      string `rethinkdb:"name" json:"name"`
-	Namespace string `rethinkdb:"namespace" json:"namespace"`
-	User      *User  `rethinkdb:"user_id,reference" rethinkdb_ref:"id" json:"user"`
+	Endpoint  string      `rethinkdb:"id" json:"endpoint"`
+	Name      string      `rethinkdb:"name" json:"name"`
+	Namespace string      `rethinkdb:"namespace" json:"namespace"`
+	User      *types.User `rethinkdb:"user_id,reference" rethinkdb_ref:"id" json:"user"`
 }
 
 func (d *rethinkDBSession) GetDesktopSession(id string) (*DesktopSession, error) {
