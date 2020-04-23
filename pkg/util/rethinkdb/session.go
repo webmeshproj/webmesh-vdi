@@ -13,17 +13,24 @@ var rdbLogger = logf.Log.WithName("rethinkdb")
 
 type RethinkDBSession interface {
 	Migrate(adminPass string, replicas, shards int32, allowAnonymous bool) error
+
 	GetAllUsers() ([]types.User, error)
 	GetUser(id string) (*types.User, error)
 	CreateUser(*types.User) error
+	UpdateUser(*types.User) error
 	SetUserPassword(*types.User, string) error
 	DeleteUser(*types.User) error
+
 	GetAllRoles() ([]*types.Role, error)
 	GetRole(string) (*types.Role, error)
 	CreateRole(*types.Role) error
+	UpdateRole(*types.Role) error
+	DeleteRole(*types.Role) error
+
 	GetUserSession(id string) (*types.UserSession, error)
 	CreateUserSession(*types.User) (*types.UserSession, error)
 	DeleteUserSession(*types.UserSession) error
+
 	Close() error
 }
 

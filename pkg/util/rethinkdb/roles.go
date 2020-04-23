@@ -48,3 +48,19 @@ func (d *rethinkDBSession) CreateRole(role *types.Role) error {
 	}
 	return cursor.Err()
 }
+
+func (d *rethinkDBSession) UpdateRole(role *types.Role) error {
+	cursor, err := rdb.DB(kvdiDB).Table(rolesTable).Get(role.Name).Update(role).Run(d.session)
+	if err != nil {
+		return err
+	}
+	return cursor.Err()
+}
+
+func (d *rethinkDBSession) DeleteRole(role *types.Role) error {
+	cursor, err := rdb.DB(kvdiDB).Table(rolesTable).Get(role.Name).Delete().Run(d.session)
+	if err != nil {
+		return err
+	}
+	return cursor.Err()
+}

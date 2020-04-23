@@ -19,5 +19,5 @@ func (d *desktopAPI) DeleteDesktopSession(w http.ResponseWriter, r *http.Request
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(map[string]bool{"ok": true}, w)
+	apiutil.WriteOK(w)
 }

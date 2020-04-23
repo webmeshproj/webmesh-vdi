@@ -380,6 +380,11 @@ func (in *VDIClusterSpec) DeepCopyInto(out *VDIClusterSpec) {
 		*out = make([]v1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	if in.UserDataSpec != nil {
+		in, out := &in.UserDataSpec, &out.UserDataSpec
+		*out = new(v1.PersistentVolumeClaimSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.App != nil {
 		in, out := &in.App, &out.App
 		*out = new(AppConfig)

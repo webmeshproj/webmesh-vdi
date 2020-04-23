@@ -28,6 +28,25 @@ func BoolPointer(b bool) *bool { return &b }
 
 func Int64Ptr(i int64) *int64 { return &i }
 
+func StringSliceContains(ss []string, s string) bool {
+	for _, x := range ss {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
+
+func StringSliceRemove(ss []string, s string) []string {
+	newSlice := make([]string, 0)
+	for _, x := range ss {
+		if x != s {
+			newSlice = append(newSlice, x)
+		}
+	}
+	return newSlice
+}
+
 func ParseFlagsAndSetupLogging() {
 	pflag.CommandLine.AddFlagSet(zap.FlagSet())
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)

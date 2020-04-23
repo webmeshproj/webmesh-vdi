@@ -1,8 +1,11 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,7 +66,25 @@ func (c *VDICluster) OwnerReferences() []metav1.OwnerReference {
 			Name:               c.GetName(),
 			UID:                c.GetUID(),
 			Controller:         &trueVal,
-			BlockOwnerDeletion: &trueVal,
+			BlockOwnerDeletion: &falseVal,
 		},
+	}
+}
+
+func (c *VDICluster) GetUserdataVolumeSpec() *corev1.PersistentVolumeClaimSpec {
+	if c.Spec.UserDataSpec != nil {
+		return c.Spec.UserDataSpec
+	}
+	return nil
+}
+
+func (c *VDICluster) GetUserdataVolumeName(username string) string {
+	return fmt.Sprintf("%s-%s-userdata", c.GetName(), username)
+}
+
+func (c *VDICluster) GetUserdataVolumeMapName() types.NamespacedName {
+	return types.NamespacedName{
+		Name:      fmt.Sprintf("%s-userdata-volume-map", c.GetName()),
+		Namespace: c.GetCoreNamespace(),
 	}
 }

@@ -50,6 +50,11 @@ export default {
           icon: 'cloud_done',
           message: `Logged in as ${this.username}`
         })
+        try {
+          this.$configStore.dispatch('getServerConfig')
+        } catch (err) {
+          this.$root.$emit('notify-error', err)
+        }
         this.$root.$emit('set-logged-in', this.username)
         this.$root.$emit('set-active-title', 'Desktop Templates')
         this.$router.push('templates')

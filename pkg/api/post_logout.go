@@ -24,16 +24,22 @@ func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	desktops := &v1alpha1.DesktopList{}
-	if err := d.client.List(context.TODO(), desktops, client.InNamespace(metav1.NamespaceAll), d.vdiCluster.GetUserDesktopsSelector(userSession.User.Name)); err != nil {
+	if err := d.CleanupUserDesktops(userSession.User.Name); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
+	apiutil.WriteOK(w)
+}
+
+func (d *desktopAPI) CleanupUserDesktops(username string) error {
+	desktops := &v1alpha1.DesktopList{}
+	if err := d.client.List(context.TODO(), desktops, client.InNamespace(metav1.NamespaceAll), d.vdiCluster.GetUserDesktopsSelector(username)); err != nil {
+		return err
+	}
 	for _, item := range desktops.Items {
 		if err := d.client.Delete(context.TODO(), &item); err != nil {
-			apiutil.ReturnAPIError(err, w)
-			return
+			return err
 		}
 	}
-	apiutil.WriteJSON(map[string]bool{"ok": true}, w)
+	return nil
 }

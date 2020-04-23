@@ -52,3 +52,9 @@ func UnmarshalRequest(r *http.Request, in interface{}) error {
 	}
 	return json.Unmarshal(body, in)
 }
+
+func WriteOK(w http.ResponseWriter) {
+	WriteJSON(map[string]bool{
+		"ok": true,
+	}, w)
+}

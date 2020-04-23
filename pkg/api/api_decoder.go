@@ -15,6 +15,30 @@ var Decoders = map[string]map[string]DecoderFunc{
 			return req, apiutil.UnmarshalRequest(r, req)
 		},
 	},
+	"/api/users": {
+		"POST": func(r *http.Request) (interface{}, error) {
+			req := &PostUserRequest{}
+			return req, apiutil.UnmarshalRequest(r, req)
+		},
+	},
+	"/api/users/{user}": {
+		"PUT": func(r *http.Request) (interface{}, error) {
+			req := &PostUserRequest{}
+			return req, apiutil.UnmarshalRequest(r, req)
+		},
+	},
+	"/api/roles": {
+		"POST": func(r *http.Request) (interface{}, error) {
+			req := &PostRoleRequest{}
+			return req, apiutil.UnmarshalRequest(r, req)
+		},
+	},
+	"/api/roles/{role}": {
+		"PUT": func(r *http.Request) (interface{}, error) {
+			req := &PostRoleRequest{}
+			return req, apiutil.UnmarshalRequest(r, req)
+		},
+	},
 }
 
 func DecodeRequest(next http.Handler) http.Handler {

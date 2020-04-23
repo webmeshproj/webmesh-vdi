@@ -84,6 +84,10 @@ export default {
     this.$userStore.dispatch('initStore')
       .then(() => {
         if (this.$userStore.getters.isLoggedIn) {
+          this.$configStore.dispatch('getServerConfig')
+            .catch((err) => {
+              this.$root.$emit('notify-error', err)
+            })
           this.pushIfNotCurrent('templates')
           this.$root.$emit('set-active-title', 'Desktop Templates')
         } else {

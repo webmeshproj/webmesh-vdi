@@ -101,7 +101,7 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 
 // GetDesktopVolumes returns the volumes to mount to desktop pods.
 // TODO: Persistent for users can be added here.
-func (t *DesktopTemplate) GetDesktopVolumes(desktop *Desktop) []corev1.Volume {
+func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Desktop) []corev1.Volume {
 	volumes := []corev1.Volume{
 		{
 			Name: "vnc-sock",
@@ -126,6 +126,23 @@ func (t *DesktopTemplate) GetDesktopVolumes(desktop *Desktop) []corev1.Volume {
 			},
 		},
 	}
+	if cluster.GetUserdataVolumeSpec() != nil {
+		volumes = append(volumes, corev1.Volume{
+			Name: "home",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: cluster.GetUserdataVolumeName(desktop.GetUser()),
+				},
+			},
+		})
+	} else {
+		volumes = append(volumes, corev1.Volume{
+			Name: "home",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+	}
 	if t.Spec.Config == nil {
 		return volumes
 	}
@@ -143,7 +160,7 @@ func (t *DesktopTemplate) GetDesktopVolumes(desktop *Desktop) []corev1.Volume {
 }
 
 // GetDesktopVolumeMounts returns the volume mounts for the main desktop container.
-func (t *DesktopTemplate) GetDesktopVolumeMounts(desktop *Desktop) []corev1.VolumeMount {
+func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *Desktop) []corev1.VolumeMount {
 	mounts := []corev1.VolumeMount{
 		{
 			Name:      "vnc-sock",
@@ -152,6 +169,10 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(desktop *Desktop) []corev1.Volu
 		{
 			Name:      "shm",
 			MountPath: "/dev/shm",
+		},
+		{
+			Name:      "home",
+			MountPath: fmt.Sprintf("/home/%s", desktop.GetUser()),
 		},
 	}
 	if t.Spec.Config == nil {

@@ -23,7 +23,7 @@
 import RFB from '@novnc/novnc/core/rfb'
 import { init_logging as initLogging } from '@novnc/novnc/core/util/logging.js'
 
-initLogging('info')
+initLogging('error')
 
 function getWebsockifyAddr (namespace, name, token) {
   return `${window.location.origin.replace('http', 'ws')}/api/websockify/${namespace}/${name}?token=${token}`

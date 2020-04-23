@@ -31,7 +31,13 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			apiutil.ReturnAPIForbidden(err, "Could not retrieve user session", w)
 			return
 		} else if userSess.ExpiresAt.Before(time.Now()) {
-			// TODO cleanup the session (maybe a seperate reaper process)
+			if err := sess.DeleteUserSession(userSess); err != nil {
+				apiLogger.Error(err, "Failed to remove user session from database", "Session.Token", userSess.Token)
+			}
+			if err := d.CleanupUserDesktops(userSess.User.Name); err != nil {
+				apiLogger.Error(err, "Failed to cleanup user desktops", "User.Name", userSess.User.Name)
+			}
+			// TODO - need a separate reaper process
 			apiutil.ReturnAPIForbidden(nil, "User session has expired", w)
 			return
 		}

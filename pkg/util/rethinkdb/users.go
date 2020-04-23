@@ -71,17 +71,21 @@ func (d *rethinkDBSession) CreateUser(user *types.User) error {
 	return cursor.Err()
 }
 
+func (d *rethinkDBSession) UpdateUser(user *types.User) error {
+	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Update(user).Run(d.session)
+	if err != nil {
+		return err
+	}
+	return cursor.Err()
+}
+
 func (d *rethinkDBSession) SetUserPassword(user *types.User, password string) error {
 	hash, err := util.HashPassword(password)
 	if err != nil {
 		return err
 	}
 	user.PasswordSalt = string(hash)
-	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Update(user).Run(d.session)
-	if err != nil {
-		return err
-	}
-	return cursor.Err()
+	return d.UpdateUser(user)
 }
 
 func (d *rethinkDBSession) DeleteUser(user *types.User) error {

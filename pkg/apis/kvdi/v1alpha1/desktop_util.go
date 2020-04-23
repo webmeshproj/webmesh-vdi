@@ -48,7 +48,7 @@ func (d *Desktop) OwnerReferences() []metav1.OwnerReference {
 			Name:               d.GetName(),
 			UID:                d.GetUID(),
 			Controller:         &trueVal,
-			BlockOwnerDeletion: &trueVal,
+			BlockOwnerDeletion: &falseVal,
 		},
 	}
 }

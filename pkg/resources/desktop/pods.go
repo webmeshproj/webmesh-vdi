@@ -22,7 +22,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 			Subdomain:          instance.GetName(),
 			ServiceAccountName: tmpl.GetDesktopServiceAccount(),
 			SecurityContext:    tmpl.GetDesktopPodSecurityContext(),
-			Volumes:            tmpl.GetDesktopVolumes(instance),
+			Volumes:            tmpl.GetDesktopVolumes(cluster, instance),
 			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),
 			Containers: []corev1.Container{
 				tmpl.GetDesktopProxyContainer(instance.GetNoVNCProxyImage()),
@@ -30,7 +30,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 					Name:            "desktop",
 					Image:           tmpl.GetDesktopImage(),
 					ImagePullPolicy: tmpl.GetDesktopPullPolicy(),
-					VolumeMounts:    tmpl.GetDesktopVolumeMounts(instance),
+					VolumeMounts:    tmpl.GetDesktopVolumeMounts(cluster, instance),
 					SecurityContext: tmpl.GetDesktopContainerSecurityContext(),
 					Env:             tmpl.GetDesktopEnvVars(instance),
 				},

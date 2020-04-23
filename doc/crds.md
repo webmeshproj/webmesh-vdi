@@ -50,10 +50,14 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>Whether to add CORS headers to API requests</p></td>
 </tr>
 <tr class="odd">
+<td><code>auditLog</code> <em>bool</em></td>
+<td><p>Whether to log auditing events to stdout</p></td>
+</tr>
+<tr class="even">
 <td><code>replicas</code> <em>int32</em></td>
 <td><p>The number of app replicas to run</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -397,14 +401,18 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
+<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+</tr>
+<tr class="odd">
 <td><code>app</code> <em><a href="#kvdi.io/v1alpha1.AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>rethinkdb</code> <em><a href="#kvdi.io/v1alpha1.RethinkDBConfig">RethinkDBConfig</a></em></td>
 <td><p>RethinkDB configurations</p></td>
 </tr>
@@ -445,14 +453,18 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
+<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+</tr>
+<tr class="odd">
 <td><code>app</code> <em><a href="#kvdi.io/v1alpha1.AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>rethinkdb</code> <em><a href="#kvdi.io/v1alpha1.RethinkDBConfig">RethinkDBConfig</a></em></td>
 <td><p>RethinkDB configurations</p></td>
 </tr>
@@ -461,4 +473,4 @@ VDIClusterSpec defines the desired state of VDICluster
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `898a9c8`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `b8ffd1a`.*

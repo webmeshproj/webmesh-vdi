@@ -11,5 +11,11 @@ spec:
     corsEnabled: true
     auditLog: true
   auth:
-    allowAnonymous: true
+    allowAnonymous: false
     localAuth: {}
+  userDataSpec:
+    resources:
+      requests:
+        storage: 4Gi
+    accessModes:
+      - ReadWriteOnce

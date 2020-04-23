@@ -144,7 +144,7 @@ export default {
       if (err.response !== undefined && err.response.data !== undefined) {
         error = err.response.data.error
       } else {
-        error = err
+        error = err.message
       }
       this.$q.notify({
         color: 'red-4',

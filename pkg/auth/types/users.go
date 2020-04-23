@@ -10,7 +10,7 @@ type User struct {
 	Name         string  `rethinkdb:"id" json:"name"`
 	Password     string  `rethinkdb:"-" json:"-"`
 	PasswordSalt string  `rethinkdb:"password" json:"-"`
-	Roles        []*Role `rethinkdb:"role_ids,reference,omitempty" rethinkdb_ref:"id" json:"roles"`
+	Roles        []*Role `rethinkdb:"role_ids,reference" rethinkdb_ref:"id" json:"roles"`
 }
 
 func (u *User) HasGrant(grant grants.RoleGrant) bool {
@@ -25,10 +25,8 @@ func (u *User) HasGrant(grant grants.RoleGrant) bool {
 func (u *User) Namespaces() []string {
 	namespaces := make([]string, 0)
 	for _, role := range u.Roles {
-		for _, restraint := range role.Restraints {
-			if restraint.Namespaces != nil && len(restraint.Namespaces) > 0 {
-				namespaces = append(namespaces, restraint.Namespaces...)
-			}
+		if role.Namespaces != nil && len(role.Namespaces) > 0 {
+			namespaces = append(namespaces, role.Namespaces...)
 		}
 	}
 	return namespaces
@@ -40,39 +38,29 @@ func (u *User) CanLaunch(namespace, tmpl string) bool {
 	}
 	var namespaceAllowed, tmplAllowed bool
 
-	for _, role := range u.Roles {
-		if role.Restraints == nil || len(role.Restraints) == 0 {
-			return true
-		}
-	}
-
 NamespaceLoop:
 	for _, role := range u.Roles {
-		for _, restraint := range role.Restraints {
-			if restraint.Namespaces == nil || len(restraint.Namespaces) == 0 {
-				namespaceAllowed = true
-				break NamespaceLoop
-			}
-			if contains(restraint.Namespaces, namespace) {
-				namespaceAllowed = true
-				break NamespaceLoop
-			}
+		if role.Namespaces == nil || len(role.Namespaces) == 0 {
+			namespaceAllowed = true
+			break NamespaceLoop
+		}
+		if contains(role.Namespaces, namespace) {
+			namespaceAllowed = true
+			break NamespaceLoop
 		}
 	}
 
 TemplateLoop:
 	for _, role := range u.Roles {
-		for _, restraint := range role.Restraints {
-			if restraint.TemplatePatterns == nil || len(restraint.TemplatePatterns) == 0 {
+		if role.TemplatePatterns == nil || len(role.TemplatePatterns) == 0 {
+			tmplAllowed = true
+			break TemplateLoop
+		}
+		for _, pattern := range role.TemplatePatterns {
+			re := regexp.MustCompile(pattern)
+			if re.MatchString(tmpl) {
 				tmplAllowed = true
 				break TemplateLoop
-			}
-			for _, pattern := range restraint.TemplatePatterns {
-				re := regexp.MustCompile(pattern)
-				if re.MatchString(tmpl) {
-					tmplAllowed = true
-					break TemplateLoop
-				}
 			}
 		}
 	}

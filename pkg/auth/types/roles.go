@@ -5,18 +5,14 @@ import (
 )
 
 type Role struct {
-	Name       string           `rethinkdb:"id" json:"name"`
-	Grants     grants.RoleGrant `rethinkdb:"grants" json:"-"`
-	Restraints []RoleRestraint  `rethinkdb:"restraints" json:"restraints"`
-	GrantNames []string         `rethinkdb:"-" json:"grants"`
+	Name             string           `rethinkdb:"id" json:"name"`
+	Grants           grants.RoleGrant `rethinkdb:"grants" json:"-"`
+	Namespaces       []string         `rethinkdb:"namespaces" json:"namespaces"`
+	TemplatePatterns []string         `rethinkdb:"templatePatterns" json:"templatePatterns"`
+	GrantNames       []string         `rethinkdb:"-" json:"grants"`
 }
 
 func (r *Role) RoleGrants() grants.RoleGrant {
 	// in case we want to change how the value gets stored easily
 	return r.Grants
-}
-
-type RoleRestraint struct {
-	Namespaces       []string `rethinkdb:"namespaces" json:"namespaces"`
-	TemplatePatterns []string `rethinkdb:"templatePatterns" json:"templatePatterns"`
 }
