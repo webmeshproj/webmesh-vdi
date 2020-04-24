@@ -3,33 +3,35 @@
 #################
 FROM golang:1.14-alpine as builder
 
-ARG GO_SWAGGER_VERSION=v0.23.0
-RUN apk add --update upx curl \
-  && mkdir -p /go/src/github.com/tinyzimmer/kvdi \
-  && curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
-  && chmod +x /usr/local/bin/swagger
+RUN apk --update-cache add upx
 
 # Setup build directory
-WORKDIR /go/src/github.com/tinyzimmer/kvdi
+RUN mkdir -p /build
+WORKDIR /build
 
 # Go build options
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
 # Fetch deps first as they don't change frequently
-COPY go.mod /go/src/github.com/tinyzimmer/kvdi/go.mod
-COPY go.sum /go/src/github.com/tinyzimmer/kvdi/go.sum
+COPY go.mod /build/go.mod
+COPY go.sum /build/go.sum
 RUN go mod download
 
+ARG GO_SWAGGER_VERSION=v0.23.0
+RUN apk add --update curl \
+  && curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
+  && chmod +x /usr/local/bin/swagger
+
 # Copy go code
-COPY version/ /go/src/github.com/tinyzimmer/kvdi/version
-COPY pkg/     /go/src/github.com/tinyzimmer/kvdi/pkg
-COPY cmd/app  /go/src/github.com/tinyzimmer/kvdi/cmd/app
+COPY version/     /build/version
+COPY pkg/         /build/pkg
+COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
 RUN go build -o /tmp/app ./cmd/app \
   && upx /tmp/app \
-  && cd /go/src/github.com/tinyzimmer/kvdi/pkg/api \
+  && cd pkg/api \
   && /usr/local/bin/swagger generate spec -o /tmp/swagger.json --scan-models
 
 ##############

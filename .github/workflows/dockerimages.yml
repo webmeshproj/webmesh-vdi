@@ -1,0 +1,45 @@
+name: Docker Image CI
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build Images
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Login to Quay
+      run: echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+
+    - name: Get image version
+      shell: bash
+      run: |
+        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "master" ]] && echo latest || echo ${GITHUB_REF##*/})
+      id: version
+
+    - name: Build the manager docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-manager
+
+    - name: Build the app docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-app
+
+    - name: Build the novnc-proxy docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-novnc-proxy
+
+    - name: Push the manager docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make push-manager
+
+    - name: Push the app docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make push-app
+
+    - name: Push the novnc-proxy docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make push-novnc-proxy

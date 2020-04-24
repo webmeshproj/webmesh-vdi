@@ -32,7 +32,11 @@ jobs:
     - name: Get dependencies
       run: |
         go mod download
-        
+
     - name: Lint
       run: |
         make lint
+
+    - name: Tests
+      run: |
+        make test
