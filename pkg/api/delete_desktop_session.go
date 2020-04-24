@@ -25,6 +25,8 @@ import (
 // responses:
 //   "200":
 //     "$ref": "#/responses/boolResponse"
+//   "400":
+//     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
 //   "500":

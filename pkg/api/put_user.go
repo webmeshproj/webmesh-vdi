@@ -5,7 +5,6 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
@@ -33,9 +32,9 @@ type PutUserRequest struct {
 // responses:
 //   "200":
 //     "$ref": "#/responses/boolResponse"
-//   "403":
+//   "400":
 //     "$ref": "#/responses/error"
-//   "404":
+//   "403":
 //     "$ref": "#/responses/error"
 //   "500":
 //     "$ref": "#/responses/error"
@@ -46,10 +45,6 @@ func (d *desktopAPI) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
 	if err != nil {
-		if errors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPINotFound(err, w)
-			return
-		}
 		apiutil.ReturnAPIError(err, w)
 		return
 	}

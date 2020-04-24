@@ -11,6 +11,7 @@ import (
 // Retrieves a mapping of grants to their bit values.
 // responses:
 //   200: grantResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) GetGrants(w http.ResponseWriter, r *http.Request) {

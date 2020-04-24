@@ -44,6 +44,7 @@ func (p *PostRoleRequest) Validate() error {
 // Create a new role in kVDI.
 // responses:
 //   200: boolResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {

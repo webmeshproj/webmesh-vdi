@@ -12,6 +12,7 @@ import (
 // Retrieves a list of the authorization rolse in kVDI.
 // responses:
 //   200: rolesResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +43,8 @@ func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 // responses:
 //   "200":
 //     "$ref": "#/responses/roleResponse"
+//   "400":
+//     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
 //   "404":

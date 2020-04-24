@@ -56,6 +56,7 @@ type swaggerStartSessionResponse struct {
 // Creates a new desktop session with the given parameters.
 // responses:
 //   200: postSessionResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {

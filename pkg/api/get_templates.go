@@ -15,6 +15,7 @@ import (
 // Retrieves available templates to boot desktops from.
 // responses:
 //   200: templatesResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {

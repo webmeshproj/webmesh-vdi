@@ -13,6 +13,7 @@ import (
 // Retrieves all the users currently known to kVDI.
 // responses:
 //   200: usersResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +44,8 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 // responses:
 //   "200":
 //     "$ref": "#/responses/userResponse"
+//   "400":
+//     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
 //   "404":

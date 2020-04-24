@@ -29,7 +29,7 @@ func (p *PutRoleRequest) Validate() error {
 // swagger:operation PUT /api/roles/{role} Roles putRoleRequest
 // ---
 // summary: Update the specified role.
-// description: All properties will be overwritten with those provided in the payload.
+// description: All properties will be overwritten with those provided in the payload, even if undefined.
 // parameters:
 // - name: role
 //   in: path
@@ -44,6 +44,8 @@ func (p *PutRoleRequest) Validate() error {
 // responses:
 //   "200":
 //     "$ref": "#/responses/boolResponse"
+//   "400":
+//     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
 //   "500":

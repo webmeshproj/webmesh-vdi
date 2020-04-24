@@ -40,6 +40,7 @@ func (p *PostUserRequest) Validate() error {
 // Create a new user in kVDI.
 // responses:
 //   200: boolResponse
+//   400: error
 //   403: error
 //   500: error
 func (d *desktopAPI) CreateUser(w http.ResponseWriter, r *http.Request) {

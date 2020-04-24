@@ -10,6 +10,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gorilla/websocket"
 	"github.com/koding/websocketproxy"
@@ -52,10 +53,23 @@ var upgrader = websocket.Upgrader{
 //   description: The X-Session-Token of the requesting client
 //   type: string
 //   required: true
-// responses: {}
+// responses:
+//   "UPGRADE": {}
+//   "400":
+//     "$ref": "#/responses/error"
+//   "403":
+//     "$ref": "#/responses/error"
+//   "404":
+//     "$ref": "#/responses/error"
+//   "500":
+//     "$ref": "#/responses/error"
 func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 	endpointURL, err := d.getEndpointURL(r)
 	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
