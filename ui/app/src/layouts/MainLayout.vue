@@ -110,6 +110,12 @@ export default {
           icon: 'settings',
           link: 'settings',
           active: false
+        },
+        {
+          title: 'API Explorer',
+          icon: 'code',
+          link: 'swagger',
+          active: false
         }
       ]
     }

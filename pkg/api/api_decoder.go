@@ -23,7 +23,7 @@ var Decoders = map[string]map[string]DecoderFunc{
 	},
 	"/api/users/{user}": {
 		"PUT": func(r *http.Request) (interface{}, error) {
-			req := &PostUserRequest{}
+			req := &PutUserRequest{}
 			return req, apiutil.UnmarshalRequest(r, req)
 		},
 	},
@@ -35,7 +35,7 @@ var Decoders = map[string]map[string]DecoderFunc{
 	},
 	"/api/roles/{role}": {
 		"PUT": func(r *http.Request) (interface{}, error) {
-			req := &PostRoleRequest{}
+			req := &PutRoleRequest{}
 			return req, apiutil.UnmarshalRequest(r, req)
 		},
 	},

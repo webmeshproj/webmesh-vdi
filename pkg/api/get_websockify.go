@@ -32,6 +32,27 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
+// swagger:operation GET /api/websockify/{namespace}/{name} Desktops doWebsocket
+// ---
+// summary: Start an mTLS noVNC connection with the provided Desktop.
+// description: Assumes the requesting client is a noVNC RFB object.
+// parameters:
+// - name: namespace
+//   in: path
+//   description: The namespace of the desktop session
+//   type: string
+//   required: true
+// - name: name
+//   in: path
+//   description: The name of the desktop session
+//   type: string
+//   required: true
+// - name: token
+//   in: query
+//   description: The X-Session-Token of the requesting client
+//   type: string
+//   required: true
+// responses: {}
 func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 	endpointURL, err := d.getEndpointURL(r)
 	if err != nil {

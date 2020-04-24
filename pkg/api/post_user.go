@@ -11,12 +11,21 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
+// PostUserRequest represents a request to create a new user.
 type PostUserRequest struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
 	Roles    []string `json:"roles"`
 }
 
+// Request containing a new user
+// swagger:parameters postUserRequest
+type swaggerCreateUserRequest struct {
+	// in:body
+	Body PostUserRequest
+}
+
+// Validate the new user request
 func (p *PostUserRequest) Validate() error {
 	if p.Username == "" || p.Password == "" {
 		return errors.New("'username' and 'password' must be provided in the request")
@@ -27,6 +36,12 @@ func (p *PostUserRequest) Validate() error {
 	return nil
 }
 
+// swagger:route POST /api/users Users postUserRequest
+// Create a new user in kVDI.
+// responses:
+//   200: boolResponse
+//   403: error
+//   500: error
 func (d *desktopAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	req := GetRequestObject(r).(*PostUserRequest)
 	if err := req.Validate(); err != nil {

@@ -1,9 +1,12 @@
 import MainLayout from 'layouts/MainLayout.vue'
+
 import Login from 'pages/Login.vue'
 import DesktopTemplates from 'pages/DesktopTemplates.vue'
 import VNCViewer from 'pages/VNCViewer.vue'
 import Settings from 'pages/Settings.vue'
 import Profile from 'pages/Profile.vue'
+import APIExplorer from 'pages/APIExplorer'
+
 import Error404 from 'pages/Error404.vue'
 
 const routes = [
@@ -45,6 +48,11 @@ const routes = [
         name: 'profile',
         component: Profile,
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'swagger',
+        name: 'swagger',
+        component: APIExplorer
       },
       { path: '*', component: Error404 }
     ]

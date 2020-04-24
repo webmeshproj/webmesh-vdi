@@ -3,13 +3,43 @@ package api
 import (
 	"net/http"
 
+	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
+// PostRoleRequest requests updates to an existing role.
+type PutRoleRequest struct {
+	Grants           grants.RoleGrant `json:"grants"`
+	Namespaces       []string         `json:"namespaces"`
+	TemplatePatterns []string         `json:"templatePatterns"`
+}
+
+// swagger:operation PUT /api/roles/{role} Roles putRoleRequest
+// ---
+// summary: Update the specified role.
+// description: All properties will be overwritten with those provided in the payload.
+// parameters:
+// - name: role
+//   in: path
+//   description: The role to update
+//   type: string
+//   required: true
+// - in: body
+//   name: roleDetails
+//   description: The role details to update.
+//   schema:
+//     "$ref": "#/definitions/PutRoleRequest"
+// responses:
+//   "200":
+//     "$ref": "#/responses/boolResponse"
+//   "403":
+//     "$ref": "#/responses/error"
+//   "500":
+//     "$ref": "#/responses/error"
 func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
-	req := GetRequestObject(r).(*PostRoleRequest)
+	req := GetRequestObject(r).(*PutRoleRequest)
 	roleName := getRoleFromRequest(r)
 	role := &types.Role{
 		Name:             roleName,
@@ -28,4 +58,11 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	apiutil.WriteOK(w)
+}
+
+// Request containing updates to a role
+// swagger:parameters putRoleRequest
+type swaggerUpdateRoleRequest struct {
+	// in:body
+	Body PutRoleRequest
 }

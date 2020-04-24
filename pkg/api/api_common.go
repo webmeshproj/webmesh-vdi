@@ -7,6 +7,7 @@ import (
 
 	authtypes "github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -38,10 +39,38 @@ func GetRequestObject(r *http.Request) interface{} {
 	return context.Get(r, ContextRequestObjectKey)
 }
 
-// WhoAmI is a simple route that returns the requestor their user details
+// swagger:route GET /api/whoami Miscellaneous whoAmI
+// Retrieves information about the current user session.
+// responses:
+//   200: sessionResponse
+//   403: error
+//   500: error
 func (d *desktopAPI) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	session := GetRequestUserSession(r)
 	apiutil.WriteJSON(session, w)
+}
+
+// Success response
+// swagger:response boolResponse
+type swaggerBoolResponse struct {
+	// in:body
+	Body struct {
+		Ok bool `json:"ok"`
+	}
+}
+
+// Session response
+// swagger:response sessionResponse
+type swaggerSessionResponse struct {
+	// in:body
+	Body authtypes.UserSession
+}
+
+// A generic error response
+// swagger:response error
+type swaggerResponseError struct {
+	// in:body
+	Body errors.APIError
 }
 
 // getNamespacedNameFromRequest returns the namespaced name of the Desktop instance

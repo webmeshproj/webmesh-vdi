@@ -27,6 +27,11 @@ func ReturnAPIError(err error, w http.ResponseWriter) {
 	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
 }
 
+func ReturnAPINotFound(err error, w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
+}
+
 func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())

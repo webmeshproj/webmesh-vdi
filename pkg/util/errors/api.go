@@ -3,6 +3,7 @@ package errors
 import "encoding/json"
 
 type APIError struct {
+	// A message describing the error
 	ErrMsg string `json:"error"`
 }
 

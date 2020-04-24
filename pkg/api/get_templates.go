@@ -11,8 +11,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// GetDesktopTemplates mirrors an API call to list all the available desktop
-// templates back to the caller.
+// swagger:route GET /api/templates Desktops getTemplates
+// Retrieves available templates to boot desktops from.
+// responses:
+//   200: templatesResponse
+//   403: error
+//   500: error
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {
 	tmpls, err := d.getAllDesktopTemplates()
 	if err != nil {
@@ -26,4 +30,11 @@ func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request)
 func (d *desktopAPI) getAllDesktopTemplates() (*v1alpha1.DesktopTemplateList, error) {
 	tmplList := &v1alpha1.DesktopTemplateList{}
 	return tmplList, d.client.List(context.TODO(), tmplList, client.InNamespace(metav1.NamespaceAll))
+}
+
+// Templates response
+// swagger:response templatesResponse
+type swaggerTemplatesResponse struct {
+	// in:body
+	Body []v1alpha1.DesktopTemplate
 }

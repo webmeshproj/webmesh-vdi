@@ -12,6 +12,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// swagger:route POST /api/logout Miscellaneous logout
+// Ends the current user session.
+// responses:
+//   200: boolResponse
+//   400: error
+//   403: error
+//   500: error
 func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
 	userSession := GetRequestUserSession(r)
 	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))

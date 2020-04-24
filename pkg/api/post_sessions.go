@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// PostSessionsRequest requests a new desktop session with the givin parameters.
 type PostSessionsRequest struct {
 	Template  string `json:"template"`
 	Namespace string `json:"namespace,omitempty"`
@@ -31,12 +32,32 @@ func (p *PostSessionsRequest) GetNamespace() string {
 	return "default"
 }
 
+// Request for a new desktop session
+// swagger:parameters postSessionRequest
+type swaggerStartSessionRequest struct {
+	// in:body
+	Body PostSessionsRequest
+}
+
 type PostSessionsResponse struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 	Endpoint  string `json:"endpoint"`
 }
 
+// New session response
+// swagger:response postSessionResponse
+type swaggerStartSessionResponse struct {
+	// in:body
+	Body PostSessionsResponse
+}
+
+// swagger:route POST /api/sessions Desktops postSessionRequest
+// Creates a new desktop session with the given parameters.
+// responses:
+//   200: postSessionResponse
+//   403: error
+//   500: error
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
 	sess := GetRequestUserSession(r)
 	req := GetRequestObject(r).(*PostSessionsRequest)

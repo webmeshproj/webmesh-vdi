@@ -13,11 +13,19 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
+// PostRoleRequest represents a request for a new role.
 type PostRoleRequest struct {
 	Name             string           `json:"name"`
 	Grants           grants.RoleGrant `json:"grants"`
 	Namespaces       []string         `json:"namespaces"`
 	TemplatePatterns []string         `json:"templatePatterns"`
+}
+
+// Request containing a new user
+// swagger:parameters postRoleRequest
+type swaggerCreateRoleRequest struct {
+	// in:body
+	Body PostRoleRequest
 }
 
 func (p *PostRoleRequest) Validate() error {
@@ -32,6 +40,12 @@ func (p *PostRoleRequest) Validate() error {
 	return nil
 }
 
+// swagger:route POST /api/roles Roles postRoleRequest
+// Create a new role in kVDI.
+// responses:
+//   200: boolResponse
+//   403: error
+//   500: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 	req := GetRequestObject(r).(*PostRoleRequest)
 	if err := req.Validate(); err != nil {

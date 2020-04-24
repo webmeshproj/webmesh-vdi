@@ -8,8 +8,28 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
-// GetSessionStatus returns to the caller whether the instance is running and
-// resolveable inside the cluster.
+// swagger:operation GET /api/sessions/{namespace}/{name} Desktops getSession
+// ---
+// summary: Retrieve the status of the requested desktop session.
+// description: Details include the podPhase and CRD status.
+// parameters:
+// - name: namespace
+//   in: path
+//   description: The namespace of the desktop session
+//   type: string
+//   required: true
+// - name: name
+//   in: path
+//   description: The name of the desktop session
+//   type: string
+//   required: true
+// responses:
+//   "200":
+//     "$ref": "#/responses/getSessionResponse"
+//   "403":
+//     "$ref": "#/responses/error"
+//   "500":
+//     "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopSessionStatus(w http.ResponseWriter, r *http.Request) {
 	nn := getNamespacedNameFromRequest(r)
 	found := &v1alpha1.Desktop{}
@@ -21,4 +41,11 @@ func (d *desktopAPI) GetDesktopSessionStatus(w http.ResponseWriter, r *http.Requ
 	res["running"] = found.Status.Running
 	res["podPhase"] = found.Status.PodPhase
 	apiutil.WriteJSON(res, w)
+}
+
+// Session status response
+// swagger:response getSessionResponse
+type swaggerGetSessionResponse struct {
+	// in:body
+	Body map[string]interface{}
 }
