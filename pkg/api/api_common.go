@@ -68,7 +68,16 @@ func getGorillaPath(r *http.Request) string {
 	vars := mux.Vars(r)
 	path := strings.TrimSuffix(r.URL.Path, "/")
 	for k, v := range vars {
-		path = strings.Replace(path, v, fmt.Sprintf("{%s}", k), 1)
+		path = rev(strings.Replace(rev(path), rev(v), rev(fmt.Sprintf("{%s}", k)), 1))
 	}
 	return path
+}
+
+// rev will reverse a string so we can call strings.Replace from the end
+func rev(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -24,11 +25,22 @@ type MethodPermissions struct {
 }
 
 func allowSameUser(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	user := getUserFromRequest(r)
-	if reqUser.Name == user {
-		return true, true, nil
+	pathUser := getUserFromRequest(r)
+	if reqUser.Name != pathUser {
+		return false, false, nil
 	}
-	return false, false, nil
+	reqUserRoles := reqUser.RoleNames()
+	// make sure the user isn't trying to change their permission level
+	if reqObj, ok := GetRequestObject(r).(*PostUserRequest); ok {
+		if !reqUser.HasGrant(grants.WriteUsers) || !reqUser.HasGrant(grants.WriteRoles) {
+			for _, role := range reqObj.Roles {
+				if !util.StringSliceContains(reqUserRoles, role) {
+					return false, false, nil
+				}
+			}
+		}
+	}
+	return true, true, nil
 }
 
 func allowSessionOwner(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
@@ -48,8 +60,8 @@ func allowAll(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, own
 }
 
 func checkUserLaunchRestraints(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource string, err error) {
-	reqObj := GetRequestObject(r).(*PostSessionsRequest)
-	if reqObj == nil {
+	reqObj, ok := GetRequestObject(r).(*PostSessionsRequest)
+	if !ok {
 		return false, "Invalid", errors.New("PostSessionsRequest object is nil")
 	}
 	resourceName := fmt.Sprintf("%s/%s", reqObj.GetNamespace(), reqObj.GetTemplate())

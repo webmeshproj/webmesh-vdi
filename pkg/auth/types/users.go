@@ -32,6 +32,14 @@ func (u *User) Namespaces() []string {
 	return namespaces
 }
 
+func (u *User) RoleNames() []string {
+	roles := make([]string, 0)
+	for _, role := range u.Roles {
+		roles = append(roles, role.Name)
+	}
+	return roles
+}
+
 func (u *User) CanLaunch(namespace, tmpl string) bool {
 	if !u.HasGrant(grants.LaunchTemplates) {
 		return false

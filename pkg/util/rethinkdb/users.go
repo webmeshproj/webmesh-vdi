@@ -72,7 +72,13 @@ func (d *rethinkDBSession) CreateUser(user *types.User) error {
 }
 
 func (d *rethinkDBSession) UpdateUser(user *types.User) error {
-	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Update(user).Run(d.session)
+	role_ids := make([]string, 0)
+	for _, role := range user.Roles {
+		role_ids = append(role_ids, role.Name)
+	}
+	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Update(map[string]interface{}{
+		"role_ids": role_ids,
+	}).Run(d.session)
 	if err != nil {
 		return err
 	}
@@ -84,8 +90,13 @@ func (d *rethinkDBSession) SetUserPassword(user *types.User, password string) er
 	if err != nil {
 		return err
 	}
-	user.PasswordSalt = string(hash)
-	return d.UpdateUser(user)
+	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Get(user.Name).Update(map[string]interface{}{
+		"password": string(hash),
+	}).Run(d.session)
+	if err != nil {
+		return err
+	}
+	return cursor.Err()
 }
 
 func (d *rethinkDBSession) DeleteUser(user *types.User) error {
