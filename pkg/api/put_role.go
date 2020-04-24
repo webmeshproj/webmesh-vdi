@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
@@ -14,6 +15,15 @@ type PutRoleRequest struct {
 	Grants           grants.RoleGrant `json:"grants"`
 	Namespaces       []string         `json:"namespaces"`
 	TemplatePatterns []string         `json:"templatePatterns"`
+}
+
+func (p *PutRoleRequest) Validate() error {
+	for _, x := range p.TemplatePatterns {
+		if _, err := regexp.Compile(x); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // swagger:operation PUT /api/roles/{role} Roles putRoleRequest
@@ -40,6 +50,10 @@ type PutRoleRequest struct {
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	req := GetRequestObject(r).(*PutRoleRequest)
+	if err := req.Validate(); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
 	roleName := getRoleFromRequest(r)
 	role := &types.Role{
 		Name:             roleName,
