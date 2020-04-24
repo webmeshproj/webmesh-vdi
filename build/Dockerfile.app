@@ -31,9 +31,9 @@ RUN go build \
 ##############
 # UI Builder #
 ##############
-FROM node:13-alpine as ui-builder
+FROM node:14-alpine as ui-builder
 
-RUN mkdir -p /build && yarn global add @quasar/cli
+RUN apk add --update python2 build-base && mkdir -p /build && yarn global add @quasar/cli
 
 COPY ui/app/package.json /build/package.json
 RUN cd /build && yarn
