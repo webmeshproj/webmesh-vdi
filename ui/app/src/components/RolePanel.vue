@@ -18,6 +18,7 @@
         :data="data"
         :columns="columns"
         row-key="name"
+        v-if="!loading"
       >
         <template v-slot:body="props">
           <q-tr :props="props">
