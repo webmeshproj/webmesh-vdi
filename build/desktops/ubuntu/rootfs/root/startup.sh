@@ -23,7 +23,8 @@ export HOME="/home/${USER}"
 
 cp -r /root/{.gtkrc-2.0,.asoundrc} ${HOME}
 
-sed -i -e "s|%USER%|${USER}|g" -e "s|%HOME%|${HOME}|g" /etc/supervisor/conf.d/desktop.conf
+find /etc/supervisor/conf.d/ -type f -exec \
+    sed -i -e "s|%USER%|${USER}|g" -e "s|%HOME%|${HOME}|g" {} +
 sed -i -e "s|%UNIX_SOCK%|${VNC_SOCK_ADDR}|g" /etc/supervisor/conf.d/supervisord.conf
 
 mkdir -p /var/log/supervisord

@@ -29,6 +29,7 @@ endif
 MANAGER_IMAGE ?= ${REPO}/${NAME}:manager-${VERSION}
 APP_IMAGE ?= ${REPO}/${NAME}:app-${VERSION}
 NOVNC_PROXY_IMAGE ?= ${REPO}/${NAME}:novnc-proxy-${VERSION}
+DESKTOP_BASE_IMAGE ?= ${REPO}/${NAME}:ubuntu20.04-base
 
 # Operator SDK
 OPERATOR_SDK ?= _bin/operator-sdk

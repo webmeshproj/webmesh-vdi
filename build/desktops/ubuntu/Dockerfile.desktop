@@ -1,0 +1,14 @@
+ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:ubuntu20.04-base
+FROM ${BASE_IMAGE}
+
+# User environment
+ARG DESKTOP_PACKAGE=lxde
+ENV DESKTOP_PACKAGE ${DESKTOP_PACKAGE}
+RUN apt-get update \
+    && apt-get install -y ${DESKTOP_PACKAGE} \
+    && apt-get autoclean -y \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Supervisor config
+COPY supervisor/desktop.conf.${DESKTOP_PACKAGE} /etc/supervisor/conf.d/desktop.conf

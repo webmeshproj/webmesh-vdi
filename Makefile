@@ -20,9 +20,15 @@ build-app:
 build-novnc-proxy:
 	$(call build_docker,novnc-proxy,${NOVNC_PROXY_IMAGE})
 
+build-desktop-base:
+	cd build/desktops/ubuntu && docker build . \
+		-f Dockerfile.base \
+		-t ${DESKTOP_BASE_IMAGE}
+
 build-desktop-%:
-	docker build . \
-		-f build/Dockerfile.desktop \
+	cd build/desktops/ubuntu && docker build . \
+		-f Dockerfile.desktop \
+		--build-arg BASE_IMAGE=${DESKTOP_BASE_IMAGE} \
 		--build-arg DESKTOP_PACKAGE=$* \
 		-t ${REPO}/${NAME}:$*-${VERSION}
 
@@ -54,6 +60,9 @@ push-app: build-app
 
 push-novnc-proxy: build-novnc-proxy
 	docker push ${NOVNC_PROXY_IMAGE}
+
+push-desktop-base: build-desktop-base
+	docker push ${DESKTOP_BASE_IMAGE}
 
 push-desktop-%: build-desktop-%
 	docker push ${REPO}/${NAME}:$*-${VERSION}

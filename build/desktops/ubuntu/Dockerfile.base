@@ -1,0 +1,28 @@
+FROM ubuntu:20.04 as base-system
+
+RUN sed -i 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
+
+# Core Dependencies
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update \
+    && apt-get dist-upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        sudo software-properties-common curl supervisor net-tools zenity xz-utils apt-utils \
+        dbus-x11 x11-utils alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
+    && apt-get autoclean -y \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Tini to fix subreap
+ARG TINI_VERSION=v0.18.0
+RUN echo "Installing tini version: ${TINI_VERSION}" \
+  && curl -JL -o /bin/tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini \
+  && chmod +x /bin/tini
+
+# Filesystem
+COPY rootfs /
+
+# Start
+WORKDIR /root
+ENV SHELL=/bin/bash
+ENTRYPOINT ["/root/startup.sh"]

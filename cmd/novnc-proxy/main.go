@@ -63,7 +63,6 @@ func newServer() (*http.Server, error) {
 
 	r.PathPrefix("/").Handler(&websocket.Server{
 		Handshake: func(c *websocket.Config, r *http.Request) error {
-			// c.Protocol = []string{"binary"}
 			return nil
 		},
 		Handler: func(wsconn *websocket.Conn) {
@@ -81,8 +80,16 @@ func newServer() (*http.Server, error) {
 
 			wsconn.PayloadType = websocket.BinaryFrame
 
-			go io.Copy(conn, wsconn)
-			go io.Copy(wsconn, conn)
+			go func() {
+				if _, err := io.Copy(conn, wsconn); err != nil {
+					log.Error(err, "Error while copying stream from websocket connection to VNC socket")
+				}
+			}()
+			go func() {
+				if _, err := io.Copy(wsconn, conn); err != nil {
+					log.Error(err, "Error while copying stream from VNC socket to websocket connection")
+				}
+			}()
 
 			select {}
 		},

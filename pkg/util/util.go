@@ -68,7 +68,9 @@ func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj runtime.Object) erro
 		return err
 	}
 	h := sha256.New()
-	h.Write(spec)
+	if _, err := h.Write(spec); err != nil {
+		return err
+	}
 	annotations[v1alpha1.CreationSpecAnnotation] = fmt.Sprintf("%x", h.Sum(nil))
 	meta.SetAnnotations(annotations)
 	return nil
@@ -164,9 +166,5 @@ func HashPassword(passw string) (string, error) {
 }
 
 func PasswordMatchesHash(passw, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(passw))
-	if err != nil {
-		return false
-	}
-	return true
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(passw)) == nil
 }

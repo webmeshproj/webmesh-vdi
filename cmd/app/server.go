@@ -39,7 +39,9 @@ func formatLog(writer io.Writer, params handlers.LogFormatterParams) {
 		RemoteHost: host,
 		Size:       params.Size,
 	}); err == nil {
-		writer.Write(append(out, []byte("\n")...))
+		if _, err := writer.Write(append(out, []byte("\n")...)); err != nil {
+			fmt.Println(string(out))
+		}
 	}
 }
 

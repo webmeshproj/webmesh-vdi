@@ -73,7 +73,7 @@ func (d *desktopAPI) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 // Request containing updates to a user
 // swagger:parameters putUserRequest
-type swaggerUpdateUserRequest struct {
+type wwaggerUpdateUserRequest struct {
 	// in:body
 	Body PutUserRequest
 }

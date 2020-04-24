@@ -19,7 +19,7 @@ import (
 func (d *desktopAPI) GetNamespaces(w http.ResponseWriter, r *http.Request) {
 	sess := GetRequestUserSession(r)
 	namespaces := sess.User.Namespaces()
-	if namespaces == nil || len(namespaces) == 0 {
+	if len(namespaces) == 0 {
 		var err error
 		namespaces, err = d.ListKubernetesNamespaces()
 		if err != nil {
