@@ -2,7 +2,6 @@ package desktop
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
@@ -22,7 +21,7 @@ func newDesktopProxyCert(cluster *v1alpha1.VDICluster, instance *v1alpha1.Deskto
 		Spec: cm.CertificateSpec{
 			KeySize:     4096,
 			CommonName:  podIP,
-			DNSNames:    append(util.DNSNames(instance.GetName(), instance.GetNamespace()), podIP),
+			DNSNames:    append(tlsutil.DNSNames(instance.GetName(), instance.GetNamespace()), podIP),
 			IPAddresses: []string{podIP},
 			SecretName:  instance.GetName(),
 			Usages:      tlsutil.ServerMTLSUsages(),

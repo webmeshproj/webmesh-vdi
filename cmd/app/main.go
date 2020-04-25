@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	"github.com/spf13/pflag"
@@ -20,7 +20,7 @@ func main() {
 	var enableCORS bool
 	pflag.CommandLine.StringVar(&vdiCluster, "vdi-cluster", "", "The VDICluster this application is serving")
 	pflag.CommandLine.BoolVar(&enableCORS, "enable-cors", false, "Add CORS headers to requests")
-	util.ParseFlagsAndSetupLogging()
+	common.ParseFlagsAndSetupLogging()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	"github.com/gorilla/mux"
@@ -27,7 +27,7 @@ var vncConnectProto, vncConnectAddr string
 
 func main() {
 	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "tcp://127.0.0.1:5900", "The tcp or unix-socket address of the vnc server")
-	util.ParseFlagsAndSetupLogging()
+	common.ParseFlagsAndSetupLogging()
 
 	if strings.HasPrefix(vncAddr, "tcp://") {
 		vncConnectProto = "tcp"

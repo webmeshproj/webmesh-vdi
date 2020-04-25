@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -14,7 +14,7 @@ import (
 )
 
 func ReconcileStatefulSet(reqLogger logr.Logger, c client.Client, ss *appsv1.StatefulSet, wait bool) error {
-	if err := util.SetCreationSpecAnnotation(&ss.ObjectMeta, ss); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&ss.ObjectMeta, ss); err != nil {
 		return err
 	}
 
@@ -36,10 +36,11 @@ func ReconcileStatefulSet(reqLogger logr.Logger, c client.Client, ss *appsv1.Sta
 	}
 
 	// Check the found ss spec
-	if !util.CreationSpecsEqual(ss.ObjectMeta, foundStatefulSet.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(ss.ObjectMeta, foundStatefulSet.ObjectMeta) {
 		// We need to update the ss
 		reqLogger.Info("StatefulSet annotation spec has changed, updating", "StatefulSet.Name", ss.Name, "StatefulSet.Namespace", ss.Namespace)
 		foundStatefulSet.Spec = ss.Spec
+		foundStatefulSet.SetAnnotations(ss.GetAnnotations())
 		if err := c.Update(context.TODO(), foundStatefulSet); err != nil {
 			return err
 		}

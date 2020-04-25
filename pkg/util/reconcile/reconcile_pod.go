@@ -3,8 +3,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -17,7 +17,7 @@ import (
 // deleted and requeued. If the found pod has a deletion timestamp (e.g. it is still terminating)
 // then the request will also be requued.
 func ReconcilePod(reqLogger logr.Logger, c client.Client, pod *corev1.Pod) (bool, error) {
-	if err := util.SetCreationSpecAnnotation(&pod.ObjectMeta, pod); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&pod.ObjectMeta, pod); err != nil {
 		return false, err
 	}
 	found := &corev1.Pod{}
@@ -40,7 +40,7 @@ func ReconcilePod(reqLogger logr.Logger, c client.Client, pod *corev1.Pod) (bool
 	}
 
 	// Check the found pod spec
-	if !util.CreationSpecsEqual(pod.ObjectMeta, found.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(pod.ObjectMeta, found.ObjectMeta) {
 		// We need to delete the pod and return a requeue
 		if err := c.Delete(context.TODO(), found); err != nil {
 			return false, err

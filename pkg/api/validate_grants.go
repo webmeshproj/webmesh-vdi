@@ -11,8 +11,8 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 type AllowFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error)
@@ -34,7 +34,7 @@ func allowSameUser(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed
 	if reqObj, ok := GetRequestObject(r).(*PostUserRequest); ok {
 		if !reqUser.HasGrant(grants.WriteUsers) || !reqUser.HasGrant(grants.WriteRoles) {
 			for _, role := range reqObj.Roles {
-				if !util.StringSliceContains(reqUserRoles, role) {
+				if !common.StringSliceContains(reqUserRoles, role) {
 					return false, false, nil
 				}
 			}

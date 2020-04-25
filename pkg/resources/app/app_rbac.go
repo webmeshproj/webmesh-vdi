@@ -8,6 +8,35 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var verbsAll = []string{"create", "delete", "deletecollection", "get", "list", "watch", "patch", "update"}
+var verbsReadOnly = []string{"get", "list", "watch"}
+
+var appRules = []rbacv1.PolicyRule{
+	{
+		APIGroups: []string{"kvdi.io"},
+		Resources: []string{"*"},
+		Verbs:     verbsAll,
+	},
+	{
+		APIGroups: []string{""},
+		Resources: []string{"pods", "services", "namespaces"},
+		Verbs:     verbsReadOnly,
+	},
+}
+
+func newAppClusterRoleForCR(instance *v1alpha1.VDICluster) *rbacv1.ClusterRole {
+	return &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            instance.GetAppName(),
+			Namespace:       metav1.NamespaceAll,
+			Labels:          instance.GetComponentLabels("app"),
+			Annotations:     instance.GetAnnotations(),
+			OwnerReferences: instance.OwnerReferences(),
+		},
+		Rules: appRules,
+	}
+}
+
 func newAppServiceAccountForCR(instance *v1alpha1.VDICluster) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
@@ -38,7 +67,7 @@ func newRoleBindingsForCR(instance *v1alpha1.VDICluster) *rbacv1.ClusterRoleBind
 		},
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "ClusterRole",
-			Name:     AppClusterRole,
+			Name:     instance.GetAppName(),
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}

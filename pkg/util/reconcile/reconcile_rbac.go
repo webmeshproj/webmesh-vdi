@@ -3,14 +3,16 @@ package reconcile
 import (
 	"context"
 
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+
 	"github.com/go-logr/logr"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ReconcileServiceAccount will ensure a service account in the cluster
 func ReconcileServiceAccount(reqLogger logr.Logger, c client.Client, acct *corev1.ServiceAccount) error {
 	found := &corev1.ServiceAccount{}
 	if err := c.Get(context.TODO(), types.NamespacedName{Name: acct.Name, Namespace: acct.Namespace}, found); err != nil {
@@ -27,8 +29,43 @@ func ReconcileServiceAccount(reqLogger logr.Logger, c client.Client, acct *corev
 	return nil
 }
 
+// ReconcileClusterRole will ensure a ClusterRole with the cluster.
+func ReconcileClusterRole(reqLogger logr.Logger, c client.Client, role *rbacv1.ClusterRole) error {
+	if err := k8sutil.SetCreationSpecAnnotation(&role.ObjectMeta, role); err != nil {
+		return err
+	}
+	found := &rbacv1.ClusterRole{}
+	if err := c.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: role.Namespace}, found); err != nil {
+		// Return API error
+		if client.IgnoreNotFound(err) != nil {
+			return err
+		}
+		// Create the role
+		reqLogger.Info("Creating new cluster role ", "Name", role.Name)
+		if err := c.Create(context.TODO(), role); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Check the found role binding spec
+	if !k8sutil.CreationSpecsEqual(role.ObjectMeta, found.ObjectMeta) {
+		// We need to update the role binding
+		reqLogger.Info("Role annotation spec has changed, updating", "Name", role.Name)
+		found.Rules = role.Rules
+		found.SetAnnotations(role.GetAnnotations())
+		if err := c.Update(context.TODO(), found); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// ReconcileClusterRoleBinding will ensure a cluster role binding.
 func ReconcileClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBinding *rbacv1.ClusterRoleBinding) error {
-	if err := util.SetCreationSpecAnnotation(&roleBinding.ObjectMeta, roleBinding); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&roleBinding.ObjectMeta, roleBinding); err != nil {
 		return err
 	}
 	found := &rbacv1.ClusterRoleBinding{}
@@ -46,11 +83,12 @@ func ReconcileClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBin
 	}
 
 	// Check the found role binding spec
-	if !util.CreationSpecsEqual(roleBinding.ObjectMeta, found.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(roleBinding.ObjectMeta, found.ObjectMeta) {
 		// We need to update the role binding
 		reqLogger.Info("Role binding annotation spec has changed, updating", "Name", roleBinding.Name)
 		found.Subjects = roleBinding.Subjects
 		found.RoleRef = roleBinding.RoleRef
+		found.SetAnnotations(roleBinding.GetAnnotations())
 		if err := c.Update(context.TODO(), found); err != nil {
 			return err
 		}

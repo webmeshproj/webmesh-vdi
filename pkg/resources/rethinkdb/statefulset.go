@@ -2,7 +2,7 @@ package rethinkdb
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -76,7 +76,7 @@ func newStatefulSetForCR(cr *v1alpha1.VDICluster) *appsv1.StatefulSet {
 							Image:           cr.GetRethinkDBImage(),
 							Env: append(cr.RethinkDBEnvVars(), corev1.EnvVar{
 								Name:  "CLUSTER_SUFFIX",
-								Value: util.GetClusterSuffix(),
+								Value: common.GetClusterSuffix(),
 							}),
 							VolumeMounts: cr.GetRethinkDBVolumeMounts(),
 							Command:      []string{"/bin/bash", "-c"},

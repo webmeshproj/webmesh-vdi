@@ -3,7 +3,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -13,10 +13,9 @@ import (
 
 // ReconcilePersistentVolumeClaim will reconcile a persistent volume with the kubernetes
 // cluster. If it exists, we do nothing for now.
-// TODO: Support PV changes?
 func ReconcilePersistentVolumeClaim(reqLogger logr.Logger, c client.Client, pvc *corev1.PersistentVolumeClaim) error {
 	// Set the creation spec anyway so it's there if we need it in the future
-	if err := util.SetCreationSpecAnnotation(&pvc.ObjectMeta, pvc); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&pvc.ObjectMeta, pvc); err != nil {
 		return err
 	}
 

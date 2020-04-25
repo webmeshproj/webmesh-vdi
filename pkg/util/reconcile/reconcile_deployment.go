@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -13,8 +13,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ReconcileDeployment reconciles a deployment with the cluster and opionally
+// returns a requeue error if it isn't fully running yet.
 func ReconcileDeployment(reqLogger logr.Logger, c client.Client, deployment *appsv1.Deployment, wait bool) error {
-	if err := util.SetCreationSpecAnnotation(&deployment.ObjectMeta, deployment); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&deployment.ObjectMeta, deployment); err != nil {
 		return err
 	}
 
@@ -36,10 +38,11 @@ func ReconcileDeployment(reqLogger logr.Logger, c client.Client, deployment *app
 	}
 
 	// Check the found deployment spec
-	if !util.CreationSpecsEqual(deployment.ObjectMeta, foundDeployment.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(deployment.ObjectMeta, foundDeployment.ObjectMeta) {
 		// We need to update the deployment
 		reqLogger.Info("Deployment annotation spec has changed, updating", "Deployment.Name", deployment.Name, "Deployment.Namespace", deployment.Namespace)
 		foundDeployment.Spec = deployment.Spec
+		foundDeployment.SetAnnotations(deployment.GetAnnotations())
 		if err := c.Update(context.TODO(), foundDeployment); err != nil {
 			return err
 		}

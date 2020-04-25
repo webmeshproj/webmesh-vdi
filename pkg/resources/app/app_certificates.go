@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
@@ -14,7 +13,7 @@ import (
 
 // TODO: Allow custom frontend TLS
 func newAppCertForCR(instance *v1alpha1.VDICluster) *cm.Certificate {
-	dnsNames := util.DNSNames(instance.GetAppName(), instance.GetCoreNamespace())
+	dnsNames := tlsutil.DNSNames(instance.GetAppName(), instance.GetCoreNamespace())
 	if instance.GetAppExternalHostname() != "" {
 		dnsNames = append(dnsNames, instance.GetAppExternalHostname())
 	}
@@ -51,7 +50,7 @@ func newAppClientCertForCR(instance *v1alpha1.VDICluster) *cm.Certificate {
 		Spec: cm.CertificateSpec{
 			KeySize:    4096,
 			CommonName: instance.GetAppName(),
-			DNSNames:   util.DNSNames(instance.GetAppName(), instance.GetCoreNamespace()),
+			DNSNames:   tlsutil.DNSNames(instance.GetAppName(), instance.GetCoreNamespace()),
 			SecretName: fmt.Sprintf("%s-client", instance.GetAppName()),
 			Usages:     tlsutil.ClientMTLSUsages(),
 			Subject: &cm.X509Subject{

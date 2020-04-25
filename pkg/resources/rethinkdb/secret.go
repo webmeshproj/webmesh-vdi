@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	"github.com/go-logr/logr"
@@ -25,7 +25,7 @@ func (r *RethinkDBReconciler) reconcileAdminSecret(reqLogger logr.Logger, cluste
 		}
 		// We are generating a password
 		reqLogger.Info("Generating password and creating new admin secret", "Secret.Name", nn.Name, "Secret.Namespace", nn.Namespace)
-		passw := util.GeneratePassword(16)
+		passw := common.GeneratePassword(16)
 		secret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            nn.Name,

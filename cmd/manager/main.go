@@ -13,7 +13,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/controller"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -47,7 +47,7 @@ func printVersion() {
 
 func main() {
 
-	util.ParseFlagsAndSetupLogging()
+	common.ParseFlagsAndSetupLogging()
 
 	printVersion()
 

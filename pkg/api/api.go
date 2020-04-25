@@ -6,7 +6,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/gorilla/mux"
 
@@ -63,7 +63,7 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	apiLogger.Info("Retrieving VDICluster configuration")
 	var found *v1alpha1.VDICluster
 	for found == nil {
-		if found, err = util.LookupClusterByName(client, vdiCluster); err != nil {
+		if found, err = k8sutil.LookupClusterByName(client, vdiCluster); err != nil {
 			apiLogger.Error(err, "Failed to retrieve VDICluster configuration, retrying in 2 seconds...")
 			found = nil
 			time.Sleep(time.Duration(2) * time.Second)

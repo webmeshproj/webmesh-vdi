@@ -1,8 +1,6 @@
 package app
 
 import (
-	"os"
-
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
@@ -11,16 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-var AppClusterRole string
-
-func init() {
-	if role := os.Getenv("KVDI_APP_CLUSTER_ROLE"); role == "" {
-		panic("No KVDI_APP_CLUSTER_ROLE set in the environment")
-	} else {
-		AppClusterRole = role
-	}
-}
 
 type AppReconciler struct {
 	resources.VDIReconciler
@@ -37,8 +25,11 @@ func New(c client.Client, s *runtime.Scheme) resources.VDIReconciler {
 }
 
 func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
-	// Service account and cluster role binding, role is created during deployment
+	// Service account and cluster role/binding
 	if err := reconcile.ReconcileServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
+		return err
+	}
+	if err := reconcile.ReconcileClusterRole(reqLogger, f.client, newAppClusterRoleForCR(instance)); err != nil {
 		return err
 	}
 	if err := reconcile.ReconcileClusterRoleBinding(reqLogger, f.client, newRoleBindingsForCR(instance)); err != nil {

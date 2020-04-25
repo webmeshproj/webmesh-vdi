@@ -3,8 +3,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -14,7 +14,7 @@ import (
 
 // ReconcileService will reconcile a provided service spec with the cluster.
 func ReconcileService(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
-	if err := util.SetCreationSpecAnnotation(&svc.ObjectMeta, svc); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&svc.ObjectMeta, svc); err != nil {
 		return err
 	}
 	found := &corev1.Service{}
@@ -32,7 +32,7 @@ func ReconcileService(reqLogger logr.Logger, c client.Client, svc *corev1.Servic
 	}
 
 	// Check the found service spec
-	if !util.CreationSpecsEqual(svc.ObjectMeta, found.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(svc.ObjectMeta, found.ObjectMeta) {
 		// We need to update the service
 		reqLogger.Info("Service annotation spec has changed, deleting and requeing", "Service.Name", svc.Name, "Service.Namespace", svc.Namespace)
 		if err := c.Delete(context.TODO(), found); err != nil {

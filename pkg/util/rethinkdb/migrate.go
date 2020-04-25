@@ -3,7 +3,7 @@ package rethinkdb
 import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
@@ -15,13 +15,13 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 	if err != nil {
 		return err
 	}
-	if contains(dbs, "test") {
+	if common.StringSliceContains(dbs, "test") {
 		rdbLogger.Info("Deleting 'test' database")
 		if err := r.deleteDB("test"); err != nil {
 			return err
 		}
 	}
-	if !contains(dbs, kvdiDB) {
+	if !common.StringSliceContains(dbs, kvdiDB) {
 		rdbLogger.Info("Creating new database", "Database.Name", kvdiDB)
 		if err := r.createDB(kvdiDB); err != nil {
 			return err
@@ -34,7 +34,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 		return err
 	}
 	for _, table := range allTables {
-		if !contains(tables, table) {
+		if !common.StringSliceContains(tables, table) {
 			rdbLogger.Info("Creating new table", "Database.Name", kvdiDB, "Table.Name", table)
 			if err := r.createTable(kvdiDB, table); err != nil {
 				return err
@@ -94,7 +94,7 @@ func (r *rethinkDBSession) Migrate(adminPass string, desiredReplicas, desiredSha
 		if err := r.CreateUser(&types.User{Name: adminUser, Password: adminPass, Roles: []*types.Role{{Name: adminRole}}}); err != nil {
 			return err
 		}
-	} else if user.PasswordSalt == "" || !util.PasswordMatchesHash(adminPass, user.PasswordSalt) {
+	} else if user.PasswordSalt == "" || !common.PasswordMatchesHash(adminPass, user.PasswordSalt) {
 		rdbLogger.Info("Admin password salt in database doesn't match provided password, updating...")
 		if err := r.SetUserPassword(user, adminPass); err != nil {
 			return err

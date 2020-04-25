@@ -17,8 +17,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// serverCertMountPath redeclared locally for mocking
+var serverCertMountPath = v1alpha1.ServerCertificateMountPath
+
+// clientCertMountPath redeclared locally for mocking
+var clientCertMountPath = v1alpha1.ClientCertificateMountPath
+
+// The minimum TLS version required for all mTLS traffic
+var minTLSVersion = uint16(tls.VersionTLS12)
+
+// NewServerTLSConfig returns a new server TLS configuration with client
+// certificate verification enabled.
 func NewServerTLSConfig() (*tls.Config, error) {
-	caCertPool, err := getCACertPool(v1alpha1.ServerCertificateMountPath)
+	caCertPool, err := getCACertPool(serverCertMountPath)
 	if err != nil {
 		return nil, err
 	}
@@ -26,26 +37,31 @@ func NewServerTLSConfig() (*tls.Config, error) {
 		ClientCAs:                caCertPool,
 		ClientAuth:               tls.RequireAndVerifyClientCert,
 		PreferServerCipherSuites: true,
-		MinVersion:               tls.VersionTLS12,
+		MinVersion:               minTLSVersion,
 	}
 	return tlsConfig, nil
 }
 
+// NewServerTLSConfig returns a new client TLS configuration for use with
+// connecting to a server requiring mTLS.
 func NewClientTLSConfig() (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(ClientKeypair())
 	if err != nil {
 		return nil, err
 	}
-	caCertPool, err := getCACertPool(v1alpha1.ClientCertificateMountPath)
+	caCertPool, err := getCACertPool(clientCertMountPath)
 	if err != nil {
 		return nil, err
 	}
 	return &tls.Config{
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{cert},
+		MinVersion:   minTLSVersion,
 	}, nil
 }
 
+// NewClientTLSConfigFromSecret returns a client TLS config from a kubernetes
+// certificate secret.
 func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls.Config, error) {
 	nn := types.NamespacedName{Name: name, Namespace: namespace}
 	secret := &corev1.Secret{}
@@ -66,19 +82,24 @@ func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls
 	return &tls.Config{
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{cert},
+		MinVersion:   minTLSVersion,
 	}, nil
 }
 
+// ServerKeypair returns the path to a server certificatee and key.
 func ServerKeypair() (string, string) {
-	return filepath.Join(v1alpha1.ServerCertificateMountPath, corev1.TLSCertKey),
-		filepath.Join(v1alpha1.ServerCertificateMountPath, corev1.TLSPrivateKeyKey)
+	return filepath.Join(serverCertMountPath, corev1.TLSCertKey),
+		filepath.Join(serverCertMountPath, corev1.TLSPrivateKeyKey)
 }
 
+// ClientKeypair returns the path to a client certificatee and key.
 func ClientKeypair() (string, string) {
-	return filepath.Join(v1alpha1.ClientCertificateMountPath, corev1.TLSCertKey),
-		filepath.Join(v1alpha1.ClientCertificateMountPath, corev1.TLSPrivateKeyKey)
+	return filepath.Join(clientCertMountPath, corev1.TLSCertKey),
+		filepath.Join(clientCertMountPath, corev1.TLSPrivateKeyKey)
 }
 
+// getCACertPool creates a CA Certificate pool from the CA found at the given
+// mount point.
 func getCACertPool(mountPath string) (*x509.CertPool, error) {
 	caCertFile := filepath.Join(mountPath, cmmeta.TLSCAKey)
 	caCert, err := ioutil.ReadFile(caCertFile)
@@ -90,14 +111,18 @@ func getCACertPool(mountPath string) (*x509.CertPool, error) {
 	return caCertPool, nil
 }
 
+// CAUsages returns the key usages for a CA certificate. It must have every usage
+// that will be given to a certificate signed from it.
 func CAUsages() []cm.KeyUsage {
 	return append(ServerMTLSUsages(), cm.UsageSigning, cm.UsageCertSign, cm.UsageCRLSign, cm.UsageOCSPSigning)
 }
 
+// ServerMTLSUsages returns the key usages to use for a server side TLS certificate.
 func ServerMTLSUsages() []cm.KeyUsage {
 	return append(ClientMTLSUsages(), cm.UsageServerAuth)
 }
 
+// ClientMTLSUsages returns the key usages for a client side TLS certificate.
 func ClientMTLSUsages() []cm.KeyUsage {
 	return []cm.KeyUsage{
 		cm.UsageKeyEncipherment,

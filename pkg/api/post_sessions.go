@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	"github.com/google/uuid"
@@ -42,7 +41,6 @@ type swaggerStartSessionRequest struct {
 type PostSessionsResponse struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
-	Endpoint  string `json:"endpoint"`
 }
 
 // New session response
@@ -81,7 +79,6 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	apiutil.WriteJSON(&PostSessionsResponse{
 		Name:      desktop.Name,
 		Namespace: desktop.Namespace,
-		Endpoint:  util.DesktopShortURL(desktop),
 	}, w)
 }
 

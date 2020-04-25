@@ -2,7 +2,6 @@ package rethinkdb
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
@@ -23,8 +22,8 @@ func newDBCertForCR(instance *v1alpha1.VDICluster) *cm.Certificate {
 			KeySize:    4096,
 			CommonName: instance.GetRethinkDBName(),
 			DNSNames: append(
-				util.StatefulSetDNSNames(instance.GetRethinkDBName(), instance.GetCoreNamespace(), *instance.GetRethinkDBReplicas()),
-				util.StatefulSetDNSNames(instance.GetRethinkDBProxyName(), instance.GetCoreNamespace(), *instance.GetRethinkDBProxyReplicas())...,
+				tlsutil.StatefulSetDNSNames(instance.GetRethinkDBName(), instance.GetCoreNamespace(), *instance.GetRethinkDBReplicas()),
+				tlsutil.StatefulSetDNSNames(instance.GetRethinkDBProxyName(), instance.GetCoreNamespace(), *instance.GetRethinkDBProxyReplicas())...,
 			),
 			SecretName: instance.GetRethinkDBName(),
 			Usages:     tlsutil.ServerMTLSUsages(),

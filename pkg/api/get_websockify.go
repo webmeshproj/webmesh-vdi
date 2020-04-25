@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -16,16 +15,6 @@ import (
 	"github.com/koding/websocketproxy"
 	corev1 "k8s.io/api/core/v1"
 )
-
-var clientTLSConfig *tls.Config
-
-func init() {
-	var err error
-	clientTLSConfig, err = tlsutil.NewClientTLSConfig()
-	if err != nil {
-		panic(err)
-	}
-}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -70,6 +59,11 @@ func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 			apiutil.ReturnAPINotFound(err, w)
 			return
 		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	clientTLSConfig, err := tlsutil.NewClientTLSConfig()
+	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}

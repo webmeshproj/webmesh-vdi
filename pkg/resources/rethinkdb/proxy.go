@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
 	"github.com/go-logr/logr"
@@ -35,7 +35,7 @@ exec rethinkdb proxy \
 `
 
 func (r *RethinkDBReconciler) reconcileProxy(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
-	clusterSuffix := util.GetClusterSuffix()
+	clusterSuffix := common.GetClusterSuffix()
 	name := instance.GetRethinkDBName()
 	namespace := instance.GetCoreNamespace()
 	joinStr := ""
@@ -115,7 +115,7 @@ func newProxyStatefulSetForCR(cr *v1alpha1.VDICluster, joinStr, waitStr string) 
 								},
 								{
 									Name:  "CLUSTER_SUFFIX",
-									Value: util.GetClusterSuffix(),
+									Value: common.GetClusterSuffix(),
 								},
 							}...),
 							Ports: []corev1.ContainerPort{

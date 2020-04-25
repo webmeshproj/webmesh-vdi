@@ -3,7 +3,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -13,7 +13,7 @@ import (
 
 // ReconcileConfigMap will reconcile a provided configmap with the cluster.
 func ReconcileConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
-	if err := util.SetCreationSpecAnnotation(&cm.ObjectMeta, cm); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&cm.ObjectMeta, cm); err != nil {
 		return err
 	}
 	found := &corev1.ConfigMap{}
@@ -31,7 +31,7 @@ func ReconcileConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.Confi
 	}
 
 	// Check the found service spec
-	if !util.CreationSpecsEqual(cm.ObjectMeta, found.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(cm.ObjectMeta, found.ObjectMeta) {
 		// We need to update the configmap
 		reqLogger.Info("ConfigMap annotation spec has changed, updating", "ConfigMap.Name", cm.Name, "ConfigMap.Namespace", cm.Namespace)
 		found.Data = cm.Data

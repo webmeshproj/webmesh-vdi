@@ -3,8 +3,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
@@ -13,8 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ReconcileClusterIssuer reconciles a ClusterIssuer with the cluster
 func ReconcileClusterIssuer(reqLogger logr.Logger, c client.Client, issuer *cm.ClusterIssuer, wait bool) error {
-	if err := util.SetCreationSpecAnnotation(&issuer.ObjectMeta, issuer); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&issuer.ObjectMeta, issuer); err != nil {
 		return err
 	}
 
@@ -36,9 +37,10 @@ func ReconcileClusterIssuer(reqLogger logr.Logger, c client.Client, issuer *cm.C
 	}
 
 	// Check the found certificate spec
-	if !util.CreationSpecsEqual(issuer.ObjectMeta, found.ObjectMeta) {
+	if !k8sutil.CreationSpecsEqual(issuer.ObjectMeta, found.ObjectMeta) {
 		// We need to update the certificate
 		found.Spec = issuer.Spec
+		found.SetAnnotations(issuer.GetAnnotations())
 		if err := c.Update(context.TODO(), found); err != nil {
 			return err
 		}

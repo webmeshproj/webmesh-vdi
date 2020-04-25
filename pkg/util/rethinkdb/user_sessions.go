@@ -10,6 +10,12 @@ import (
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 
+// Generator functions declared externally for mocking
+var uuidFunc = uuid.New
+var nowFunc = time.Now
+
+// GetUserSession retrieves the user session with the given token. It joins the user
+// and their grants to the response object.
 func (d *rethinkDBSession) GetUserSession(id string) (*types.UserSession, error) {
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(id).Do(func(row rdb.Term) interface{} {
 		return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
@@ -41,10 +47,11 @@ func (d *rethinkDBSession) GetUserSession(id string) (*types.UserSession, error)
 	return session, nil
 }
 
+// CreateUserSession creates a new user session for the provided user.
 func (d *rethinkDBSession) CreateUserSession(user *types.User) (*types.UserSession, error) {
 	session := &types.UserSession{
-		Token:     uuid.New().String(),
-		ExpiresAt: time.Now().Add(DefaultSessionLength),
+		Token:     uuidFunc().String(),
+		ExpiresAt: nowFunc().Add(DefaultSessionLength),
 		User:      user,
 	}
 	for _, role := range session.User.Roles {
@@ -57,6 +64,7 @@ func (d *rethinkDBSession) CreateUserSession(user *types.User) (*types.UserSessi
 	return session, cursor.Err()
 }
 
+// DeleteUserSession deletes a user session from the database.
 func (d *rethinkDBSession) DeleteUserSession(session *types.UserSession) error {
 	cursor, err := rdb.DB(kvdiDB).Table(userSessionTable).Get(session.Token).Delete().Run(d.session)
 	if err != nil {

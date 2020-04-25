@@ -31,8 +31,6 @@ spec:
           image: "{{ .Values.image.repository }}:manager-{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: KVDI_APP_CLUSTER_ROLE
-              value: {{ include "kvdi.fullname" . }}-app
             - name: OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:

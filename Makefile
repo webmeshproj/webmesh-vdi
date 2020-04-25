@@ -102,8 +102,11 @@ lint: ${GOLANGCI_LINT}
 	${GOLANGCI_LINT} run -v --timeout 300s
 
 # Tests
+TEST_FLAGS ?= -v -cover -race -coverpkg=./... -coverprofile=profile.cov
 test:
-	echo 'no tests yet, but needed'
+	go test ${TEST_FLAGS} ./...
+	go tool cover -func profile.cov
+	rm profile.cov
 
 ###
 # Kind helpers for local testing

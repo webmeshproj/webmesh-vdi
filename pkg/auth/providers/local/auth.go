@@ -8,14 +8,15 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 )
 
 type LocalAuthProvider struct {
-	apiutil.AuthProvider
+	types.AuthProvider
 
 	tlsConfig *tls.Config
 	rdbAddr   string
@@ -26,7 +27,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func New() apiutil.AuthProvider {
+func New() types.AuthProvider {
 	return &LocalAuthProvider{}
 }
 
@@ -61,7 +62,7 @@ func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(errors.New("Invalid credentials"), w)
 		return
 	}
-	if !util.PasswordMatchesHash(req.Password, user.PasswordSalt) {
+	if !common.PasswordMatchesHash(req.Password, user.PasswordSalt) {
 		apiutil.ReturnAPIError(errors.New("Invalid credentials"), w)
 		return
 	}

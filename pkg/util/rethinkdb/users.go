@@ -2,11 +2,13 @@ package rethinkdb
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
+
+var hashFunc = common.HashPassword
 
 func (d *rethinkDBSession) GetAllUsers() ([]types.User, error) {
 	cursor, err := rdb.DB(kvdiDB).Table(usersTable).Map(func(row rdb.Term) interface{} {
@@ -59,7 +61,7 @@ func (d *rethinkDBSession) GetUser(name string) (*types.User, error) {
 }
 
 func (d *rethinkDBSession) CreateUser(user *types.User) error {
-	hash, err := util.HashPassword(user.Password)
+	hash, err := hashFunc(user.Password)
 	if err != nil {
 		return err
 	}
@@ -86,7 +88,7 @@ func (d *rethinkDBSession) UpdateUser(user *types.User) error {
 }
 
 func (d *rethinkDBSession) SetUserPassword(user *types.User, password string) error {
-	hash, err := util.HashPassword(password)
+	hash, err := hashFunc(password)
 	if err != nil {
 		return err
 	}

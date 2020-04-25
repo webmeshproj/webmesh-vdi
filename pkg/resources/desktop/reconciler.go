@@ -5,7 +5,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
-	"github.com/tinyzimmer/kvdi/pkg/util"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
@@ -126,7 +126,7 @@ func (f *DesktopReconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.
 }
 
 func (f *DesktopReconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
-	if !util.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
+	if !common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		instance.SetFinalizers(append(instance.GetFinalizers(), userdataReclaimFinalizer))
 		if err := f.client.Update(context.TODO(), instance); err != nil {
 			return err
@@ -140,11 +140,11 @@ func (f *DesktopReconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1
 
 func (f *DesktopReconciler) runFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
 	var updated bool
-	if util.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
+	if common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		if err := f.reclaimVolumes(reqLogger, instance); err != nil {
 			return err
 		}
-		instance.SetFinalizers(util.StringSliceRemove(instance.GetFinalizers(), userdataReclaimFinalizer))
+		instance.SetFinalizers(common.StringSliceRemove(instance.GetFinalizers(), userdataReclaimFinalizer))
 		updated = true
 	}
 	if updated {

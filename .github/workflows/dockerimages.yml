@@ -27,7 +27,7 @@ jobs:
       id: version
 
     - name: Build the manager docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-manager
+      run: VERSION=${{ steps.version.outputs.tag }} make generate build-manager
 
     - name: Build the app docker image
       run: VERSION=${{ steps.version.outputs.tag }} make build-app
