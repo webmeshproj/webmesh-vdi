@@ -59,7 +59,7 @@
                 <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit Role</q-tooltip>
               </q-btn>
               &nbsp;
-              <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onDeleteRole(props.row.name)">
+              <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteRole(props.row.name)">
                 <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete Role</q-tooltip>
               </q-btn>
             </q-td>
@@ -70,6 +70,19 @@
     </div>
     <q-dialog v-model="editRoleDialog">
       <EditRoleDialog :name="editRole"/>
+    </q-dialog>
+    <q-dialog v-model="confirmDelete" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-avatar icon="warning" color="primary" text-color="white" />
+          <span class="q-ml-sm">Are you sure you want to delete <strong>{{ roleToDelete }}</strong>?</span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="primary" v-close-popup />
+          <q-btn flat label="Delete" color="red" v-close-popup @click="onDeleteRole(roleToDelete)" />
+        </q-card-actions>
+      </q-card>
     </q-dialog>
   </div>
 </template>
@@ -123,7 +136,9 @@ export default {
       columns: roleColumns,
       newRoleDialog: false,
       editRoleDialog: false,
-      editRole: ''
+      editRole: '',
+      roleToDelete: '',
+      confirmDelete: false
     }
   },
 
@@ -144,6 +159,21 @@ export default {
     onEditRole (role) {
       this.editRole = role
       this.editRoleDialog = true
+    },
+
+    onConfirmDeleteRole (roleName) {
+      // TODO: There is no server-side check for this yet - and there should be
+      if (roleName === 'admin') {
+        this.$q.notify({
+          color: 'red-4',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'You cannot delete the admin role'
+        })
+        return
+      }
+      this.roleToDelete = roleName
+      this.confirmDelete = true
     },
 
     async onDeleteRole (roleName) {

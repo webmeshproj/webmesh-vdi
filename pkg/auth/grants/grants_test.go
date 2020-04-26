@@ -34,3 +34,9 @@ func TestGrantNames(t *testing.T) {
 		t.Error("Expected ReadTemplates,LaunchTemplates for LaunchTemplatesGrant, got:", LaunchTemplatesGrant.Names())
 	}
 }
+
+func TestGrants(t *testing.T) {
+	if !reflect.DeepEqual(All.Grants(), Grants) {
+		t.Error("Expected all grants for all grants, got:", All.Grants())
+	}
+}

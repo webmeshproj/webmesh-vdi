@@ -1,71 +1,23 @@
 package api
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 type AllowFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error)
-type OverrideFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource string, err error)
+type ResourceFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource, reason string, err error)
 
 type MethodPermissions struct {
 	RoleGrant    grants.RoleGrant
 	AllowFunc    AllowFunc
-	ResourceFunc OverrideFunc
-}
-
-func allowSameUser(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	pathUser := getUserFromRequest(r)
-	if reqUser.Name != pathUser {
-		return false, false, nil
-	}
-	reqUserRoles := reqUser.RoleNames()
-	// make sure the user isn't trying to change their permission level
-	if reqObj, ok := GetRequestObject(r).(*PostUserRequest); ok {
-		if !reqUser.HasGrant(grants.WriteUsers) || !reqUser.HasGrant(grants.WriteRoles) {
-			for _, role := range reqObj.Roles {
-				if !common.StringSliceContains(reqUserRoles, role) {
-					return false, false, nil
-				}
-			}
-		}
-	}
-	return true, true, nil
-}
-
-func allowSessionOwner(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	nn := getNamespacedNameFromRequest(r)
-	found := &v1alpha1.Desktop{}
-	if err := d.client.Get(context.TODO(), nn, found); err != nil {
-		return false, false, err
-	}
-	if !reflect.DeepEqual(found.GetLabels(), d.vdiCluster.GetUserDesktopLabels(reqUser.Name)) {
-		return false, false, nil
-	}
-	return true, true, nil
-}
-
-func allowAll(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	return true, false, nil
-}
-
-func checkUserLaunchRestraints(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource string, err error) {
-	reqObj, ok := GetRequestObject(r).(*PostSessionsRequest)
-	if !ok {
-		return false, "Invalid", errors.New("PostSessionsRequest object is nil")
-	}
-	resourceName := fmt.Sprintf("%s/%s", reqObj.GetNamespace(), reqObj.GetTemplate())
-	return reqUser.CanLaunch(reqObj.GetNamespace(), reqObj.GetTemplate()), resourceName, nil
+	ResourceFunc ResourceFunc
 }
 
 var RouterGrantRequirements = map[string]map[string]MethodPermissions{
@@ -95,8 +47,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		},
 	},
 	"/api/users": {
-		"GET":  {RoleGrant: grants.ReadUsers},
-		"POST": {RoleGrant: grants.WriteUsers},
+		"GET": {RoleGrant: grants.ReadUsers},
+		"POST": {
+			RoleGrant:    grants.WriteUsers,
+			ResourceFunc: denyUserElevatePerms,
+		},
 	},
 	"/api/users/{user}": {
 		"GET": {
@@ -104,18 +59,25 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			AllowFunc: allowSameUser,
 		},
 		"PUT": {
-			RoleGrant: grants.WriteUsers,
-			AllowFunc: allowSameUser,
+			RoleGrant:    grants.WriteUsers,
+			AllowFunc:    allowSameUser,
+			ResourceFunc: denyUserElevatePerms,
 		},
 		"DELETE": {RoleGrant: grants.WriteUsers},
 	},
 	"/api/roles": {
-		"GET":  {RoleGrant: grants.ReadRoles},
-		"POST": {RoleGrant: grants.WriteRoles},
+		"GET": {RoleGrant: grants.ReadRoles},
+		"POST": {
+			RoleGrant:    grants.WriteRoles,
+			ResourceFunc: denyUserElevatePerms,
+		},
 	},
 	"/api/roles/{role}": {
-		"GET":    {RoleGrant: grants.ReadRoles},
-		"PUT":    {RoleGrant: grants.WriteRoles},
+		"GET": {RoleGrant: grants.ReadRoles},
+		"PUT": {
+			RoleGrant:    grants.WriteRoles,
+			ResourceFunc: denyUserElevatePerms,
+		},
 		"DELETE": {RoleGrant: grants.WriteRoles},
 	},
 	"/api/templates": {
@@ -206,7 +168,7 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 		}
 
 		if methodGrant.ResourceFunc != nil {
-			if allowed, resource, err := methodGrant.ResourceFunc(d, userSession.User, r); err != nil {
+			if allowed, resource, reason, err := methodGrant.ResourceFunc(d, userSession.User, r); err != nil {
 				apiutil.ReturnAPIForbidden(err, "An error ocurred validating permission to the requested resource", w)
 				result.Allowed = false
 				d.auditLog(result)
@@ -217,6 +179,9 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 					result.Allowed = false
 					names := methodGrant.RoleGrant.Names()
 					msg := fmt.Sprintf("%s cannot %s on resource %s", userSession.User.Name, strings.Join(names, ","), resource)
+					if reason != "" {
+						msg = msg + fmt.Sprintf(". %s", reason)
+					}
 					apiutil.ReturnAPIForbidden(err, msg, w)
 					d.auditLog(result)
 					return

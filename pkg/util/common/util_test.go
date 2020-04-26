@@ -39,6 +39,18 @@ func TestStringSliceRemove(t *testing.T) {
 	}
 }
 
+func TestAppendStringIfMissing(t *testing.T) {
+	sl := []string{"a", "b", "c"}
+	sl = AppendStringIfMissing(sl, "a", "b", "c")
+	if !reflect.DeepEqual(sl, []string{"a", "b", "c"}) {
+		t.Error("Did not get correct slice back:", sl)
+	}
+	sl = AppendStringIfMissing(sl, "d", "e")
+	if !reflect.DeepEqual(sl, []string{"a", "b", "c", "d", "e"}) {
+		t.Error("Did not get correct slice back:", sl)
+	}
+}
+
 func TestParseFlagsAndSetupLogging(t *testing.T) {
 	ParseFlagsAndSetupLogging()
 }

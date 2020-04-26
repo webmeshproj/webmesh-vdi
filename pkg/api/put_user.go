@@ -5,7 +5,6 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // PutUserRequest requests updates to an existing user
@@ -43,7 +42,7 @@ func (d *desktopAPI) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userName := getUserFromRequest(r)
 	user := &types.User{Name: userName}
 
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -73,7 +72,7 @@ func (d *desktopAPI) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 // Request containing updates to a user
 // swagger:parameters putUserRequest
-type wwaggerUpdateUserRequest struct {
+type swaggerUpdateUserRequest struct {
 	// in:body
 	Body PutUserRequest
 }

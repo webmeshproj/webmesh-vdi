@@ -11,8 +11,11 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+// auditLogger handles the audit events. This could be overridden with audit
+// "providers" that just implement the logr interface.
 var auditLogger = logf.Log.WithName("api_audit")
 
+// AuditResult contains information about an audit event from the API router.
 type AuditResult struct {
 	Allowed     bool
 	FromOwner   bool
@@ -22,11 +25,13 @@ type AuditResult struct {
 	Request     *http.Request
 }
 
+// actions maps allowed values to display strings
 var actions = map[bool]string{
 	true:  "ALLOWED",
 	false: "DENIED",
 }
 
+// buildAuditMsg builds a user-friendly audit message to pass to the logger.
 func buildAuditMsg(result *AuditResult) string {
 	msg := fmt.Sprintf(
 		"%s %s => %s => %s",
@@ -44,6 +49,7 @@ func buildAuditMsg(result *AuditResult) string {
 	return msg
 }
 
+// auditLog logs the event with parseable metadata.
 func (d *desktopAPI) auditLog(result *AuditResult) {
 	if !d.vdiCluster.AuditLogEnabled() {
 		return

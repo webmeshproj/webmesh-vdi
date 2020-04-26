@@ -6,6 +6,8 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 )
 
+// GetAuthProvider returns the authentication provider for the given VDICluster.
+// Currently only local-auth is supported.
 func GetAuthProvider(cluster *v1alpha1.VDICluster) types.AuthProvider {
 	return local.New()
 }

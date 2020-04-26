@@ -7,7 +7,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // PostRoleRequest requests updates to an existing role.
@@ -24,6 +23,15 @@ func (p *PutRoleRequest) Validate() error {
 		}
 	}
 	return nil
+}
+
+func newRoleFromPutRequest(name string, req *PutRoleRequest) *types.Role {
+	return &types.Role{
+		Name:             name,
+		Grants:           req.Grants,
+		Namespaces:       req.Namespaces,
+		TemplatePatterns: req.TemplatePatterns,
+	}
 }
 
 // swagger:operation PUT /api/roles/{role} Roles putRoleRequest
@@ -56,14 +64,8 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	roleName := getRoleFromRequest(r)
-	role := &types.Role{
-		Name:             roleName,
-		Grants:           req.Grants,
-		Namespaces:       req.Namespaces,
-		TemplatePatterns: req.TemplatePatterns,
-	}
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	role := newRoleFromPutRequest(getRoleFromRequest(r), req)
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

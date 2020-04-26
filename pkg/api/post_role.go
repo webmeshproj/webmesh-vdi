@@ -10,7 +10,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	apierrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // PostRoleRequest represents a request for a new role.
@@ -40,6 +39,15 @@ func (p *PostRoleRequest) Validate() error {
 	return nil
 }
 
+func newRoleFromRequest(req *PostRoleRequest) *types.Role {
+	return &types.Role{
+		Name:             req.Name,
+		Grants:           req.Grants,
+		Namespaces:       req.Namespaces,
+		TemplatePatterns: req.TemplatePatterns,
+	}
+}
+
 // swagger:route POST /api/roles Roles postRoleRequest
 // Create a new role in kVDI.
 // responses:
@@ -53,13 +61,8 @@ func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	role := &types.Role{
-		Name:             req.Name,
-		Grants:           req.Grants,
-		Namespaces:       req.Namespaces,
-		TemplatePatterns: req.TemplatePatterns,
-	}
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	role := newRoleFromRequest(req)
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

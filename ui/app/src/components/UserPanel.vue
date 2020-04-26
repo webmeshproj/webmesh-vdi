@@ -74,7 +74,7 @@
                 <q-btn round dense flat icon="create"  size="sm" color="grey" @click="onEditUser(props.row.name)">
                   <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit User</q-tooltip>
                 </q-btn>
-                <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onDeleteUser(props.row.name)">
+                <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteUser(props.row.name)">
                   <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete User</q-tooltip>
                 </q-btn>
               </q-td>
@@ -87,6 +87,19 @@
       </div>
       <q-dialog v-model="editUserDialog">
         <EditUserDialog :name="editUser"/>
+      </q-dialog>
+      <q-dialog v-model="confirmDelete" persistent>
+        <q-card>
+          <q-card-section class="row items-center">
+            <q-avatar icon="warning" color="primary" text-color="white" />
+            <span class="q-ml-sm">Are you sure you want to delete <strong>{{ userToDelete }}</strong>?</span>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="primary" v-close-popup />
+            <q-btn flat label="Delete" color="red" v-close-popup @click="onDeleteUser(userToDelete)" />
+          </q-card-actions>
+        </q-card>
       </q-dialog>
   </div>
 </template>
@@ -145,7 +158,9 @@ export default {
       columns: userColumns,
       newUserDialog: false,
       editUserDialog: false,
-      editUser: ''
+      editUser: '',
+      userToDelete: '',
+      confirmDelete: false
     }
   },
 
@@ -165,6 +180,21 @@ export default {
     onEditUser (user) {
       this.editUser = user
       this.editUserDialog = true
+    },
+
+    onConfirmDeleteUser (userName) {
+      // TODO: There is no server-side check for this yet - and there should be
+      if (userName === 'admin') {
+        this.$q.notify({
+          color: 'red-4',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'You cannot delete the admin user'
+        })
+        return
+      }
+      this.userToDelete = userName
+      this.confirmDelete = true
     },
 
     async onDeleteUser (userName) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 
@@ -16,6 +17,18 @@ var newItem = "new-item"
 var errItem = "err-item"
 var testHash = "test-hash"
 var testToken = "00000000-0000-0000-0000-000000000000"
+
+// External test values
+var SuccessItem = "success"
+var ErrorItem = "error"
+
+// UUID generator override when mocking
+func newFakeToken() uuid.UUID { return uuid.UUID{} }
+
+// fake clock to implement nowFunc when mocking
+type fakeClock struct{}
+
+func (*fakeClock) Now() time.Time { return time.Unix(0, 0) }
 
 // mockQueries contains the queries the mock session gets configured to serve.
 // Essentially, this is a declaration of the state of the mock database.
@@ -152,6 +165,29 @@ var mockQueries = []struct {
 		Result: nil,
 	},
 	{
+		Query: rdb.DB(kvdiDB).Table(usersTable).Get(SuccessItem).Do(func(row rdb.Term) interface{} {
+			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
+				return map[string]interface{}{
+					"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(plan.Field("role_ids"))).CoerceTo("array"),
+				}
+			}), nil)
+		}),
+		Result: map[string]interface{}{
+			"id":       SuccessItem,
+			"password": testHash,
+		},
+	},
+	{
+		Query: rdb.DB(kvdiDB).Table(usersTable).Get(ErrorItem).Do(func(row rdb.Term) interface{} {
+			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
+				return map[string]interface{}{
+					"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(plan.Field("role_ids"))).CoerceTo("array"),
+				}
+			}), nil)
+		}),
+		Error: errors.New(""),
+	},
+	{
 		Query: rdb.DB(kvdiDB).Table(usersTable).Get(errItem).Do(func(row rdb.Term) interface{} {
 			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
 				return map[string]interface{}{
@@ -223,6 +259,25 @@ var mockQueries = []struct {
 				Name: newItem,
 			},
 		}),
+	},
+	{
+		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
+			Token:     testToken,
+			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
+			User: &types.User{
+				Name: SuccessItem,
+			},
+		}),
+	},
+	{
+		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
+			Token:     testToken,
+			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
+			User: &types.User{
+				Name: ErrorItem,
+			},
+		}),
+		Error: errors.New(""),
 	},
 	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Insert(&types.Role{Name: errItem}),
@@ -375,5 +430,12 @@ func NewMock(args ...interface{}) RethinkDBSession {
 		mock.On(query.Query).Return(query.Result, query.Error)
 	}
 
-	return &rethinkDBSession{session: mock, closeFunc: func() error { return nil }}
+	fk := &fakeClock{}
+
+	return &rethinkDBSession{
+		session:   mock,
+		closeFunc: func() error { return nil },
+		tokenFunc: newFakeToken,
+		nowFunc:   fk.Now,
+	}
 }

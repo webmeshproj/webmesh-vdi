@@ -42,6 +42,21 @@ func StringSliceRemove(ss []string, s string) []string {
 	return newSlice
 }
 
+// AppendStringIfMissing will append the given element(s) to the slice only if
+// they are not already present.
+func AppendStringIfMissing(sl []string, s ...string) []string {
+ArgLoop:
+	for _, x := range s {
+		for _, ele := range sl {
+			if ele == x {
+				continue ArgLoop
+			}
+		}
+		sl = append(sl, x)
+	}
+	return sl
+}
+
 // ParseFlagsAndSetupLogging is a utility function to setup logging
 // and parse any provided flags.
 func ParseFlagsAndSetupLogging() {

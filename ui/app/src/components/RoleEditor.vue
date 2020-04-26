@@ -149,6 +149,7 @@ export default {
         namespaces: this.namespaceSelection,
         templatePatterns: this.templatePatterns
       }
+      console.log(payload)
       try {
         await this.$axios.post('/api/roles', payload)
         this.$q.notify({
@@ -173,6 +174,7 @@ export default {
         namespaces: this.namespaceSelection,
         templatePatterns: this.templatePatterns
       }
+      console.log(payload)
       try {
         await this.$axios.put(`/api/roles/${this.roleToEdit}`, payload)
         this.$q.notify({

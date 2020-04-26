@@ -5,7 +5,6 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // swagger:operation DELETE /api/roles/{role} Roles deleteRoleRequest
@@ -28,7 +27,7 @@ import (
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	role := getRoleFromRequest(r)
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

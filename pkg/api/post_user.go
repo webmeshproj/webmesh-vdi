@@ -8,7 +8,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	apierrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // PostUserRequest represents a request to create a new user.
@@ -57,7 +56,7 @@ func (d *desktopAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	for _, role := range req.Roles {
 		user.Roles = append(user.Roles, &types.Role{Name: role})
 	}
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

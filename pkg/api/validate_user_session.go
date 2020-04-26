@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
@@ -20,7 +19,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			apiutil.ReturnAPIForbidden(nil, "No token provided in request", w)
 			return
 		}
-		sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+		sess, err := d.getDB()
 		if err != nil {
 			apiutil.ReturnAPIForbidden(err, "Could not connect to database backend", w)
 			return

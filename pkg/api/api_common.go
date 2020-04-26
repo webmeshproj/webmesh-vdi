@@ -50,6 +50,22 @@ func (d *desktopAPI) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	apiutil.WriteJSON(session, w)
 }
 
+// swagger:route POST /api/login Auth loginRequest
+// Retrieves a mapping of grants to their bit values.
+// responses:
+//   200: sessionResponse
+//   400: error
+//   403: error
+//   500: error
+func loginDoc(w http.ResponseWriter, r *http.Request) {}
+
+// Login request
+// swagger:parameters loginRequest
+type swaggerLoginRequest struct {
+	// in:body
+	Body authtypes.LoginRequest
+}
+
 // Success response
 // swagger:response boolResponse
 type swaggerBoolResponse struct {

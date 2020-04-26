@@ -5,7 +5,6 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
 // swagger:route GET /api/roles Roles getRoles
@@ -16,7 +15,7 @@ import (
 //   403: error
 //   500: error
 func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -52,7 +51,7 @@ func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 //   "500":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) GetRole(w http.ResponseWriter, r *http.Request) {
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

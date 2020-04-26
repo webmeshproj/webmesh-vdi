@@ -2,19 +2,10 @@ package rethinkdb
 
 import (
 	"testing"
-	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
-
-type fakeClock struct{}
-
-func (*fakeClock) Now() time.Time { return time.Unix(0, 0) }
-
-func newFakeUUID() uuid.UUID { return uuid.UUID{} }
 
 func TestGetUserSession(t *testing.T) {
 	mock := NewMock()
@@ -33,9 +24,6 @@ func TestGetUserSession(t *testing.T) {
 
 func TestCreateUserSession(t *testing.T) {
 	mock := NewMock()
-	fk := &fakeClock{}
-	nowFunc = fk.Now
-	uuidFunc = newFakeUUID
 	if _, err := mock.CreateUserSession(&types.User{Name: newItem}); err != nil {
 		t.Error("Expected no error got,", err)
 	}

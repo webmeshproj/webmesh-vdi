@@ -1,18 +1,11 @@
 package rethinkdb
 
 import (
-	"time"
-
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
-	"github.com/google/uuid"
 	rdb "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
-
-// Generator functions declared externally for mocking
-var uuidFunc = uuid.New
-var nowFunc = time.Now
 
 // GetUserSession retrieves the user session with the given token. It joins the user
 // and their grants to the response object.
@@ -50,8 +43,8 @@ func (d *rethinkDBSession) GetUserSession(id string) (*types.UserSession, error)
 // CreateUserSession creates a new user session for the provided user.
 func (d *rethinkDBSession) CreateUserSession(user *types.User) (*types.UserSession, error) {
 	session := &types.UserSession{
-		Token:     uuidFunc().String(),
-		ExpiresAt: nowFunc().Add(DefaultSessionLength),
+		Token:     d.tokenFunc().String(),
+		ExpiresAt: d.nowFunc().Add(DefaultSessionLength),
 		User:      user,
 	}
 	for _, role := range session.User.Roles {

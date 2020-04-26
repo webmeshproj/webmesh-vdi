@@ -6,13 +6,12 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// swagger:route POST /api/logout Miscellaneous logout
+// swagger:route POST /api/logout Auth logout
 // Ends the current user session.
 // responses:
 //   200: boolResponse
@@ -21,7 +20,7 @@ import (
 //   500: error
 func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
 	userSession := GetRequestUserSession(r)
-	sess, err := rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
+	sess, err := d.getDB()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
