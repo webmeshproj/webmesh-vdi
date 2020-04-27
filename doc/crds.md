@@ -15,9 +15,13 @@ Types
 -   [DesktopTemplate](#%23kvdi.io%2fv1alpha1.DesktopTemplate)
 -   [DesktopTemplateSpec](#%23kvdi.io%2fv1alpha1.DesktopTemplateSpec)
 -   [LocalAuthConfig](#%23kvdi.io%2fv1alpha1.LocalAuthConfig)
+-   [Resource](#%23kvdi.io%2fv1alpha1.Resource)
 -   [RethinkDBConfig](#%23kvdi.io%2fv1alpha1.RethinkDBConfig)
+-   [Rule](#%23kvdi.io%2fv1alpha1.Rule)
 -   [VDICluster](#%23kvdi.io%2fv1alpha1.VDICluster)
 -   [VDIClusterSpec](#%23kvdi.io%2fv1alpha1.VDIClusterSpec)
+-   [VDIRole](#%23kvdi.io%2fv1alpha1.VDIRole)
+-   [Verb](#%23kvdi.io%2fv1alpha1.Verb)
 
 kvdi.io/v1alpha1
 ----------------
@@ -316,6 +320,12 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 
 LocalAuthConfig represents a local, db-based authentication driver.
 
+Resource (`string` alias)
+
+(*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
+
+Resource represents the target of an API action
+
 ### RethinkDBConfig
 
 (*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
@@ -357,6 +367,42 @@ RethinkDBConfig represents rethinkdb configurations for the VDI cluster
 <tr class="odd">
 <td><code>proxyResources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements forr the proxy pods.</p></td>
+</tr>
+</tbody>
+</table>
+
+### Rule
+
+(*Appears on:* [VDIRole](#kvdi.io/v1alpha1.VDIRole))
+
+Rule represents a set of permissions applied to a VDIRole. It mostly
+resembles an rbacv1.PolicyRule, with resources being a regex and the
+addition of a namespace selector. An empty rule is effectively admin
+privileges.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>verbs</code> <em><a href="#kvdi.io/v1alpha1.Verb">[]Verb</a></em></td>
+<td><p>The actions this rule applies for. VerbAll matches all actions.</p></td>
+</tr>
+<tr class="even">
+<td><code>resources</code> <em><a href="#kvdi.io/v1alpha1.Resource">[]Resource</a></em></td>
+<td><p>Resources this rule applies to. ResourceAll matches all resources.</p></td>
+</tr>
+<tr class="odd">
+<td><code>resourcePatterns</code> <em>[]string</em></td>
+<td><p>Resource regexes that match this rule. This can be template patterns, role names or user names. There is no All representation because * will have that effect on its own when the regex is evaluated.</p></td>
+</tr>
+<tr class="even">
+<td><code>namespaces</code> <em>[]string</em></td>
+<td><p>Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.</p></td>
 </tr>
 </tbody>
 </table>
@@ -471,6 +517,35 @@ VDIClusterSpec defines the desired state of VDICluster
 </tbody>
 </table>
 
+### VDIRole
+
+VDIRole is the Schema for the vdiroles API
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
+<td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
+</tr>
+<tr class="even">
+<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><p>A list of rules granting access to resources in the VDICluster.</p></td>
+</tr>
+</tbody>
+</table>
+
+Verb (`string` alias)
+
+(*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
+
+Verb represents an API action
+
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b8ffd1a`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `3c34300`.*

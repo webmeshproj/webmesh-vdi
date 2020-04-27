@@ -15,7 +15,7 @@ import (
 //      must match.
 type Role struct {
 	Name             string           `rethinkdb:"id" json:"name"`
-	Grants           grants.RoleGrant `rethinkdb:"grants" json:"-"`
+	Grants           grants.RoleGrant `rethinkdb:"grants" json:"grantBit"`
 	Namespaces       []string         `rethinkdb:"namespaces" json:"namespaces"`
 	TemplatePatterns []string         `rethinkdb:"templatePatterns" json:"templatePatterns"`
 	GrantNames       []string         `rethinkdb:"-" json:"grants"`

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
@@ -25,16 +26,37 @@ func (u *User) HasGrant(grant grants.RoleGrant) bool {
 	return false
 }
 
-// Namespaces returns a list of namespaces the user is allowed to provision
-// templates in. An empty list signifies ANY namespace.
-func (u *User) Namespaces() []string {
+// FilterNamespaces takes a list of namespaces and filters it based on the ones
+// the user is allowed to launch templates in.
+func (u *User) FilterNamespaces(nss []string) []string {
 	namespaces := make([]string, 0)
 	for _, role := range u.Roles {
-		if len(role.Namespaces) > 0 {
-			namespaces = common.AppendStringIfMissing(namespaces, role.Namespaces...)
+		if len(role.Namespaces) == 0 {
+			return nss
+		}
+		for _, ns := range role.Namespaces {
+			if common.StringSliceContains(nss, ns) {
+				namespaces = common.AppendStringIfMissing(namespaces, ns)
+			}
 		}
 	}
 	return namespaces
+}
+
+// FilterTemplates takes a list of templates and filters it based on the ones
+// the user is allowed to launch.
+func (u *User) FilterTemplates(tmpls []v1alpha1.DesktopTemplate) []v1alpha1.DesktopTemplate {
+	filtered := make([]v1alpha1.DesktopTemplate, 0)
+TmplLoop:
+	for _, tmpl := range tmpls {
+		for _, role := range u.Roles {
+			if role.MatchesTemplatePattern(tmpl.GetName()) {
+				filtered = append(filtered, tmpl)
+				continue TmplLoop
+			}
+		}
+	}
+	return filtered
 }
 
 // RoleNames returns a list of the role names for this user.

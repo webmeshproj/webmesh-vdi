@@ -1,0 +1,73 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: vdiroles.kvdi.io
+spec:
+  group: kvdi.io
+  names:
+    kind: VDIRole
+    listKind: VDIRoleList
+    plural: vdiroles
+    singular: vdirole
+  scope: Cluster
+  validation:
+    openAPIV3Schema:
+      description: VDIRole is the Schema for the vdiroles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        rules:
+          description: A list of rules granting access to resources in the VDICluster.
+          items:
+            description: Rule represents a set of permissions applied to a VDIRole.
+              It mostly resembles an rbacv1.PolicyRule, with resources being a regex
+              and the addition of a namespace selector. An empty rule is effectively
+              admin privileges.
+            properties:
+              namespaces:
+                description: Namespaces this rule applies to. Only evaluated for template
+                  launching permissions. NamespaceAll matches all namespaces.
+                items:
+                  type: string
+                type: array
+              resourcePatterns:
+                description: Resource regexes that match this rule. This can be template
+                  patterns, role names or user names. There is no All representation
+                  because * will have that effect on its own when the regex is evaluated.
+                items:
+                  type: string
+                type: array
+              resources:
+                description: Resources this rule applies to. ResourceAll matches all
+                  resources.
+                items:
+                  description: Resource represents the target of an API action
+                  type: string
+                type: array
+              verbs:
+                description: The actions this rule applies for. VerbAll matches all
+                  actions.
+                items:
+                  description: Verb represents an API action
+                  type: string
+                type: array
+            type: object
+          type: array
+      required:
+      - rules
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

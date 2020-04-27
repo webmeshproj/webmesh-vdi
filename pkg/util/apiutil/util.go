@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
+
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	verrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
@@ -69,4 +73,14 @@ func WriteOK(w http.ResponseWriter) {
 	WriteJSON(map[string]bool{
 		"ok": true,
 	}, w)
+}
+
+func GenerateJWT(secret []byte, user *types.User) (types.JWTClaims, string, error) {
+	claims := types.JWTClaims{user, jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(types.DefaultSessionLength).Unix(),
+		IssuedAt:  time.Now().Unix(),
+	}}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(secret)
+	return claims, tokenString, err
 }

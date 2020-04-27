@@ -22,13 +22,13 @@ const ContextUserKey = 0
 const ContextRequestObjectKey = 1
 
 // SetRequestUserSession writes the user session to the request context
-func SetRequestUserSession(r *http.Request, sess *authtypes.UserSession) {
+func SetRequestUserSession(r *http.Request, sess *authtypes.JWTClaims) {
 	context.Set(r, ContextUserKey, sess)
 }
 
 // GetRequestUserSession retrieves the user session from the request context.
-func GetRequestUserSession(r *http.Request) *authtypes.UserSession {
-	return context.Get(r, ContextUserKey).(*authtypes.UserSession)
+func GetRequestUserSession(r *http.Request) *authtypes.JWTClaims {
+	return context.Get(r, ContextUserKey).(*authtypes.JWTClaims)
 }
 
 func SetRequestObject(r *http.Request, obj interface{}) {
@@ -42,12 +42,12 @@ func GetRequestObject(r *http.Request) interface{} {
 // swagger:route GET /api/whoami Miscellaneous whoAmI
 // Retrieves information about the current user session.
 // responses:
-//   200: sessionResponse
+//   200: userResponse
 //   403: error
 //   500: error
 func (d *desktopAPI) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	session := GetRequestUserSession(r)
-	apiutil.WriteJSON(session, w)
+	apiutil.WriteJSON(session.User, w)
 }
 
 // swagger:route POST /api/login Auth loginRequest
@@ -79,7 +79,7 @@ type swaggerBoolResponse struct {
 // swagger:response sessionResponse
 type swaggerSessionResponse struct {
 	// in:body
-	Body authtypes.UserSession
+	Body authtypes.SessionResponse
 }
 
 // A generic error response

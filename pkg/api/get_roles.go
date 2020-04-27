@@ -8,7 +8,7 @@ import (
 )
 
 // swagger:route GET /api/roles Roles getRoles
-// Retrieves a list of the authorization rolse in kVDI.
+// Retrieves a list of the authorization roles in kVDI.
 // responses:
 //   200: rolesResponse
 //   400: error

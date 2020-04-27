@@ -26,10 +26,10 @@ func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer sess.Close()
-	if err := sess.DeleteUserSession(userSession); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
+	// if err := sess.DeleteUserSession(userSession); err != nil {
+	// 	apiutil.ReturnAPIError(err, w)
+	// 	return
+	// }
 	if err := d.CleanupUserDesktops(userSession.User.Name); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

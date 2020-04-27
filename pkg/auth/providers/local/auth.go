@@ -10,6 +10,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
+	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 )
 
 // LocalAuthProvider implements an AuthProvider that uses the rethinkdb database
@@ -20,16 +21,22 @@ import (
 type LocalAuthProvider struct {
 	types.AuthProvider
 
-	// getDB is a function configureed at initialization that
-	// retrieves a db connection.
-	getDB    func() (rethinkdb.RethinkDBSession, error)
-	compHash func(string, string) bool
+	// utility functions for mocking
+	getDB     func() (rethinkdb.RethinkDBSession, error)
+	getKey    func() ([]byte, error)
+	signToken func([]byte, *types.User) (types.JWTClaims, string, error)
+	compHash  func(string, string) bool
 }
 
 // New returns a new LocalAuthProvider.
 func New() types.AuthProvider {
 	return &LocalAuthProvider{
-		compHash: common.PasswordMatchesHash,
+		compHash:  common.PasswordMatchesHash,
+		signToken: apiutil.GenerateJWT,
+		getKey: func() ([]byte, error) {
+			_, key := tlsutil.ServerKeypair()
+			return ioutil.ReadFile(key)
+		},
 	}
 }
 
@@ -78,11 +85,22 @@ func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	session, err := sess.CreateUserSession(user)
+	secret, err := a.getKey()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	claims, newToken, err := a.signToken(secret, user)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
 
-	apiutil.WriteJSON(session, w)
+	response := &types.SessionResponse{
+		Token:     newToken,
+		ExpiresAt: claims.ExpiresAt,
+		User:      user,
+	}
+
+	apiutil.WriteJSON(response, w)
 }

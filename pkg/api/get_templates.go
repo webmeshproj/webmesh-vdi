@@ -19,12 +19,13 @@ import (
 //   403: error
 //   500: error
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {
+	sess := GetRequestUserSession(r)
 	tmpls, err := d.getAllDesktopTemplates()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(tmpls.Items, w)
+	apiutil.WriteJSON(sess.User.FilterTemplates(tmpls.Items), w)
 }
 
 // getAllDesktopTemplates lists the DesktopTemplates registered in the api servers.

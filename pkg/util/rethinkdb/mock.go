@@ -2,9 +2,7 @@ package rethinkdb
 
 import (
 	"errors"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 
@@ -16,19 +14,10 @@ var nonExist = "non-exist"
 var newItem = "new-item"
 var errItem = "err-item"
 var testHash = "test-hash"
-var testToken = "00000000-0000-0000-0000-000000000000"
 
 // External test values
 var SuccessItem = "success"
 var ErrorItem = "error"
-
-// UUID generator override when mocking
-func newFakeToken() uuid.UUID { return uuid.UUID{} }
-
-// fake clock to implement nowFunc when mocking
-type fakeClock struct{}
-
-func (*fakeClock) Now() time.Time { return time.Unix(0, 0) }
 
 // mockQueries contains the queries the mock session gets configured to serve.
 // Essentially, this is a declaration of the state of the mock database.
@@ -46,7 +35,6 @@ var mockQueries = []struct {
 		Result: []string{
 			string(usersTable),
 			string(rolesTable),
-			string(userSessionTable),
 		},
 	},
 	{
@@ -58,19 +46,11 @@ var mockQueries = []struct {
 		Result: 1,
 	},
 	{
-		Query:  rdb.DB(kvdiDB).Table(userSessionTable).Config().Field("shards").Count(),
-		Result: 1,
-	},
-	{
 		Query:  rdb.DB(kvdiDB).Table(usersTable).Config().Field("shards").Nth(0).Field("replicas").Count(),
 		Result: 1,
 	},
 	{
 		Query:  rdb.DB(kvdiDB).Table(rolesTable).Config().Field("shards").Nth(0).Field("replicas").Count(),
-		Result: 1,
-	},
-	{
-		Query:  rdb.DB(kvdiDB).Table(userSessionTable).Config().Field("shards").Nth(0).Field("replicas").Count(),
 		Result: 1,
 	},
 	{
@@ -225,19 +205,11 @@ var mockQueries = []struct {
 		Result: nil,
 	},
 	{
-		Query:  rdb.DB(kvdiDB).Table(userSessionTable).Get(nonExist),
-		Result: nil,
-	},
-	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Get(errItem),
 		Error: errors.New(""),
 	},
 	{
 		Query: rdb.DB(kvdiDB).Table(usersTable).Get(errItem),
-		Error: errors.New(""),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(errItem),
 		Error: errors.New(""),
 	},
 	{
@@ -252,49 +224,11 @@ var mockQueries = []struct {
 		}),
 	},
 	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
-			Token:     testToken,
-			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
-			User: &types.User{
-				Name: newItem,
-			},
-		}),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
-			Token:     testToken,
-			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
-			User: &types.User{
-				Name: SuccessItem,
-			},
-		}),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
-			Token:     testToken,
-			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
-			User: &types.User{
-				Name: ErrorItem,
-			},
-		}),
-		Error: errors.New(""),
-	},
-	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Insert(&types.Role{Name: errItem}),
 		Error: errors.New(""),
 	},
 	{
 		Query: rdb.DB(kvdiDB).Table(usersTable).Insert(&types.User{Name: errItem, PasswordSalt: testHash}),
-		Error: errors.New(""),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Insert(&types.UserSession{
-			Token:     testToken,
-			ExpiresAt: time.Unix(0, 0).Add(DefaultSessionLength),
-			User: &types.User{
-				Name: errItem,
-			},
-		}),
 		Error: errors.New(""),
 	},
 	{
@@ -308,14 +242,6 @@ var mockQueries = []struct {
 		}),
 	},
 	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(newItem).Update(&types.UserSession{
-			Token: newItem,
-			User: &types.User{
-				Name: newItem,
-			},
-		}),
-	},
-	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Get(errItem).Update(&types.Role{Name: errItem}),
 		Error: errors.New(""),
 	},
@@ -326,22 +252,10 @@ var mockQueries = []struct {
 		Error: errors.New(""),
 	},
 	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(errItem).Update(&types.UserSession{
-			Token: errItem,
-			User: &types.User{
-				Name: errItem,
-			},
-		}),
-		Error: errors.New(""),
-	},
-	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Get(newItem).Delete(),
 	},
 	{
 		Query: rdb.DB(kvdiDB).Table(usersTable).Get(newItem).Delete(),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(testToken).Delete(),
 	},
 	{
 		Query: rdb.DB(kvdiDB).Table(rolesTable).Get(errItem).Delete(),
@@ -350,72 +264,6 @@ var mockQueries = []struct {
 	{
 		Query: rdb.DB(kvdiDB).Table(usersTable).Get(errItem).Delete(),
 		Error: errors.New(""),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(errItem).Delete(),
-		Error: errors.New(""),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(newItem).Do(func(row rdb.Term) interface{} {
-			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
-				return map[string]interface{}{
-					"user_id": rdb.DB(kvdiDB).Table(usersTable).Get(plan.Field("user_id")).Do(
-						func(innerrow rdb.Term) interface{} {
-							return rdb.Branch(innerrow, innerrow.Merge(func(innerplan rdb.Term) interface{} {
-								return map[string]interface{}{
-									"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(innerplan.Field("role_ids"))).CoerceTo("array"),
-								}
-							}), nil)
-						}),
-				}
-			}), nil)
-		}),
-		Result: map[string]interface{}{
-			"id": newItem,
-			"user_id": map[string]interface{}{
-				"id": newItem,
-				"role_ids": []map[string]interface{}{
-					{
-						"id":     newItem,
-						"grants": grants.All,
-					},
-				},
-			},
-		},
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(errItem).Do(func(row rdb.Term) interface{} {
-			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
-				return map[string]interface{}{
-					"user_id": rdb.DB(kvdiDB).Table(usersTable).Get(plan.Field("user_id")).Do(
-						func(innerrow rdb.Term) interface{} {
-							return rdb.Branch(innerrow, innerrow.Merge(func(innerplan rdb.Term) interface{} {
-								return map[string]interface{}{
-									"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(innerplan.Field("role_ids"))).CoerceTo("array"),
-								}
-							}), nil)
-						}),
-				}
-			}), nil)
-		}),
-		Error: errors.New(""),
-	},
-	{
-		Query: rdb.DB(kvdiDB).Table(userSessionTable).Get(nonExist).Do(func(row rdb.Term) interface{} {
-			return rdb.Branch(row, row.Merge(func(plan rdb.Term) interface{} {
-				return map[string]interface{}{
-					"user_id": rdb.DB(kvdiDB).Table(usersTable).Get(plan.Field("user_id")).Do(
-						func(innerrow rdb.Term) interface{} {
-							return rdb.Branch(innerrow, innerrow.Merge(func(innerplan rdb.Term) interface{} {
-								return map[string]interface{}{
-									"role_ids": rdb.DB(kvdiDB).Table(rolesTable).GetAll(rdb.Args(innerplan.Field("role_ids"))).CoerceTo("array"),
-								}
-							}), nil)
-						}),
-				}
-			}), nil)
-		}),
-		Result: nil,
 	},
 }
 
@@ -430,12 +278,8 @@ func NewMock(args ...interface{}) RethinkDBSession {
 		mock.On(query.Query).Return(query.Result, query.Error)
 	}
 
-	fk := &fakeClock{}
-
 	return &rethinkDBSession{
 		session:   mock,
 		closeFunc: func() error { return nil },
-		tokenFunc: newFakeToken,
-		nowFunc:   fk.Now,
 	}
 }

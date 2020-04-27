@@ -4,6 +4,8 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
+	github.com/aws/aws-sdk-go v1.24.1 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/gophercloud/gophercloud v0.3.0 // indirect
@@ -13,6 +15,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/jetstack/cert-manager v0.14.2
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/operator-framework/operator-sdk v0.16.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5

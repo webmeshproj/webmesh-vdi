@@ -21,7 +21,7 @@ type AuditResult struct {
 	FromOwner   bool
 	Resource    string
 	Grant       grants.RoleGrant
-	UserSession *types.UserSession
+	UserSession *types.JWTClaims
 	Request     *http.Request
 }
 

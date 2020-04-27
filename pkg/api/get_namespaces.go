@@ -18,18 +18,16 @@ import (
 //   500: error
 func (d *desktopAPI) GetNamespaces(w http.ResponseWriter, r *http.Request) {
 	sess := GetRequestUserSession(r)
-	namespaces := sess.User.Namespaces()
-	if len(namespaces) == 0 {
-		var err error
-		namespaces, err = d.ListKubernetesNamespaces()
-		if err != nil {
-			apiutil.ReturnAPIError(err, w)
-			return
-		}
+	namespaces, err := d.ListKubernetesNamespaces()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
 	}
-	apiutil.WriteJSON(namespaces, w)
+	apiutil.WriteJSON(sess.User.FilterNamespaces(namespaces), w)
 }
 
+// ListKubernetesNamespaces returns a string slice of all the namespaces
+// in kubernetes.
 func (d *desktopAPI) ListKubernetesNamespaces() ([]string, error) {
 	nsList := &corev1.NamespaceList{}
 	if err := d.client.List(context.TODO(), nsList); err != nil {

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 )
 
@@ -34,7 +35,9 @@ func TestAuthenticate(t *testing.T) {
 		getDB: func() (rethinkdb.RethinkDBSession, error) {
 			return rethinkdb.NewMock(), nil
 		},
-		compHash: func(string, string) bool { return true },
+		signToken: apiutil.GenerateJWT,
+		getKey:    func() ([]byte, error) { return []byte("secret"), nil },
+		compHash:  func(string, string) bool { return true },
 	}
 
 	rr := httptest.NewRecorder()

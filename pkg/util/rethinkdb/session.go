@@ -1,9 +1,6 @@
 package rethinkdb
 
 import (
-	"time"
-
-	"github.com/google/uuid"
 	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
@@ -36,11 +33,6 @@ type RethinkDBSession interface {
 	UpdateRole(*types.Role) error
 	DeleteRole(*types.Role) error
 
-	// UserSession operations
-	GetUserSession(id string) (*types.UserSession, error)
-	CreateUserSession(*types.User) (*types.UserSession, error)
-	DeleteUserSession(*types.UserSession) error
-
 	Close() error
 }
 
@@ -51,10 +43,6 @@ type rethinkDBSession struct {
 	session rdb.QueryExecutor
 	// when mocking there is no socket to close
 	closeFunc func() error
-	// func for genereating tokens
-	tokenFunc func() uuid.UUID
-	// func for getting time
-	nowFunc func() time.Time
 }
 
 // New returns a RethinkDBSession for the given address. It assumes a
@@ -74,8 +62,6 @@ func New(addr string) (RethinkDBSession, error) {
 	return &rethinkDBSession{
 		session:   session,
 		closeFunc: func() error { return session.Close() },
-		tokenFunc: uuid.New,
-		nowFunc:   time.Now,
 	}, nil
 }
 
@@ -96,8 +82,6 @@ func NewFromSecret(c client.Client, addr, name, namespace string) (RethinkDBSess
 	return &rethinkDBSession{
 		session:   session,
 		closeFunc: func() error { return session.Close() },
-		tokenFunc: uuid.New,
-		nowFunc:   time.Now,
 	}, nil
 }
 

@@ -1,46 +1,74 @@
 package api
 
 import (
+	"errors"
+	"io/ioutil"
 	"net/http"
-	"time"
 
+	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/mitchellh/mapstructure"
 )
 
 func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get(TokenHeader)
-		if token == "" {
+		authToken := r.Header.Get(TokenHeader)
+		if authToken == "" {
 			if keys, ok := r.URL.Query()["token"]; ok {
-				token = keys[0]
+				authToken = keys[0]
 			}
 		}
-		if token == "" {
+		if authToken == "" {
 			apiutil.ReturnAPIForbidden(nil, "No token provided in request", w)
 			return
 		}
-		sess, err := d.getDB()
-		if err != nil {
-			apiutil.ReturnAPIForbidden(err, "Could not connect to database backend", w)
+		parser := &jwt.Parser{UseJSONNumber: true}
+		token, err := parser.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("Incorrect signing algorithm on token")
+			}
+			_, key := tlsutil.ServerKeypair()
+			return ioutil.ReadFile(key)
+		})
+		if !token.Valid {
+			if ve, ok := err.(*jwt.ValidationError); ok {
+				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+					apiutil.ReturnAPIForbidden(nil, "Malformed token provided in request", w)
+					return
+				} else if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
+					apiutil.ReturnAPIForbidden(nil, "User session has expired", w)
+					return
+				} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+					apiutil.ReturnAPIForbidden(nil, "User session is not valid yet", w)
+					return
+				} else {
+					apiutil.ReturnAPIForbidden(nil, "Could not parse provided token", w)
+					return
+				}
+			}
+		}
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			session := &types.JWTClaims{}
+			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+				TagName: "json",
+				Result:  session,
+			})
+			if err != nil {
+				apiutil.ReturnAPIError(err, w)
+				return
+			}
+			if err := decoder.Decode(claims); err != nil {
+				apiutil.ReturnAPIError(err, w)
+				return
+			}
+			SetRequestUserSession(r, session)
+			next.ServeHTTP(w, r)
 			return
 		}
-		defer sess.Close()
-		userSess, err := sess.GetUserSession(token)
-		if err != nil {
-			apiutil.ReturnAPIForbidden(err, "Could not retrieve user session", w)
-			return
-		} else if userSess.ExpiresAt.Before(time.Now()) {
-			if err := sess.DeleteUserSession(userSess); err != nil {
-				apiLogger.Error(err, "Failed to remove user session from database", "Session.Token", userSess.Token)
-			}
-			if err := d.CleanupUserDesktops(userSess.User.Name); err != nil {
-				apiLogger.Error(err, "Failed to cleanup user desktops", "User.Name", userSess.User.Name)
-			}
-			// TODO - need a separate reaper process
-			apiutil.ReturnAPIForbidden(nil, "User session has expired", w)
-			return
-		}
-		SetRequestUserSession(r, userSess)
-		next.ServeHTTP(w, r)
+		apiutil.ReturnAPIError(errors.New("Could not parse provided token"), w)
+		return
 	})
 }

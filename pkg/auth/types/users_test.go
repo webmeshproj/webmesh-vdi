@@ -4,7 +4,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func newUserWithGrant(grant grants.RoleGrant) *User {
@@ -41,7 +44,8 @@ func TestUserHasGrant(t *testing.T) {
 	}
 }
 
-func TestUserNamespaces(t *testing.T) {
+func TestUserFilterNamespaces(t *testing.T) {
+	allNss := []string{"default", "kube-public", "kube-system", "kube-node-lease"}
 	nss := []string{"default", "kube-public"}
 	user := &User{
 		Name: "test-user",
@@ -51,13 +55,48 @@ func TestUserNamespaces(t *testing.T) {
 			},
 		},
 	}
-	if !reflect.DeepEqual(user.Namespaces(), nss) {
-		t.Error("Namespace list not as expected, got:", user.Namespaces())
+	if !reflect.DeepEqual(user.FilterNamespaces(allNss), nss) {
+		t.Error("Namespace list not as expected, got:", user.FilterNamespaces(allNss))
+	}
+	user.Roles[0].Namespaces = []string{}
+	if !reflect.DeepEqual(user.FilterNamespaces(allNss), allNss) {
+		t.Error("Namespace list not as expected, got:", user.FilterNamespaces(allNss))
+	}
+}
+
+func TestFilterTemplates(t *testing.T) {
+	tmpls := []v1alpha1.DesktopTemplate{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "lxde-minimal",
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "kde-full",
+			},
+		},
+	}
+	user := &User{
+		Name: "test-user",
+		Roles: []*Role{
+			{
+				TemplatePatterns: []string{"lxde-.*"},
+			},
+		},
 	}
 
-	user.Roles = append(user.Roles, &Role{Namespaces: []string{"default", "kube-system"}})
-	if !reflect.DeepEqual(user.Namespaces(), append(nss, "kube-system")) {
-		t.Error("Namespace list not as expected, got:", user.Namespaces())
+	filtered := user.FilterTemplates(tmpls)
+	if len(filtered) != 1 {
+		t.Error("Expected only one template after filtering, got", len(filtered))
+	} else if filtered[0].Name != "lxde-minimal" {
+		t.Error("Got wrong template back after filtering, got:", filtered[0].Name)
+	}
+
+	user.Roles[0].TemplatePatterns = []string{}
+	filtered = user.FilterTemplates(tmpls)
+	if len(filtered) != 2 {
+		t.Error("Expected both templates after filtering, got", len(filtered))
 	}
 }
 
@@ -240,6 +279,28 @@ func TestElevatedBy(t *testing.T) {
 				},
 			},
 			Input:  &Role{Grants: grants.All},
+			Result: true,
+		},
+		{
+			Roles: []*Role{
+				{
+					Namespaces:       []string{"default"},
+					TemplatePatterns: []string{"lxde-.*"},
+					Grants:           grants.LaunchTemplates | grants.ReadUsers,
+				},
+			},
+			Input:  &Role{Grants: grants.WriteUsers},
+			Result: true,
+		},
+		{
+			Roles: []*Role{
+				{
+					Namespaces:       []string{"default"},
+					TemplatePatterns: []string{"lxde-.*"},
+					Grants:           grants.WriteUsers,
+				},
+			},
+			Input:  &Role{Grants: grants.WriteRoles},
 			Result: true,
 		},
 		{

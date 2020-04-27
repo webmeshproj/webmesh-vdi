@@ -10,8 +10,6 @@ const (
 	usersTable = "users"
 	// The table for user roles
 	rolesTable = "roles"
-	// The table for user sessions
-	userSessionTable = "userSessions"
 
 	// The admin username
 	adminUser = "admin"
@@ -24,7 +22,7 @@ const (
 )
 
 // allTables is a slice of all the table names in rethinkdb
-var allTables = []string{usersTable, rolesTable, userSessionTable}
+var allTables = []string{usersTable, rolesTable}
 
 const (
 	// DefaultSessionLength is the session length used for setting expiry
