@@ -43,7 +43,9 @@ type AuthProvider interface {
 
 // JWTClaims represents the claims used when issuing JWT tokens.
 type JWTClaims struct {
+	// The user with their permissions when the token was generated
 	User *VDIUser `json:"user"`
+	// The standard JWT claims
 	jwt.StandardClaims
 }
 
@@ -127,19 +129,19 @@ type ResourceGetter interface {
 }
 
 // TemplatesGetter is an interface that can be used to retrieve available
-// templates while chcking user permissions.
+// templates while checking user permissions.
 type TemplatesGetter interface {
 	GetTemplates() ([]DesktopTemplate, error)
 }
 
 // UsersGetter is an interface that can be used to retrieve available
-// users while chcking user permissions.
+// users while checking user permissions.
 type UsersGetter interface {
 	GetUsers() ([]VDIUser, error)
 }
 
 // RolesGetter is an interface that can be used to retrieve available
-// roles while chcking user permissions.
+// roles while checking user permissions.
 type RolesGetter interface {
 	GetRoles() ([]VDIRole, error)
 }

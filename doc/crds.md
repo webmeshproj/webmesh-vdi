@@ -23,7 +23,6 @@ Types
 -   [LoginRequest](#%23kvdi.io%2fv1alpha1.LoginRequest)
 -   [Resource](#%23kvdi.io%2fv1alpha1.Resource)
 -   [ResourceGetter](#%23kvdi.io%2fv1alpha1.ResourceGetter)
--   [RethinkDBConfig](#%23kvdi.io%2fv1alpha1.RethinkDBConfig)
 -   [RolesGetter](#%23kvdi.io%2fv1alpha1.RolesGetter)
 -   [Rule](#%23kvdi.io%2fv1alpha1.Rule)
 -   [SessionResponse](#%23kvdi.io%2fv1alpha1.SessionResponse)
@@ -81,7 +80,7 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>The number of app replicas to run</p></td>
 </tr>
 <tr class="even">
-<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
 </tbody>
@@ -137,11 +136,11 @@ CreateRoleRequest represents a request for a new role.
 <tbody>
 <tr class="odd">
 <td><code>name</code> <em>string</em></td>
-<td></td>
+<td><p>The name of the new role</p></td>
 </tr>
 <tr class="even">
 <td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
-<td></td>
+<td><p>Rules to apply to the new role.</p></td>
 </tr>
 </tbody>
 </table>
@@ -161,18 +160,20 @@ parameters.
 <tbody>
 <tr class="odd">
 <td><code>template</code> <em>string</em></td>
-<td></td>
+<td><p>The template to create the session from.</p></td>
 </tr>
 <tr class="even">
 <td><code>namespace</code> <em>string</em></td>
-<td></td>
+<td><p>The namespace to launch the template in. Defaults to default.</p></td>
 </tr>
 </tbody>
 </table>
 
 ### CreateUserRequest
 
-CreateUserRequest represents a request to create a new user.
+CreateUserRequest represents a request to create a new user. Not all
+auth providers will be able to implement this route and can instead
+return an error describing why.
 
 <table>
 <thead>
@@ -184,15 +185,15 @@ CreateUserRequest represents a request to create a new user.
 <tbody>
 <tr class="odd">
 <td><code>username</code> <em>string</em></td>
-<td></td>
+<td><p>The user name for the new user.</p></td>
 </tr>
 <tr class="even">
 <td><code>password</code> <em>string</em></td>
-<td></td>
+<td><p>The password for the new user.</p></td>
 </tr>
 <tr class="odd">
 <td><code>roles</code> <em>[]string</em></td>
-<td></td>
+<td><p>Roles to assign the new user. These are the names of VDIRoles in the cluster.</p></td>
 </tr>
 </tbody>
 </table>
@@ -214,7 +215,7 @@ Desktop is the Schema for the desktops API
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
+<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
@@ -264,7 +265,7 @@ Desktop is the Schema for the desktops API
 <td><p>A service account to tie to desktops booted from this template. TODO: This should really be per-desktop and by user-grants.</p></td>
 </tr>
 <tr class="even">
-<td><code>capabilities</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#capability-v1-core">[]Kubernetes core/v1.Capability</a></em></td>
+<td><code>capabilities</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#capability-v1-core">[]Kubernetes core/v1.Capability</a></em></td>
 <td><p>Extra system capabilities to add to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
@@ -332,7 +333,7 @@ DesktopTemplate is the Schema for the desktoptemplates API
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
+<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
@@ -347,15 +348,15 @@ DesktopTemplate is the Schema for the desktoptemplates API
 <td><p>The docker repository and tag to use for desktops booted from this template.</p></td>
 </tr>
 <tr class="even">
-<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
 <td><p>The pull policy to use when pulling the container image.</p></td>
 </tr>
 <tr class="odd">
-<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
+<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Any pull secrets required for pulling the container image.</p></td>
 </tr>
 <tr class="even">
-<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to apply to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
@@ -395,15 +396,15 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 <td><p>The docker repository and tag to use for desktops booted from this template.</p></td>
 </tr>
 <tr class="even">
-<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
 <td><p>The pull policy to use when pulling the container image.</p></td>
 </tr>
 <tr class="odd">
-<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
+<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Any pull secrets required for pulling the container image.</p></td>
 </tr>
 <tr class="even">
-<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to apply to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
@@ -431,11 +432,11 @@ JWTClaims represents the claims used when issuing JWT tokens.
 <tbody>
 <tr class="odd">
 <td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
-<td></td>
+<td><p>The user with their permissions when the token was generated</p></td>
 </tr>
 <tr class="even">
 <td><code>StandardClaims</code> <em>github.com/dgrijalva/jwt-go.StandardClaims</em></td>
-<td></td>
+<td><p>The standard JWT claims</p></td>
 </tr>
 </tbody>
 </table>
@@ -448,7 +449,10 @@ LocalAuthConfig represents a local, db-based authentication driver.
 
 ### LoginRequest
 
-LoginRequest represents a request for a session token
+LoginRequest represents a request for a session token. Different auth
+providers may not always need this request, and can instead redirect
+/api/login as needed. All the auth provider needs to do in the end is
+return a JWT token that contains a fulfilled VDIUser.
 
 <table>
 <thead>
@@ -481,55 +485,10 @@ ResourceGetter is an interface for retrieving lists of kVDI related
 resources. Its primary purpose is to pass an interface to rbac
 evaluations so they can check permissions against present resources.
 
-### RethinkDBConfig
-
-(*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
-
-RethinkDBConfig represents rethinkdb configurations for the VDI cluster
-
-<table>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>image</code> <em>string</em></td>
-<td><p>The image to use for the rethinkdb instances. Defaults to rethinkdb:2.4.</p></td>
-</tr>
-<tr class="even">
-<td><code>pvcSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
-<td><p>The spec for persistent volumes attached to the reethinkdb nodes</p></td>
-</tr>
-<tr class="odd">
-<td><code>shards</code> <em>int32</em></td>
-<td><p>The number of shards to create for each table in the database.</p></td>
-</tr>
-<tr class="even">
-<td><code>replicas</code> <em>int32</em></td>
-<td><p>The number of data rpelicas to run for each table.</p></td>
-</tr>
-<tr class="odd">
-<td><code>proxyReplicas</code> <em>int32</em></td>
-<td><p>The number of proxy instances to run.</p></td>
-</tr>
-<tr class="even">
-<td><code>dbResources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
-<td><p>Resource requirements for the database pods.</p></td>
-</tr>
-<tr class="odd">
-<td><code>proxyResources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
-<td><p>Resource requirements forr the proxy pods.</p></td>
-</tr>
-</tbody>
-</table>
-
 ### RolesGetter
 
 RolesGetter is an interface that can be used to retrieve available roles
-while chcking user permissions.
+while checking user permissions.
 
 ### Rule
 
@@ -583,15 +542,15 @@ SessionResponse represents a response with a new session token
 <tbody>
 <tr class="odd">
 <td><code>token</code> <em>string</em></td>
-<td></td>
+<td><p>The X-Session-Token to use for future requests.</p></td>
 </tr>
 <tr class="even">
 <td><code>expiresAt</code> <em>int64</em></td>
-<td></td>
+<td><p>The time the token expires.</p></td>
 </tr>
 <tr class="odd">
 <td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
-<td></td>
+<td><p>Information about the authenticated user and their permissions.</p></td>
 </tr>
 </tbody>
 </table>
@@ -599,11 +558,12 @@ SessionResponse represents a response with a new session token
 ### TemplatesGetter
 
 TemplatesGetter is an interface that can be used to retrieve available
-templates while chcking user permissions.
+templates while checking user permissions.
 
 ### UpdateRoleRequest
 
-UpdateRoleRequest requests updates to an existing role.
+UpdateRoleRequest requests updates to an existing role. Note that all
+rules will be replaces with those in the request.
 
 <table>
 <thead>
@@ -615,14 +575,16 @@ UpdateRoleRequest requests updates to an existing role.
 <tbody>
 <tr class="odd">
 <td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
-<td></td>
+<td><p>The new rules for the role.</p></td>
 </tr>
 </tbody>
 </table>
 
 ### UpdateUserRequest
 
-UpdateUserRequest requests updates to an existing user
+UpdateUserRequest requests updates to an existing user. Not all auth
+providers will be able to implement this route and can instead return an
+error describing why.
 
 <table>
 <thead>
@@ -634,11 +596,11 @@ UpdateUserRequest requests updates to an existing user
 <tbody>
 <tr class="odd">
 <td><code>password</code> <em>string</em></td>
-<td></td>
+<td><p>When populated, will change the password for the user.</p></td>
 </tr>
 <tr class="even">
 <td><code>roles</code> <em>[]string</em></td>
-<td></td>
+<td><p>When populated will change the roles for the user.</p></td>
 </tr>
 </tbody>
 </table>
@@ -646,7 +608,7 @@ UpdateUserRequest requests updates to an existing user
 ### UsersGetter
 
 UsersGetter is an interface that can be used to retrieve available users
-while chcking user permissions.
+while checking user permissions.
 
 ### VDICluster
 
@@ -665,7 +627,7 @@ VDICluster is the Schema for the vdiclusters API
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
+<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
@@ -680,7 +642,7 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>The namespace to provision application resurces in. Defaults to the <code>default</code> namespace</p></td>
 </tr>
 <tr class="even">
-<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
+<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
@@ -688,7 +650,7 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
-<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
@@ -698,10 +660,6 @@ VDICluster is the Schema for the vdiclusters API
 <tr class="even">
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
-</tr>
-<tr class="odd">
-<td><code>rethinkdb</code> <em><a href="#kvdi.io/v1alpha1.RethinkDBConfig">RethinkDBConfig</a></em></td>
-<td><p>RethinkDB configurations</p></td>
 </tr>
 </tbody>
 </table></td>
@@ -732,7 +690,7 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>The namespace to provision application resurces in. Defaults to the <code>default</code> namespace</p></td>
 </tr>
 <tr class="even">
-<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
+<td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
@@ -740,7 +698,7 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
-<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
@@ -750,10 +708,6 @@ VDIClusterSpec defines the desired state of VDICluster
 <tr class="even">
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
-</tr>
-<tr class="odd">
-<td><code>rethinkdb</code> <em><a href="#kvdi.io/v1alpha1.RethinkDBConfig">RethinkDBConfig</a></em></td>
-<td><p>RethinkDB configurations</p></td>
 </tr>
 </tbody>
 </table>
@@ -773,7 +727,7 @@ VDIRole is the Schema for the vdiroles API
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
+<td><code>metadata</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta">Kubernetes meta/v1.ObjectMeta</a></em></td>
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
@@ -848,4 +802,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `50db58d`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `b4447c3`.*

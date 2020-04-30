@@ -23,8 +23,6 @@ type VDIClusterSpec struct {
 	App *AppConfig `json:"app,omitempty"`
 	// Authentication configurations
 	Auth *AuthConfig `json:"auth,omitempty"`
-	// RethinkDB configurations
-	RethinkDB *RethinkDBConfig `json:"rethinkdb,omitempty"`
 }
 
 // AppConfig represents app configurations for the VDI cluster
@@ -43,24 +41,6 @@ type AppConfig struct {
 	Replicas int32 `json:"replicas,omitempty"`
 	// Resource requirements to place on the app pods
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-}
-
-// RethinkDBConfig represents rethinkdb configurations for the VDI cluster
-type RethinkDBConfig struct {
-	// The image to use for the rethinkdb instances. Defaults to rethinkdb:2.4.
-	Image string `json:"image,omitempty"`
-	// The spec for persistent volumes attached to the reethinkdb nodes
-	PVCSpec *corev1.PersistentVolumeClaimSpec `json:"pvcSpec,omitempty"`
-	// The number of shards to create for each table in the database.
-	Shards int32 `json:"shards,omitempty"`
-	// The number of data rpelicas to run for each table.
-	Replicas int32 `json:"replicas,omitempty"`
-	// The number of proxy instances to run.
-	ProxyReplicas int32 `json:"proxyReplicas,omitempty"`
-	// Resource requirements for the database pods.
-	DBResources corev1.ResourceRequirements `json:"dbResources,omitempty"`
-	// Resource requirements forr the proxy pods.
-	ProxyResources corev1.ResourceRequirements `json:"proxyResources,omitempty"`
 }
 
 // AuthConfig will be for authentication driver configurations. The goal

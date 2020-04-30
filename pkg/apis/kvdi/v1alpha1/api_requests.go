@@ -9,7 +9,10 @@ import (
 
 // API Request/Response types
 
-// LoginRequest represents a request for a session token
+// LoginRequest represents a request for a session token. Different auth providers
+// may not always need this request, and can instead redirect /api/login as needed.
+// All the auth provider needs to do in the end is return a JWT token that contains
+// a fulfilled VDIUser.
 type LoginRequest struct {
 	// Username
 	Username string `json:"username"`
@@ -19,19 +22,27 @@ type LoginRequest struct {
 
 // SessionResponse represents a response with a new session token
 type SessionResponse struct {
-	Token     string   `json:"token"`
-	ExpiresAt int64    `json:"expiresAt"`
-	User      *VDIUser `json:"user"`
+	// The X-Session-Token to use for future requests.
+	Token string `json:"token"`
+	// The time the token expires.
+	ExpiresAt int64 `json:"expiresAt"`
+	// Information about the authenticated user and their permissions.
+	User *VDIUser `json:"user"`
 }
 
-// CreateUserRequest represents a request to create a new user.
+// CreateUserRequest represents a request to create a new user. Not all auth
+// providers will be able to implement this route and can instead return an
+// error describing why.
 type CreateUserRequest struct {
-	Username string   `json:"username"`
-	Password string   `json:"password"`
-	Roles    []string `json:"roles"`
+	// The user name for the new user.
+	Username string `json:"username"`
+	// The password for the new user.
+	Password string `json:"password"`
+	// Roles to assign the new user. These are the names of VDIRoles in the cluster.
+	Roles []string `json:"roles"`
 }
 
-// Validate the new user request
+// Validates a new user request
 func (r *CreateUserRequest) Validate() error {
 	if r.Username == "" || r.Password == "" {
 		return errors.New("'username' and 'password' must be provided in the request")
@@ -45,10 +56,14 @@ func (r *CreateUserRequest) Validate() error {
 	return nil
 }
 
-// UpdateUserRequest requests updates to an existing user
+// UpdateUserRequest requests updates to an existing user. Not all auth
+// providers will be able to implement this route and can instead return an
+// error describing why.
 type UpdateUserRequest struct {
-	Password string   `json:"password"`
-	Roles    []string `json:"roles"`
+	// When populated, will change the password for the user.
+	Password string `json:"password"`
+	// When populated will change the roles for the user.
+	Roles []string `json:"roles"`
 }
 
 // Validate the UpdateUserRequest
@@ -61,7 +76,9 @@ func (r *UpdateUserRequest) Validate() error {
 
 // CreateRoleRequest represents a request for a new role.
 type CreateRoleRequest struct {
-	Name  string `json:"name"`
+	// The name of the new role
+	Name string `json:"name"`
+	// Rules to apply to the new role.
 	Rules []Rule `json:"rules"`
 }
 
@@ -78,6 +95,8 @@ func (r *CreateRoleRequest) Validate() error {
 	return nil
 }
 
+// GetRules returns the rules for a new role request, or a single-element slice with
+// a deny-all rule if none are provided.
 func (r *CreateRoleRequest) GetRules() []Rule {
 	if r.Rules == nil {
 		return []Rule{{
@@ -90,11 +109,15 @@ func (r *CreateRoleRequest) GetRules() []Rule {
 	return r.Rules
 }
 
-// UpdateRoleRequest requests updates to an existing role.
+// UpdateRoleRequest requests updates to an existing role. Note that all rules will be
+// replaces with those in the request.
 type UpdateRoleRequest struct {
+	// The new rules for the role.
 	Rules []Rule `json:"rules"`
 }
 
+// GetRules returns the rules for an update role request, or a single-element slice with
+// a deny-all rule if none are provided.
 func (r *UpdateRoleRequest) GetRules() []Rule {
 	if r.Rules == nil {
 		return []Rule{{
@@ -130,7 +153,9 @@ func validatePatterns(patterns []string) error {
 
 // CreateSessionRequest requests a new desktop session with the givin parameters.
 type CreateSessionRequest struct {
-	Template  string `json:"template"`
+	// The template to create the session from.
+	Template string `json:"template"`
+	// The namespace to launch the template in. Defaults to default.
 	Namespace string `json:"namespace,omitempty"`
 }
 

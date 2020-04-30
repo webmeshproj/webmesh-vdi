@@ -4,7 +4,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
 
 **This is a very heavy work-in-progress and not even remotely close to ready for production usage**
 
- - [CRD Reference](doc/crds.md)
+ - [API Reference](doc/crds.md)
  - [Security](#security)
  - [Screenshots](#screenshots)
 

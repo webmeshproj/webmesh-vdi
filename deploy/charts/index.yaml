@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  kvdi:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2020-04-30T19:02:57.730938+03:00"
+    description: A Helm chart for Kubernetes
+    digest: 51afba8616ca11c4ff2777ddab9628d1836f5172319ed9c0133c2e1c8a4cac07
+    name: kvdi
+    type: application
+    urls:
+    - https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-0.0.1.tgz
+    version: 0.0.1
+generated: "2020-04-30T19:02:57.728159+03:00"
