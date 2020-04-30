@@ -21,6 +21,18 @@ For building and running locally you will need:
   - `go >= 1.13`
   - `docker`
 
+## Installing
+
+Assuming you have `cert-manager` installed and running in the cluster:
+
+```bash
+$> helm install deploy/charts/kvdi
+```
+
+It will take a minute or two for all the parts to start running after the install command.
+Once the app is launched, you can run `make get-admin-password` to retrieve the generated admin password.
+To access the app interface either do a `port-forward` (`make forward-app` is another helper for that), or go to the "LoadBalancer" IP of the service.
+
 ## Building and Running Locally
 
 The `Makefiles` contain helpers for testing the full solution locally using `kind`.
@@ -32,8 +44,8 @@ $> make build-all
 $> make full-test-cluster
 # Load all the docker images into the kind cluster (optional for same reason as build)
 $> make load-all
-# Deploy the manager and setup the example VDI manifests
-$> make deploy example-vdi
+# Deploy the manager, kvdi, and setup the example templates
+$> make deploy example-vdi-templates
 ```
 
 After the manager has finished spinning up the `app` instance, get the IP of its service with `kubectl get svc` to access the app interface.
@@ -47,11 +59,18 @@ The UI for the "desktop" containers is placed behind a VNC server listening on a
 
 ![img](doc/kvdi_arch.png)
 
-A finished implementation would include user authentication and role-based access control enforced from the `app` instance and API.
+User authentication is provided by "providers". Currently there is only one `local-auth` implementation meant for development and testing.
+It keeps a `passwd` like file in a Kubernetes secret where it stores users, password hashes, and role mappings.
+
+RBAC is provided by a `VDIRole` CRD that behaves similar to a Kubernetes `ClusterRole`.
+These roles can restrict users to namespaces, desktop templates, and user/role management.
+It should not be possible for a user to make an API request that grants them more priviliges than they already have.
 
 ## Screenshots
 
-The UI is super basic but here are some shots of what I have so far
+The UI is super basic but here are some shots of what I have so far.
+
+There is actually more since I took these photos. Primarily user/role management.
 
 ![img](doc/templates.png)
 

@@ -13,7 +13,6 @@ import (
 //   200: configResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) GetConfig(w http.ResponseWriter, r *http.Request) {
 	apiutil.WriteJSON(d.vdiCluster.Spec, w)
 }

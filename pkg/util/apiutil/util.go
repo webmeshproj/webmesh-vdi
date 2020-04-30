@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	verrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
+
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // WriteOrLogError will write the provided content to the response writer, or
@@ -75,12 +76,36 @@ func WriteOK(w http.ResponseWriter) {
 	}, w)
 }
 
-func GenerateJWT(secret []byte, user *types.User) (types.JWTClaims, string, error) {
-	claims := types.JWTClaims{user, jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(types.DefaultSessionLength).Unix(),
+// GenerateJWT will create a new JWT with the given user object's fields
+// embedded in the claims.
+func GenerateJWT(secret []byte, user *v1alpha1.VDIUser) (v1alpha1.JWTClaims, string, error) {
+	claims := v1alpha1.JWTClaims{User: user, StandardClaims: jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(v1alpha1.DefaultSessionLength).Unix(),
 		IssuedAt:  time.Now().Unix(),
 	}}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(secret)
 	return claims, tokenString, err
+}
+
+// GetJWTSecret reads the JWT signing secret from the expected location.
+func GetJWTSecret() ([]byte, error) {
+	if secret := os.Getenv(v1alpha1.JWTSecretEnvVar); secret != "" {
+		return []byte(secret), nil
+	}
+	return nil, fmt.Errorf("No %s in environment", v1alpha1.JWTSecretEnvVar)
+}
+
+// FilterUserRolesByName returns a list of UserRoles matching the provided names
+// and cluster
+func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1alpha1.VDIUserRole {
+	userRoles := make([]*v1alpha1.VDIUserRole, 0)
+	for _, name := range names {
+		for _, role := range roles {
+			if role.GetName() == name {
+				userRoles = append(userRoles, role.ToUserRole())
+			}
+		}
+	}
+	return userRoles
 }

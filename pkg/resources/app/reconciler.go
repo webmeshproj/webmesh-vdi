@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
@@ -25,6 +26,26 @@ func New(c client.Client, s *runtime.Scheme) resources.VDIReconciler {
 }
 
 func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
+	// Generate the admin secret
+	adminPass, err := f.reconcileAdminSecret(reqLogger, instance)
+	if err != nil {
+		return err
+	}
+
+	// initialize a secret for provider storage and the jwt key
+	if err := f.reconcileAppSecret(reqLogger, instance); err != nil {
+		return err
+	}
+
+	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
+		return err
+	}
+
+	// reconcile any resources needed for the auth provider
+	if err := auth.GetAuthProvider(instance).Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
+		return err
+	}
+
 	// Service account and cluster role/binding
 	if err := reconcile.ReconcileServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
 		return err
@@ -53,5 +74,11 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 	if err := reconcile.ReconcileService(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
 		return err
 	}
+
+	// The built-in admin role
+	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
+		return err
+	}
+
 	return nil
 }

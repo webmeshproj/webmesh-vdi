@@ -18,32 +18,28 @@ const (
 	ServerCertificateMountPath = "/etc/kvdi/tls/server"
 	// Where client certificates get placed inside pods
 	ClientCertificateMountPath = "/etc/kvdi/tls/client"
+	// A mount path for assets backed by secrets
+	SecretAssetsMountPath = "/etc/kvdi/secrets"
+	// Where our JWT secret is stored in the assets secret
+	JWTSecretKey = "jwtSecret"
+	// The env var where the jwt secret is mounted
+	JWTSecretEnvVar = "JWT_SECRET"
 	// The port that web servicees will listen on internally
 	WebPort = 8443
 	// The port for the app service
 	PublicWebPort = 443
-	// The admin port for rethinkdb
-	RethinkDBAdminPort = 8080
-	// The driver port for rethinkdb
-	RethinkDBDriverPort = 28015
-	// The cluster port for rethinkdb
-	RethinkDBClusterPort = 29015
 )
 
 // Defaults
 const (
 	// defaultNamespace is the default namespace to provision resources in
 	defaultNamespace string = "default"
-	// defaultRethinkDBImage is the default image to use for rethinkdb
-	defaultRethinkDBImage string = "rethinkdb:2.4"
 )
 
 // Other defaults that we need to the address of
 var (
-	defaultUser              int64 = 1000
-	defaultReplicas          int32 = 1
-	defaultRethinkDBReplicas int32 = 1
-	defaultRethinkDBShards   int32 = 1
-	trueVal                        = true
-	falseVal                       = false
+	defaultUser     int64 = 1000
+	defaultReplicas int32 = 1
+	trueVal               = true
+	falseVal              = false
 )

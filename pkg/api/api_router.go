@@ -18,7 +18,7 @@ func (d *desktopAPI) buildRouter() error {
 	// login handler is provided by the authentication provider, does not go
 	// through middlewares
 	loginHandler := auth.GetAuthProvider(d.vdiCluster)
-	if err := loginHandler.Setup(d.vdiCluster); err != nil {
+	if err := loginHandler.Setup(d.client, d.vdiCluster); err != nil {
 		return err
 	}
 	r.PathPrefix("/api/login").HandlerFunc(loginHandler.Authenticate).Methods("POST")
@@ -33,15 +33,14 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/logout", d.Logout).Methods("POST")
 	protected.HandleFunc("/whoami", d.WhoAmI).Methods("GET")
 	protected.HandleFunc("/config", d.GetConfig).Methods("GET")
-	protected.HandleFunc("/grants", d.GetGrants).Methods("GET")
 	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")
 
 	// User operations
-	protected.HandleFunc("/users", d.GetUsers).Methods("GET")
-	protected.HandleFunc("/users", d.CreateUser).Methods("POST")
-	protected.HandleFunc("/users/{user}", d.GetUser).Methods("GET")
-	protected.HandleFunc("/users/{user}", d.UpdateUser).Methods("PUT")
-	protected.HandleFunc("/users/{user}", d.DeleteUser).Methods("DELETE")
+	protected.HandleFunc("/users", loginHandler.GetUsers).Methods("GET")
+	protected.HandleFunc("/users", loginHandler.PostUsers).Methods("POST")
+	protected.HandleFunc("/users/{user}", loginHandler.GetUser).Methods("GET")
+	protected.HandleFunc("/users/{user}", loginHandler.PutUser).Methods("PUT")
+	protected.HandleFunc("/users/{user}", loginHandler.DeleteUser).Methods("DELETE")
 
 	// Role operations
 	protected.HandleFunc("/roles", d.GetRoles).Methods("GET")

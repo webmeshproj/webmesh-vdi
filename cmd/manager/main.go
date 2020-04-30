@@ -60,7 +60,7 @@ func main() {
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
-	err = leader.Become(ctx, "vdi-operator-lock")
+	err = leader.Become(ctx, "kvdi-manager-lock")
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

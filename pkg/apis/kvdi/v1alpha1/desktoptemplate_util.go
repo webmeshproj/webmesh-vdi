@@ -7,6 +7,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// GetNoVNCProxyImage returns the novnc-proxy image for the desktop instance.
+func (t *DesktopTemplate) GetNoVNCProxyImage() string {
+	if t.Spec.Config != nil && t.Spec.Config.ProxyImage != "" {
+		return t.Spec.Config.ProxyImage
+	}
+	return fmt.Sprintf("quay.io/tinyzimmer/kvdi:novnc-proxy-%s", version.Version)
+}
+
 // GetDesktopImage returns the docker image to use for instances booted from
 // this template.
 func (t *DesktopTemplate) GetDesktopImage() string {
@@ -188,10 +196,10 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 }
 
 // GetDesktopProxyContainer returns the configuration for the novnc-proxy sidecar.
-func (t *DesktopTemplate) GetDesktopProxyContainer(proxyImg string) corev1.Container {
+func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 	return corev1.Container{
 		Name:            "novnc-proxy",
-		Image:           proxyImg,
+		Image:           t.GetNoVNCProxyImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args:            []string{"--vnc-addr", t.GetVNCSocketAddr()},
 		Ports: []corev1.ContainerPort{

@@ -1,0 +1,73 @@
+package apiutil
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+// ContextUserKey is the key where UserSesssions are stored in the request context
+const ContextUserKey = 0
+const ContextRequestObjectKey = 1
+
+// SetRequestUserSession writes the user session to the request context
+func SetRequestUserSession(r *http.Request, sess *v1alpha1.JWTClaims) {
+	context.Set(r, ContextUserKey, sess)
+}
+
+// GetRequestUserSession retrieves the user session from the request context.
+func GetRequestUserSession(r *http.Request) *v1alpha1.JWTClaims {
+	return context.Get(r, ContextUserKey).(*v1alpha1.JWTClaims)
+}
+
+func SetRequestObject(r *http.Request, obj interface{}) {
+	context.Set(r, ContextRequestObjectKey, obj)
+}
+
+func GetRequestObject(r *http.Request) interface{} {
+	return context.Get(r, ContextRequestObjectKey)
+}
+
+// GetNamespacedNameFromRequest returns the namespaced name of the Desktop instance
+// for the given request.
+func GetNamespacedNameFromRequest(r *http.Request) types.NamespacedName {
+	vars := mux.Vars(r)
+	return types.NamespacedName{Name: vars["name"], Namespace: vars["namespace"]}
+}
+
+// GetUserFromRequest will retrieve the user variable from a request path.
+func GetUserFromRequest(r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars["user"]
+}
+
+// GetRoleFromRequest will retrieve the role variable from a request path.
+func GetRoleFromRequest(r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars["role"]
+}
+
+// getGorillaPath will retrieve the URL path as it was configured in mux.
+func GetGorillaPath(r *http.Request) string {
+	vars := mux.Vars(r)
+	path := strings.TrimSuffix(r.URL.Path, "/")
+	for k, v := range vars {
+		path = rev(strings.Replace(rev(path), rev(v), rev(fmt.Sprintf("{%s}", k)), 1))
+	}
+	return path
+}
+
+// rev will reverse a string so we can call strings.Replace from the end
+func rev(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
+}

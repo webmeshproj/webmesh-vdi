@@ -6,22 +6,7 @@
     </q-card-section>
 
     <q-card-section class="q-pt-none">
-      <q-input dense label="Password" v-model="password" :type="pwPromptType" :rules="[validatePassword]" :bottom-slots="passwordIsDisabled" :disabled="passwordIsDisabled">
-        <template v-slot:append>
-          <q-btn round dense flat :icon="revealIcon"  size="sm" color="grey" @click="revealPassword" :disabled="passwordIsDisabled">
-            <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">{{ pwPromptToolTip }}</q-tooltip>
-          </q-btn>
-          <q-btn round dense flat icon="loop" size="sm" color="teal" @click="generatePassword" :disabled="passwordIsDisabled">
-            <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Generate password</q-tooltip>
-          </q-btn>
-        </template>
-        <template v-slot:hint>
-          <div style="float: right;" v-if="passwordIsDisabled">
-            <q-btn dense right flat size="sm" color="blue" label="Reset password" @click="onEditPassword" />
-            <br />
-          </div>
-        </template>
-      </q-input>
+      <PasswordInput ref="password" :startDisabled="passwordIsDisabled" />
     </q-card-section>
     <q-card-section class="q-pt-none">
       <q-select
@@ -55,12 +40,11 @@
 </template>
 
 <script>
-
-const CharacterSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|'
-const PasswordSize = 16
+import PasswordInput from 'components/PasswordInput.vue'
 
 export default {
   name: 'UserEditor',
+  components: { PasswordInput },
   props: {
     editorFunction: {
       type: String,
@@ -76,32 +60,12 @@ export default {
     return {
       username: null,
       password: null,
-      passwordVisible: false,
-      editPassword: false,
       roleSelection: [],
       roles: [],
       loading: true
     }
   },
   computed: {
-    revealIcon () {
-      if (!this.passwordVisible) {
-        return 'visibility'
-      }
-      return 'visibility_off'
-    },
-    pwPromptType () {
-      if (!this.passwordVisible) {
-        return 'password'
-      }
-      return ''
-    },
-    pwPromptToolTip () {
-      if (!this.passwordVisible) {
-        return 'Reveal password'
-      }
-      return 'Hide password'
-    },
     submitLabel () {
       if (!this.isUpdating) {
         return 'Create User'
@@ -121,18 +85,10 @@ export default {
       if (!this.isUpdating) {
         return false
       }
-      if (this.isUpdating && this.editPassword) {
-        return false
-      }
       return true
     }
   },
   methods: {
-
-    onEditPassword () {
-      this.password = ''
-      this.editPassword = !this.editPassword
-    },
 
     async validateUser (val) {
       if (!val) {
@@ -144,33 +100,10 @@ export default {
       } catch (err) {}
     },
 
-    validatePassword (val) {
-      if (!this.isUpdating && !val) {
-        return 'Password is required'
-      }
-    },
-
-    generatePassword () {
-      this.generate()
-      this.passwordVisible = true
-    },
-
-    revealPassword () {
-      this.passwordVisible = !this.passwordVisible
-    },
-
-    generate () {
-      let password = ''
-      for (let i = 0; i < PasswordSize; i++) {
-        password += CharacterSet.charAt(Math.floor(Math.random() * CharacterSet.length))
-      }
-      this.password = password
-    },
-
     async addUser () {
       const payload = {
         username: this.username,
-        password: this.password,
+        password: this.$refs.password.password,
         roles: this.roleSelection
       }
       try {
@@ -192,7 +125,7 @@ export default {
         roles: this.roleSelection
       }
       if (this.editPassword) {
-        payload.password = this.password
+        payload.password = this.$refs.password.password
       }
       try {
         await this.$axios.put(`/api/users/${this.userToEdit}`, payload)
@@ -200,7 +133,7 @@ export default {
           color: 'green-4',
           textColor: 'white',
           icon: 'cloud_done',
-          message: `User '${this.userToEdit}' updated succesfully`
+          message: `User '${this.userToEdit}' updated successfully`
         })
         this.$root.$emit('reload-users')
       } catch (err) {
@@ -213,7 +146,7 @@ export default {
         const res = await this.$axios.get('/api/roles')
         const roles = []
         res.data.forEach((role) => {
-          roles.push(role.name)
+          roles.push(role.metadata.name)
         })
         if (val === '') {
           update(() => {
@@ -239,9 +172,9 @@ export default {
             res.data.roles.forEach((role) => {
               roles.push(role.name)
             })
-            this.password = '******************'
             this.roleSelection = roles
             this.loading = false
+            this.$refs.password.password = '*******************'
           })
           .catch((err) => {
             this.$root.$emit('notify-error', err)

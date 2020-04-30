@@ -15,9 +15,8 @@ import (
 //   200: namespacesResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) GetNamespaces(w http.ResponseWriter, r *http.Request) {
-	sess := GetRequestUserSession(r)
+	sess := apiutil.GetRequestUserSession(r)
 	namespaces, err := d.ListKubernetesNamespaces()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)

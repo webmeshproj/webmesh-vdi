@@ -9,7 +9,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/resources/app"
 	"github.com/tinyzimmer/kvdi/pkg/resources/pki"
-	"github.com/tinyzimmer/kvdi/pkg/resources/rethinkdb"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
@@ -27,11 +26,6 @@ import (
 )
 
 var log = logf.Log.WithName("controller_vdicluster")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new VDICluster Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -60,15 +54,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to secondary resource Deployments and requeue the owner VDICluster
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.VDICluster{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource StatefulSets and requeue the owner VDICluster
-	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.VDICluster{},
 	})
@@ -119,11 +104,6 @@ type ReconcileVDICluster struct {
 
 // Reconcile reads that state of the cluster for a VDICluster object and makes changes based on the state read
 // and what is in the VDICluster.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileVDICluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling VDICluster")
@@ -145,7 +125,6 @@ func (r *ReconcileVDICluster) Reconcile(request reconcile.Request) (reconcile.Re
 	// Build our reconcilers for this instance
 	reconcilers := []resources.VDIReconciler{
 		pki.New(r.client, r.scheme),
-		rethinkdb.New(r.client, r.scheme),
 		app.New(r.client, r.scheme),
 	}
 

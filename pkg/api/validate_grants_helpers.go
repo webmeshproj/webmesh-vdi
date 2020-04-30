@@ -2,26 +2,24 @@ package api
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
-func allowSameUser(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	pathUser := getUserFromRequest(r)
+func allowSameUser(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
+	pathUser := apiutil.GetUserFromRequest(r)
 	if reqUser.Name != pathUser {
 		return false, false, nil
 	}
 	// make sure the user isn't trying to change their permission level
-	allowed, _, _, err = denyUserElevatePerms(d, reqUser, r)
+	allowed, _, err = denyUserElevatePerms(d, reqUser, r)
 	return allowed, true, err
 }
 
-func allowSessionOwner(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
-	nn := getNamespacedNameFromRequest(r)
+func allowSessionOwner(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
+	nn := apiutil.GetNamespacedNameFromRequest(r)
 	found := &v1alpha1.Desktop{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return false, false, err
@@ -41,15 +39,6 @@ func allowSessionOwner(d *desktopAPI, reqUser *types.User, r *http.Request) (all
 	return true, true, nil
 }
 
-func allowAll(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error) {
+func allowAll(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
 	return true, false, nil
-}
-
-func checkUserLaunchRestraints(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource, reason string, err error) {
-	reqObj, ok := GetRequestObject(r).(*PostSessionsRequest)
-	if !ok {
-		return false, "Invalid", "", errors.New("PostSessionsRequest object is nil")
-	}
-	resourceName := fmt.Sprintf("%s/%s", reqObj.GetNamespace(), reqObj.GetTemplate())
-	return reqUser.CanLaunch(reqObj.GetNamespace(), reqObj.GetTemplate()), resourceName, "", nil
 }

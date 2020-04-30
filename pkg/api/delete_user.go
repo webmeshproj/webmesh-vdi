@@ -2,9 +2,6 @@ package api
 
 import (
 	"net/http"
-
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 // swagger:operation DELETE /api/users/{user} Users deleteUserRequest
@@ -23,19 +20,8 @@ import (
 //     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
-//   "500":
+//   "404":
 //     "$ref": "#/responses/error"
-func (d *desktopAPI) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	user := getUserFromRequest(r)
-	sess, err := d.getDB()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	if err := sess.DeleteUser(&types.User{Name: user}); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteOK(w)
-}
+func (d *desktopAPI) DeleteUser(w http.ResponseWriter, r *http.Request) {}
+
+// Implemented by the auth provider

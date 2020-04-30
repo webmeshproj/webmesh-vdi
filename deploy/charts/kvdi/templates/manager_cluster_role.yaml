@@ -2,7 +2,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "kvdi.fullname" . }}-manager
+  labels:
+    {{- include "kvdi.labels" . | nindent 4 }}
 rules:
+
 - apiGroups:
   - ""
   resources:
@@ -11,6 +14,7 @@ rules:
     - watch
     - get
     - list
+
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
@@ -25,14 +29,7 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - policy
-  resourceNames:
-  - privileged
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+
 - apiGroups:
   - ""
   resources:
@@ -43,33 +40,19 @@ rules:
   - endpoints
   - persistentvolumeclaims
   - persistentvolumes
-  - events
   - configmaps
   - secrets
   verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
+
 - apiGroups:
   - apps
   resources:
   - deployments
   - replicasets
-  - statefulsets
   verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
+
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -77,19 +60,13 @@ rules:
   verbs:
   - get
   - create
+
 - apiGroups:
   - kvdi.io
   resources:
   - '*'
   verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
   - cert-manager.io
   resources:
@@ -103,3 +80,14 @@ rules:
   - list
   - get
   - watch
+
+{{- if .Values.rbac.pspEnabled }}
+- apiGroups:
+  - policy
+  verbs:
+  - use
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - {{ include "kvdi.fullname" . }}-psp
+{{- end }}

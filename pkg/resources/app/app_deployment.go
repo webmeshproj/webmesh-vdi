@@ -40,7 +40,7 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 							Name: "tls-server",
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: instance.GetAppName(),
+									SecretName: fmt.Sprintf("%s-server", instance.GetAppName()),
 								},
 							},
 						},
@@ -61,6 +61,35 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 							ImagePullPolicy: instance.GetAppPullPolicy(),
 							Resources:       instance.GetAppResources(),
 							Args:            args,
+							Env: []corev1.EnvVar{
+								{
+									Name: "POD_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+								{
+									Name: "POD_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+								{
+									Name: v1alpha1.JWTSecretEnvVar,
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: instance.GetAppSecretsName(),
+											},
+											Key: v1alpha1.JWTSecretKey,
+										},
+									},
+								},
+							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",

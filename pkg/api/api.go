@@ -7,14 +7,11 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
 
 	"github.com/gorilla/mux"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -38,8 +35,6 @@ type desktopAPI struct {
 	router *mux.Router
 	// our parent vdi cluster
 	vdiCluster *v1alpha1.VDICluster
-	// function used for retrieving a database client
-	getDB func() (rethinkdb.RethinkDBSession, error)
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
@@ -79,13 +74,8 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		scheme:     scheme,
 		vdiCluster: found,
 	}
-	api.getDB = api.getDBClient
 
 	return api, api.buildRouter()
-}
-
-func (d *desktopAPI) getDBClient() (rethinkdb.RethinkDBSession, error) {
-	return rethinkdb.New(rethinkdb.RDBAddrForCR(d.vdiCluster))
 }
 
 // func (d *desktopAPI) getRestClientForGVK(gvk schema.GroupVersionKind) (rest.Interface, error) {

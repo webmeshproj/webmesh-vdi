@@ -33,6 +33,9 @@ func (c *VDICluster) GetAppResources() corev1.ResourceRequirements {
 }
 
 func (c *VDICluster) GetAppImage() string {
+	if c.Spec.App != nil && c.Spec.App.Image != "" {
+		return c.Spec.App.Image
+	}
 	return fmt.Sprintf("quay.io/tinyzimmer/kvdi:app-%s", version.Version)
 }
 
@@ -42,7 +45,10 @@ func (c *VDICluster) GetAppPullPolicy() corev1.PullPolicy {
 
 func (c *VDICluster) GetAppSecurityContext() *corev1.PodSecurityContext {
 	return &corev1.PodSecurityContext{
-		RunAsUser: &defaultUser,
+		RunAsUser:    &defaultUser,
+		RunAsGroup:   &defaultUser,
+		FSGroup:      &defaultUser,
+		RunAsNonRoot: &trueVal,
 	}
 }
 
@@ -58,4 +64,8 @@ func (c *VDICluster) AuditLogEnabled() bool {
 		return c.Spec.App.AuditLog
 	}
 	return false
+}
+
+func (c *VDICluster) GetAppSecretsName() string {
+	return fmt.Sprintf("%s-app-secets", c.GetName())
 }

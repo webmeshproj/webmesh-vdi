@@ -3,11 +3,13 @@ package reconcile
 import (
 	"context"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -48,9 +50,9 @@ func ReconcileClusterRole(reqLogger logr.Logger, c client.Client, role *rbacv1.C
 		return nil
 	}
 
-	// Check the found role binding spec
+	// Check the found role spec
 	if !k8sutil.CreationSpecsEqual(role.ObjectMeta, found.ObjectMeta) {
-		// We need to update the role binding
+		// We need to update the role
 		reqLogger.Info("Role annotation spec has changed, updating", "Name", role.Name)
 		found.Rules = role.Rules
 		found.SetAnnotations(role.GetAnnotations())
@@ -89,6 +91,40 @@ func ReconcileClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBin
 		found.Subjects = roleBinding.Subjects
 		found.RoleRef = roleBinding.RoleRef
 		found.SetAnnotations(roleBinding.GetAnnotations())
+		if err := c.Update(context.TODO(), found); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
+func ReconcileVDIRole(reqLogger logr.Logger, c client.Client, role *v1alpha1.VDIRole) error {
+	if err := k8sutil.SetCreationSpecAnnotation(&role.ObjectMeta, role); err != nil {
+		return err
+	}
+	found := &v1alpha1.VDIRole{}
+	if err := c.Get(context.TODO(), types.NamespacedName{Name: role.Name, Namespace: metav1.NamespaceAll}, found); err != nil {
+		// Return API error
+		if client.IgnoreNotFound(err) != nil {
+			return err
+		}
+		// Create the role
+		reqLogger.Info("Creating new VDI role ", "Name", role.Name)
+		if err := c.Create(context.TODO(), role); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Check the found role spec
+	if !k8sutil.CreationSpecsEqual(role.ObjectMeta, found.ObjectMeta) {
+		// We need to update the role
+		reqLogger.Info("Role annotation spec has changed, updating", "Name", role.Name)
+		found.Rules = role.Rules
+		found.SetLabels(role.GetLabels())
+		found.SetAnnotations(role.GetAnnotations())
 		if err := c.Update(context.TODO(), found); err != nil {
 			return err
 		}

@@ -24,6 +24,10 @@
 
             <q-tr :props="props">
 
+              <q-td auto-width>
+                <q-btn size="sm" color="primary" round dense @click="props.expand = !props.expand" :icon="props.expand ? 'remove' : 'add'" />
+              </q-td>
+
               <q-td key="name" :props="props">
                 <strong>{{ props.row.name }}</strong>
               </q-td>
@@ -37,39 +41,6 @@
                 </div>
               </q-td>
 
-              <q-td key="grants" :props="props">
-                <div v-for="r in props.row.roles" :v-bind="r" :key="r.name" style="float: left;">
-                  <div v-for="grant in r.grants" :v-bind="grant" :key="grant" style="float: left;">
-                    <q-badge color="green">
-                      {{ grant }}
-                    </q-badge>
-                    &nbsp;
-                  </div>
-                </div>
-              </q-td>
-
-              <q-td key="namespaces" :props="props">
-                <div v-for="r in props.row.roles" :v-bind="r" :key="r.name" style="float: left;">
-                  <div v-for="ns in r.namespaces" :v-bind="ns" :key="ns" style="float: left;">
-                    <q-badge color="teal">
-                      {{ ns }}
-                    </q-badge>
-                    &nbsp;
-                  </div>
-                </div>
-              </q-td>
-
-              <q-td key="templatePatterns" :props="props">
-                <div v-for="r in props.row.roles" :v-bind="r" :key="r.name" style="float: left;">
-                  <div v-for="pattern in r.templatePatterns" :v-bind="pattern" :key="pattern" style="float: left;">
-                    <q-badge color="purple">
-                      {{ pattern }}
-                    </q-badge>
-                    &nbsp;
-                  </div>
-                </div>
-              </q-td>
-
               <q-td key="updateUser">
                 <q-btn round dense flat icon="create"  size="sm" color="grey" @click="onEditUser(props.row.name)">
                   <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit User</q-tooltip>
@@ -80,6 +51,25 @@
               </q-td>
 
             </q-tr>
+
+            <q-tr v-show="props.expand" :props="props">
+               <q-td colspan="100%">
+                 <q-markup-table v-for="role in props.row.roles" :key="role.name" v-bind="role">
+                   <thead>
+                     <tr>
+                       <th class="text-left text-black">Role</th>
+                       <th class="text-center text-black">Rules</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     <tr v-for="(rule, idx) in role.rules" :key="idx">
+                       <td>{{ role.name }}</td>
+                       <td><RuleDisplay v-bind="rule" /></td>
+                     </tr>
+                   </tbody>
+                 </q-markup-table>
+               </q-td>
+             </q-tr>
 
           </template>
         </q-table>
@@ -108,8 +98,10 @@
 import SkeletonTable from 'components/SkeletonTable'
 import NewUserDialog from 'components/NewUserDialog'
 import EditUserDialog from 'components/EditUserDialog'
+import RuleDisplay from 'components/RuleDisplay'
 
 const userColumns = [
+  {},
   {
     name: 'name',
     required: true,
@@ -127,21 +119,6 @@ const userColumns = [
     label: 'Roles'
   },
   {
-    name: 'grants',
-    align: 'center',
-    label: 'Grants'
-  },
-  {
-    name: 'namespaces',
-    align: 'center',
-    label: 'Namespaces'
-  },
-  {
-    name: 'templatePatterns',
-    align: 'center',
-    label: 'Template Patterns'
-  },
-  {
     name: 'updateUser',
     align: 'center'
   }
@@ -149,7 +126,7 @@ const userColumns = [
 
 export default {
   name: 'UserPanel',
-  components: { SkeletonTable, NewUserDialog, EditUserDialog },
+  components: { SkeletonTable, NewUserDialog, EditUserDialog, RuleDisplay },
 
   data () {
     return {

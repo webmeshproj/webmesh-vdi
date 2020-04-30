@@ -41,11 +41,6 @@ export default {
       required: true
     },
 
-    endpoint: {
-      type: String,
-      required: true
-    },
-
     active: {
       type: Boolean,
       required: false,

@@ -2,12 +2,10 @@ package api
 
 import (
 	"errors"
-	"io/ioutil"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/mitchellh/mapstructure"
@@ -30,8 +28,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("Incorrect signing algorithm on token")
 			}
-			_, key := tlsutil.ServerKeypair()
-			return ioutil.ReadFile(key)
+			return apiutil.GetJWTSecret()
 		})
 		if !token.Valid {
 			if ve, ok := err.(*jwt.ValidationError); ok {
@@ -44,14 +41,13 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 				} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
 					apiutil.ReturnAPIForbidden(nil, "User session is not valid yet", w)
 					return
-				} else {
-					apiutil.ReturnAPIForbidden(nil, "Could not parse provided token", w)
-					return
 				}
+				apiutil.ReturnAPIForbidden(nil, "Could not parse provided token", w)
+				return
 			}
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			session := &types.JWTClaims{}
+			session := &v1alpha1.JWTClaims{}
 			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 				TagName: "json",
 				Result:  session,
@@ -64,11 +60,10 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 				apiutil.ReturnAPIError(err, w)
 				return
 			}
-			SetRequestUserSession(r, session)
+			apiutil.SetRequestUserSession(r, session)
 			next.ServeHTTP(w, r)
 			return
 		}
 		apiutil.ReturnAPIError(errors.New("Could not parse provided token"), w)
-		return
 	})
 }

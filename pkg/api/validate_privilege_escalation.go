@@ -1,71 +1,85 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 var elevateDenyReason = "The requested operation grants more privileges than the user has."
 
-func denyUserElevatePerms(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource, reason string, err error) {
-	db, err := d.getDB()
-	if err != nil {
-		return false, "Invalid", "Failed to connect to database", err
-	}
-	defer db.Close()
+func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed bool, reason string, err error) {
 
 	// Check that a POST /users will not grant permissions the user does not have.
-	if reqObj, ok := GetRequestObject(r).(*PostUserRequest); ok {
-		resource := fmt.Sprintf("user/%s", reqObj.Username)
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.CreateUserRequest); ok {
+		vdiRoles, err := d.vdiCluster.GetRoles(d.client)
+		if err != nil {
+			return false, "", err
+		}
 		for _, role := range reqObj.Roles {
-			roleObj, err := db.GetRole(role)
-			if err != nil {
-				return false, resource, elevateDenyReason, err
+			roleObj := getRoleByName(vdiRoles, role)
+			if roleObj == nil {
+				continue
 			}
-			if reqUser.ElevatedBy(roleObj) {
-				return false, resource, elevateDenyReason, nil
+			for _, rule := range roleObj.GetRules() {
+				if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
+					return false, elevateDenyReason, nil
+				}
 			}
 		}
-		return true, resource, elevateDenyReason, nil
+		return true, "", nil
 	}
 
 	// Check that a PUT /users/{user} will not grant permissions the user does not have.
-	if reqObj, ok := GetRequestObject(r).(*PutUserRequest); ok {
-		resource := fmt.Sprintf("user/%s", getUserFromRequest(r))
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.UpdateUserRequest); ok {
+		vdiRoles, err := d.vdiCluster.GetRoles(d.client)
+		if err != nil {
+			return false, "", err
+		}
 		for _, role := range reqObj.Roles {
-			roleObj, err := db.GetRole(role)
-			if err != nil {
-				return false, resource, "Error fetching role resource", err
+			roleObj := getRoleByName(vdiRoles, role)
+			if roleObj == nil {
+				continue
 			}
-			if reqUser.ElevatedBy(roleObj) {
-				return false, resource, elevateDenyReason, nil
+			for _, rule := range roleObj.GetRules() {
+				if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
+					return false, elevateDenyReason, nil
+				}
 			}
 		}
-		return true, resource, "", nil
+		return true, "", nil
 	}
 
 	// Check that a POST /roles will not grant permissions the user does not have.
-	if reqObj, ok := GetRequestObject(r).(*PostRoleRequest); ok {
-		resource := fmt.Sprintf("role/%s", reqObj.Name)
-		role := newRoleFromRequest(reqObj)
-		if reqUser.ElevatedBy(role) {
-			return false, resource, elevateDenyReason, nil
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.CreateRoleRequest); ok {
+		for _, rule := range reqObj.GetRules() {
+			if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
+				return false, elevateDenyReason, nil
+			}
 		}
-		return true, resource, "", nil
+		return true, "", nil
 	}
 
 	// Check that a PUT /roles/{role} will not grant permissions the user does not have.
-	if reqObj, ok := GetRequestObject(r).(*PutRoleRequest); ok {
-		role := newRoleFromPutRequest(getRoleFromRequest(r), reqObj)
-		resource := fmt.Sprintf("role/%s", role.Name)
-		if reqUser.ElevatedBy(role) {
-			return false, resource, elevateDenyReason, nil
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.UpdateRoleRequest); ok {
+		for _, rule := range reqObj.GetRules() {
+			if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
+				return false, elevateDenyReason, nil
+			}
 		}
-		return true, resource, "", nil
+		return true, "", nil
 	}
 
 	apiLogger.Info("Method used privilege validator without adding request logic")
-	return false, "", elevateDenyReason, nil
+	return false, elevateDenyReason, nil
+}
+
+func getRoleByName(roles []v1alpha1.VDIRole, name string) *v1alpha1.VDIRole {
+	for _, role := range roles {
+		if role.GetName() == name {
+			return &role
+		}
+	}
+	return nil
 }

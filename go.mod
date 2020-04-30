@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
-	github.com/aws/aws-sdk-go v1.24.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
@@ -22,7 +21,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
-	gopkg.in/rethinkdb/rethinkdb-go.v6 v6.2.1
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.18.0
 	k8s.io/client-go v12.0.0+incompatible

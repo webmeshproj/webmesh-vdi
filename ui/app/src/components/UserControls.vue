@@ -20,7 +20,6 @@
           href="#/profile"
           :active="profileLinkActive"
           @click="onProfileClick()"
-          dense
         >
         <q-item-section avatar>
           <q-icon name="supervisor_account" />
@@ -33,7 +32,6 @@
         <q-item
           clickable
           tag="a"
-          dense
           @click="onLogout()"
         >
           <q-item-section avatar>
@@ -90,6 +88,7 @@ export default {
             })
           this.pushIfNotCurrent('templates')
           this.$root.$emit('set-active-title', 'Desktop Templates')
+          this.setLoggedIn()
         } else {
           this.pushIfNotCurrent('login')
         }
@@ -110,6 +109,7 @@ export default {
       this.$userStore.dispatch('logout')
       this.$desktopSessions.dispatch('clearSessions')
       this.$root.$emit('set-active-title', 'Login')
+      this.setLoggedOut()
     },
 
     onProfileClick () {
@@ -124,7 +124,7 @@ export default {
       }
     },
 
-    setLoggedIn (username) {
+    setLoggedIn () {
       this.user = this.$userStore.getters.user
       this.loggedIn = true
       this.loginLinkActive = false

@@ -4,105 +4,199 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/gorilla/mux"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
-type AllowFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed, owner bool, err error)
-type ResourceFunc func(d *desktopAPI, reqUser *types.User, r *http.Request) (allowed bool, resource, reason string, err error)
+// OverrideFunc is a function that takes precedence over any other action evaluations.
+// If it returns false for allowed, the next rules in the chain will be considered.
+// Errors are considered forbidden.
+type OverrideFunc func(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed, owner bool, err error)
 
+// ExtraCheckFunc is a function that fires after the action itself has been evaluated.
+// Allowed being false or any errors are considered forbidden.
+type ExtraCheckFunc func(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed bool, reason string, err error)
+
+// ResourceNameFunc returns the name of a requested resource based off the contents
+// of a request.
+type ResourceValueFunc func(r *http.Request) (name string)
+
+// MethodPermissions represents a set of checks to run for an API method.
 type MethodPermissions struct {
-	RoleGrant    grants.RoleGrant
-	AllowFunc    AllowFunc
-	ResourceFunc ResourceFunc
+	OverrideFunc          OverrideFunc
+	Action                v1alpha1.APIAction
+	ResourceNameFunc      ResourceValueFunc
+	ResourceNamespaceFunc ResourceValueFunc
+	ExtraCheckFunc        ExtraCheckFunc
 }
 
+// RouterGrantRequirements defines all the methods that are protected, and what
+// rules should be evaluated for them.
 var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	"/api/whoami": {
 		"GET": {
-			AllowFunc: allowAll,
+			OverrideFunc: allowAll,
 		},
 	},
 	"/api/logout": {
 		"POST": {
-			AllowFunc: allowAll,
+			OverrideFunc: allowAll,
 		},
 	},
 	"/api/config": {
 		"GET": {
-			AllowFunc: allowAll,
-		},
-	},
-	"/api/grants": {
-		"GET": {
-			AllowFunc: allowAll,
+			OverrideFunc: allowAll,
 		},
 	},
 	"/api/namespaces": {
 		"GET": {
-			AllowFunc: allowAll,
+			OverrideFunc: allowAll,
 		},
 	},
 	"/api/users": {
-		"GET": {RoleGrant: grants.ReadUsers},
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+		},
 		"POST": {
-			RoleGrant:    grants.WriteUsers,
-			ResourceFunc: denyUserElevatePerms,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbCreate,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ExtraCheckFunc: denyUserElevatePerms,
 		},
 	},
 	"/api/users/{user}": {
 		"GET": {
-			RoleGrant: grants.ReadUsers,
-			AllowFunc: allowSameUser,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			OverrideFunc:     allowSameUser,
 		},
 		"PUT": {
-			RoleGrant:    grants.WriteUsers,
-			AllowFunc:    allowSameUser,
-			ResourceFunc: denyUserElevatePerms,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUpdate,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			OverrideFunc:     allowSameUser,
+			ExtraCheckFunc:   denyUserElevatePerms,
 		},
-		"DELETE": {RoleGrant: grants.WriteUsers},
+		"DELETE": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbDelete,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+		},
 	},
 	"/api/roles": {
-		"GET": {RoleGrant: grants.ReadRoles},
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceRoles,
+			},
+		},
 		"POST": {
-			RoleGrant:    grants.WriteRoles,
-			ResourceFunc: denyUserElevatePerms,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbCreate,
+				ResourceType: v1alpha1.ResourceRoles,
+			},
+			ExtraCheckFunc: denyUserElevatePerms,
 		},
 	},
 	"/api/roles/{role}": {
-		"GET": {RoleGrant: grants.ReadRoles},
-		"PUT": {
-			RoleGrant:    grants.WriteRoles,
-			ResourceFunc: denyUserElevatePerms,
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceRoles,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
 		},
-		"DELETE": {RoleGrant: grants.WriteRoles},
+		"PUT": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUpdate,
+				ResourceType: v1alpha1.ResourceRoles,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
+			ExtraCheckFunc:   denyUserElevatePerms,
+		},
+		"DELETE": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbDelete,
+				ResourceType: v1alpha1.ResourceRoles,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
+		},
 	},
 	"/api/templates": {
-		"GET": {RoleGrant: grants.ReadTemplates},
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+		},
 	},
 	"/api/sessions": {
 		"POST": {
-			RoleGrant:    grants.LaunchTemplates,
-			ResourceFunc: checkUserLaunchRestraints,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbLaunch,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: func(r *http.Request) string {
+				req := apiutil.GetRequestObject(r).(*v1alpha1.CreateSessionRequest)
+				return req.GetTemplate()
+			},
+			ResourceNamespaceFunc: func(r *http.Request) string {
+				req := apiutil.GetRequestObject(r).(*v1alpha1.CreateSessionRequest)
+				return req.GetNamespace()
+			},
 		},
 	},
 	"/api/sessions/{namespace}/{name}": {
 		"GET": {
-			RoleGrant: grants.ReadDesktopSessions,
-			AllowFunc: allowSessionOwner,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: func(r *http.Request) string {
+				return mux.Vars(r)["name"]
+			},
+			ResourceNamespaceFunc: func(r *http.Request) string {
+				return mux.Vars(r)["namespace"]
+			},
+			OverrideFunc: allowSessionOwner,
 		},
 		"DELETE": {
-			RoleGrant: grants.WriteDesktopSessions,
-			AllowFunc: allowSessionOwner,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbDelete,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: func(r *http.Request) string {
+				return mux.Vars(r)["name"]
+			},
+			ResourceNamespaceFunc: func(r *http.Request) string {
+				return mux.Vars(r)["namespace"]
+			},
+			OverrideFunc: allowSessionOwner,
 		},
 	},
 	"/api/websockify/{namespace}/{name}": {
 		"GET": {
-			RoleGrant: grants.UseDesktopSessions,
-			AllowFunc: allowSessionOwner,
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUse,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: func(r *http.Request) string {
+				return fmt.Sprintf("%s/%s", mux.Vars(r)["namespace"], mux.Vars(r)["name"])
+			},
+			OverrideFunc: allowSessionOwner,
 		},
 	},
 }
@@ -116,31 +210,29 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 		// // defer d.auditLog(result)
 
 		// rertrieve the user and the path to match required grants
-		userSession := GetRequestUserSession(r)
+		userSession := apiutil.GetRequestUserSession(r)
 		result.UserSession = userSession
 
-		path := getGorillaPath(r)
+		path := apiutil.GetGorillaPath(r)
 
 		// Safety checks should not fire when deployed, more to catch errors in testing
 		grants, ok := RouterGrantRequirements[path]
 		if !ok {
 			apiutil.ReturnAPIForbidden(errors.New(path), "Could not determine required grants for route", w)
-			result.Allowed = false
-			d.auditLog(result)
 			return
 		}
 		methodGrant, ok := grants[r.Method]
 		if !ok {
 			apiutil.ReturnAPIForbidden(errors.New(r.Method), "Could not determine required grants for method", w)
-			result.Allowed = false
-			d.auditLog(result)
 			return
 		}
-		result.Grant = methodGrant.RoleGrant
+
+		apiAction := buildActionFromTemplate(methodGrant, r)
+		result.Action = apiAction
 
 		// Check if the route supports validating resource ownership
-		if methodGrant.AllowFunc != nil {
-			if allowed, owner, err := methodGrant.AllowFunc(d, userSession.User, r); err != nil {
+		if methodGrant.OverrideFunc != nil {
+			if allowed, owner, err := methodGrant.OverrideFunc(d, userSession.User, r); err != nil {
 				apiutil.ReturnAPIForbidden(err, "An error ocurred validating permission to the requested resource", w)
 				result.Allowed = false
 				d.auditLog(result)
@@ -155,37 +247,28 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 			// We were not allowed, but we may have a grant that lets us anyway
 		}
 
-		if !userSession.User.HasGrant(methodGrant.RoleGrant) {
-			names := methodGrant.RoleGrant.Names()
-			msg := fmt.Sprintf("%s does not have the %s grant", userSession.User.Name, strings.Join(names, ","))
-			if len(names) > 1 {
-				msg = msg + "s"
-			}
+		if !userSession.User.Evaluate(apiAction) {
+			msg := fmt.Sprintf("%s does not have the ability to %s", userSession.User.Name, apiAction.String())
 			apiutil.ReturnAPIForbidden(nil, msg, w)
 			result.Allowed = false
 			d.auditLog(result)
 			return
 		}
 
-		if methodGrant.ResourceFunc != nil {
-			if allowed, resource, reason, err := methodGrant.ResourceFunc(d, userSession.User, r); err != nil {
-				apiutil.ReturnAPIForbidden(err, "An error ocurred validating permission to the requested resource", w)
+		if methodGrant.ExtraCheckFunc != nil {
+			allowed, reason, err := methodGrant.ExtraCheckFunc(d, userSession.User, r)
+			if err != nil {
+				apiutil.ReturnAPIForbidden(err, "An error ocurred checking extra restraints on the resource", w)
 				result.Allowed = false
 				d.auditLog(result)
 				return
-			} else {
-				result.Resource = resource
-				if !allowed {
-					result.Allowed = false
-					names := methodGrant.RoleGrant.Names()
-					msg := fmt.Sprintf("%s cannot %s on resource %s", userSession.User.Name, strings.Join(names, ","), resource)
-					if reason != "" {
-						msg = msg + fmt.Sprintf(". %s", reason)
-					}
-					apiutil.ReturnAPIForbidden(err, msg, w)
-					d.auditLog(result)
-					return
-				}
+			}
+			if !allowed {
+				msg := fmt.Sprintf("%s does not have the ability to %s: %s", userSession.User.Name, apiAction.String(), reason)
+				apiutil.ReturnAPIForbidden(nil, msg, w)
+				result.Allowed = false
+				d.auditLog(result)
+				return
 			}
 		}
 
@@ -193,4 +276,26 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 		d.auditLog(result)
 		next.ServeHTTP(w, r)
 	})
+}
+
+// buildActionFromTemplate will create an APIAction to evaluate based off the
+// parameters in the MethodPermissions.
+func buildActionFromTemplate(perms MethodPermissions, r *http.Request) *v1alpha1.APIAction {
+	// build a new action object
+	action := &v1alpha1.APIAction{
+		Verb:         perms.Action.Verb,
+		ResourceType: perms.Action.ResourceType,
+	}
+
+	// populate the name if possible
+	if perms.ResourceNameFunc != nil {
+		action.ResourceName = perms.ResourceNameFunc(r)
+	}
+
+	// populate the namespace if possible
+	if perms.ResourceNamespaceFunc != nil {
+		action.ResourceNamespace = perms.ResourceNamespaceFunc(r)
+	}
+
+	return action
 }

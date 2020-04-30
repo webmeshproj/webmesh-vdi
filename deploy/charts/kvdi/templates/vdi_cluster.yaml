@@ -1,0 +1,9 @@
+apiVersion: kvdi.io/v1alpha1
+kind: VDICluster
+metadata:
+  name: kvdi
+  labels:
+    {{- include "kvdi.labels" . | nindent 4 }}
+    component: kvdi-cluster
+spec:
+  {{ toYaml .Values.vdiCluster.spec | nindent 2 }}

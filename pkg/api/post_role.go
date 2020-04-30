@@ -1,51 +1,21 @@
 package api
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"net/http"
-	"regexp"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/grants"
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	apierrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
-)
 
-// PostRoleRequest represents a request for a new role.
-type PostRoleRequest struct {
-	Name             string           `json:"name"`
-	Grants           grants.RoleGrant `json:"grants"`
-	Namespaces       []string         `json:"namespaces"`
-	TemplatePatterns []string         `json:"templatePatterns"`
-}
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // Request containing a new user
 // swagger:parameters postRoleRequest
 type swaggerCreateRoleRequest struct {
 	// in:body
-	Body PostRoleRequest
-}
-
-func (p *PostRoleRequest) Validate() error {
-	if p.Name == "" || p.Grants == 0 {
-		return errors.New("'name' and 'grants' must be provided in the request")
-	}
-	for _, x := range p.TemplatePatterns {
-		if _, err := regexp.Compile(x); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func newRoleFromRequest(req *PostRoleRequest) *types.Role {
-	return &types.Role{
-		Name:             req.Name,
-		Grants:           req.Grants,
-		Namespaces:       req.Namespaces,
-		TemplatePatterns: req.TemplatePatterns,
-	}
+	Body v1alpha1.CreateRoleRequest
 }
 
 // swagger:route POST /api/roles Roles postRoleRequest
@@ -54,30 +24,28 @@ func newRoleFromRequest(req *PostRoleRequest) *types.Role {
 //   200: boolResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
-	req := GetRequestObject(r).(*PostRoleRequest)
-	if err := req.Validate(); err != nil {
-		apiutil.ReturnAPIError(err, w)
+	req := apiutil.GetRequestObject(r).(*v1alpha1.CreateRoleRequest)
+	if req == nil {
+		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
-	role := newRoleFromRequest(req)
-	sess, err := d.getDB()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	if _, err := sess.GetRole(role.Name); err == nil {
-		apiutil.ReturnAPIError(fmt.Errorf("A role with the name %s already exists", role.Name), w)
-		return
-	} else if !apierrors.IsRoleNotFoundError(err) {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	if err := sess.CreateRole(role); err != nil {
+	role := d.newRoleFromRequest(req)
+	if err := d.client.Create(context.TODO(), role); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
 	apiutil.WriteOK(w)
+}
+
+func (d *desktopAPI) newRoleFromRequest(req *v1alpha1.CreateRoleRequest) *v1alpha1.VDIRole {
+	return &v1alpha1.VDIRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: req.Name,
+			Labels: map[string]string{
+				v1alpha1.RoleClusterRefLabel: d.vdiCluster.GetName(),
+			},
+		},
+		Rules: req.GetRules(),
+	}
 }

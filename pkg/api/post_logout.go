@@ -17,20 +17,9 @@ import (
 //   200: boolResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
-	userSession := GetRequestUserSession(r)
-	sess, err := d.getDB()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	// if err := sess.DeleteUserSession(userSession); err != nil {
-	// 	apiutil.ReturnAPIError(err, w)
-	// 	return
-	// }
-	if err := d.CleanupUserDesktops(userSession.User.Name); err != nil {
+	userSession := apiutil.GetRequestUserSession(r)
+	if err := d.CleanupUserDesktops(userSession.User.GetName()); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}

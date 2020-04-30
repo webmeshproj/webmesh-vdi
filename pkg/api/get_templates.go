@@ -17,9 +17,8 @@ import (
 //   200: templatesResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {
-	sess := GetRequestUserSession(r)
+	sess := apiutil.GetRequestUserSession(r)
 	tmpls, err := d.getAllDesktopTemplates()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)

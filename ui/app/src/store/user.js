@@ -31,7 +31,7 @@ export const UserStore = new Vuex.Store({
 
     logout (state) {
       state.status = ''
-      state.user = ''
+      state.user = {}
       state.token = ''
     }
 
@@ -52,9 +52,8 @@ export const UserStore = new Vuex.Store({
         try {
           console.log('Retrieving user information')
           const res = await Vue.prototype.$axios.get('/api/whoami')
-          commit('auth_got_user', res.data.user)
-          commit('auth_success', res.data.token)
-          console.log(`Resuming session as ${res.data.user.name}`)
+          commit('auth_got_user', res.data)
+          console.log(`Resuming session as ${res.data.name}`)
         } catch (err) {
           console.log('Could not fetch user information')
           console.log(err)

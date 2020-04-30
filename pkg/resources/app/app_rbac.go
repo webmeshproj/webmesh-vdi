@@ -8,19 +8,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var verbsAll = []string{"create", "delete", "deletecollection", "get", "list", "watch", "patch", "update"}
 var verbsReadOnly = []string{"get", "list", "watch"}
 
 var appRules = []rbacv1.PolicyRule{
 	{
 		APIGroups: []string{"kvdi.io"},
-		Resources: []string{"*"},
-		Verbs:     verbsAll,
+		Resources: []string{rbacv1.ResourceAll},
+		Verbs:     []string{rbacv1.VerbAll},
 	},
 	{
 		APIGroups: []string{""},
 		Resources: []string{"pods", "services", "namespaces"},
 		Verbs:     verbsReadOnly,
+	},
+	{
+		APIGroups: []string{""},
+		Resources: []string{"configmaps", "secrets"},
+		Verbs:     []string{rbacv1.VerbAll},
 	},
 }
 

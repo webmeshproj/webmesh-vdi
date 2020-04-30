@@ -14,40 +14,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PostSessionsRequest requests a new desktop session with the givin parameters.
-type PostSessionsRequest struct {
-	Template  string `json:"template"`
-	Namespace string `json:"namespace,omitempty"`
-}
-
-func (p *PostSessionsRequest) GetTemplate() string {
-	return p.Template
-}
-
-func (p *PostSessionsRequest) GetNamespace() string {
-	if p.Namespace != "" {
-		return p.Namespace
-	}
-	return "default"
-}
-
 // Request for a new desktop session
 // swagger:parameters postSessionRequest
-type swaggerStartSessionRequest struct {
+type swaggerCreateSessionRequest struct {
 	// in:body
-	Body PostSessionsRequest
+	Body v1alpha1.CreateSessionRequest
 }
 
-type PostSessionsResponse struct {
+// CreateSessionResponse returns the name of the Desktop and what namespace
+// it is running in.
+type CreateSessionResponse struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 }
 
 // New session response
 // swagger:response postSessionResponse
-type swaggerStartSessionResponse struct {
+type swaggerCreateSessionResponse struct {
 	// in:body
-	Body PostSessionsResponse
+	Body CreateSessionResponse
 }
 
 // swagger:route POST /api/sessions Desktops postSessionRequest
@@ -56,33 +41,29 @@ type swaggerStartSessionResponse struct {
 //   200: postSessionResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
-	sess := GetRequestUserSession(r)
-	req := GetRequestObject(r).(*PostSessionsRequest)
+	sess := apiutil.GetRequestUserSession(r)
+	req := apiutil.GetRequestObject(r).(*v1alpha1.CreateSessionRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
-	if req.Template == "" {
-		apiutil.ReturnAPIError(errors.New("No DesktopTemplate included in the request"), w)
-		return
-	}
 
-	desktop := d.newDesktopForRequest(req, sess.User.Name)
+	desktop := d.newDesktopForRequest(req, sess.User.GetName())
 
 	if err := d.client.Create(context.TODO(), desktop); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
 
-	apiutil.WriteJSON(&PostSessionsResponse{
-		Name:      desktop.Name,
-		Namespace: desktop.Namespace,
+	apiutil.WriteJSON(&CreateSessionResponse{
+		Name:      desktop.GetName(),
+		Namespace: desktop.GetNamespace(),
 	}, w)
 }
 
-func (d *desktopAPI) newDesktopForRequest(req *PostSessionsRequest, username string) *v1alpha1.Desktop {
+// newDesktopForRequest builds a new Desktop object from the request parameters.
+func (d *desktopAPI) newDesktopForRequest(req *v1alpha1.CreateSessionRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),

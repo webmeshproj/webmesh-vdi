@@ -62,7 +62,8 @@ module.exports = function (/* ctx */) {
       plugins: [
         'AppFullscreen',
         'Loading',
-        'Notify'
+        'Notify',
+        'Dialog'
       ]
     },
 
@@ -112,6 +113,11 @@ module.exports = function (/* ctx */) {
           secure: false
         },
         '/api': {
+          target: 'https://localhost:8443',
+          changeOrigin: true,
+          secure: false
+        },
+        '/swagger.json': {
           target: 'https://localhost:8443',
           changeOrigin: true,
           secure: false

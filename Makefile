@@ -167,10 +167,9 @@ test-certmanager: ${KUBECTL} ${HELM}
 		--set extraArgs[0]="--enable-certificate-owner-ref=true" \
 		--wait
 
-example-vdi: ${KUBECTL}
+example-vdi-templates: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply \
-		-f deploy/examples/example-cluster.yaml \
-		-f deploy/examples/example-desktop-template.yaml
+		-f deploy/examples/example-desktop-templates.yaml
 
 full-test-cluster: test-cluster test-ingress test-certmanager
 
@@ -182,9 +181,10 @@ restart-app: ${KUBECTL}
 
 restart: restart-manager restart-app
 
-clean-cluster: ${KUBECTL}
+clean-cluster: ${KUBECTL} ${HELM}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found -f deploy/examples
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found certificate --all
+	${HELM} del kvdi
 
 remove-cluster: ${KIND}
 	${KIND} delete cluster --name ${CLUSTER_NAME}
@@ -194,14 +194,12 @@ forward-app: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get pod | grep app | awk '{print$$1}' | xargs -I% ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} port-forward % 8443
 
 get-app-secret: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
 get-admin-password: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret example-vdicluster-admin-secret -o json | jq -r .data.password | base64 -d && echo
-
-cycle-cluster: clean-cluster build-all load-all restart-manager example-vdi
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
 .PHONY: deploy

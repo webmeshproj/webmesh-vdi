@@ -29,7 +29,7 @@ func newAppCertForCR(instance *v1alpha1.VDICluster) *cm.Certificate {
 			KeySize:    4096,
 			CommonName: instance.GetAppName(),
 			DNSNames:   dnsNames,
-			SecretName: instance.GetAppName(),
+			SecretName: fmt.Sprintf("%s-server", instance.GetAppName()),
 			IssuerRef: cmmeta.ObjectReference{
 				Name: instance.GetCAName(),
 				Kind: "ClusterIssuer",

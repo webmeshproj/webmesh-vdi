@@ -1,9 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -13,18 +14,10 @@ import (
 //   200: rolesResponse
 //   400: error
 //   403: error
-//   500: error
 func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
-	sess, err := d.getDB()
+	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	roles, err := sess.GetAllRoles()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
 	}
 	apiutil.WriteJSON(roles, w)
 }
@@ -48,33 +41,31 @@ func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 //     "$ref": "#/responses/error"
 //   "404":
 //     "$ref": "#/responses/error"
-//   "500":
-//     "$ref": "#/responses/error"
 func (d *desktopAPI) GetRole(w http.ResponseWriter, r *http.Request) {
-	sess, err := d.getDB()
+	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
-		return
 	}
-	defer sess.Close()
-	role, err := sess.GetRole(getRoleFromRequest(r))
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+	roleName := apiutil.GetRoleFromRequest(r)
+	for _, role := range roles {
+		if role.GetName() == roleName {
+			apiutil.WriteJSON(role, w)
+			return
+		}
 	}
-	apiutil.WriteJSON(role, w)
+	apiutil.ReturnAPINotFound(fmt.Errorf("No role with the name '%s' found", roleName), w)
 }
 
 // A list of roles
 // swagger:response rolesResponse
 type swaggerRolesResponse struct {
 	// in:body
-	Body []types.Role
+	Body []v1alpha1.VDIRole
 }
 
 // A single role
 // swagger:response roleResponse
 type swaggerRoleResponse struct {
 	// in:body
-	Body types.Role
+	Body v1alpha1.VDIRole
 }

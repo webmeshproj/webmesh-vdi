@@ -29,6 +29,9 @@ type VDIClusterSpec struct {
 
 // AppConfig represents app configurations for the VDI cluster
 type AppConfig struct {
+	// The image to use for the app instances. Defaults to the public image
+	// matching the version of the currently running manager.
+	Image string `json:"image,omitempty"`
 	// An exterenal host name that will be used for any routes that need to be
 	// broadcasted to the end user.
 	ExternalHostname string `json:"externalHostname,omitempty"`

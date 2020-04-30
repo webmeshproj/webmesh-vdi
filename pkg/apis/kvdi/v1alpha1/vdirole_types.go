@@ -6,7 +6,7 @@ import (
 
 // Labels used for configuring how the role gets applied
 const (
-	// RoleClusterRefLabel marks for which cluster
+	// RoleClusterRefLabel marks for which cluster a role belongs
 	RoleClusterRefLabel = "kvdi.io/cluster-ref"
 	// Other labels could be used to pass auth provider level configurations,
 	// such as mapping users to roles.
@@ -62,12 +62,21 @@ type VDIRole struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// A list of rules granting access to resources in the VDICluster.
-	Rules []Rule `json:"rules"`
+	Rules []Rule `json:"rules,omitempty"`
+}
+
+func (v *VDIRole) GetRules() []Rule { return v.Rules }
+
+func (v *VDIRole) ToUserRole() *VDIUserRole {
+	return &VDIUserRole{
+		Name:  v.GetName(),
+		Rules: v.GetRules(),
+	}
 }
 
 // Rule represents a set of permissions applied to a VDIRole. It mostly resembles
 // an rbacv1.PolicyRule, with resources being a regex and the addition of a
-// namespace selector. An empty rule is effectively admin privileges.
+// namespace selector.
 type Rule struct {
 	// The actions this rule applies for. VerbAll matches all actions.
 	Verbs []Verb `json:"verbs,omitempty"`

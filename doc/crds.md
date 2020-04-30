@@ -9,18 +9,33 @@ Types
 
 -   [AppConfig](#%23kvdi.io%2fv1alpha1.AppConfig)
 -   [AuthConfig](#%23kvdi.io%2fv1alpha1.AuthConfig)
+-   [AuthProvider](#%23kvdi.io%2fv1alpha1.AuthProvider)
+-   [CreateRoleRequest](#%23kvdi.io%2fv1alpha1.CreateRoleRequest)
+-   [CreateSessionRequest](#%23kvdi.io%2fv1alpha1.CreateSessionRequest)
+-   [CreateUserRequest](#%23kvdi.io%2fv1alpha1.CreateUserRequest)
 -   [Desktop](#%23kvdi.io%2fv1alpha1.Desktop)
 -   [DesktopConfig](#%23kvdi.io%2fv1alpha1.DesktopConfig)
 -   [DesktopSpec](#%23kvdi.io%2fv1alpha1.DesktopSpec)
 -   [DesktopTemplate](#%23kvdi.io%2fv1alpha1.DesktopTemplate)
 -   [DesktopTemplateSpec](#%23kvdi.io%2fv1alpha1.DesktopTemplateSpec)
+-   [JWTClaims](#%23kvdi.io%2fv1alpha1.JWTClaims)
 -   [LocalAuthConfig](#%23kvdi.io%2fv1alpha1.LocalAuthConfig)
+-   [LoginRequest](#%23kvdi.io%2fv1alpha1.LoginRequest)
 -   [Resource](#%23kvdi.io%2fv1alpha1.Resource)
+-   [ResourceGetter](#%23kvdi.io%2fv1alpha1.ResourceGetter)
 -   [RethinkDBConfig](#%23kvdi.io%2fv1alpha1.RethinkDBConfig)
+-   [RolesGetter](#%23kvdi.io%2fv1alpha1.RolesGetter)
 -   [Rule](#%23kvdi.io%2fv1alpha1.Rule)
+-   [SessionResponse](#%23kvdi.io%2fv1alpha1.SessionResponse)
+-   [TemplatesGetter](#%23kvdi.io%2fv1alpha1.TemplatesGetter)
+-   [UpdateRoleRequest](#%23kvdi.io%2fv1alpha1.UpdateRoleRequest)
+-   [UpdateUserRequest](#%23kvdi.io%2fv1alpha1.UpdateUserRequest)
+-   [UsersGetter](#%23kvdi.io%2fv1alpha1.UsersGetter)
 -   [VDICluster](#%23kvdi.io%2fv1alpha1.VDICluster)
 -   [VDIClusterSpec](#%23kvdi.io%2fv1alpha1.VDIClusterSpec)
 -   [VDIRole](#%23kvdi.io%2fv1alpha1.VDIRole)
+-   [VDIUser](#%23kvdi.io%2fv1alpha1.VDIUser)
+-   [VDIUserRole](#%23kvdi.io%2fv1alpha1.VDIUserRole)
 -   [Verb](#%23kvdi.io%2fv1alpha1.Verb)
 
 kvdi.io/v1alpha1
@@ -46,22 +61,26 @@ AppConfig represents app configurations for the VDI cluster
 </thead>
 <tbody>
 <tr class="odd">
+<td><code>image</code> <em>string</em></td>
+<td><p>The image to use for the app instances. Defaults to the public image matching the version of the currently running manager.</p></td>
+</tr>
+<tr class="even">
 <td><code>externalHostname</code> <em>string</em></td>
 <td><p>An exterenal host name that will be used for any routes that need to be broadcasted to the end user.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>corsEnabled</code> <em>bool</em></td>
 <td><p>Whether to add CORS headers to API requests</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>auditLog</code> <em>bool</em></td>
 <td><p>Whether to log auditing events to stdout</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>replicas</code> <em>int32</em></td>
 <td><p>The number of app replicas to run</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -94,6 +113,86 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 <tr class="odd">
 <td><code>localAuth</code> <em><a href="#kvdi.io/v1alpha1.LocalAuthConfig">LocalAuthConfig</a></em></td>
 <td><p>Use local auth (db-backed) authentication</p></td>
+</tr>
+</tbody>
+</table>
+
+### AuthProvider
+
+AuthProvider defines an interface for handling login attempts. Currently
+only Local auth (db-based) is supported, however other integrations such
+as LDAP or OAuth can implement this interface.
+
+### CreateRoleRequest
+
+CreateRoleRequest represents a request for a new role.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+### CreateSessionRequest
+
+CreateSessionRequest requests a new desktop session with the givin
+parameters.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>template</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>namespace</code> <em>string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+### CreateUserRequest
+
+CreateUserRequest represents a request to create a new user.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>username</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>password</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>roles</code> <em>[]string</em></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -179,6 +278,10 @@ Desktop is the Schema for the desktops API
 <tr class="odd">
 <td><code>socketAddr</code> <em>string</em></td>
 <td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/vnc.sock. The novnc-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>proxyImage</code> <em>string</em></td>
+<td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
 </tbody>
 </table>
@@ -314,17 +417,69 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 </tbody>
 </table>
 
+### JWTClaims
+
+JWTClaims represents the claims used when issuing JWT tokens.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>StandardClaims</code> <em>github.com/dgrijalva/jwt-go.StandardClaims</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
 ### LocalAuthConfig
 
 (*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
 
 LocalAuthConfig represents a local, db-based authentication driver.
 
+### LoginRequest
+
+LoginRequest represents a request for a session token
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>username</code> <em>string</em></td>
+<td><p>Username</p></td>
+</tr>
+<tr class="even">
+<td><code>password</code> <em>string</em></td>
+<td><p>Password</p></td>
+</tr>
+</tbody>
+</table>
+
 Resource (`string` alias)
 
 (*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
 
 Resource represents the target of an API action
+
+### ResourceGetter
+
+ResourceGetter is an interface for retrieving lists of kVDI related
+resources. Its primary purpose is to pass an interface to rbac
+evaluations so they can check permissions against present resources.
 
 ### RethinkDBConfig
 
@@ -371,14 +526,21 @@ RethinkDBConfig represents rethinkdb configurations for the VDI cluster
 </tbody>
 </table>
 
+### RolesGetter
+
+RolesGetter is an interface that can be used to retrieve available roles
+while chcking user permissions.
+
 ### Rule
 
-(*Appears on:* [VDIRole](#kvdi.io/v1alpha1.VDIRole))
+(*Appears on:* [CreateRoleRequest](#kvdi.io/v1alpha1.CreateRoleRequest),
+[UpdateRoleRequest](#kvdi.io/v1alpha1.UpdateRoleRequest),
+[VDIRole](#kvdi.io/v1alpha1.VDIRole),
+[VDIUserRole](#kvdi.io/v1alpha1.VDIUserRole))
 
 Rule represents a set of permissions applied to a VDIRole. It mostly
 resembles an rbacv1.PolicyRule, with resources being a regex and the
-addition of a namespace selector. An empty rule is effectively admin
-privileges.
+addition of a namespace selector.
 
 <table>
 <thead>
@@ -406,6 +568,85 @@ privileges.
 </tr>
 </tbody>
 </table>
+
+### SessionResponse
+
+SessionResponse represents a response with a new session token
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>token</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>expiresAt</code> <em>int64</em></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+### TemplatesGetter
+
+TemplatesGetter is an interface that can be used to retrieve available
+templates while chcking user permissions.
+
+### UpdateRoleRequest
+
+UpdateRoleRequest requests updates to an existing role.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+### UpdateUserRequest
+
+UpdateUserRequest requests updates to an existing user
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>password</code> <em>string</em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>roles</code> <em>[]string</em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+### UsersGetter
+
+UsersGetter is an interface that can be used to retrieve available users
+while chcking user permissions.
 
 ### VDICluster
 
@@ -519,6 +760,8 @@ VDIClusterSpec defines the desired state of VDICluster
 
 ### VDIRole
 
+(*Appears on:* [VDIUser](#kvdi.io/v1alpha1.VDIUser))
+
 VDIRole is the Schema for the vdiroles API
 
 <table>
@@ -540,6 +783,63 @@ VDIRole is the Schema for the vdiroles API
 </tbody>
 </table>
 
+### VDIUser
+
+(*Appears on:* [JWTClaims](#kvdi.io/v1alpha1.JWTClaims),
+[SessionResponse](#kvdi.io/v1alpha1.SessionResponse))
+
+VDIUser represents a user in kVDI. It is the auth providers
+responsibility to take an authentication request and generate a JWT with
+claims defining this object.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-</code> <em><a href="#kvdi.io/v1alpha1.VDIRole">VDIRole</a></em></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>name</code> <em>string</em></td>
+<td><p>A unique name for the user</p></td>
+</tr>
+<tr class="odd">
+<td><code>roles</code> <em><a href="#kvdi.io/v1alpha1.*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
+<td><p>A list of roles applide to the user. The grants associated with each user are embedded in the JWT signed when authenticating.</p></td>
+</tr>
+</tbody>
+</table>
+
+### VDIUserRole
+
+VDIUserRole represents a VDIRole, but only with the data that is to be
+embedded in the JWT. Primarily, leaving out useless metadata that will
+inflate the token.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code> <em>string</em></td>
+<td><p>The name of the role, this must match the VDIRole from which this object derives.</p></td>
+</tr>
+<tr class="even">
+<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><p>The rules for this role.</p></td>
+</tr>
+</tbody>
+</table>
+
 Verb (`string` alias)
 
 (*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
@@ -548,4 +848,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `3c34300`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `50db58d`.*

@@ -6,56 +6,12 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/rethinkdb"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
-// LocalAuthProvider implements an AuthProvider that uses the rethinkdb database
-// as the store for user credentials. This is currently tightly coupled with
-// the rethinkdb util pkg which expects password information in user objects.
-// However, it's possible those fields can just be ignored when implementing new
-// providers.
-type LocalAuthProvider struct {
-	types.AuthProvider
-
-	// utility functions for mocking
-	getDB     func() (rethinkdb.RethinkDBSession, error)
-	getKey    func() ([]byte, error)
-	signToken func([]byte, *types.User) (types.JWTClaims, string, error)
-	compHash  func(string, string) bool
-}
-
-// New returns a new LocalAuthProvider.
-func New() types.AuthProvider {
-	return &LocalAuthProvider{
-		compHash:  common.PasswordMatchesHash,
-		signToken: apiutil.GenerateJWT,
-		getKey: func() ([]byte, error) {
-			_, key := tlsutil.ServerKeypair()
-			return ioutil.ReadFile(key)
-		},
-	}
-}
-
-// Setup implements the AuthProvider interface and configures the provider's
-// database connection options.
-func (a *LocalAuthProvider) Setup(cluster *v1alpha1.VDICluster) error {
-	rdbAddr := rethinkdb.RDBAddrForCR(cluster)
-	a.getDB = func() (rethinkdb.RethinkDBSession, error) {
-		sess, err := rethinkdb.New(rdbAddr)
-		if err != nil {
-			return nil, err
-		}
-		return sess, nil
-	}
-	return nil
-}
-
 // Authenticate implements AuthProvider and simply checks the provided password
-// in the request against the hash in the database.
+// in the request against the hash in the file.
 func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -63,40 +19,52 @@ func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	req := &types.LoginRequest{}
+	req := &v1alpha1.LoginRequest{}
 	if err := json.Unmarshal(body, req); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	sess, err := a.getDB()
+
+	user := &v1alpha1.VDIUser{
+		Name:  req.Username,
+		Roles: make([]*v1alpha1.VDIUserRole, 0),
+	}
+
+	localUser, err := a.getUser(req.Username)
 	if err != nil {
+		if errors.IsUserNotFoundError(err) {
+			apiutil.ReturnAPIForbidden(nil, "Invalid credentials", w)
+			return
+		}
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	defer sess.Close()
 
-	user, err := sess.GetUser(req.Username)
-	if err != nil {
+	if !localUser.PasswordMatchesHash(req.Password) {
 		apiutil.ReturnAPIForbidden(nil, "Invalid credentials", w)
 		return
 	}
-	if !a.compHash(req.Password, user.PasswordSalt) {
-		apiutil.ReturnAPIForbidden(nil, "Invalid credentials", w)
-		return
-	}
 
-	secret, err := a.getKey()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	claims, newToken, err := a.signToken(secret, user)
+	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
 
-	response := &types.SessionResponse{
+	user.Roles = apiutil.FilterUserRolesByNames(roles, localUser.Groups)
+
+	secret, err := apiutil.GetJWTSecret()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	claims, newToken, err := apiutil.GenerateJWT(secret, user)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	response := &v1alpha1.SessionResponse{
 		Token:     newToken,
 		ExpiresAt: claims.ExpiresAt,
 		User:      user,

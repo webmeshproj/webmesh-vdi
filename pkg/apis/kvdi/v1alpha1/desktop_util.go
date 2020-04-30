@@ -2,9 +2,6 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/tinyzimmer/kvdi/version"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,11 +28,6 @@ func (d *Desktop) GetUser() string {
 		return "anonymous"
 	}
 	return d.Spec.User
-}
-
-// GetNoVNCProxyImage returns the novnc-proxy image for the desktop instance.
-func (d *Desktop) GetNoVNCProxyImage() string {
-	return fmt.Sprintf("quay.io/tinyzimmer/kvdi:novnc-proxy-%s", version.Version)
 }
 
 // OwnerReferences returns an owner reference slice with this Desktop

@@ -3,9 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 )
 
 // swagger:route GET /api/users Users getUsers
@@ -14,21 +12,9 @@ import (
 //   200: usersResponse
 //   400: error
 //   403: error
-//   500: error
-func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
-	sess, err := d.getDB()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	users, err := sess.GetAllUsers()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteJSON(users, w)
-}
+func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {}
+
+// Implemented by the auth provider
 
 // swagger:operation GET /api/users/{user} Users getUser
 // ---
@@ -49,37 +35,20 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 //     "$ref": "#/responses/error"
 //   "404":
 //     "$ref": "#/responses/error"
-//   "500":
-//     "$ref": "#/responses/error"
-func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
-	sess, err := d.getDB()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	defer sess.Close()
-	user, err := sess.GetUser(getUserFromRequest(r))
-	if err != nil {
-		if errors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPINotFound(err, w)
-			return
-		}
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteJSON(user, w)
-}
+func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {}
+
+// Implemented by the auth provider
 
 // A list of users
 // swagger:response usersResponse
 type swaggerUsersResponse struct {
 	// in:body
-	Body []types.User
+	Body []v1alpha1.VDIUser
 }
 
 // A single user
 // swagger:response userResponse
 type swaggerUserResponse struct {
 	// in:body
-	Body types.User
+	Body v1alpha1.VDIUser
 }

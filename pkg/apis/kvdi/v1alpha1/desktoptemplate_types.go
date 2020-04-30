@@ -40,6 +40,10 @@ type DesktopConfig struct {
 	// websockify requests validated by mTLS to this socket.
 	// Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
 	SocketAddr string `json:"socketAddr,omitempty"`
+	// The image to use for the sidecar that proxies mTLS connections to the local
+	// VNC server inside the Desktop. Defaults to the public novnc-proxy image
+	// matching the version of the currrently running manager.
+	ProxyImage string `json:"proxyImage,omitempty"`
 }
 
 // DesktopTemplateStatus defines the observed state of DesktopTemplate

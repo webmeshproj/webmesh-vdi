@@ -50,8 +50,6 @@ var upgrader = websocket.Upgrader{
 //     "$ref": "#/responses/error"
 //   "404":
 //     "$ref": "#/responses/error"
-//   "500":
-//     "$ref": "#/responses/error"
 func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 	endpointURL, err := d.getEndpointURL(r)
 	if err != nil {
@@ -79,9 +77,7 @@ func (d *desktopAPI) mtlsWebsockify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *desktopAPI) getEndpointURL(r *http.Request) (*url.URL, error) {
-	nn := getNamespacedNameFromRequest(r)
-	// url, _ := url.Parse(fmt.Sprintf("wss://%s.%s.%s:%d", nn.Name, nn.Name, nn.Namespace, v1alpha1.WebPort))
-	// return url
+	nn := apiutil.GetNamespacedNameFromRequest(r)
 	found := &corev1.Service{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return nil, err

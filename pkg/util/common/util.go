@@ -20,6 +20,9 @@ func BoolPointer(b bool) *bool { return &b }
 // Int64Ptr returns a pointer to the given int64
 func Int64Ptr(i int64) *int64 { return &i }
 
+// Int32Ptr returns a pointer to the given int32
+func Int32Ptr(i int32) *int32 { return &i }
+
 // StringSliceContains returns true if the given string exists in the
 // given slice.
 func StringSliceContains(ss []string, s string) bool {

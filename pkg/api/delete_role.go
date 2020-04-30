@@ -1,10 +1,16 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth/types"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // swagger:operation DELETE /api/roles/{role} Roles deleteRoleRequest
@@ -23,19 +29,22 @@ import (
 //     "$ref": "#/responses/error"
 //   "403":
 //     "$ref": "#/responses/error"
-//   "500":
+//   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) DeleteRole(w http.ResponseWriter, r *http.Request) {
-	role := getRoleFromRequest(r)
-	sess, err := d.getDB()
-	if err != nil {
+	role := apiutil.GetRoleFromRequest(r)
+	nn := types.NamespacedName{Name: role, Namespace: metav1.NamespaceAll}
+	vdiRole := &v1alpha1.VDIRole{}
+	if err := d.client.Get(context.TODO(), nn, vdiRole); err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(fmt.Errorf("The role '%s' doesn't exist", role), w)
+			return
+		}
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	defer sess.Close()
-	if err := sess.DeleteRole(&types.Role{Name: role}); err != nil {
+	if err := d.client.Delete(context.TODO(), vdiRole); err != nil {
 		apiutil.ReturnAPIError(err, w)
-		return
 	}
 	apiutil.WriteOK(w)
 }

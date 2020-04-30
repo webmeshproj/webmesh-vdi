@@ -5,8 +5,21 @@
       <q-btn flat color="primary" icon-right="add" label="New Role" @click="onNewRole" />
     </div>
 
-    <q-dialog v-model="newRoleDialog">
-      <NewRoleDialog />
+    <q-dialog v-model="newRolePrompt" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">New Role</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input debounce="500" dense v-model="newRoleName" autofocus :rules="[validateRole]" />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn flat label="Add Role" v-close-popup @click="doCreateRole" />
+        </q-card-actions>
+      </q-card>
     </q-dialog>
 
     <div style="clear: right">
@@ -17,49 +30,49 @@
         title="Roles"
         :data="data"
         :columns="columns"
-        row-key="name"
+        row-key="idx"
         v-if="!loading"
+        ref="table"
       >
         <template v-slot:body="props">
           <q-tr :props="props">
 
             <q-td key="name" :props="props">
-              <strong>{{ props.row.name }}</strong>
+              <strong>{{ props.row.metadata.name }}</strong>
             </q-td>
 
-            <q-td key="grants" :props="props">
-              <div v-for="grant in props.row.grants" :v-bind="grant" :key="grant" style="float: left;">
-                <q-badge color="green">
-                  {{ grant }}
-                </q-badge>
-                &nbsp;
-              </div>
-            </q-td>
-
-            <q-td key="namespaces" :props="props">
-              <div v-for="ns in props.row.namespaces" :v-bind="ns" :key="ns" style="float: left;">
-                <q-badge color="teal">
-                  {{ ns }}
-                </q-badge>
-                &nbsp;
-              </div>
-            </q-td>
-
-            <q-td key="templatePatterns" :props="props">
-              <div v-for="pattern in props.row.templatePatterns" :v-bind="pattern" :key="pattern" style="float: left;">
-                <q-badge color="purple">
-                  {{ pattern }}
-                </q-badge>
-                &nbsp;
+            <q-td key="rules" :props="props" text-align="center">
+              <div class="rule-wrapper">
+                <RuleDisplay
+                  v-for="(rule, idx) in props.row.rules"
+                  v-bind="rule"
+                  :roleIdx="props.row.idx"
+                  :roleName="props.row.metadata.name"
+                  :ruleIdx="idx"
+                  :editable="props.row.editable"
+                  :key="idx"
+                  style="float: left;"
+                />
               </div>
             </q-td>
 
             <q-td key="updateRole" :props="props">
-              <q-btn round dense flat icon="create"  size="sm" color="grey" @click="onEditRole(props.row.name)">
+              <q-btn v-if="props.row.editable" round dense flat icon="add"  size="sm" color="blue" @click="onAddRule(props.row.idx, props.row.metadata.name)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Add Rule</q-tooltip>
+              </q-btn>
+              &nbsp;
+              <q-btn v-if="props.row.editable" round dense flat icon="cancel"  size="sm" color="warning" @click="onCancelEdit(props.row.idx, props.row.metadata.name)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Cancel Editing</q-tooltip>
+              </q-btn>
+              &nbsp;
+              <q-btn v-if="props.row.editable" round dense flat icon="save"  size="sm" color="green" @click="onSaveRole(props.row.idx, props.row.metadata.name)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Save Role</q-tooltip>
+              </q-btn>
+              <q-btn v-if="!props.row.editable" round dense flat icon="create"  size="sm" color="grey" @click="onEditRole(props.row.idx, props.row.metadata.name)">
                 <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit Role</q-tooltip>
               </q-btn>
               &nbsp;
-              <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteRole(props.row.name)">
+              <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteRole(props.row.idx, props.row.metadata.name)">
                 <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete Role</q-tooltip>
               </q-btn>
             </q-td>
@@ -68,9 +81,7 @@
         </template>
       </q-table>
     </div>
-    <q-dialog v-model="editRoleDialog">
-      <EditRoleDialog :name="editRole"/>
-    </q-dialog>
+
     <q-dialog v-model="confirmDelete" persistent>
       <q-card>
         <q-card-section class="row items-center">
@@ -80,7 +91,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" v-close-popup />
-          <q-btn flat label="Delete" color="red" v-close-popup @click="onDeleteRole(roleToDelete)" />
+          <q-btn flat label="Delete" color="red" v-close-popup @click="doDeleteRole(roleToDelete)" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -89,8 +100,7 @@
 
 <script>
 import SkeletonTable from 'components/SkeletonTable'
-import NewRoleDialog from 'components/NewRoleDialog'
-import EditRoleDialog from 'components/EditRoleDialog'
+import RuleDisplay from 'components/RuleDisplay'
 
 const roleColumns = [
   {
@@ -105,19 +115,9 @@ const roleColumns = [
     headerClasses: 'bg-primary text-white'
   },
   {
-    name: 'grants',
-    align: 'center',
-    label: 'Grants'
-  },
-  {
-    name: 'namespaces',
-    align: 'center',
-    label: 'Namespaces'
-  },
-  {
-    name: 'templatePatterns',
-    align: 'center',
-    label: 'Template Patterns'
+    name: 'rules',
+    align: 'left',
+    label: 'Rules'
   },
   {
     name: 'updateRole',
@@ -127,18 +127,17 @@ const roleColumns = [
 
 export default {
   name: 'RolesPanel',
-  components: { SkeletonTable, NewRoleDialog, EditRoleDialog },
+  components: { SkeletonTable, RuleDisplay },
 
   data () {
     return {
       loading: true,
       data: [],
       columns: roleColumns,
-      newRoleDialog: false,
-      editRoleDialog: false,
-      editRole: '',
       roleToDelete: '',
-      confirmDelete: false
+      confirmDelete: false,
+      newRolePrompt: false,
+      newRoleName: ''
     }
   },
 
@@ -153,30 +152,101 @@ export default {
   methods: {
 
     onNewRole () {
-      this.newRoleDialog = true
+      this.newRolePrompt = true
     },
 
-    onEditRole (role) {
-      this.editRole = role
-      this.editRoleDialog = true
+    onEditRole (roleIdx, roleName) {
+      this.$root.$on(roleName, this.doUpdateRole)
+      this.data[roleIdx].editable = true
     },
 
-    onConfirmDeleteRole (roleName) {
+    onSaveRole (roleIdx, roleName) {
+      this.$root.$off(roleName, this.doUpdateRole)
+      this.data[roleIdx].editable = false
+      this.doSaveRole(roleIdx, roleName)
+    },
+
+    onAddRule (roleIdx, roleName) {
+      this.data[roleIdx].rules.push({
+        verbs: [], resources: [], resourcePatterns: [], namespaces: []
+      })
+    },
+
+    onCancelEdit (roleIdx, roleName) {
+      this.$root.$off(roleName, this.doUpdateRole)
+      this.data[roleIdx].editable = false
+      this.fetchData()
+    },
+
+    onConfirmDeleteRole (roleIdx, roleName) {
       // TODO: There is no server-side check for this yet - and there should be
-      if (roleName === 'admin') {
-        this.$q.notify({
-          color: 'red-4',
-          textColor: 'white',
-          icon: 'warning',
-          message: 'You cannot delete the admin role'
-        })
-        return
-      }
+      if (this.doAdminCheck()) { return }
       this.roleToDelete = roleName
       this.confirmDelete = true
     },
 
-    async onDeleteRole (roleName) {
+    doUpdateRole ({ roleIdx, ruleIdx, roleName, payload, deleteRule }) {
+      if (deleteRule === true) {
+        this.data[roleIdx].rules.splice(ruleIdx, 1)
+        return
+      }
+      this.data[roleIdx].rules.splice(ruleIdx, 1, payload)
+    },
+
+    doAdminCheck (roleName) {
+      if (roleName === 'kvdi-admin') {
+        this.$q.notify({
+          color: 'red-4',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'You cannot delete the kvdi-admin role'
+        })
+        return true
+      }
+      return false
+    },
+
+    async validateRole (val) {
+      if (!val) {
+        return 'Name is required'
+      }
+      try {
+        await this.$axios.get(`/api/roles/${val}`)
+        return 'Role already exists'
+      } catch (err) {}
+    },
+
+    async doCreateRole () {
+      try {
+        await this.$axios.post('/api/roles', { name: this.newRoleName })
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'cloud_done',
+          message: `Created role '${this.newRoleName}'`
+        })
+      } catch (err) {
+        this.$root.$emit('notify-error', err)
+      }
+      this.fetchData()
+    },
+
+    async doSaveRole (roleIdx, roleName) {
+      try {
+        await this.$axios.put(`/api/roles/${roleName}`, { rules: this.data[roleIdx].rules })
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'cloud_done',
+          message: `Successfully updated role '${roleName}'`
+        })
+      } catch (err) {
+        this.$root.$emit('notify-error', err)
+      }
+      this.fetchData()
+    },
+
+    async doDeleteRole (roleName) {
       try {
         await this.$axios.delete(`/api/roles/${roleName}`)
         this.$q.notify({
@@ -194,7 +264,14 @@ export default {
     async fetchData () {
       try {
         const res = await this.$axios.get('/api/roles')
-        this.data = res.data
+        this.data = []
+        res.data.forEach((val, idx) => {
+          this.data.push({
+            idx: idx,
+            editable: false,
+            ...val
+          })
+        })
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
@@ -212,7 +289,11 @@ export default {
 }
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
+.rule-wrapper
+  position: relative
+  width: 100vh
+
 .roles-table
   /* height or max-height is important */
   max-height: 500px

@@ -25,7 +25,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 			Volumes:            tmpl.GetDesktopVolumes(cluster, instance),
 			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),
 			Containers: []corev1.Container{
-				tmpl.GetDesktopProxyContainer(instance.GetNoVNCProxyImage()),
+				tmpl.GetDesktopProxyContainer(),
 				{
 					Name:            "desktop",
 					Image:           tmpl.GetDesktopImage(),
