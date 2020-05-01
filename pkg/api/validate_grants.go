@@ -19,7 +19,7 @@ type OverrideFunc func(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request
 // Allowed being false or any errors are considered forbidden.
 type ExtraCheckFunc func(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed bool, reason string, err error)
 
-// ResourceNameFunc returns the name of a requested resource based off the contents
+// ResourceValueFunc returns the name of a requested resource based off the contents
 // of a request.
 type ResourceValueFunc func(r *http.Request) (name string)
 
@@ -47,6 +47,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/config": {
 		"GET": {
+			OverrideFunc: allowAll,
+		},
+	},
+	"/api/config/reload": {
+		"POST": {
 			OverrideFunc: allowAll,
 		},
 	},

@@ -78,3 +78,4 @@ tags
 
 _bin
 vendor/
+deploy/charts/kvdi/Chart.yaml

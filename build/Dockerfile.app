@@ -12,6 +12,10 @@ WORKDIR /build
 # Go build options
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
+ARG VERSION
+ENV VERSION=${VERSION}
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Fetch deps first as they don't change frequently
 COPY go.mod /build/go.mod
@@ -29,11 +33,8 @@ COPY pkg/         /build/pkg
 COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
-ARG VERSION
-ARG GIT_COMMIT
 RUN go build -o /tmp/app \
-    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}'" \
-    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
+    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
     ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \

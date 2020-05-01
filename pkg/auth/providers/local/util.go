@@ -23,10 +23,10 @@ func (a *LocalAuthProvider) getUser(username string) (*LocalUser, error) {
 // createUser adds a new user to the passwd file. If it already exists an error
 // is returned.
 func (a *LocalAuthProvider) createUser(user *LocalUser) error {
-	if err := a.LockSecret(); err != nil {
+	if err := a.secrets.Lock(); err != nil {
 		return err
 	}
-	defer a.ReleaseLock()
+	defer a.secrets.Release()
 	file, err := a.getPasswdFile()
 	if err != nil {
 		return err
@@ -41,10 +41,10 @@ func (a *LocalAuthProvider) createUser(user *LocalUser) error {
 }
 
 func (a *LocalAuthProvider) updateUser(user *LocalUser) error {
-	if err := a.LockSecret(); err != nil {
+	if err := a.secrets.Lock(); err != nil {
 		return err
 	}
-	defer a.ReleaseLock()
+	defer a.secrets.Release()
 	file, err := a.getPasswdFile()
 	if err != nil {
 		return err
@@ -57,10 +57,10 @@ func (a *LocalAuthProvider) updateUser(user *LocalUser) error {
 }
 
 func (a *LocalAuthProvider) deleteUser(username string) error {
-	if err := a.LockSecret(); err != nil {
+	if err := a.secrets.Lock(); err != nil {
 		return err
 	}
-	defer a.ReleaseLock()
+	defer a.secrets.Release()
 	file, err := a.getPasswdFile()
 	if err != nil {
 		return err

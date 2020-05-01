@@ -14,15 +14,15 @@ import (
 
 type K8SecretProvider struct {
 	v1alpha1.SecretsProvider
+
 	client     client.Client
 	secretName types.NamespacedName
-	cache      map[string][]byte
 }
 
 var _ v1alpha1.SecretsProvider = &K8SecretProvider{}
 
 func New() *K8SecretProvider {
-	return &K8SecretProvider{cache: make(map[string][]byte)}
+	return &K8SecretProvider{}
 }
 
 func (k *K8SecretProvider) Setup(client client.Client, cluster *v1alpha1.VDICluster) error {
@@ -58,12 +58,7 @@ func (k *K8SecretProvider) GetName() string {
 	return k.secretName.Name
 }
 
-func (k *K8SecretProvider) ReadSecret(name string, cache bool) ([]byte, error) {
-	if cache {
-		if val, ok := k.cache[name]; ok {
-			return val, nil
-		}
-	}
+func (k *K8SecretProvider) ReadSecret(name string) ([]byte, error) {
 	secret, err := k.getSecret()
 	if err != nil {
 		return nil, err
@@ -74,9 +69,6 @@ func (k *K8SecretProvider) ReadSecret(name string, cache bool) ([]byte, error) {
 	data, ok := secret.Data[name]
 	if !ok {
 		return nil, errors.NewSecretNotFoundError(name)
-	}
-	if cache {
-		k.cache[name] = data
 	}
 	return data, nil
 }
@@ -92,9 +84,6 @@ func (k *K8SecretProvider) WriteSecret(name string, content []byte) error {
 	secret.Data[name] = content
 	if err := k.client.Update(context.TODO(), secret); err != nil {
 		return err
-	}
-	if _, ok := k.cache[name]; ok {
-		k.cache[name] = content
 	}
 	return nil
 }

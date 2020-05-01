@@ -21,8 +21,8 @@ type LocalAuthProvider struct {
 	client client.Client
 	// our cluster instance
 	cluster *v1alpha1.VDICluster
-	// the name of the secret with the passwd
-	secrets v1alpha1.SecretsProvider
+	// the secrets engine where we store our passwd
+	secrets *secrets.SecretEngine
 	// the pointer to a currently held lock
 	lock *lock.Lock
 }
@@ -37,6 +37,6 @@ func New() v1alpha1.AuthProvider {
 func (a *LocalAuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	a.client = c
 	a.cluster = cluster
-	a.secrets = secrets.GetProvider(cluster)
+	a.secrets = secrets.GetSecretEngine(cluster)
 	return a.secrets.Setup(c, cluster)
 }

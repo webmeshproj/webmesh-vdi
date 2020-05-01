@@ -24,7 +24,7 @@ Cluster requirements
 
 For building and running locally you will need:
 
-  - `go >= 1.13`
+  - `go >= 1.14`
   - `docker`
 
 ## Installing

@@ -35,17 +35,17 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		return err
 	}
 
-	secretsProvider := secrets.GetProvider(instance)
-	if err := secretsProvider.Setup(f.client, instance); err != nil {
+	secretsEngine := secrets.GetSecretEngine(instance)
+	if err := secretsEngine.Setup(f.client, instance); err != nil {
 		return err
 	}
 
-	if _, err := secretsProvider.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
+	if _, err := secretsEngine.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err
 		}
 		jwtSecret := common.GeneratePassword(32)
-		if err := secretsProvider.WriteSecret(v1alpha1.JWTSecretKey, []byte(jwtSecret)); err != nil {
+		if err := secretsEngine.WriteSecret(v1alpha1.JWTSecretKey, []byte(jwtSecret)); err != nil {
 			return err
 		}
 	}

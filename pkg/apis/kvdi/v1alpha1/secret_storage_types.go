@@ -8,11 +8,8 @@ import "sigs.k8s.io/controller-runtime/pkg/client"
 type SecretsProvider interface {
 	// Setup is called before the interface is used for any operations
 	Setup(client.Client, *VDICluster) error
-	// GetName should return a distinct name that can be used for grabbing external
-	// locks during write operations.
-	GetName() string
 	// ReadSecret should return the contents of a secret by name.
-	ReadSecret(name string, cache bool) (contents []byte, err error)
+	ReadSecret(name string) (contents []byte, err error)
 	// WriteSecret should store a secret, replacing any existing one with the
 	// same name.
 	WriteSecret(name string, contents []byte) error

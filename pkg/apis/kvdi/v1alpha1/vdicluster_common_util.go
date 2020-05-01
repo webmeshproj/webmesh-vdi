@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	"reflect"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,6 +15,10 @@ func (c *VDICluster) GetCoreNamespace() string {
 		return c.Spec.AppNamespace
 	}
 	return defaultNamespace
+}
+
+func (c *VDICluster) NamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: c.GetName(), Namespace: metav1.NamespaceAll}
 }
 
 func (c *VDICluster) GetPullSecrets() []corev1.LocalObjectReference {
@@ -72,7 +77,7 @@ func (c *VDICluster) OwnerReferences() []metav1.OwnerReference {
 }
 
 func (c *VDICluster) GetUserdataVolumeSpec() *corev1.PersistentVolumeClaimSpec {
-	if c.Spec.UserDataSpec != nil {
+	if c.Spec.UserDataSpec != nil && !reflect.DeepEqual(*c.Spec.UserDataSpec, corev1.PersistentVolumeClaimSpec{}) {
 		return c.Spec.UserDataSpec
 	}
 	return nil

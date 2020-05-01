@@ -40,7 +40,7 @@ type desktopAPI struct {
 	// the user auth provider
 	auth v1alpha1.AuthProvider
 	// the secrets backend
-	secrets v1alpha1.SecretsProvider
+	secrets *secrets.SecretEngine
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
@@ -80,9 +80,9 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		return nil, err
 	}
 
-	// setup the secrets provider
-	secretsProvider := secrets.GetProvider(found)
-	if err := secretsProvider.Setup(client, found); err != nil {
+	// setup the secrets engine
+	secretsEngine := secrets.GetSecretEngine(found)
+	if err := secretsEngine.Setup(client, found); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +92,7 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		scheme:     scheme,
 		vdiCluster: found,
 		auth:       authProvider,
-		secrets:    secretsProvider,
+		secrets:    secretsEngine,
 	}
 
 	return api, api.buildRouter()

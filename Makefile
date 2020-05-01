@@ -70,7 +70,7 @@ push-desktop-%: build-desktop-%
 chart-yaml:
 	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
 
-package-chart: chart-yaml
+package-chart: ${HELM} chart-yaml
 	cd deploy/charts && helm package kvdi
 	rm deploy/charts/kvdi/Chart.yaml
 
@@ -210,8 +210,8 @@ get-admin-password: ${KUBECTL}
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
 .PHONY: deploy
-deploy: ${HELM}
-	${HELM} upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME} ${HELM_ARGS} --wait
+deploy: ${HELM} package-chart
+	${HELM} upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME}-${VERSION}.tgz ${HELM_ARGS} --wait
 
 ## Doc generation
 

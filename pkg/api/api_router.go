@@ -25,6 +25,7 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/logout", d.Logout).Methods("POST")
 	protected.HandleFunc("/whoami", d.WhoAmI).Methods("GET")
 	protected.HandleFunc("/config", d.GetConfig).Methods("GET")
+	protected.HandleFunc("/config/reload", d.PostReloadConfig).Methods("POST")
 	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")
 
 	// User operations

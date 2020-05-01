@@ -12,6 +12,10 @@ WORKDIR /build
 # Go build options
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
+ARG VERSION
+ENV VERSION=${VERSION}
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Fetch deps first as they don't change frequently
 COPY go.mod /build/go.mod
@@ -24,12 +28,9 @@ COPY pkg/             /build/pkg
 COPY cmd/novnc-proxy  /build/cmd/novnc-proxy
 
 # Build the binary
-ARG VERSION
-ARG GIT_COMMIT
 RUN go build \
   -o /tmp/novnc-proxy \
-  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}'" \
-  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
   ./cmd/novnc-proxy && upx /tmp/novnc-proxy
 
 ###############

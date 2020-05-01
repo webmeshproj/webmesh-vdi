@@ -70,7 +70,7 @@ define build_docker
 	docker build . \
 		-f build/Dockerfile.$(1) \
 		-t $(2) \
-		--build-arg VERSION=${VERSION} \
+		--build-arg VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(shell git rev-parse HEAD)
 endef
 
