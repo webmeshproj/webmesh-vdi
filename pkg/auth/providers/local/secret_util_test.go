@@ -2,15 +2,12 @@ package local
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io/ioutil"
 	"strings"
 	"testing"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 const testUsername = "admin"
@@ -26,7 +23,7 @@ func getTestUser(t *testing.T, name string) *LocalUser {
 	}
 }
 
-func providerSetUp(t *testing.T) (*LocalAuthProvider, *corev1.Secret) {
+func providerSetUp(t *testing.T) *LocalAuthProvider {
 	t.Helper()
 	client := getFakeClient(t)
 	cluster := &v1alpha1.VDICluster{}
@@ -36,42 +33,23 @@ func providerSetUp(t *testing.T) (*LocalAuthProvider, *corev1.Secret) {
 		client:  client,
 		cluster: cluster,
 	}
-	secret := &corev1.Secret{}
-	secret.Name = cluster.GetAppSecretsName()
-	secret.Namespace = cluster.GetCoreNamespace()
-	return provider, secret
-}
-
-func TestGetSecret(t *testing.T) {
-
-	provider, secret := providerSetUp(t)
-
-	if _, err := provider.getSecret(); err == nil {
-		t.Error("Expected error fetching non-exist secret")
-	}
-
-	provider.client.Create(context.TODO(), secret)
-	if _, err := provider.getSecret(); err != nil {
-		t.Error("Expected no error fetching secret, got", err)
-	}
+	provider.Setup(client, cluster)
+	return provider
 }
 
 func TestGetPasswdFile(t *testing.T) {
-	provider, secret := providerSetUp(t)
+	provider := providerSetUp(t)
 
-	if _, err := provider.getPasswdFile(); err == nil {
-		t.Error("Expected error fetching non-exist secret")
+	_, err := provider.getPasswdFile()
+	if err == nil {
+		t.Error("Expected error because no key exists yet")
 	}
 
-	provider.client.Create(context.TODO(), secret)
-	if _, err := provider.getPasswdFile(); err == nil {
-		t.Error("Expected error fetching secret with no data")
+	var buf bytes.Buffer
+	buf.Write(getTestUser(t, testUsername).Encode())
+	if err := provider.updatePasswdFile(bytes.NewReader(buf.Bytes())); err != nil {
+		t.Fatal("Expceted no error updating passwd file, got", err)
 	}
-
-	secret.Data = map[string][]byte{
-		passwdKey: getTestUser(t, testUsername).Encode(),
-	}
-	provider.client.Update(context.TODO(), secret)
 
 	rdr, err := provider.getPasswdFile()
 	if err != nil {
@@ -93,19 +71,13 @@ func (d *deadBuffer) Read([]byte) (int, error) {
 }
 
 func TestUpdatePasswdFile(t *testing.T) {
-	provider, secret := providerSetUp(t)
+	provider := providerSetUp(t)
 
 	if err := provider.updatePasswdFile(&deadBuffer{}); err == nil {
 		t.Error("Expected error reading bad buffer")
 	}
 
 	var buf bytes.Buffer
-
-	if err := provider.updatePasswdFile(&buf); err == nil {
-		t.Error("Expected error fetching non-exist secret")
-	}
-
-	provider.client.Create(context.TODO(), secret)
 
 	buf.Write(getTestUser(t, testUsername).Encode())
 

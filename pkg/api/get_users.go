@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // swagger:route GET /api/users Users getUsers
@@ -12,9 +14,14 @@ import (
 //   200: usersResponse
 //   400: error
 //   403: error
-func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {}
-
-// Implemented by the auth provider
+func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := d.auth.GetUsers()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	apiutil.WriteJSON(users, w)
+}
 
 // swagger:operation GET /api/users/{user} Users getUser
 // ---
@@ -35,9 +42,19 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {}
 //     "$ref": "#/responses/error"
 //   "404":
 //     "$ref": "#/responses/error"
-func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {}
-
-// Implemented by the auth provider
+func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
+	username := apiutil.GetUserFromRequest(r)
+	user, err := d.auth.GetUser(username)
+	if err != nil {
+		if errors.IsUserNotFoundError(err) {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	apiutil.WriteJSON(user, w)
+}
 
 // A list of users
 // swagger:response usersResponse

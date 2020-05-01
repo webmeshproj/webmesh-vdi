@@ -1,29 +1,15 @@
 package local
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
+	"errors"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // Authenticate implements AuthProvider and simply checks the provided password
 // in the request against the hash in the file.
-func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	req := &v1alpha1.LoginRequest{}
-	if err := json.Unmarshal(body, req); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
+func (a *LocalAuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthResult, error) {
 
 	user := &v1alpha1.VDIUser{
 		Name:  req.Username,
@@ -32,43 +18,18 @@ func (a *LocalAuthProvider) Authenticate(w http.ResponseWriter, r *http.Request)
 
 	localUser, err := a.getUser(req.Username)
 	if err != nil {
-		if errors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPIForbidden(nil, "Invalid credentials", w)
-			return
-		}
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
 
 	if !localUser.PasswordMatchesHash(req.Password) {
-		apiutil.ReturnAPIForbidden(nil, "Invalid credentials", w)
-		return
+		return nil, errors.New("Invalid credentials")
 	}
 
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
 
 	user.Roles = apiutil.FilterUserRolesByNames(roles, localUser.Groups)
-
-	secret, err := apiutil.GetJWTSecret()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	claims, newToken, err := apiutil.GenerateJWT(secret, user)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
-	response := &v1alpha1.SessionResponse{
-		Token:     newToken,
-		ExpiresAt: claims.ExpiresAt,
-		User:      user,
-	}
-
-	apiutil.WriteJSON(response, w)
+	return &v1alpha1.AuthResult{User: user}, nil
 }

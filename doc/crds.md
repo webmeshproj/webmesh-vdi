@@ -10,6 +10,7 @@ Types
 -   [AppConfig](#%23kvdi.io%2fv1alpha1.AppConfig)
 -   [AuthConfig](#%23kvdi.io%2fv1alpha1.AuthConfig)
 -   [AuthProvider](#%23kvdi.io%2fv1alpha1.AuthProvider)
+-   [AuthResult](#%23kvdi.io%2fv1alpha1.AuthResult)
 -   [CreateRoleRequest](#%23kvdi.io%2fv1alpha1.CreateRoleRequest)
 -   [CreateSessionRequest](#%23kvdi.io%2fv1alpha1.CreateSessionRequest)
 -   [CreateUserRequest](#%23kvdi.io%2fv1alpha1.CreateUserRequest)
@@ -19,12 +20,15 @@ Types
 -   [DesktopTemplate](#%23kvdi.io%2fv1alpha1.DesktopTemplate)
 -   [DesktopTemplateSpec](#%23kvdi.io%2fv1alpha1.DesktopTemplateSpec)
 -   [JWTClaims](#%23kvdi.io%2fv1alpha1.JWTClaims)
+-   [K8SSecretConfig](#%23kvdi.io%2fv1alpha1.K8SSecretConfig)
 -   [LocalAuthConfig](#%23kvdi.io%2fv1alpha1.LocalAuthConfig)
 -   [LoginRequest](#%23kvdi.io%2fv1alpha1.LoginRequest)
 -   [Resource](#%23kvdi.io%2fv1alpha1.Resource)
 -   [ResourceGetter](#%23kvdi.io%2fv1alpha1.ResourceGetter)
 -   [RolesGetter](#%23kvdi.io%2fv1alpha1.RolesGetter)
 -   [Rule](#%23kvdi.io%2fv1alpha1.Rule)
+-   [SecretsConfig](#%23kvdi.io%2fv1alpha1.SecretsConfig)
+-   [SecretsProvider](#%23kvdi.io%2fv1alpha1.SecretsProvider)
 -   [SessionResponse](#%23kvdi.io%2fv1alpha1.SessionResponse)
 -   [TemplatesGetter](#%23kvdi.io%2fv1alpha1.TemplatesGetter)
 -   [UpdateRoleRequest](#%23kvdi.io%2fv1alpha1.UpdateRoleRequest)
@@ -64,22 +68,18 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>The image to use for the app instances. Defaults to the public image matching the version of the currently running manager.</p></td>
 </tr>
 <tr class="even">
-<td><code>externalHostname</code> <em>string</em></td>
-<td><p>An exterenal host name that will be used for any routes that need to be broadcasted to the end user.</p></td>
-</tr>
-<tr class="odd">
 <td><code>corsEnabled</code> <em>bool</em></td>
 <td><p>Whether to add CORS headers to API requests</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>auditLog</code> <em>bool</em></td>
 <td><p>Whether to log auditing events to stdout</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>replicas</code> <em>int32</em></td>
 <td><p>The number of app replicas to run</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -121,6 +121,27 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 AuthProvider defines an interface for handling login attempts. Currently
 only Local auth (db-based) is supported, however other integrations such
 as LDAP or OAuth can implement this interface.
+
+### AuthResult
+
+AuthResult represents a response from an authentication attempt to a
+provider. It contains user information, roles, and any other auth
+requirements.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>User</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td><p>The authenticated user and their roles</p></td>
+</tr>
+</tbody>
+</table>
 
 ### CreateRoleRequest
 
@@ -441,6 +462,28 @@ JWTClaims represents the claims used when issuing JWT tokens.
 </tbody>
 </table>
 
+### K8SSecretConfig
+
+(*Appears on:* [SecretsConfig](#kvdi.io/v1alpha1.SecretsConfig))
+
+K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive
+values.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>secretName</code> <em>string</em></td>
+<td><p>The name of the secret backing the values. Default is <code>&lt;cluster-name&gt;-app-secrets</code>.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### LocalAuthConfig
 
 (*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
@@ -527,6 +570,35 @@ addition of a namespace selector.
 </tr>
 </tbody>
 </table>
+
+### SecretsConfig
+
+(*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
+
+SecretsConfig will be for secrets backend configurations. Currently only
+K8s secret storage is supported, but the idea is to support multiple
+key/value stores such as vault.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>k8sSecret</code> <em><a href="#kvdi.io/v1alpha1.K8SSecretConfig">K8SSecretConfig</a></em></td>
+<td><p>Use a kubernetes secret for storing sensitive values.</p></td>
+</tr>
+</tbody>
+</table>
+
+### SecretsProvider
+
+SecretsProvider provides an interface for an app instance to get and
+store any secrets it needs. Currenetly there is only a k8s secret
+provider, but this intreface could be implemented for things like vault.
 
 ### SessionResponse
 
@@ -661,6 +733,10 @@ VDICluster is the Schema for the vdiclusters API
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
+<tr class="odd">
+<td><code>secrets</code> <em><a href="#kvdi.io/v1alpha1.SecretsConfig">SecretsConfig</a></em></td>
+<td><p>Secrets backend configurations</p></td>
+</tr>
 </tbody>
 </table></td>
 </tr>
@@ -709,6 +785,10 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
+<tr class="odd">
+<td><code>secrets</code> <em><a href="#kvdi.io/v1alpha1.SecretsConfig">SecretsConfig</a></em></td>
+<td><p>Secrets backend configurations</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -739,7 +819,8 @@ VDIRole is the Schema for the vdiroles API
 
 ### VDIUser
 
-(*Appears on:* [JWTClaims](#kvdi.io/v1alpha1.JWTClaims),
+(*Appears on:* [AuthResult](#kvdi.io/v1alpha1.AuthResult),
+[JWTClaims](#kvdi.io/v1alpha1.JWTClaims),
 [SessionResponse](#kvdi.io/v1alpha1.SessionResponse))
 
 VDIUser represents a user in kVDI. It is the auth providers
@@ -802,4 +883,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b4447c3`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `8f62810`.*

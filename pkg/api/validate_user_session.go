@@ -28,7 +28,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("Incorrect signing algorithm on token")
 			}
-			return apiutil.GetJWTSecret()
+			return d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
 		})
 		if !token.Valid {
 			if ve, ok := err.(*jwt.ValidationError); ok {

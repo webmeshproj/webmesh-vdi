@@ -6,6 +6,8 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/auth"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/gorilla/mux"
@@ -35,6 +37,10 @@ type desktopAPI struct {
 	router *mux.Router
 	// our parent vdi cluster
 	vdiCluster *v1alpha1.VDICluster
+	// the user auth provider
+	auth v1alpha1.AuthProvider
+	// the secrets backend
+	secrets v1alpha1.SecretsProvider
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
@@ -68,16 +74,26 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		}
 	}
 
+	// get the auth provider
+	authProvider := auth.GetAuthProvider(found)
+	if err := authProvider.Setup(client, found); err != nil {
+		return nil, err
+	}
+
+	// setup the secrets provider
+	secretsProvider := secrets.GetProvider(found)
+	if err := secretsProvider.Setup(client, found); err != nil {
+		return nil, err
+	}
+
 	api := &desktopAPI{
 		client:     client,
 		restConfig: cfg,
 		scheme:     scheme,
 		vdiCluster: found,
+		auth:       authProvider,
+		secrets:    secretsProvider,
 	}
 
 	return api, api.buildRouter()
 }
-
-// func (d *desktopAPI) getRestClientForGVK(gvk schema.GroupVersionKind) (rest.Interface, error) {
-// 	return cutil.RESTClientForGVK(gvk, d.restConfig, serializer.NewCodecFactory(d.scheme))
-// }

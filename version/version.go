@@ -1,5 +1,8 @@
 package version
 
 var (
-	Version = "0.0.1"
+	// Version as specified at compile
+	Version = ""
+	// GitCommit as specified at compile
+	GitCommit = ""
 )

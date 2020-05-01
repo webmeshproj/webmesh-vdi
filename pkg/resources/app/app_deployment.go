@@ -78,17 +78,6 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 										},
 									},
 								},
-								{
-									Name: v1alpha1.JWTSecretEnvVar,
-									ValueFrom: &corev1.EnvVarSource{
-										SecretKeyRef: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: instance.GetAppSecretsName(),
-											},
-											Key: v1alpha1.JWTSecretKey,
-										},
-									},
-								},
 							},
 							Ports: []corev1.ContainerPort{
 								{

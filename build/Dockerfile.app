@@ -29,7 +29,12 @@ COPY pkg/         /build/pkg
 COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
-RUN go build -o /tmp/app ./cmd/app \
+ARG VERSION
+ARG GIT_COMMIT
+RUN go build -o /tmp/app \
+    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}'" \
+    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
+    ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \
   && /usr/local/bin/swagger generate spec -o /tmp/swagger.json --scan-models

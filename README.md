@@ -2,6 +2,9 @@
 
 A Kubernetes-native Virtual Desktop Infrastructure.
 
+![](https://github.com/tinyzimmer/kvdi/workflows/Tests/badge.svg)
+![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
+
 **This is a very heavy work-in-progress and not even remotely close to ready for production usage**
 
  - [API Reference](doc/crds.md)
@@ -26,15 +29,18 @@ For building and running locally you will need:
 
 ## Installing
 
-Assuming you have `cert-manager` installed and running in the cluster:
+Assuming you have `cert-manager` installed and running in the cluster already:
 
 ```bash
-$> helm install deploy/charts/kvdi
+$> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
+$> helm install kvdi tinyzimmer/kvdi
 ```
 
 It will take a minute or two for all the parts to start running after the install command.
-Once the app is launched, you can run `make get-admin-password` to retrieve the generated admin password.
+Once the app is launched, you can retrieve the admin password from `kvdi-admin-secret` in your cluster.
 To access the app interface either do a `port-forward` (`make forward-app` is another helper for that), or go to the "LoadBalancer" IP of the service.
+
+By default there are no desktop templates configured. If you'd like, you can apply the ones in `deploy/examples/example-desktop-templates.yaml` to get started quickly.
 
 ## Building and Running Locally
 
@@ -53,7 +59,7 @@ $> make deploy example-vdi-templates
 
 After the manager has finished spinning up the `app` instance, get the IP of its service with `kubectl get svc` to access the app interface.
 
-If not using anonymous auth, look for `example-vdicluster-admin-secret` to retrieve the `admin` password.
+If not using anonymous auth, look for `kvdi-admin-secret` to retrieve the `admin` password.
 
 ## Security
 

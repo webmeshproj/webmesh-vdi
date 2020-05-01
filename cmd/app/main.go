@@ -22,6 +22,8 @@ func main() {
 	pflag.CommandLine.BoolVar(&enableCORS, "enable-cors", false, "Add CORS headers to requests")
 	common.ParseFlagsAndSetupLogging()
 
+	common.PrintVersion(applogger)
+
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {

@@ -2,13 +2,19 @@ package common
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
+	"github.com/tinyzimmer/kvdi/version"
+
+	"github.com/go-logr/logr"
 	"github.com/operator-framework/operator-sdk/pkg/log/zap"
+	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	"golang.org/x/crypto/bcrypt"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -58,6 +64,14 @@ ArgLoop:
 		sl = append(sl, x)
 	}
 	return sl
+}
+
+func PrintVersion(log logr.Logger) {
+	log.Info(fmt.Sprintf("kVDI Version: %s", version.Version))
+	log.Info(fmt.Sprintf("kVDI Commit: %s", version.GitCommit))
+	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 }
 
 // ParseFlagsAndSetupLogging is a utility function to setup logging

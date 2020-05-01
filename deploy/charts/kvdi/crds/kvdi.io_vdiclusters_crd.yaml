@@ -40,10 +40,6 @@ spec:
                 corsEnabled:
                   description: Whether to add CORS headers to API requests
                   type: boolean
-                externalHostname:
-                  description: An exterenal host name that will be used for any routes
-                    that need to be broadcasted to the end user.
-                  type: string
                 image:
                   description: The image to use for the app instances. Defaults to
                     the public image matching the version of the currently running
@@ -104,6 +100,18 @@ spec:
                     type: string
                 type: object
               type: array
+            secrets:
+              description: Secrets backend configurations
+              properties:
+                k8sSecret:
+                  description: Use a kubernetes secret for storing sensitive values.
+                  properties:
+                    secretName:
+                      description: The name of the secret backing the values. Default
+                        is `<cluster-name>-app-secrets`.
+                      type: string
+                  type: object
+              type: object
             userDataSpec:
               description: The configuration for user volumes. *NOTE:* Even though
                 the controller will try to force the reclaim policy on created volumes

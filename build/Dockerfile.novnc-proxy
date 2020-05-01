@@ -24,8 +24,12 @@ COPY pkg/             /build/pkg
 COPY cmd/novnc-proxy  /build/cmd/novnc-proxy
 
 # Build the binary
+ARG VERSION
+ARG GIT_COMMIT
 RUN go build \
   -o /tmp/novnc-proxy \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}'" \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
   ./cmd/novnc-proxy && upx /tmp/novnc-proxy
 
 ###############

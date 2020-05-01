@@ -52,6 +52,15 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// Watch for changes to secondary resource VDIRoles and requeue the owner VDICluster
+	err = c.Watch(&source.Kind{Type: &v1alpha1.VDIRole{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1alpha1.VDIRole{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch for changes to secondary resource Deployments and requeue the owner VDICluster
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,

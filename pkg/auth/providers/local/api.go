@@ -1,26 +1,20 @@
 package local
 
 import (
-	"errors"
-	"net/http"
-
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	vdierrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // GetUsers implements AuthProvider and serves a GET /api/users request
-func (a *LocalAuthProvider) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (a *LocalAuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
 	users, err := a.listUsers()
 	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
 	res := make([]*v1alpha1.VDIUser, 0)
 	for _, user := range users {
@@ -30,64 +24,43 @@ func (a *LocalAuthProvider) GetUsers(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	apiutil.WriteJSON(res, w)
+	return res, nil
 }
 
-// PostUsers implements AuthProvider and serves a POST /api/users request
-func (a *LocalAuthProvider) PostUsers(w http.ResponseWriter, r *http.Request) {
-	req := apiutil.GetRequestObject(r).(*v1alpha1.CreateUserRequest)
-	if req == nil {
-		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
-		return
-	}
+// CreateUser implements AuthProvider and serves a POST /api/users request
+func (a *LocalAuthProvider) CreateUser(req *v1alpha1.CreateUserRequest) error {
 	passwdHash, err := common.HashPassword(req.Password)
 	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+		return err
 	}
 	user := &LocalUser{
 		Username:     req.Username,
 		PasswordHash: passwdHash,
 		Groups:       req.Roles,
 	}
-	if err := a.createUser(user); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteOK(w)
+	return a.createUser(user)
 }
 
 // GetUser implements AuthProvider and serves a GET /api/users/{user} request
-func (a *LocalAuthProvider) GetUser(w http.ResponseWriter, r *http.Request) {
-	userName := apiutil.GetUserFromRequest(r)
-	user, err := a.getUser(userName)
+func (a *LocalAuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
+	user, err := a.getUser(username)
 	if err != nil {
-		if vdierrors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPINotFound(err, w)
-			return
-		}
+		return nil, err
 	}
 
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
 
-	apiutil.WriteJSON(&v1alpha1.VDIUser{
+	return &v1alpha1.VDIUser{
 		Name:  user.Username,
 		Roles: apiutil.FilterUserRolesByNames(roles, user.Groups),
-	}, w)
+	}, nil
 }
 
-// PutUser implements AuthProvider and serves a PUT /api/users/{user} request
-func (a *LocalAuthProvider) PutUser(w http.ResponseWriter, r *http.Request) {
-	username := apiutil.GetUserFromRequest(r)
-	req := apiutil.GetRequestObject(r).(*v1alpha1.UpdateUserRequest)
-	if req == nil {
-		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
-		return
-	}
+// UpdateUser implements AuthProvider and serves a PUT /api/users/{user} request
+func (a *LocalAuthProvider) UpdateUser(username string, req *v1alpha1.UpdateUserRequest) error {
 	user := &LocalUser{Username: username}
 	if len(req.Roles) != 0 {
 		user.Groups = req.Roles
@@ -95,24 +68,14 @@ func (a *LocalAuthProvider) PutUser(w http.ResponseWriter, r *http.Request) {
 	if req.Password != "" {
 		passwdHash, err := common.HashPassword(req.Password)
 		if err != nil {
-			apiutil.ReturnAPIError(err, w)
-			return
+			return err
 		}
 		user.PasswordHash = passwdHash
 	}
-	if err := a.updateUser(user); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteOK(w)
+	return a.updateUser(user)
 }
 
 // DeleteUser implements AuthProvider and serves a DELETE /api/users/{user} request
-func (a *LocalAuthProvider) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	username := apiutil.GetUserFromRequest(r)
-	if err := a.deleteUser(username); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	apiutil.WriteOK(w)
+func (a *LocalAuthProvider) DeleteUser(username string) error {
+	return a.deleteUser(username)
 }

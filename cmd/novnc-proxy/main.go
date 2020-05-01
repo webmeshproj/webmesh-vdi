@@ -29,6 +29,8 @@ func main() {
 	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "tcp://127.0.0.1:5900", "The tcp or unix-socket address of the vnc server")
 	common.ParseFlagsAndSetupLogging()
 
+	common.PrintVersion(log)
+
 	if strings.HasPrefix(vncAddr, "tcp://") {
 		vncConnectProto = "tcp"
 		vncConnectAddr = strings.TrimPrefix(vncAddr, "tcp://")

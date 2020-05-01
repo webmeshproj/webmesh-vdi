@@ -4,6 +4,9 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
 	"github.com/go-logr/logr"
@@ -32,12 +35,26 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		return err
 	}
 
-	// initialize a secret for provider storage and the jwt key
-	if err := f.reconcileAppSecret(reqLogger, instance); err != nil {
+	secretsProvider := secrets.GetProvider(instance)
+	if err := secretsProvider.Setup(f.client, instance); err != nil {
 		return err
 	}
 
+	if _, err := secretsProvider.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
+		if !errors.IsSecretNotFoundError(err) {
+			return err
+		}
+		jwtSecret := common.GeneratePassword(32)
+		if err := secretsProvider.WriteSecret(v1alpha1.JWTSecretKey, []byte(jwtSecret)); err != nil {
+			return err
+		}
+	}
+
 	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
+		return err
+	}
+
+	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetLaunchTemplatesRole()); err != nil {
 		return err
 	}
 

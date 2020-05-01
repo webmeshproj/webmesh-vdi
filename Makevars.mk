@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= latest
+VERSION ?= 0.0.1
 
 # Go options
 GO111MODULE ?= auto
@@ -69,9 +69,21 @@ endef
 define build_docker
 	docker build . \
 		-f build/Dockerfile.$(1) \
-		-t $(2)
+		-t $(2) \
+		--build-arg VERSION=${VERSION} \
+		--build-arg GIT_COMMIT=$(shell git rev-parse HEAD)
 endef
 
 define load_image
 	$(KIND) load --name $(CLUSTER_NAME) docker-image $(1)
 endef
+
+define CHART_YAML
+apiVersion: v2
+name: kvdi
+description: A Kubernetes-Native Virtual Desktop Infrastructure
+type: application
+version: ${VERSION}
+appVersion: ${VERSION}
+endef
+export CHART_YAML

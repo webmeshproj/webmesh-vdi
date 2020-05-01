@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // swagger:operation PUT /api/users/{user} Users putUserRequest
@@ -30,7 +32,23 @@ import (
 //     "$ref": "#/responses/error"
 //   "404":
 //     "$ref": "#/responses/error"
-func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {}
+func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
+	username := apiutil.GetUserFromRequest(r)
+	req := apiutil.GetRequestObject(r).(*v1alpha1.UpdateUserRequest)
+	if req == nil {
+		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
+		return
+	}
+	if err := d.auth.UpdateUser(username, req); err != nil {
+		if errors.IsUserNotFoundError(err) {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	apiutil.WriteOK(w)
+}
 
 // Implemented by the auth provider
 

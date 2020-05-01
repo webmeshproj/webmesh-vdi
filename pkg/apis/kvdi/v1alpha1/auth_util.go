@@ -28,6 +28,27 @@ func (v *VDICluster) GetAdminRole() *VDIRole {
 	}
 }
 
+// GetLaunchTemplatesRole returns a launch-templates role for a cluster.
+// This role is used if anonymous auth is enabled.
+func (v *VDICluster) GetLaunchTemplatesRole() *VDIRole {
+	return &VDIRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("%s-launch-templates", v.GetName()),
+			Labels: map[string]string{
+				RoleClusterRefLabel: v.GetName(),
+			},
+		},
+		Rules: []Rule{
+			{
+				Verbs:            []Verb{VerbRead, VerbUse, VerbLaunch},
+				Resources:        []Resource{ResourceTemplates},
+				ResourcePatterns: []string{".*"},
+				Namespaces:       []string{NamespaceAll},
+			},
+		},
+	}
+}
+
 // GetName returns the name of a VDIUser.
 func (u *VDIUser) GetName() string { return u.Name }
 

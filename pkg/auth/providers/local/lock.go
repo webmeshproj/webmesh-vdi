@@ -12,7 +12,7 @@ var mux sync.Mutex
 
 func (a *LocalAuthProvider) LockSecret() error {
 	mux.Lock()
-	a.lock = lock.New(a.client, a.cluster.GetAppSecretsName(), time.Duration(10)*time.Second)
+	a.lock = lock.New(a.client, a.secrets.GetName(), time.Duration(10)*time.Second)
 	return a.lock.Acquire()
 }
 

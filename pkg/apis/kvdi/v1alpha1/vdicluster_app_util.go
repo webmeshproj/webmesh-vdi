@@ -11,13 +11,6 @@ func (c *VDICluster) GetAppName() string {
 	return fmt.Sprintf("%s-app", c.GetName())
 }
 
-func (c *VDICluster) GetAppExternalHostname() string {
-	if c.Spec.App != nil && c.Spec.App.ExternalHostname != "" {
-		return c.Spec.App.ExternalHostname
-	}
-	return ""
-}
-
 func (c *VDICluster) GetAppReplicas() *int32 {
 	if c.Spec.App != nil && c.Spec.App.Replicas != 0 {
 		return &c.Spec.App.Replicas
@@ -47,7 +40,6 @@ func (c *VDICluster) GetAppSecurityContext() *corev1.PodSecurityContext {
 	return &corev1.PodSecurityContext{
 		RunAsUser:    &defaultUser,
 		RunAsGroup:   &defaultUser,
-		FSGroup:      &defaultUser,
 		RunAsNonRoot: &trueVal,
 	}
 }
@@ -67,5 +59,8 @@ func (c *VDICluster) AuditLogEnabled() bool {
 }
 
 func (c *VDICluster) GetAppSecretsName() string {
-	return fmt.Sprintf("%s-app-secets", c.GetName())
+	if c.Spec.Secrets != nil && c.Spec.Secrets.K8SSecret != nil && c.Spec.Secrets.K8SSecret.SecretName != "" {
+		return c.Spec.Secrets.K8SSecret.SecretName
+	}
+	return fmt.Sprintf("%s-app-secrets", c.GetName())
 }

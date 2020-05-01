@@ -23,6 +23,8 @@ type VDIClusterSpec struct {
 	App *AppConfig `json:"app,omitempty"`
 	// Authentication configurations
 	Auth *AuthConfig `json:"auth,omitempty"`
+	// Secrets backend configurations
+	Secrets *SecretsConfig `json:"secrets,omitempty"`
 }
 
 // AppConfig represents app configurations for the VDI cluster
@@ -30,9 +32,6 @@ type AppConfig struct {
 	// The image to use for the app instances. Defaults to the public image
 	// matching the version of the currently running manager.
 	Image string `json:"image,omitempty"`
-	// An exterenal host name that will be used for any routes that need to be
-	// broadcasted to the end user.
-	ExternalHostname string `json:"externalHostname,omitempty"`
 	// Whether to add CORS headers to API requests
 	CORSEnabled bool `json:"corsEnabled,omitempty"`
 	// Whether to log auditing events to stdout
@@ -54,8 +53,22 @@ type AuthConfig struct {
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 }
 
+// SecretsConfig will be for secrets backend configurations. Currently only K8s
+// secret storage is supported, but the idea is to support multiple key/value stores
+// such as vault.
+type SecretsConfig struct {
+	// Use a kubernetes secret for storing sensitive values.
+	K8SSecret *K8SSecretConfig `json:"k8sSecret,omitempty"`
+}
+
 // LocalAuthConfig represents a local, db-based authentication driver.
 type LocalAuthConfig struct{}
+
+// K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.
+type K8SSecretConfig struct {
+	// The name of the secret backing the values. Default is `<cluster-name>-app-secrets`.
+	SecretName string `json:"secretName,omitempty"`
+}
 
 // VDIClusterStatus defines the observed state of VDICluster
 type VDIClusterStatus struct {

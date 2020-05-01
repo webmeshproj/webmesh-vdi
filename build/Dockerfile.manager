@@ -22,8 +22,12 @@ COPY pkg/         /build/pkg
 COPY cmd/manager  /build/cmd/manager
 
 # Build the binary
+ARG VERSION
+ARG GIT_COMMIT
 RUN go build \
   -o /tmp/vdi-manager \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}'" \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
   ./cmd/manager && upx /tmp/vdi-manager
 
 ##

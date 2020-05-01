@@ -38,6 +38,9 @@ var Decoders = map[string]map[string]interface{}{
 	"/api/roles/{role}": {
 		"PUT": v1alpha1.UpdateRoleRequest{},
 	},
+	"/api/login": {
+		"POST": v1alpha1.LoginRequest{},
+	},
 }
 
 func DecodeRequest(next http.Handler) http.Handler {

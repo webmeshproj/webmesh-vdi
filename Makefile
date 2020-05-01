@@ -67,6 +67,13 @@ push-desktop-base: build-desktop-base
 push-desktop-%: build-desktop-%
 	docker push ${REPO}/${NAME}:$*-${VERSION}
 
+chart-yaml:
+	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
+
+package-chart: chart-yaml
+	cd deploy/charts && helm package kvdi
+	rm deploy/charts/kvdi/Chart.yaml
+
 ###
 # Codegen
 ###

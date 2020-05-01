@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -28,17 +27,24 @@ type AuthProvider interface {
 
 	// Authenticate is called for API authentication requests. It should generate
 	// a new JWTClaims object and serve a SessionResponse back to the user.
-	Authenticate(w http.ResponseWriter, r *http.Request)
+	Authenticate(*LoginRequest) (*AuthResult, error)
 	// GetUsers should return a list of VDIUsers.
-	GetUsers(w http.ResponseWriter, r *http.Request)
-	// PostUser should handle any logic required to register a new user in kVDI.
-	PostUsers(w http.ResponseWriter, r *http.Request)
+	GetUsers() ([]*VDIUser, error)
 	// GetUser should retrieve a single VDIUser.
-	GetUser(w http.ResponseWriter, r *http.Request)
+	GetUser(string) (*VDIUser, error)
+	// PostUser should handle any logic required to register a new user in kVDI.
+	CreateUser(*CreateUserRequest) error
 	// PutUser should update a VDIUser.
-	PutUser(w http.ResponseWriter, r *http.Request)
+	UpdateUser(string, *UpdateUserRequest) error
 	// DeleteUser should remove a VDIUser.
-	DeleteUser(w http.ResponseWriter, r *http.Request)
+	DeleteUser(string) error
+}
+
+// AuthResult represents a response from an authentication attempt to a provider.
+// It contains user information, roles, and any other auth requirements.
+type AuthResult struct {
+	// The authenticated user and their roles
+	User *VDIUser
 }
 
 // JWTClaims represents the claims used when issuing JWT tokens.

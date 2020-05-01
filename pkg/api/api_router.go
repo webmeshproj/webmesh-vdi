@@ -3,8 +3,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/auth"
-
 	"github.com/gorilla/mux"
 )
 
@@ -15,13 +13,7 @@ func (d *desktopAPI) buildRouter() error {
 	// Setup the decoder
 	r.Use(DecodeRequest)
 
-	// login handler is provided by the authentication provider, does not go
-	// through middlewares
-	loginHandler := auth.GetAuthProvider(d.vdiCluster)
-	if err := loginHandler.Setup(d.client, d.vdiCluster); err != nil {
-		return err
-	}
-	r.PathPrefix("/api/login").HandlerFunc(loginHandler.Authenticate).Methods("POST")
+	r.PathPrefix("/api/login").HandlerFunc(d.PostLogin).Methods("POST")
 
 	// Main HTTP routes
 
@@ -36,11 +28,11 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")
 
 	// User operations
-	protected.HandleFunc("/users", loginHandler.GetUsers).Methods("GET")
-	protected.HandleFunc("/users", loginHandler.PostUsers).Methods("POST")
-	protected.HandleFunc("/users/{user}", loginHandler.GetUser).Methods("GET")
-	protected.HandleFunc("/users/{user}", loginHandler.PutUser).Methods("PUT")
-	protected.HandleFunc("/users/{user}", loginHandler.DeleteUser).Methods("DELETE")
+	protected.HandleFunc("/users", d.GetUsers).Methods("GET")
+	protected.HandleFunc("/users", d.PostUsers).Methods("POST")
+	protected.HandleFunc("/users/{user}", d.GetUser).Methods("GET")
+	protected.HandleFunc("/users/{user}", d.PutUser).Methods("PUT")
+	protected.HandleFunc("/users/{user}", d.DeleteUser).Methods("DELETE")
 
 	// Role operations
 	protected.HandleFunc("/roles", d.GetRoles).Methods("GET")

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
@@ -88,15 +87,7 @@ func GenerateJWT(secret []byte, user *v1alpha1.VDIUser) (v1alpha1.JWTClaims, str
 	return claims, tokenString, err
 }
 
-// GetJWTSecret reads the JWT signing secret from the expected location.
-func GetJWTSecret() ([]byte, error) {
-	if secret := os.Getenv(v1alpha1.JWTSecretEnvVar); secret != "" {
-		return []byte(secret), nil
-	}
-	return nil, fmt.Errorf("No %s in environment", v1alpha1.JWTSecretEnvVar)
-}
-
-// FilterUserRolesByName returns a list of UserRoles matching the provided names
+// FilterUserRolesByNames returns a list of UserRoles matching the provided names
 // and cluster
 func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1alpha1.VDIUserRole {
 	userRoles := make([]*v1alpha1.VDIUserRole, 0)

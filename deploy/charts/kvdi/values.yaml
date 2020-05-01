@@ -25,21 +25,12 @@ rbac:
 vdiCluster:
   spec:
     appNamespace: default
+    imagePullSecrets: []
     certManagerNamespace: cert-manager
-    app:
-      image: quay.io/tinyzimmer/kvdi:app-latest
-      replicas: 1
-      corsEnabled: true
-      auditLog: true
-    auth:
-      allowAnonymous: false
-      localAuth: {}
-    userDataSpec:
-      resources:
-        requests:
-          storage: 4Gi
-      accessModes:
-        - ReadWriteOnce
+    userDataSpec: {}
+    app: {}
+    auth: {}
+    secrets: {}
 
 podSecurityContext: {}
   # fsGroup: 2000

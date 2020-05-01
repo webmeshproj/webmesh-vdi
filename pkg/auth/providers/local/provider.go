@@ -2,6 +2,7 @@ package local
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/lock"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,7 +22,7 @@ type LocalAuthProvider struct {
 	// our cluster instance
 	cluster *v1alpha1.VDICluster
 	// the name of the secret with the passwd
-	secretName string
+	secrets v1alpha1.SecretsProvider
 	// the pointer to a currently held lock
 	lock *lock.Lock
 }
@@ -36,6 +37,6 @@ func New() v1alpha1.AuthProvider {
 func (a *LocalAuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	a.client = c
 	a.cluster = cluster
-	a.secretName = cluster.GetAppSecretsName()
-	return nil
+	a.secrets = secrets.GetProvider(cluster)
+	return a.secrets.Setup(c, cluster)
 }
