@@ -62,8 +62,12 @@ func (s *SecretEngine) WriteSecret(name string, contents []byte) error {
 }
 
 func (s *SecretEngine) Lock() error {
-	s.lock = lock.New(s.client, s.cluster.GetAppSecretsName(), time.Duration(10)*time.Second)
-	return s.lock.Acquire()
+	lock := lock.New(s.client, s.cluster.GetAppSecretsName(), time.Duration(10)*time.Second)
+	if err := lock.Acquire(); err != nil {
+		return err
+	}
+	s.lock = lock
+	return nil
 }
 
 func (s *SecretEngine) Release() {
