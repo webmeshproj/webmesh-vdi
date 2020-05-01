@@ -12,15 +12,16 @@ WORKDIR /build
 # Go build options
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
-ARG VERSION
-ENV VERSION=${VERSION}
-ARG GIT_COMMIT
-ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Fetch deps first as they don't change frequently
 COPY go.mod /build/go.mod
 COPY go.sum /build/go.sum
 RUN go mod download
+
+ARG VERSION
+ENV VERSION=${VERSION}
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 ARG GO_SWAGGER_VERSION=v0.23.0
 RUN apk add --update curl \
