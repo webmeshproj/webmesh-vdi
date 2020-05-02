@@ -80,12 +80,13 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 				return
 			}
 
+			if !session.Authorized && apiutil.GetGorillaPath(r) != "/api/authorize" && r.Method != http.MethodPost {
+				apiutil.ReturnAPIForbidden(nil, "User session is not authorized", w)
+				return
+			}
+
 			// Set the request user object with a pointer to the decoded user session
 			apiutil.SetRequestUserSession(r, session)
-
-			// if !session.Authorized {
-			// 	// user requires MFA
-			// }
 
 			// serve the next handler
 			next.ServeHTTP(w, r)

@@ -99,11 +99,12 @@ export default {
       })
   },
 
+  beforeDestroy () {
+    this.$root.$off('set-active-title', this.setActive)
+    this.unsubscribeUsers()
+  },
+
   methods: {
-    beforeDestroy () {
-      this.$root.$off('set-active-title', this.setActive)
-      this.unsubscribeUsers()
-    },
 
     onLogout () {
       this.$userStore.dispatch('logout')

@@ -29,6 +29,8 @@
 </template>
 
 <script >
+import MFADialog from 'components/MFADialog.vue'
+
 export default {
   name: 'Login',
 
@@ -44,20 +46,19 @@ export default {
     async onSubmit () {
       try {
         await this.$userStore.dispatch('login', { username: this.username, password: this.password })
-        this.$q.notify({
-          color: 'green-4',
-          textColor: 'white',
-          icon: 'cloud_done',
-          message: `Logged in as ${this.username}`
-        })
-        try {
-          this.$configStore.dispatch('getServerConfig')
-        } catch (err) {
-          this.$root.$emit('notify-error', err)
+        if (!this.$userStore.getters.isLoggedIn) {
+          // MFA Required
+          await this.$q.dialog({
+            component: MFADialog,
+            parent: this
+          }).onOk(() => {
+            this.notifyLoggedIn()
+          }).onCancel(() => {
+          }).onDismiss(() => {
+          })
+          return
         }
-        this.$root.$emit('set-logged-in', this.username)
-        this.$root.$emit('set-active-title', 'Desktop Templates')
-        this.$router.push('templates')
+        await this.notifyLoggedIn()
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
@@ -66,6 +67,19 @@ export default {
     onReset () {
       this.username = null
       this.password = null
+    },
+
+    async notifyLoggedIn () {
+      await this.$configStore.dispatch('getServerConfig')
+      this.$root.$emit('set-logged-in', this.username)
+      this.$root.$emit('set-active-title', 'Desktop Templates')
+      this.$router.push('templates')
+      this.$q.notify({
+        color: 'green-4',
+        textColor: 'white',
+        icon: 'cloud_done',
+        message: `Logged in as ${this.username}`
+      })
     }
   },
 

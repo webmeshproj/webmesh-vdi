@@ -1,13 +1,17 @@
 <template>
-  <q-card style="min-width: 350px">
+  <q-card style="min-width: 400px">
 
+    <!-- Username -->
     <q-card-section v-if="editorFunction == 'create'">
       <q-input dense debounce="500" label="Username" v-model="username" :rules="[validateUser]"/>
     </q-card-section>
 
+    <!-- Password input -->
     <q-card-section class="q-pt-none">
       <PasswordInput ref="password" :startDisabled="passwordIsDisabled" />
     </q-card-section>
+
+    <!-- User roles selection -->
     <q-card-section class="q-pt-none">
       <q-select
         v-model="roleSelection"
@@ -32,6 +36,10 @@
       </q-select>
     </q-card-section>
 
+    <q-card-section class="q-pt-none">
+      <MFAConfig ref="mfaconfig" :username="userToEdit" :newUser="!isUpdating" />
+    </q-card-section>
+
     <q-card-actions align="right" class="text-primary">
       <q-btn flat label="Cancel" v-close-popup />
       <q-btn flat :label="submitLabel" v-close-popup @click="submitFunc" />
@@ -41,10 +49,11 @@
 
 <script>
 import PasswordInput from 'components/PasswordInput.vue'
+import MFAConfig from 'components/MFAConfig.vue'
 
 export default {
   name: 'UserEditor',
-  components: { PasswordInput },
+  components: { PasswordInput, MFAConfig },
   props: {
     editorFunction: {
       type: String,
@@ -74,7 +83,7 @@ export default {
     },
     submitFunc () {
       if (!this.isUpdating) {
-        return this.addUser
+        return () => { this.addUser() }
       }
       return this.updateUser
     },
@@ -106,18 +115,22 @@ export default {
         password: this.$refs.password.password,
         roles: this.roleSelection
       }
+      const mfaEnabled = this.$refs.mfaconfig.enabled
       try {
         await this.$axios.post('/api/users', payload)
+        if (mfaEnabled) {
+          await this.$axios.put(`/api/users/${this.username}/mfa`, { enabled: true })
+        }
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
           icon: 'cloud_done',
           message: `New user '${this.username}' created`
         })
-        this.$root.$emit('reload-users')
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
+      this.$root.$emit('reload-users')
     },
 
     async updateUser () {
@@ -135,10 +148,10 @@ export default {
           icon: 'cloud_done',
           message: `User '${this.userToEdit}' updated successfully`
         })
-        this.$root.$emit('reload-users')
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
+      this.$root.$emit('reload-users')
     },
 
     async filterFn (val, update) {

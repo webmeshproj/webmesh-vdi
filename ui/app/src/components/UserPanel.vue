@@ -25,7 +25,7 @@
             <q-tr :props="props">
 
               <q-td auto-width>
-                <q-btn size="sm" color="primary" round dense @click="props.expand = !props.expand" :icon="props.expand ? 'remove' : 'add'" />
+                <q-btn size="xs" color="primary" round dense @click="props.expand = !props.expand" :icon="props.expand ? 'remove' : 'add'" />
               </q-td>
 
               <q-td key="name" :props="props">
@@ -39,6 +39,11 @@
                   </q-badge>
                   &nbsp;
                 </div>
+              </q-td>
+
+              <q-td key="mfaEnabled" :props="props">
+                <q-avatar v-if="props.row.mfaEnabled" size="27px" font-size="20px" color="green" text-color="white" icon="verified_user" />
+                <q-avatar v-if="!props.row.mfaEnabled" size="27px" font-size="20px" color="warning" text-color="white" icon="info" />
               </q-td>
 
               <q-td key="updateUser">
@@ -117,6 +122,11 @@ const userColumns = [
     name: 'roles',
     align: 'center',
     label: 'Roles'
+  },
+  {
+    name: 'mfaEnabled',
+    align: 'center',
+    label: 'MFA Enabled'
   },
   {
     name: 'updateUser',

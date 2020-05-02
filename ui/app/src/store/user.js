@@ -7,6 +7,7 @@ export const UserStore = new Vuex.Store({
   state: {
     status: '',
     token: localStorage.getItem('token') || '',
+    needMFA: false,
     user: {}
   },
 
@@ -23,6 +24,10 @@ export const UserStore = new Vuex.Store({
     auth_success (state, token) {
       state.status = 'success'
       state.token = token
+    },
+
+    auth_need_mfa (state) {
+      state.needMFA = true
     },
 
     auth_error (state) {
@@ -71,14 +76,29 @@ export const UserStore = new Vuex.Store({
         const res = await axios({ url: '/api/login', data: credentials, method: 'POST' })
         const token = res.data.token
         const user = res.data.user
+        const authorized = res.data.authorized
         localStorage.setItem('token', token)
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
         commit('auth_got_user', user)
-        commit('auth_success', token)
+        if (authorized) {
+          commit('auth_success', token)
+          return
+        }
       } catch (err) {
         commit('auth_error')
         localStorage.removeItem('token')
         throw err
+      }
+    },
+
+    async authorize ({ commit }, otp) {
+      const res = await axios({ url: '/api/authorize', data: { otp: otp }, method: 'POST' })
+      const token = res.data.token
+      const authorized = res.data.authorized
+      localStorage.setItem('token', token)
+      Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
+      if (authorized) {
+        commit('auth_success', token)
       }
     },
 
@@ -99,6 +119,7 @@ export const UserStore = new Vuex.Store({
 
   getters: {
     isLoggedIn: state => !!state.token,
+    requiresMFA: state => state.needMFA,
     authStatus: state => state.status,
     user: state => state.user,
     token: state => state.token

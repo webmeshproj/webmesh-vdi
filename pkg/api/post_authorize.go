@@ -41,7 +41,7 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	totp := gotp.NewDefaultTOTP(secret)
 
 	if totp.Now() != req.OTP {
-		apiutil.ReturnAPIForbidden(nil, "Invalid mfa token", w)
+		apiutil.ReturnAPIForbidden(nil, "Invalid MFA Code", w)
 		return
 	}
 

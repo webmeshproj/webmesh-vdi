@@ -11,6 +11,12 @@ var elevateDenyReason = "The requested operation grants more privileges than the
 
 func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed bool, reason string, err error) {
 
+	// This is an ugly hack at the moment. This will be triggered if called from
+	// allowSameUser while configuring MFA options. No need to check.
+	if apiutil.GetGorillaPath(r) == "/api/users/{user}/mfa" {
+		return true, "", nil
+	}
+
 	// Check that a POST /users will not grant permissions the user does not have.
 	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.CreateUserRequest); ok {
 		vdiRoles, err := d.vdiCluster.GetRoles(d.client)

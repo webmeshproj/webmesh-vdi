@@ -11,6 +11,7 @@ Types
 -   [AuthConfig](#%23kvdi.io%2fv1alpha1.AuthConfig)
 -   [AuthProvider](#%23kvdi.io%2fv1alpha1.AuthProvider)
 -   [AuthResult](#%23kvdi.io%2fv1alpha1.AuthResult)
+-   [AuthorizeRequest](#%23kvdi.io%2fv1alpha1.AuthorizeRequest)
 -   [CreateRoleRequest](#%23kvdi.io%2fv1alpha1.CreateRoleRequest)
 -   [CreateSessionRequest](#%23kvdi.io%2fv1alpha1.CreateSessionRequest)
 -   [CreateUserRequest](#%23kvdi.io%2fv1alpha1.CreateUserRequest)
@@ -31,6 +32,8 @@ Types
 -   [SecretsProvider](#%23kvdi.io%2fv1alpha1.SecretsProvider)
 -   [SessionResponse](#%23kvdi.io%2fv1alpha1.SessionResponse)
 -   [TemplatesGetter](#%23kvdi.io%2fv1alpha1.TemplatesGetter)
+-   [UpdateMFARequest](#%23kvdi.io%2fv1alpha1.UpdateMFARequest)
+-   [UpdateMFAResponse](#%23kvdi.io%2fv1alpha1.UpdateMFAResponse)
 -   [UpdateRoleRequest](#%23kvdi.io%2fv1alpha1.UpdateRoleRequest)
 -   [UpdateUserRequest](#%23kvdi.io%2fv1alpha1.UpdateUserRequest)
 -   [UsersGetter](#%23kvdi.io%2fv1alpha1.UsersGetter)
@@ -139,6 +142,26 @@ requirements.
 <tr class="odd">
 <td><code>User</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
 <td><p>The authenticated user and their roles</p></td>
+</tr>
+</tbody>
+</table>
+
+### AuthorizeRequest
+
+AuthorizeRequest is a request with an OTP for receiving an authorized
+token.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>otp</code> <em>string</em></td>
+<td><p>The one-time password</p></td>
 </tr>
 </tbody>
 </table>
@@ -456,6 +479,10 @@ JWTClaims represents the claims used when issuing JWT tokens.
 <td><p>The user with their permissions when the token was generated</p></td>
 </tr>
 <tr class="even">
+<td><code>authorized</code> <em>bool</em></td>
+<td><p>Whether the user is fully authorized</p></td>
+</tr>
+<tr class="odd">
 <td><code>StandardClaims</code> <em>github.com/dgrijalva/jwt-go.StandardClaims</em></td>
 <td><p>The standard JWT claims</p></td>
 </tr>
@@ -488,7 +515,8 @@ values.
 
 (*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
 
-LocalAuthConfig represents a local, db-based authentication driver.
+LocalAuthConfig represents a local, ‘passwd’-based authentication
+driver.
 
 ### LoginRequest
 
@@ -624,6 +652,10 @@ SessionResponse represents a response with a new session token
 <td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
 <td><p>Information about the authenticated user and their permissions.</p></td>
 </tr>
+<tr class="even">
+<td><code>authorized</code> <em>bool</em></td>
+<td><p>Whether the user is fully authorized (e.g. false if MFA is required but not provided yet)</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -631,6 +663,49 @@ SessionResponse represents a response with a new session token
 
 TemplatesGetter is an interface that can be used to retrieve available
 templates while checking user permissions.
+
+### UpdateMFARequest
+
+UpdateMFARequest sets the MFA configuration for the user. If enabling, a
+provisioning URI will be returned.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>enabled</code> <em>bool</em></td>
+<td><p>When set, will enable MFA for the given user. If false, will disable MFA.</p></td>
+</tr>
+</tbody>
+</table>
+
+### UpdateMFAResponse
+
+UpdateMFAResponse contains the response to an UpdateMFARequest.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>enabled</code> <em>bool</em></td>
+<td><p>Whether MFA is enabled for the user</p></td>
+</tr>
+<tr class="even">
+<td><code>provisioningURI</code> <em>string</em></td>
+<td><p>If enabled is set, a provisioning URI is also returned.</p></td>
+</tr>
+</tbody>
+</table>
 
 ### UpdateRoleRequest
 
@@ -847,6 +922,10 @@ claims defining this object.
 <td><code>roles</code> <em><a href="#kvdi.io/v1alpha1.*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
 <td><p>A list of roles applide to the user. The grants associated with each user are embedded in the JWT signed when authenticating.</p></td>
 </tr>
+<tr class="even">
+<td><code>mfaEnabled</code> <em>bool</em></td>
+<td><p>Whether or not MFA is enabled for this user</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -883,4 +962,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `7d5cdcf`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `f0e05bf`.*
