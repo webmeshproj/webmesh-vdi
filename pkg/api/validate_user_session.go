@@ -83,9 +83,9 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			// Set the request user object with a pointer to the decoded user session
 			apiutil.SetRequestUserSession(r, session)
 
-			if !session.Authorized {
-				// user requires MFA
-			}
+			// if !session.Authorized {
+			// 	// user requires MFA
+			// }
 
 			// serve the next handler
 			next.ServeHTTP(w, r)

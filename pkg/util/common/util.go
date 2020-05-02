@@ -66,6 +66,7 @@ ArgLoop:
 	return sl
 }
 
+// PrintVersion will dump version info to the given log interface.
 func PrintVersion(log logr.Logger) {
 	log.Info(fmt.Sprintf("kVDI Version: %s", version.Version))
 	log.Info(fmt.Sprintf("kVDI Commit: %s", version.GitCommit))

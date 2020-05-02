@@ -12,8 +12,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// ContextUserKey is the key where UserSesssions are stored in the request context
+// ContextUserKey is the key where user sessions are stored in the request context
 const ContextUserKey = 0
+
+// ContextRequestObjectKey is the key where decoded request objects are stored
+// in the request context
 const ContextRequestObjectKey = 1
 
 // SetRequestUserSession writes the user session to the request context
@@ -26,10 +29,12 @@ func GetRequestUserSession(r *http.Request) *v1alpha1.JWTClaims {
 	return context.Get(r, ContextUserKey).(*v1alpha1.JWTClaims)
 }
 
+// SetRequestObject sets the given interface to the decoded request object in the context.
 func SetRequestObject(r *http.Request, obj interface{}) {
 	context.Set(r, ContextRequestObjectKey, obj)
 }
 
+// GetRequestObject retrieves the decoded request from the request context.
 func GetRequestObject(r *http.Request) interface{} {
 	return context.Get(r, ContextRequestObjectKey)
 }
@@ -53,7 +58,7 @@ func GetRoleFromRequest(r *http.Request) string {
 	return vars["role"]
 }
 
-// getGorillaPath will retrieve the URL path as it was configured in mux.
+// GetGorillaPath will retrieve the URL path as it was configured in mux.
 func GetGorillaPath(r *http.Request) string {
 	vars := mux.Vars(r)
 	path := strings.TrimSuffix(r.URL.Path, "/")

@@ -12,26 +12,36 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type K8SecretProvider struct {
+// Provider implements a SecretsProvider that matches secret names to
+// keys in a single configured secret.
+type Provider struct {
 	v1alpha1.SecretsProvider
 
-	client     client.Client
+	// the k8s client
+	client client.Client
+	// the name of the secret backing this engine
 	secretName types.NamespacedName
 }
 
-var _ v1alpha1.SecretsProvider = &K8SecretProvider{}
+// Blank assignmnt to make sure Provider satisfies the SecretsProvider
+// interface.
+var _ v1alpha1.SecretsProvider = &Provider{}
 
-func New() *K8SecretProvider {
-	return &K8SecretProvider{}
+// New returns a new Provider.
+func New() *Provider {
+	return &Provider{}
 }
 
-func (k *K8SecretProvider) Setup(client client.Client, cluster *v1alpha1.VDICluster) error {
+// Setup will set the client inteface and secret name, and then ensure the presence
+// of the secret in the cluster.
+func (k *Provider) Setup(client client.Client, cluster *v1alpha1.VDICluster) error {
 	k.secretName = types.NamespacedName{Name: cluster.GetAppSecretsName(), Namespace: cluster.GetCoreNamespace()}
 	k.client = client
 	return k.ensureSecret(cluster)
 }
 
-func (k *K8SecretProvider) ensureSecret(cluster *v1alpha1.VDICluster) error {
+// ensureSecret makes sure the configured secret exists in the cluster.
+func (k *Provider) ensureSecret(cluster *v1alpha1.VDICluster) error {
 	if _, err := k.getSecret(); err != nil {
 		if client.IgnoreNotFound(err) != nil {
 			return err
@@ -49,16 +59,14 @@ func (k *K8SecretProvider) ensureSecret(cluster *v1alpha1.VDICluster) error {
 	return nil
 }
 
-func (k *K8SecretProvider) getSecret() (*corev1.Secret, error) {
+// getSecret will retrieve the configured secret.
+func (k *Provider) getSecret() (*corev1.Secret, error) {
 	secret := &corev1.Secret{}
 	return secret, k.client.Get(context.TODO(), k.secretName, secret)
 }
 
-func (k *K8SecretProvider) GetName() string {
-	return k.secretName.Name
-}
-
-func (k *K8SecretProvider) ReadSecret(name string) ([]byte, error) {
+// ReadSecret returns the data in the key specified by the given name.
+func (k *Provider) ReadSecret(name string) ([]byte, error) {
 	secret, err := k.getSecret()
 	if err != nil {
 		return nil, err
@@ -73,7 +81,9 @@ func (k *K8SecretProvider) ReadSecret(name string) ([]byte, error) {
 	return data, nil
 }
 
-func (k *K8SecretProvider) WriteSecret(name string, content []byte) error {
+// WriteSecret will write the given data to the key of the given name and then
+// update the secret.
+func (k *Provider) WriteSecret(name string, content []byte) error {
 	secret, err := k.getSecret()
 	if err != nil {
 		return err

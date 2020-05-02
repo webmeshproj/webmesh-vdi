@@ -118,7 +118,8 @@ func (s *SecretEngine) WriteSecret(name string, contents []byte) error {
 }
 
 // AppendSecret is a convenience wrapper around reading a secret, adding a line,
-// and then overwriting the existing secret with the new value.
+// and then overwriting the existing secret with the new value. When using this method
+// it is assumed to use the cache.
 func (s *SecretEngine) AppendSecret(name string, line []byte) error {
 	currentVal, err := s.ReadSecret(name, true)
 	if err != nil {
@@ -130,7 +131,7 @@ func (s *SecretEngine) AppendSecret(name string, line []byte) error {
 }
 
 // Lock locks the secret engine. This is useful for long running operations that
-// need to guarantee consistency. If there are multiple replicas of the app running
+// need to guarantee consistency. If there are multiple replicas of the app running,
 // a remote lock is also acquired to keep peer processes from interfering.
 func (s *SecretEngine) Lock() error {
 	// mux lock to make sure the local process doesn't overwrite the lock

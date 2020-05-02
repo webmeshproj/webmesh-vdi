@@ -49,7 +49,7 @@ func New(c client.Client, name string, timeout time.Duration) *Lock {
 }
 
 // Acquire will attempt to acquire the lock, retrying until the lock is either
-// acquired of the timeout is reached.
+// acquired or the timeout is reached.
 func (l *Lock) Acquire() error {
 	lockLogger.Info("Acquiring lock", "Lock.Name", l.name)
 	pod, err := l.getCurrentPod()
