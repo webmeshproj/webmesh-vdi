@@ -1,0 +1,39 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+{{ template "chart.versionLine" . }}
+
+{{ template "chart.sourceLinkLine" . }}
+
+## Installation
+
+For the time being `kVDI` depends on `cert-manager >= 0.14.1` for provisioning mTLS certificates.
+The chart does not set this up for you.
+
+_This requirement will probably be removed at some point_
+
+Once `cert-manager` is running:
+
+```bash
+$> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
+$> helm install kvdi tinyzimmer/kvdi
+```
+
+Once the app pod is running (this may take a minute) you can retrieve the initial admin password with:
+
+```bash
+$> kubectl get secret kvdi-admin-secret -o go-template="{{ "{{" }} .data.password {{ "}}" }}" | base64 -d && echo
+```
+
+The app service by default is called `kvdi-app` and you can retrieve the endpoint with `kubectl get svc kvdi-app`.
+If you'd like to use `port-forward` you can run:
+
+```bash
+$> kubectl port-forward svc/kvdi-app 8443:443
+```
+
+Then visit https://localhost:8443 to use `kVDI`.
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}

@@ -1,58 +1,94 @@
-# Default values for android-farm-operator.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Default values for kVDI.
 
-replicaCount: 1
-
-image:
-  repository: quay.io/tinyzimmer/kvdi
-  pullPolicy: IfNotPresent
-
-imagePullSecrets: []
-
+# nameOverride -- A name override for resources created by the chart.
 nameOverride: ""
+# fullnameOverride -- A full name override for resources created by the chart.
 fullnameOverride: ""
 
 rbac:
   serviceAccount:
-    # Specifies whether a service account should be created
+    # rbac.serviceAccount.create -- Specifies whether a `ServiceAccount` should be created.
     create: true
-    # The name of the service account to use.
-    # If not set and create is true, a name is generated using the fullname template
+    # rbac.serviceAccount.name -- The name of the `ServiceAccount` to use.
+    # @default -- If not set and create is true, a name is generated using the fullname template.
     name:
+  # rbac.pspEnabled -- Specifies whether to create `PodSecurityPolicies` for the manager to use when booting desktops.
   pspEnabled: false
 
-vdiCluster:
+manager:
+  # manager.replicaCount -- The number of manager replicas to run.
+  # If more than one is set, they will run in active/standby mode.
+  replicaCount: 1
+  image:
+    # manager.image.repository -- The repository to pull the manager image from.
+    # The tag is assumed to be `manager-<chart_version>`.
+    repository: quay.io/tinyzimmer/kvdi
+    # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.
+    pullPolicy: IfNotPresent
+  # manager.imagePullSecrets -- Image pull secrets for the manager pod.
+  imagePullSecrets: []
+  # manager.podSecurityContext -- The `PodSecurityContext` for the manager pod.
+  podSecurityContext: {}
+  # manager.securityContext -- The container security context for the manager pod.
+  securityContext: {}
+  # manager.resources -- Resource limits for the manager pod.
+  resources: {}
+  # manager.nodeSelector -- Node selectors for the manager pod.
+  nodeSelector: {}
+  # manager.tolerations -- Node tolerations for the manager pod.
+  tolerations: []
+  # manager.affinity -- Node affinity for the manager pod.
+  affinity: {}
+
+vdi:
+  # vdi.spec -- The `VDICluster` spec.
+  # @default -- The values described below are the same as the `VDICluster` CRD defaults.
   spec:
+    # vdi.spec.appNamespace -- The namespace where the `kvdi` app will run.
+    # This is different than the chart namespace. The chart lays down the manager
+    # and a VDI configuration, and the manager takes care of the rest.
     appNamespace: default
+    # vdi.spec.imagePullSecrets -- Image pull secrets to use for app containers.
     imagePullSecrets: []
+    # vdi.spec.certManagerNamespace -- The namespace where `cert-manager` is running.
     certManagerNamespace: cert-manager
-    userDataSpec: {}
-    app: {}
-    auth: {}
-    secrets: {}
+    # vdi.spec.userdataSpec -- If configured, enables userdata persistence with
+    # the given PVC spec. Every user will receive their own PV with the provided configuration.
+    userdataSpec: {}
+    # vdi.spec.app -- App level configurations for `kVDI`.
+    # @default -- The values described below are the same as the `VDICluster` CRD defaults.
+    app:
+      # vdi.spec.app.image -- The image to use for app pods.
+      # @default -- `quay.io/tinyzimmer/kvdi:app-${VERSION}`
+      image: ""
+      # vdi.spec.app.corsEnabled -- Enables CORS headers in API responses.
+      corsEnabled: false
+      # vdi.spec.app.auditLog -- Enables a detailed audit log of API events.
+      # At the moment, these just get logged to stdout on the app instance.
+      auditLog: false
+      # vdi.spec.app.replicas -- The number of app replicas to run.
+      replicas: 1
+      # vdi.spec.app.resources -- Resource limits for the app pods.
+      resources: {}
+    # vdi.spec.auth -- Authentication configurations for `kVDI`.
+    # @default -- The values described below are the same as the `VDICluster` CRD defaults.
+    auth:
+      # vdi.spec.auth.allowAnonymous -- Allow anonymous users to launch and use desktops.
+      allowAnonymous: false
+      # vdi.spec.auth.allowAnonymous -- The secret to store the generated admin password in.
+      adminSecret: kvdi-admin-secret
+      # vdi.spec.auth.localAuth -- Use local-auth for the authentication backend.
+      # This is currently the only supported auth provider, however more may come in the future.
+      localAuth: {}
+    # vdi.spec.secrets -- Secret storage configurations for `kVDI`.
+    # @default -- The values described below are the same as the `VDICluster` CRD defaults.
+    secrets:
+      # vdi.spec.secrets.k8sSecret -- Use the Kubernetes secret storage backend.
+      k8sSecret:
+        # vdi.spec.secrets.k8sSecret.secretName -- The name of the Kubernetes `Secret`.
+        # backing the secret storage.
+        secretName: kvdi-app-secrets
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-resources:
-  limits:
-    cpu: 250m
-    memory: 256Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+  # vdi.templates -- Not implemented in the chart yet. This will be a place
+  # to preload desktop-templates into the cluster.
+  templates: []

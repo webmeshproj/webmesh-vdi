@@ -18,7 +18,7 @@ type VDIClusterSpec struct {
 	// will try to force the reclaim policy on created volumes to `Retain`, you
 	// may want to set it explicitly on your storage-class controller as an extra
 	// safeguard.
-	UserDataSpec *corev1.PersistentVolumeClaimSpec `json:"userDataSpec,omitempty"`
+	UserDataSpec *corev1.PersistentVolumeClaimSpec `json:"userdataSpec,omitempty"`
 	// App configurations.
 	App *AppConfig `json:"app,omitempty"`
 	// Authentication configurations
@@ -49,7 +49,7 @@ type AuthConfig struct {
 	AllowAnonymous bool `json:"allowAnonymous,omitempty"`
 	// A secret where a generated admin password will be stored
 	AdminSecret string `json:"adminSecret,omitempty"`
-	// Use local auth (db-backed) authentication
+	// Use local auth (secret-backed) authentication
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 }
 
@@ -61,7 +61,7 @@ type SecretsConfig struct {
 	K8SSecret *K8SSecretConfig `json:"k8sSecret,omitempty"`
 }
 
-// LocalAuthConfig represents a local, 'passwd'-based authentication driver.
+// LocalAuthConfig represents a local, 'passwd'-like authentication driver.
 type LocalAuthConfig struct{}
 
 // K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.

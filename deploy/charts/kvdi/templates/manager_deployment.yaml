@@ -6,7 +6,7 @@ metadata:
     {{- include "kvdi.labels" . | nindent 4 }}
     component: kvdi-manager
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.manager.replicaCount }}
   selector:
     matchLabels:
       {{- include "kvdi.selectorLabels" . | nindent 6 }}
@@ -17,19 +17,19 @@ spec:
         {{- include "kvdi.selectorLabels" . | nindent 8 }}
         component: kvdi-manager
     spec:
-    {{- with .Values.imagePullSecrets }}
+    {{- with .Values.manager.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       serviceAccountName: {{ include "kvdi.serviceAccountName" . }}-manager
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.manager.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}-manager
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:manager-{{ .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- toYaml .Values.manager.securityContext | nindent 12 }}
+          image: "{{ .Values.manager.image.repository }}:manager-{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
           env:
             - name: OPERATOR_NAMESPACE
               valueFrom:
@@ -42,16 +42,16 @@ spec:
             - name: OPERATOR_NAME
               value: "kvdi"
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
+            {{- toYaml .Values.manager.resources | nindent 12 }}
+      {{- with .Values.manager.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.affinity }}
+    {{- with .Values.manager.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.tolerations }}
+    {{- with .Values.manager.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

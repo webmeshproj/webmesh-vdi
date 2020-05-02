@@ -72,7 +72,6 @@ chart-yaml:
 
 package-chart: ${HELM} chart-yaml
 	cd deploy/charts && helm package kvdi
-	rm deploy/charts/kvdi/Chart.yaml
 
 ###
 # Codegen
@@ -105,7 +104,8 @@ ${GOLANGCI_LINT}:
 	ln -s golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64/golangci-lint ${GOLANGCI_LINT}
 
 # Lint files
-lint: ${GOLANGCI_LINT}
+lint: ${GOLANGCI_LINT} ${HELM}
+	${HELM} lint deploy/charts/kvdi
 	${GOLANGCI_LINT} run -v --timeout 300s
 
 # Tests
@@ -222,3 +222,10 @@ ${REFDOCS_CLONE}:
 ${REFDOCS}: ${REFDOCS_CLONE}
 	cd "${REFDOCS_CLONE}" && go build .
 	mv "${REFDOCS_CLONE}/gen-crd-api-reference-docs" "${REFDOCS}"
+
+${HELM_DOCS}:
+	$(call get_helm_docs)
+
+HELM_DOCS_VERSION ?= v0.13.0
+helm-docs: ${HELM_DOCS} chart-yaml
+	${HELM_DOCS}

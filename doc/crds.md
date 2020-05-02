@@ -114,7 +114,7 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 </tr>
 <tr class="odd">
 <td><code>localAuth</code> <em><a href="#kvdi.io/v1alpha1.LocalAuthConfig">LocalAuthConfig</a></em></td>
-<td><p>Use local auth (db-backed) authentication</p></td>
+<td><p>Use local auth (secret-backed) authentication</p></td>
 </tr>
 </tbody>
 </table>
@@ -515,8 +515,7 @@ values.
 
 (*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
 
-LocalAuthConfig represents a local, ‘passwd’-based authentication
-driver.
+LocalAuthConfig represents a local, ‘passwd’-like authentication driver.
 
 ### LoginRequest
 
@@ -797,7 +796,7 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
-<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
@@ -849,7 +848,7 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
 </tr>
 <tr class="even">
-<td><code>userDataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
@@ -962,4 +961,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `f0e05bf`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1ff3563`.*

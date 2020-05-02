@@ -15,7 +15,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
 I'll write up CONTRIBUTING docs soon, but I am getting to the point where it'd be cool to have some collaboration.
 If you are wanting this to become a real thing (or are just interested in trying it out), and you run into any issues, feel free to open an issue here and I can try to help out.
 
-## Requirments
+## Requirements
 
 Cluster requirements
 
@@ -29,6 +29,10 @@ For building and running locally you will need:
   - `docker`
 
 ## Installing
+
+For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md).
+
+The [API Reference]((doc/crds.md)) can also be used for details on `kVDI` app-level configurations.
 
 Assuming you have `cert-manager` installed and running in the cluster already:
 
@@ -58,7 +62,7 @@ $> make load-all
 $> make deploy example-vdi-templates
 ```
 
-After the manager has finished spinning up the `app` instance, get the IP of its service with `kubectl get svc` to access the app interface.
+After the manager has started the `app` instance, get the IP of its service with `kubectl get svc` to access the frontend.
 
 If not using anonymous auth, look for `kvdi-admin-secret` to retrieve the `admin` password.
 
@@ -74,7 +78,7 @@ It keeps a `passwd` like file in a Kubernetes secret where it stores users, pass
 
 RBAC is provided by a `VDIRole` CRD that behaves similar to a Kubernetes `ClusterRole`.
 These roles can restrict users to namespaces, desktop templates, and user/role management.
-It should not be possible for a user to make an API request that grants them more priviliges than they already have.
+It should not be possible for a user to make an API request that grants them more privileges than they already have.
 
 ## Screenshots
 

@@ -82,7 +82,7 @@ spec:
                   description: Allow anonymous users to create desktop instances
                   type: boolean
                 localAuth:
-                  description: Use local auth (db-backed) authentication
+                  description: Use local auth (secret-backed) authentication
                   type: object
               type: object
             certManagerNamespace:
@@ -112,7 +112,7 @@ spec:
                       type: string
                   type: object
               type: object
-            userDataSpec:
+            userdataSpec:
               description: The configuration for user volumes. *NOTE:* Even though
                 the controller will try to force the reclaim policy on created volumes
                 to `Retain`, you may want to set it explicitly on your storage-class
