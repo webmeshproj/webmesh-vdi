@@ -104,7 +104,7 @@ ${GOLANGCI_LINT}:
 	ln -s golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64/golangci-lint ${GOLANGCI_LINT}
 
 # Lint files
-lint: ${GOLANGCI_LINT} ${HELM}
+lint: ${GOLANGCI_LINT} ${HELM} chart-yaml
 	${HELM} lint deploy/charts/kvdi
 	${GOLANGCI_LINT} run -v --timeout 300s
 
