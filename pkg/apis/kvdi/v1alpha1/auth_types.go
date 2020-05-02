@@ -51,6 +51,8 @@ type AuthResult struct {
 type JWTClaims struct {
 	// The user with their permissions when the token was generated
 	User *VDIUser `json:"user"`
+	// Whether the user is fully authorized
+	Authorized bool `json:"authorized"`
 	// The standard JWT claims
 	jwt.StandardClaims
 }

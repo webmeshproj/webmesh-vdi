@@ -26,7 +26,7 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 			Name:  userAnonymous,
 			Roles: []*v1alpha1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
 		}
-		d.returnNewJWT(w, user)
+		d.returnNewJWT(w, user, true)
 		return
 	}
 
@@ -39,10 +39,10 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.returnNewJWT(w, result.User)
+	d.returnNewJWT(w, result.User, true)
 }
 
-func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser) {
+func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser, authorized bool) {
 	// fetch the JWT signing secret
 	secret, err := d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
 	if err != nil {
@@ -51,7 +51,7 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser)
 	}
 
 	// create a new token
-	claims, newToken, err := apiutil.GenerateJWT(secret, user)
+	claims, newToken, err := apiutil.GenerateJWT(secret, user, authorized)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

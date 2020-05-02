@@ -74,6 +74,8 @@ func (l *Lock) Acquire() error {
 				lockLogger.Error(err, "Error trying to create configmap, could not acquire lock")
 				return err
 			}
+
+			lockLogger.Info("Lock is currently held, checking status of existing lock")
 			existingLock := &corev1.ConfigMap{}
 			nn := types.NamespacedName{Name: lock.GetName(), Namespace: lock.GetNamespace()}
 			if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
@@ -102,7 +104,7 @@ func (l *Lock) Acquire() error {
 				return errors.New("Failed to acquire lock in the given time limit")
 			}
 
-			lockLogger.Info("Lock is currently held, trying again in 2 seconds...")
+			lockLogger.Info("Current lock is still active, trying again in 2 seconds...")
 			time.Sleep(time.Duration(2) * time.Second)
 			continue
 		}

@@ -4,6 +4,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
 
 ![](https://github.com/tinyzimmer/kvdi/workflows/Tests/badge.svg)
 ![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/tinyzimmer/kvdi)
 
 **This is a very heavy work-in-progress and not even remotely close to ready for production usage**
 

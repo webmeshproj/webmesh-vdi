@@ -77,11 +77,15 @@ func WriteOK(w http.ResponseWriter) {
 
 // GenerateJWT will create a new JWT with the given user object's fields
 // embedded in the claims.
-func GenerateJWT(secret []byte, user *v1alpha1.VDIUser) (v1alpha1.JWTClaims, string, error) {
-	claims := v1alpha1.JWTClaims{User: user, StandardClaims: jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(v1alpha1.DefaultSessionLength).Unix(),
-		IssuedAt:  time.Now().Unix(),
-	}}
+func GenerateJWT(secret []byte, user *v1alpha1.VDIUser, authorized bool) (v1alpha1.JWTClaims, string, error) {
+	claims := v1alpha1.JWTClaims{
+		User:       user,
+		Authorized: authorized,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(v1alpha1.DefaultSessionLength).Unix(),
+			IssuedAt:  time.Now().Unix(),
+		},
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(secret)
 	return claims, tokenString, err

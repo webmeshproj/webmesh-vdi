@@ -61,7 +61,7 @@ type SecretsConfig struct {
 	K8SSecret *K8SSecretConfig `json:"k8sSecret,omitempty"`
 }
 
-// LocalAuthConfig represents a local, db-based authentication driver.
+// LocalAuthConfig represents a local, 'passwd'-based authentication driver.
 type LocalAuthConfig struct{}
 
 // K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.
