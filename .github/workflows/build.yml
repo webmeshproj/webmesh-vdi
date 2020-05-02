@@ -1,8 +1,8 @@
 name: Build
 
 on:
-  release:
-    types: [published]
+  create:
+    tags:
   push:
     branches: [ master ]
   pull_request:
