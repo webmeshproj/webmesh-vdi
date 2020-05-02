@@ -20,10 +20,10 @@ const (
 	ClientCertificateMountPath = "/etc/kvdi/tls/client"
 	// A mount path for assets backed by secrets
 	SecretAssetsMountPath = "/etc/kvdi/secrets"
-	// Where our JWT secret is stored in the assets secret
+	// Where our JWT secret is stored in a secrets backend.
 	JWTSecretKey = "jwtSecret"
-	// The env var where the jwt secret is mounted
-	JWTSecretEnvVar = "JWT_SECRET"
+	// Where a mapping of users to their OTP secrets is held in a secrets backend.
+	OTPUsersSecretKey = "otpUsers"
 	// The port that web servicees will listen on internally
 	WebPort = 8443
 	// The port for the app service

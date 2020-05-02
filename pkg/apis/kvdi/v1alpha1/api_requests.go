@@ -20,6 +20,12 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// AuthorizeRequest is a request with an OTP for receiving an authorized token.
+type AuthorizeRequest struct {
+	// The one-time password
+	OTP string `json:"otp"`
+}
+
 // SessionResponse represents a response with a new session token
 type SessionResponse struct {
 	// The X-Session-Token to use for future requests.
@@ -28,6 +34,8 @@ type SessionResponse struct {
 	ExpiresAt int64 `json:"expiresAt"`
 	// Information about the authenticated user and their permissions.
 	User *VDIUser `json:"user"`
+	// Whether the user is fully authorized (e.g. false if MFA is required but not provided yet)
+	Authorized bool `json:"authorized"`
 }
 
 // CreateUserRequest represents a request to create a new user. Not all auth
@@ -72,6 +80,21 @@ func (r *UpdateUserRequest) Validate() error {
 		return errors.New("You must specify either a new password or a list of roles")
 	}
 	return nil
+}
+
+// UpdateMFARequest sets the MFA configuration for the user. If enabling,
+// a provisioning URI will be returned.
+type UpdateMFARequest struct {
+	// When set, will enable MFA for the given user. If false, will disable MFA.
+	Enabled bool `json:"enabled"`
+}
+
+// UpdateMFAResponse contains the response to an UpdateMFARequest.
+type UpdateMFAResponse struct {
+	// Whether MFA is enabled for the user
+	Enabled bool `json:"enabled"`
+	// If enabled is set, a provisioning URI is also returned.
+	ProvisioningURI string `json:"provisioningURI"`
 }
 
 // CreateRoleRequest represents a request for a new role.

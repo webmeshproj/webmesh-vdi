@@ -13,17 +13,22 @@ func (d *desktopAPI) buildRouter() error {
 	// Setup the decoder
 	r.Use(DecodeRequest)
 
+	// Login route is not protected since it generates the tokens for which a user
+	// can use the protected routes.
 	r.PathPrefix("/api/login").HandlerFunc(d.PostLogin).Methods("POST")
 
 	// Main HTTP routes
 
 	protected := r.PathPrefix("/api").Subrouter()
 
-	// Subrouter assumes /api prefix
+	// SUBROUTER ASSUMES /api PREFIX ON ALL ROUTES
+
+	// Authorizing tokens for when MFA is required
+	protected.HandleFunc("/authorize", d.PostAuthorize).Methods("POST")
 
 	// Misc routes
-	protected.HandleFunc("/logout", d.Logout).Methods("POST")
-	protected.HandleFunc("/whoami", d.WhoAmI).Methods("GET")
+	protected.HandleFunc("/logout", d.PostLogout).Methods("POST")
+	protected.HandleFunc("/whoami", d.GetWhoAmI).Methods("GET")
 	protected.HandleFunc("/config", d.GetConfig).Methods("GET")
 	protected.HandleFunc("/config/reload", d.PostReloadConfig).Methods("POST")
 	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")
@@ -33,6 +38,8 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/users", d.PostUsers).Methods("POST")
 	protected.HandleFunc("/users/{user}", d.GetUser).Methods("GET")
 	protected.HandleFunc("/users/{user}", d.PutUser).Methods("PUT")
+	protected.HandleFunc("/users/{user}/mfa", d.GetUserMFA).Methods("GET")
+	protected.HandleFunc("/users/{user}/mfa", d.PutUserMFA).Methods("PUT")
 	protected.HandleFunc("/users/{user}", d.DeleteUser).Methods("DELETE")
 
 	// Role operations

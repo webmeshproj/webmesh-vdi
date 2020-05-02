@@ -17,25 +17,41 @@ const TokenHeader = "X-Session-Token"
 //   200: userResponse
 //   403: error
 //   500: error
-func (d *desktopAPI) WhoAmI(w http.ResponseWriter, r *http.Request) {
+func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
 	session := apiutil.GetRequestUserSession(r)
 	apiutil.WriteJSON(session.User, w)
 }
 
-// swagger:route POST /api/login Auth loginRequest
-// Retrieves a new JWT token. This route may behave differently depending on the auth provider.
-// responses:
-//   200: sessionResponse
-//   400: error
-//   403: error
-//   500: error
-func loginDoc(w http.ResponseWriter, r *http.Request) {}
+// returnNewJWT will return a new JSON web token to the requestor.
+func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser, authorized bool) {
+	// fetch the JWT signing secret
+	secret, err := d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
 
-// Login request
-// swagger:parameters loginRequest
-type swaggerLoginRequest struct {
+	// create a new token
+	claims, newToken, err := apiutil.GenerateJWT(secret, user, authorized)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	// return the token to the user
+	apiutil.WriteJSON(&v1alpha1.SessionResponse{
+		Token:      newToken,
+		ExpiresAt:  claims.ExpiresAt,
+		User:       user,
+		Authorized: authorized,
+	}, w)
+}
+
+// Session response
+// swagger:response sessionResponse
+type swaggerSessionResponse struct {
 	// in:body
-	Body v1alpha1.LoginRequest
+	Body v1alpha1.SessionResponse
 }
 
 // Success response
@@ -45,13 +61,6 @@ type swaggerBoolResponse struct {
 	Body struct {
 		Ok bool `json:"ok"`
 	}
-}
-
-// Session response
-// swagger:response sessionResponse
-type swaggerSessionResponse struct {
-	// in:body
-	Body v1alpha1.SessionResponse
 }
 
 // A generic error response

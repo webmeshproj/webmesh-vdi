@@ -7,6 +7,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth"
+	"github.com/tinyzimmer/kvdi/pkg/auth/mfa"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
@@ -41,6 +42,8 @@ type desktopAPI struct {
 	auth v1alpha1.AuthProvider
 	// the secrets backend
 	secrets *secrets.SecretEngine
+	// the mfa backend for setting and retrieving OTP secrets
+	mfa *mfa.Manager
 }
 
 // NewFromConfig builds a new API router from the given kubernetes client configuration
@@ -93,6 +96,7 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		vdiCluster: found,
 		auth:       authProvider,
 		secrets:    secretsEngine,
+		mfa:        mfa.NewManager(secretsEngine),
 	}
 
 	return api, api.buildRouter()

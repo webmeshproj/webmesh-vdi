@@ -17,7 +17,7 @@ import (
 //   200: boolResponse
 //   400: error
 //   403: error
-func (d *desktopAPI) Logout(w http.ResponseWriter, r *http.Request) {
+func (d *desktopAPI) PostLogout(w http.ResponseWriter, r *http.Request) {
 	userSession := apiutil.GetRequestUserSession(r)
 	if err := d.CleanupUserDesktops(userSession.User.GetName()); err != nil {
 		apiutil.ReturnAPIError(err, w)

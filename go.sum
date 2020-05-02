@@ -782,6 +782,8 @@ github.com/xenolf/lego v0.3.2-0.20160613233155-a9d8cec0e656/go.mod h1:fwiGnfsIjG
 github.com/xiang90/probing v0.0.0-20160813154853-07dd2e8dfe18/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1/go.mod h1:QcJo0QPSfTONNIgpN5RA8prR7fF8nkF6cTWTcNerRO8=
+github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119 h1:YyPWX3jLOtYKulBR6AScGIs74lLrJcgeKRwcbAuQOG4=
+github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119/go.mod h1:/nuTSlK+okRfR/vnIPqR89fFKonnWPiZymN5ydRJkX8=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yvasiyarov/go-metrics v0.0.0-20150112132944-c25f46c4b940/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.6/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=

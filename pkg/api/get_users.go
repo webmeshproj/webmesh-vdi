@@ -5,6 +5,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
@@ -19,6 +20,16 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
+	}
+	mfaUsers, err := d.mfa.GetMFAUsers()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	for _, user := range users {
+		if common.StringSliceContains(mfaUsers, user.Name) {
+			user.MFAEnabled = true
+		}
 	}
 	apiutil.WriteJSON(users, w)
 }
@@ -52,6 +63,12 @@ func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 		}
 		apiutil.ReturnAPIError(err, w)
 		return
+	}
+	if _, err := d.mfa.GetUserSecret(username); err != nil && !errors.IsUserNotFoundError(err) {
+		apiutil.ReturnAPIError(err, w)
+		return
+	} else if err == nil {
+		user.MFAEnabled = true
 	}
 	apiutil.WriteJSON(user, w)
 }

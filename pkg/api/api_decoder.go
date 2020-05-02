@@ -23,6 +23,9 @@ func decodeRequest(r *http.Request, t interface{}) (interface{}, error) {
 }
 
 var Decoders = map[string]map[string]interface{}{
+	"/api/authorize": {
+		"POST": v1alpha1.AuthorizeRequest{},
+	},
 	"/api/sessions": {
 		"POST": v1alpha1.CreateSessionRequest{},
 	},
@@ -31,6 +34,9 @@ var Decoders = map[string]map[string]interface{}{
 	},
 	"/api/users/{user}": {
 		"PUT": v1alpha1.UpdateUserRequest{},
+	},
+	"/api/users/{user}/mfa": {
+		"PUT": v1alpha1.UpdateMFARequest{},
 	},
 	"/api/roles": {
 		"POST": v1alpha1.CreateRoleRequest{},

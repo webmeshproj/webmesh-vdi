@@ -40,6 +40,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc: allowAll,
 		},
 	},
+	"/api/authorize": {
+		"POST": {
+			OverrideFunc: allowAll,
+		},
+	},
 	"/api/logout": {
 		"POST": {
 			OverrideFunc: allowAll,
@@ -99,6 +104,24 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				ResourceType: v1alpha1.ResourceUsers,
 			},
 			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+		},
+	},
+	"/api/users/{user}/mfa": {
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			OverrideFunc:     allowSameUser,
+		},
+		"PUT": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUpdate,
+				ResourceType: v1alpha1.ResourceUsers,
+			},
+			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			OverrideFunc:     allowSameUser,
 		},
 	},
 	"/api/roles": {

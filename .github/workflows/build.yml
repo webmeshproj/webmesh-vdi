@@ -43,3 +43,11 @@ jobs:
 
     - name: Push the novnc-proxy docker image
       run: VERSION=${{ steps.version.outputs.tag }} make push-novnc-proxy
+
+    - name: Force pkg.go.dev to refresh latest
+      run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@latest
+      if: ${{ steps.version.outputs.tag == 'latest' }}
+
+    - name: Force pkg.go.dev to refresh version
+      run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@v/${{ steps.version.outputs.tag }}.info
+      if: ${{ steps.version.outputs.tag != 'latest' }}

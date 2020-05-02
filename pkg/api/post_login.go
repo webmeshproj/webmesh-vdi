@@ -1,18 +1,22 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 const userAnonymous = "anonymous"
 
-// PostLogin handles a login request. The request object is passed to the
-// authentication provider, and then a token is created and returned to the user
-// based off the data returned by the provider.
+// swagger:route POST /api/login Auth loginRequest
+// Retrieves a new JWT token. This route may behave differently depending on the auth provider.
+// responses:
+//   200: sessionResponse
+//   400: error
+//   403: error
+//   500: error
 func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 	req := apiutil.GetRequestObject(r).(*v1alpha1.LoginRequest)
 	if req == nil {
@@ -39,28 +43,24 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.returnNewJWT(w, result.User, true)
+	// check if MFA is configured for the user
+	if _, err := d.mfa.GetUserSecret(result.User.Name); err != nil {
+		if !errors.IsUserNotFoundError(err) {
+			apiutil.ReturnAPIError(err, w)
+			return
+		}
+		// The user does not require MFA
+		d.returnNewJWT(w, result.User, true)
+		return
+	}
+
+	// the user requires MFA
+	d.returnNewJWT(w, result.User, false)
 }
 
-func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser, authorized bool) {
-	// fetch the JWT signing secret
-	secret, err := d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
-	// create a new token
-	claims, newToken, err := apiutil.GenerateJWT(secret, user, authorized)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
-	// return the token to the user
-	apiutil.WriteJSON(&v1alpha1.SessionResponse{
-		Token:     newToken,
-		ExpiresAt: claims.ExpiresAt,
-		User:      user,
-	}, w)
+// Login request
+// swagger:parameters loginRequest
+type swaggerLoginRequest struct {
+	// in:body
+	Body v1alpha1.LoginRequest
 }

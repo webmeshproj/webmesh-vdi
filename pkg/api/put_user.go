@@ -39,6 +39,7 @@ func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
+
 	if err := d.auth.UpdateUser(username, req); err != nil {
 		if errors.IsUserNotFoundError(err) {
 			apiutil.ReturnAPINotFound(err, w)
@@ -47,10 +48,9 @@ func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
+
 	apiutil.WriteOK(w)
 }
-
-// Implemented by the auth provider
 
 // Request containing updates to a user
 // swagger:parameters putUserRequest
