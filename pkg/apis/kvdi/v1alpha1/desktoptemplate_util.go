@@ -118,14 +118,19 @@ func (t *DesktopTemplate) GetDesktopPodSecurityContext() *corev1.PodSecurityCont
 // GetDesktopContainerSecurityContext returns the container security context for
 // pods booted from this template.
 func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityContext {
-	var capabilities []corev1.Capability
+	capabilities := make([]corev1.Capability, 0)
+	if t.GetInitSystem() == InitSystemd {
+		// The method of using systemd-logind to trigger a systemd --user process
+		// requires CAP_SYS_ADMIN. Specifically, SECCOMP spawing. There might
+		// be other ways around this by just using system unit files for everything.
+		capabilities = append(capabilities, "SYS_ADMIN")
+	}
 	if t.Spec.Config != nil {
-		capabilities = t.Spec.Config.Capabilities
+		capabilities = append(capabilities, t.Spec.Config.Capabilities...)
 	}
 	return &corev1.SecurityContext{
-		// Privileged: &trueVal,
 		Capabilities: &corev1.Capabilities{
-			Add: append(capabilities, []corev1.Capability{"SYS_ADMIN"}...),
+			Add: capabilities,
 		},
 	}
 }

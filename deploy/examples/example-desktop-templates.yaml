@@ -3,7 +3,7 @@ kind: DesktopTemplate
 metadata:
   name: ubuntu-lxde
 spec:
-  image: quay.io/tinyzimmer/kvdi:ubuntu-lxde-0.0.1
+  image: quay.io/tinyzimmer/kvdi:ubuntu-lxde-latest
   imagePullPolicy: IfNotPresent
   config:
     enableSound: false
@@ -19,7 +19,7 @@ kind: DesktopTemplate
 metadata:
   name: arch-xfce
 spec:
-  image: quay.io/tinyzimmer/kvdi:arch-xfce-0.0.1
+  image: quay.io/tinyzimmer/kvdi:arch-xfce-latest
   imagePullPolicy: IfNotPresent
   config:
     enableSound: true
