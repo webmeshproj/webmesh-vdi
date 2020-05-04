@@ -34,7 +34,7 @@ push-arch-base: build-arch-base
 push-ubuntu-%: build-ubuntu-%
 	docker push ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
-push-arch-%: build-ubuntu-%
+push-arch-%: build-arch-%
 	docker push ${REPO}/${NAME}:arch-$*-${VERSION}
 
 # Loaders
