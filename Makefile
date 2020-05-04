@@ -1,5 +1,6 @@
 -include Makevars.mk
 -include Manifests.mk
+-include MakeDesktops.mk
 
 ###
 # Building
@@ -9,7 +10,7 @@
 build: build-all
 
 # Build all images
-build-all: build-manager build-app build-novnc-proxy build-desktop-lxde
+build-all: build-manager build-app build-novnc-proxy
 
 build-manager:
 	$(call build_docker,manager,${MANAGER_IMAGE})
@@ -20,29 +21,6 @@ build-app:
 build-novnc-proxy:
 	$(call build_docker,novnc-proxy,${NOVNC_PROXY_IMAGE})
 
-build-desktop-base:
-	cd build/desktops/ubuntu && docker build . \
-		-f Dockerfile.base \
-		-t ${DESKTOP_BASE_IMAGE}
-
-build-desktop-%:
-	cd build/desktops/ubuntu && docker build . \
-		-f Dockerfile.desktop \
-		--build-arg BASE_IMAGE=${DESKTOP_BASE_IMAGE} \
-		--build-arg DESKTOP_PACKAGE=$* \
-		-t ${REPO}/${NAME}:$*-${VERSION}
-
-ENTRYPOINT ?= /startup.sh
-run-desktop:
-	docker run \
-		--rm -it \
-		-e USER=ubuntu \
-		-v /dev/shm:/dev/shm \
-		-v /dev/snd:/dev/snd \
-		-p 5900:5900 \
-		--privileged \
-		--entrypoint ${ENTRYPOINT} \
-		${DESKTOP_IMAGE}
 
 ###
 # Push images
@@ -60,12 +38,6 @@ push-app: build-app
 
 push-novnc-proxy: build-novnc-proxy
 	docker push ${NOVNC_PROXY_IMAGE}
-
-push-desktop-base: build-desktop-base
-	docker push ${DESKTOP_BASE_IMAGE}
-
-push-desktop-%: build-desktop-%
-	docker push ${REPO}/${NAME}:$*-${VERSION}
 
 chart-yaml:
 	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
@@ -142,7 +114,7 @@ test-cluster: ${KIND}
 # Loads the manager image into the local kind cluster
 load: load-manager
 
-load-all: load-manager load-app load-novnc-proxy load-desktop-lxde
+load-all: load-manager load-app load-novnc-proxy
 
 load-manager: ${KIND} build-manager
 	$(call load_image,${MANAGER_IMAGE})
@@ -152,9 +124,6 @@ load-app: ${KIND} build-app
 
 load-novnc-proxy: ${KIND} build-novnc-proxy
 	$(call load_image,${NOVNC_PROXY_IMAGE})
-
-load-desktop-%: ${KIND} build-desktop-%
-	$(call load_image,${REPO}/${NAME}:$*-${VERSION})
 
 # Deploys metallb load balancer to the kind cluster
 test-ingress: ${KUBECTL}

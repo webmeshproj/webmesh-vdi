@@ -53,6 +53,15 @@ spec:
                     container. Note that this also requires the image do proper setup
                     if /dev/snd is present.
                   type: boolean
+                init:
+                  description: The type of init system inside the image, currently
+                    only supervisord and systemd are supported. Defaults to `supervisord`
+                    (but depending on how much I like systemd in this use case, that
+                    could change).
+                  enum:
+                  - supervisord
+                  - systemd
+                  type: string
                 proxyImage:
                   description: The image to use for the sidecar that proxies mTLS
                     connections to the local VNC server inside the Desktop. Defaults

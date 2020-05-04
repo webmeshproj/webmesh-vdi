@@ -2,10 +2,37 @@ package v1alpha1
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/tinyzimmer/kvdi/version"
 	corev1 "k8s.io/api/core/v1"
 )
+
+// GetInitSystem returns the init system used by the docker image in this template.
+func (t *DesktopTemplate) GetInitSystem() DesktopInit {
+	if t.Spec.Config != nil && t.Spec.Config.Init != "" {
+		return t.Spec.Config.Init
+	}
+	return InitSupervisord
+}
+
+// SoundEnabled returns true if the template supports virtual sound devices.
+func (t *DesktopTemplate) SoundEnabled() bool {
+	if t.Spec.Config != nil {
+		return t.Spec.Config.EnableSound
+	}
+	return false
+}
+
+// RootEnabled returns true if desktops booted from the template should allow
+// users to use sudo.
+func (t *DesktopTemplate) RootEnabled() bool {
+	if t.Spec.Config != nil {
+		return t.Spec.Config.AllowRoot
+	}
+	return false
+}
 
 // GetNoVNCProxyImage returns the novnc-proxy image for the desktop instance.
 func (t *DesktopTemplate) GetNoVNCProxyImage() string {
@@ -71,10 +98,7 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 			Value: "/var/run/kvdi/vnc.sock",
 		},
 	}
-	if t.Spec.Config == nil {
-		return envVars
-	}
-	if t.Spec.Config.AllowRoot {
+	if t.RootEnabled() {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "ENABLE_ROOT",
 			Value: "true",
@@ -94,23 +118,28 @@ func (t *DesktopTemplate) GetDesktopPodSecurityContext() *corev1.PodSecurityCont
 // GetDesktopContainerSecurityContext returns the container security context for
 // pods booted from this template.
 func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityContext {
-	// var capabilities []corev1.Capability
-	// if t.Spec.Config != nil {
-	// 	capabilities = t.Spec.Config.Capabilities
-	// }
+	var capabilities []corev1.Capability
+	if t.Spec.Config != nil {
+		capabilities = t.Spec.Config.Capabilities
+	}
 	return &corev1.SecurityContext{
-		Privileged: &trueVal,
-		// Capabilities: &corev1.Capabilities{
-		// 	Drop: []corev1.Capability{"ALL"},
-		// 	Add:  capabilities,
-		// },
+		// Privileged: &trueVal,
+		Capabilities: &corev1.Capabilities{
+			Add: append(capabilities, []corev1.Capability{"SYS_ADMIN"}...),
+		},
 	}
 }
 
 // GetDesktopVolumes returns the volumes to mount to desktop pods.
-// TODO: Persistent for users can be added here.
 func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Desktop) []corev1.Volume {
+	// Common volumes all containers will need.
 	volumes := []corev1.Volume{
+		corev1.Volume{
+			Name: "tmp",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
 		{
 			Name: "vnc-sock",
 			VolumeSource: corev1.VolumeSource{
@@ -134,6 +163,8 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 			},
 		},
 	}
+
+	// A PVC claim for the user if specified, otherwise use an EmptyDir.
 	if cluster.GetUserdataVolumeSpec() != nil {
 		volumes = append(volumes, corev1.Volume{
 			Name: "home",
@@ -151,10 +182,35 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 			},
 		})
 	}
-	if t.Spec.Config == nil {
-		return volumes
+
+	// If systemd we need to add a few more temp filesystems and bind mount
+	// /sys/fs/cgroup.
+	if t.GetInitSystem() == InitSystemd {
+		volumes = append(volumes, []corev1.Volume{
+			{
+				Name: "cgroup",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/sys/fs/cgroup",
+					},
+				},
+			},
+			corev1.Volume{
+				Name: "run",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+			corev1.Volume{
+				Name: "run-lock",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+		}...)
 	}
-	if t.Spec.Config.EnableSound {
+
+	if t.SoundEnabled() {
 		volumes = append(volumes, corev1.Volume{
 			Name: "sound",
 			VolumeSource: corev1.VolumeSource{
@@ -164,15 +220,21 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 			},
 		})
 	}
+
 	return volumes
 }
 
 // GetDesktopVolumeMounts returns the volume mounts for the main desktop container.
 func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *Desktop) []corev1.VolumeMount {
+
 	mounts := []corev1.VolumeMount{
 		{
+			Name:      "tmp",
+			MountPath: "/tmp",
+		},
+		{
 			Name:      "vnc-sock",
-			MountPath: "/var/run/kvdi",
+			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetVNCSocketAddr(), "unix://"), "tcp://")),
 		},
 		{
 			Name:      "shm",
@@ -183,10 +245,23 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			MountPath: fmt.Sprintf("/home/%s", desktop.GetUser()),
 		},
 	}
-	if t.Spec.Config == nil {
-		return mounts
+	if t.GetInitSystem() == InitSystemd {
+		mounts = append(mounts, []corev1.VolumeMount{
+			{
+				Name:      "cgroup",
+				MountPath: "/sys/fs/cgroup",
+			},
+			{
+				Name:      "run",
+				MountPath: "/run",
+			},
+			{
+				Name:      "run-lock",
+				MountPath: "/run/lock",
+			},
+		}...)
 	}
-	if t.Spec.Config.EnableSound {
+	if t.SoundEnabled() {
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      "sound",
 			MountPath: "/dev/snd",
@@ -216,8 +291,23 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			},
 			{
 				Name:      "vnc-sock",
-				MountPath: "/var/run/kvdi",
+				MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetVNCSocketAddr(), "unix://"), "tcp://")),
 			},
 		},
 	}
+}
+
+// GetLifecycle returns the lifecycle actions for a desktop container booted from
+// this template.
+func (t *DesktopTemplate) GetLifecycle() *corev1.Lifecycle {
+	if t.GetInitSystem() == InitSystemd {
+		return &corev1.Lifecycle{
+			PreStop: &corev1.Handler{
+				Exec: &corev1.ExecAction{
+					Command: []string{"kill", "-s", "SIGRTMIN+3", "1"},
+				},
+			},
+		}
+	}
+	return &corev1.Lifecycle{}
 }

@@ -1,0 +1,10 @@
+ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:arch-base
+FROM ${BASE_IMAGE}
+
+RUN pacman -S --noconfirm plasma konsole \
+  && yes | pacman -Scc --noconfirm
+
+COPY systemd/plasma.service /etc/systemd/user/desktop.service
+COPY systemd/default/desktop /etc/default/desktop
+
+RUN systemctl --user --global enable desktop.service

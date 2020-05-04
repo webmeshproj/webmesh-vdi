@@ -1,16 +1,16 @@
 <template>
-  <div>
+  <!-- Button class when editable causes the div to wiggle -->
+  <div :class="buttonClass">
+    <!-- Delete rule button -->
     <q-btn v-if="editable" round dense flat icon="remove"  size="sm" color="red" @click="onDeleteRule">
       <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete Rule</q-tooltip>
     </q-btn>
-    <q-btn rounded flat  dense @click="onEditRule">
+    <!-- Edit rule button -->
+    <q-btn rounded flat dense @click="onEditRule">
+      <!-- Breadcrumbs give a nice effect for displaying rule interactions -->
       <q-breadcrumbs :class="`text-${color}-10`" :active-color="`${color}-10`">
         <template v-slot:separator>
-          <q-icon
-            size="1.5em"
-            name="arrow_forward"
-            color="black"
-          />
+          <q-icon size="1.5em" name="arrow_forward" color="black"/>
         </template>
         <q-breadcrumbs-el to="" :label="`ACTIONS: ${display('verbs')}`" icon="settings_remote" />
         <q-breadcrumbs-el :label="`RESOURCES: ${display('resources')}`" icon="widgets" />
@@ -19,7 +19,7 @@
       </q-breadcrumbs>
       <q-tooltip v-if="editable" anchor="center right" self="center middle">Click to edit this rule</q-tooltip>
     </q-btn>
-    <br />
+    <q-space />
   </div>
 </template>
 
@@ -50,6 +50,11 @@ export default {
       default: false
     }
   },
+  data () {
+    return {
+      editorOpen: false
+    }
+  },
   methods: {
     onDeleteRule () {
       this.$root.$emit(this.roleName, {
@@ -60,10 +65,8 @@ export default {
       })
     },
     onEditRule () {
-      if (!this.editable) {
-        console.log('not in editing mode')
-        return
-      }
+      if (!this.editable) { return }
+      this.editorOpen = true
       this.$q.dialog({
         component: RuleEditor,
         parent: this,
@@ -81,7 +84,7 @@ export default {
       }).onCancel(() => {
         console.log('Cancelled rule edit')
       }).onDismiss(() => {
-        // console.log('Called on OK or Cancel')
+        this.editorOpen = false
       })
     },
     display (item) {
@@ -101,6 +104,13 @@ export default {
     }
   },
   computed: {
+
+    buttonClass () {
+      if (this.editable && !this.editorOpen) {
+        return 'rule-editable'
+      }
+      return ''
+    },
 
     color () {
       if (this.editable) {
@@ -143,3 +153,31 @@ export default {
 
 }
 </script>
+
+<style scoped>
+.rule-editable {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+  animation-iteration-count: infinite;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0)
+  }
+
+  20%, 80% {
+    transform: translate3d(1px, 0, 0)
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-1px, 0, 0)
+  }
+
+  40%, 60% {
+    transform: translate3d(1px, 0, 0)
+  }
+}
+</style>

@@ -1,0 +1,28 @@
+FROM archlinux
+
+ENV container docker
+
+# Core deps
+RUN pacman --noconfirm -Syyu \
+  && pacman --noconfirm -S \
+      sudo net-tools xz dbus xorg-apps alsa-utils mesa xpra tigervnc libcanberra \
+  && yes | pacman -Scc --noconfirm \
+  && rm -f /usr/lib/systemd/system/systemd-firstboot.service \
+  && (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
+  systemd-tmpfiles-setup.service ] || rm -f $i; done) \
+  && rm -f /etc/systemd/system/*.wants/* \
+  && rm -f /lib/systemd/system/local-fs.target.wants/* \
+  && rm -f /lib/systemd/system/sockets.target.wants/*udev* \
+  && rm -f /lib/systemd/system/sockets.target.wants/*initctl* \
+  && rm -f /lib/systemd/system/basic.target.wants/*
+
+# Filesystem
+COPY rootfs /
+
+# At the very least we want an isolated systemd-user process and Xvnc enabled.
+# Extending images can put anything they want behind its display.
+RUN chmod +x /root/startup.sh && chmod +x /root/fakegetty.sh \
+  && systemctl --user --global enable display.service
+
+VOLUME [ "/sys/fs/cgroup" ]
+ENTRYPOINT ["/root/startup.sh"]

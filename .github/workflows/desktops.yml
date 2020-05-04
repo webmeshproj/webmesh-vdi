@@ -1,0 +1,37 @@
+name: Desktops
+
+on:
+  create:
+    tags:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: Build Images
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Login to Quay
+      run: echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+
+    - name: Get image version
+      shell: bash
+      run: |
+        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "master" ]] && echo latest || echo ${GITHUB_REF##*/})
+      id: version
+
+    - name: Build and push the ubuntu base image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-base push-ubuntu-base
+
+    - name: Build and push the archlinux base image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-arch-base push-arch-base
+
+    - name: Build and push the ubuntu lxde image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-lxde push-ubuntu-lxde
+
+    - name: Build and push the archlinux xfce4 image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-arch-xfce push-arch-xfce

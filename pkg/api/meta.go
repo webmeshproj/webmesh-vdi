@@ -4,7 +4,6 @@
 //
 //     Schemes: https
 //     BasePath: /
-//     Version: 0.0.1
 //     License: GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007
 //
 //     Consumes:

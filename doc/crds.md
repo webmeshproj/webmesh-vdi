@@ -17,6 +17,7 @@ Types
 -   [CreateUserRequest](#%23kvdi.io%2fv1alpha1.CreateUserRequest)
 -   [Desktop](#%23kvdi.io%2fv1alpha1.Desktop)
 -   [DesktopConfig](#%23kvdi.io%2fv1alpha1.DesktopConfig)
+-   [DesktopInit](#%23kvdi.io%2fv1alpha1.DesktopInit)
 -   [DesktopSpec](#%23kvdi.io%2fv1alpha1.DesktopSpec)
 -   [DesktopTemplate](#%23kvdi.io%2fv1alpha1.DesktopTemplate)
 -   [DesktopTemplateSpec](#%23kvdi.io%2fv1alpha1.DesktopTemplateSpec)
@@ -296,6 +297,9 @@ Desktop is the Schema for the desktops API
 (*Appears on:*
 [DesktopTemplateSpec](#kvdi.io/v1alpha1.DesktopTemplateSpec))
 
+DesktopConfig represents configurations for the template and desktops
+booted from it.
+
 <table>
 <thead>
 <tr class="header">
@@ -328,8 +332,18 @@ Desktop is the Schema for the desktops API
 <td><code>proxyImage</code> <em>string</em></td>
 <td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
+<tr class="odd">
+<td><code>init</code> <em><a href="#kvdi.io/v1alpha1.DesktopInit">DesktopInit</a></em></td>
+<td><p>The type of init system inside the image, currently only supervisord and systemd are supported. Defaults to <code>supervisord</code> (but depending on how much I like systemd in this use case, that could change).</p></td>
+</tr>
 </tbody>
 </table>
+
+DesktopInit (`string` alias)
+
+(*Appears on:* [DesktopConfig](#kvdi.io/v1alpha1.DesktopConfig))
+
+DesktopInit represents the init system that the desktop container uses.
 
 ### DesktopSpec
 
@@ -961,4 +975,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `1ff3563`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `5642493`.*

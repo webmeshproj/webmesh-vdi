@@ -8,20 +8,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
-type DecoderFunc func(r *http.Request) (interface{}, error)
-
-func decodeRequest(r *http.Request, t interface{}) (interface{}, error) {
-	rType := reflect.TypeOf(t)
-	req := reflect.New(rType).Interface()
-	if err := apiutil.UnmarshalRequest(r, req); err != nil {
-		return nil, err
-	}
-	if validator, ok := req.(interface{ Validate() error }); ok {
-		return req, validator.Validate()
-	}
-	return req, nil
-}
-
 var Decoders = map[string]map[string]interface{}{
 	"/api/authorize": {
 		"POST": v1alpha1.AuthorizeRequest{},
@@ -64,4 +50,16 @@ func DecodeRequest(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func decodeRequest(r *http.Request, t interface{}) (interface{}, error) {
+	rType := reflect.TypeOf(t)
+	req := reflect.New(rType).Interface()
+	if err := apiutil.UnmarshalRequest(r, req); err != nil {
+		return nil, err
+	}
+	if validator, ok := req.(interface{ Validate() error }); ok {
+		return req, validator.Validate()
+	}
+	return req, nil
 }

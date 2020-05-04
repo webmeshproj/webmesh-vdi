@@ -1,9 +1,9 @@
 apiVersion: kvdi.io/v1alpha1
 kind: DesktopTemplate
 metadata:
-  name: lxde-minimal
+  name: ubuntu-lxde
 spec:
-  image: quay.io/tinyzimmer/kvdi:lxde-0.0.1
+  image: quay.io/tinyzimmer/kvdi:ubuntu-lxde-0.0.1
   imagePullPolicy: IfNotPresent
   config:
     enableSound: false
@@ -12,18 +12,20 @@ spec:
     os: ubuntu
     desktop: lxde
     applications: minimal
+
 ---
 apiVersion: kvdi.io/v1alpha1
 kind: DesktopTemplate
 metadata:
-  name: kde-full
+  name: arch-xfce
 spec:
-  image: quay.io/tinyzimmer/kvdi:kubuntu-desktop-0.0.1
+  image: quay.io/tinyzimmer/kvdi:arch-xfce-0.0.1
   imagePullPolicy: IfNotPresent
   config:
     enableSound: true
-    allowRoot: false
+    allowRoot: true
+    init: systemd
   tags:
-    os: ubuntu
-    desktop: kde
-    applications: full
+    os: archlinux
+    desktop: xfce4
+    applications: minimal

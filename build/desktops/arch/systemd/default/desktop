@@ -1,0 +1,4 @@
+DISPLAY=:10
+HOME=/home/%USER%
+XDG_RUNTIME_DIR=/run/user/%UID%
+ALSADEV="hw:2,0"

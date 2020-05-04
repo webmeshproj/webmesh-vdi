@@ -1,0 +1,13 @@
+[Unit]
+Description=Plasma
+After=display.service
+Requires=display.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/sbin/startxfce4
+EnvironmentFile=/etc/default/desktop
+
+[Install]
+WantedBy=default.target

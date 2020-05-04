@@ -5,6 +5,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// DesktopInit represents the init system that the desktop container uses.
+// +kubebuilder:validation:Enum=supervisord;systemd
+type DesktopInit string
+
+const (
+	// InitSupervisord signals that the image uses supervisord.
+	InitSupervisord = "supervisord"
+	// InitSystemd signals that the image uses systemd.
+	InitSystemd = "systemd"
+)
+
 // DesktopTemplateSpec defines the desired state of DesktopTemplate
 type DesktopTemplateSpec struct {
 	// The docker repository and tag to use for desktops booted from this template.
@@ -22,6 +33,8 @@ type DesktopTemplateSpec struct {
 	Tags map[string]string `json:"tags,omitempty"`
 }
 
+// DesktopConfig represents configurations for the template and desktops booted
+// from it.
 type DesktopConfig struct {
 	// A service account to tie to desktops booted from this template.
 	// TODO: This should really be per-desktop and by user-grants.
@@ -44,6 +57,10 @@ type DesktopConfig struct {
 	// VNC server inside the Desktop. Defaults to the public novnc-proxy image
 	// matching the version of the currrently running manager.
 	ProxyImage string `json:"proxyImage,omitempty"`
+	// The type of init system inside the image, currently only supervisord and systemd
+	// are supported. Defaults to `supervisord` (but depending on how much I like systemd
+	// in this use case, that could change).
+	Init DesktopInit `json:"init,omitempty"`
 }
 
 // DesktopTemplateStatus defines the observed state of DesktopTemplate

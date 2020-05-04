@@ -1,0 +1,13 @@
+[Unit]
+Description=Plasma
+After=display.service
+Requires=display.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/bin/bash -c 'export $$(dbus-launch) ; exec /usr/sbin/startplasma-x11'
+EnvironmentFile=/etc/default/desktop
+
+[Install]
+WantedBy=default.target

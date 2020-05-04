@@ -1,7 +1,10 @@
 #!/bin/bash
 
+export HOME="/home/${USER}"
+
 echo "** Setting up user account: ${USER}"
-useradd --create-home --shell /bin/bash --user-group --groups adm ${USER}
+useradd --uid 9000 --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
+mkdir -p "${HOME}" && chown ${USER}: "${HOME}"
 
 if [[ "${ENABLE_ROOT}" == "true" ]] ; then
   echo "** Allowing ${USER} to use root!"
@@ -19,9 +22,7 @@ if [[ -d "/dev/snd" ]] ; then
   export ALSADEV="hw:2,0"
 fi
 
-export HOME="/home/${USER}"
-
-cp -r /root/{.gtkrc-2.0,.asoundrc} ${HOME}
+cp -r /root/{.gtkrc-2.0,.asoundrc} "${HOME}"
 
 find /etc/supervisor/conf.d/ -type f -exec \
     sed -i -e "s|%USER%|${USER}|g" -e "s|%HOME%|${HOME}|g" {} +
