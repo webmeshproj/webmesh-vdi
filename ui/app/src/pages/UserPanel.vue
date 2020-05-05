@@ -5,10 +5,6 @@
       <q-btn flat color="primary" icon-right="add" label="New User" @click="onNewUser" />
     </div>
 
-    <q-dialog v-model="newUserDialog">
-      <NewUserDialog />
-    </q-dialog>
-
     <div style="clear: right">
       <SkeletonTable v-if="loading"/>
 
@@ -80,30 +76,16 @@
         </q-table>
 
       </div>
-      <q-dialog v-model="editUserDialog">
-        <EditUserDialog :name="editUser"/>
-      </q-dialog>
-      <q-dialog v-model="confirmDelete" persistent>
-        <q-card>
-          <q-card-section class="row items-center">
-            <q-avatar icon="warning" color="primary" text-color="white" />
-            <span class="q-ml-sm">Are you sure you want to delete <strong>{{ userToDelete }}</strong>?</span>
-          </q-card-section>
 
-          <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="primary" v-close-popup />
-            <q-btn flat label="Delete" color="red" v-close-popup @click="onDeleteUser(userToDelete)" />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
   </div>
 </template>
 
 <script>
-import SkeletonTable from 'components/SkeletonTable'
-import NewUserDialog from 'components/NewUserDialog'
-import EditUserDialog from 'components/EditUserDialog'
-import RuleDisplay from 'components/RuleDisplay'
+import SkeletonTable from 'components/SkeletonTable.vue'
+import NewUserDialog from 'components/NewUserDialog.vue'
+import EditUserDialog from 'components/EditUserDialog.vue'
+import RuleDisplay from 'components/RuleDisplay.vue'
+import ConfirmDelete from 'components/ConfirmDelete.vue'
 
 const userColumns = [
   {},
@@ -136,18 +118,15 @@ const userColumns = [
 
 export default {
   name: 'UserPanel',
-  components: { SkeletonTable, NewUserDialog, EditUserDialog, RuleDisplay },
+  components: { SkeletonTable, RuleDisplay },
 
   data () {
     return {
       loading: true,
       data: [],
       columns: userColumns,
-      newUserDialog: false,
       editUserDialog: false,
-      editUser: '',
-      userToDelete: '',
-      confirmDelete: false
+      editUser: ''
     }
   },
 
@@ -161,12 +140,24 @@ export default {
 
   methods: {
     onNewUser () {
-      this.newUserDialog = true
+      this.$q.dialog({
+        component: NewUserDialog,
+        parent: this
+      }).onOk(() => {
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
 
-    onEditUser (user) {
-      this.editUser = user
-      this.editUserDialog = true
+    onEditUser (username) {
+      this.$q.dialog({
+        component: EditUserDialog,
+        parent: this,
+        name: username
+      }).onOk(() => {
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
 
     onConfirmDeleteUser (userName) {
@@ -180,11 +171,18 @@ export default {
         })
         return
       }
-      this.userToDelete = userName
-      this.confirmDelete = true
+      this.$q.dialog({
+        component: ConfirmDelete,
+        parent: this,
+        resourceName: userName
+      }).onOk(() => {
+        this.doDeleteUser(userName)
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
 
-    async onDeleteUser (userName) {
+    async doDeleteUser (userName) {
       try {
         await this.$axios.delete(`/api/users/${userName}`)
         this.$q.notify({
@@ -209,17 +207,17 @@ export default {
     }
   },
 
-  mounted () {
-    this.$nextTick().then(() => {
-      this.fetchData().then(() => {
-        this.loading = false
-      })
-    })
+  async mounted () {
+    await this.$nextTick()
+    this.loading = true
+    await new Promise((resolve, reject) => setTimeout(resolve, 500))
+    await this.fetchData()
+    this.loading = false
   }
 }
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .user-table
   /* height or max-height is important */
   max-height: 500px

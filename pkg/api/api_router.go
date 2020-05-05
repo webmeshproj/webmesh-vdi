@@ -49,8 +49,14 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/roles/{role}", d.UpdateRole).Methods("PUT")
 	protected.HandleFunc("/roles/{role}", d.DeleteRole).Methods("DELETE")
 
-	// Desktop session operations
+	// Template operations
 	protected.HandleFunc("/templates", d.GetDesktopTemplates).Methods("GET")
+	protected.HandleFunc("/templates", d.PostDesktopTemplates).Methods("POST")
+	protected.HandleFunc("/templates/{template}", d.GetDesktopTemplate).Methods("GET")
+	protected.HandleFunc("/templates/{template}", d.PutDesktopTemplate).Methods("PUT")
+	protected.HandleFunc("/templates/{template}", d.DeleteDesktopTemplate).Methods("DELETE")
+
+	// Desktop session operations
 	protected.HandleFunc("/sessions", d.StartDesktopSession).Methods("POST")
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET")
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE")

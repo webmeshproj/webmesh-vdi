@@ -27,6 +27,9 @@ var Decoders = map[string]map[string]interface{}{
 	"/api/roles": {
 		"POST": v1alpha1.CreateRoleRequest{},
 	},
+	"/api/templates": {
+		"POST": v1alpha1.DesktopTemplate{},
+	},
 	"/api/roles/{role}": {
 		"PUT": v1alpha1.UpdateRoleRequest{},
 	},

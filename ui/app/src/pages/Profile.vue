@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex">
+  <q-page padding>
     <div class="wrapper">
 
       <!-- Header -->

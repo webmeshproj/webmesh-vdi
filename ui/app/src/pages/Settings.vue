@@ -32,9 +32,9 @@
 </template>
 
 <script>
-import UserPanel from 'components/UserPanel'
-import RolePanel from 'components/RolePanel'
-import VDIConfigPanel from 'components/VDIConfigPanel'
+import UserPanel from 'pages/UserPanel'
+import RolePanel from 'pages/RolePanel'
+import VDIConfigPanel from 'pages/VDIConfigPanel'
 
 export default {
   name: 'Settings',

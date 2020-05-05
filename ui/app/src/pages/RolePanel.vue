@@ -82,25 +82,13 @@
       </q-table>
     </div>
 
-    <q-dialog v-model="confirmDelete" persistent>
-      <q-card>
-        <q-card-section class="row items-center">
-          <q-avatar icon="warning" color="primary" text-color="white" />
-          <span class="q-ml-sm">Are you sure you want to delete <strong>{{ roleToDelete }}</strong>?</span>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" v-close-popup />
-          <q-btn flat label="Delete" color="red" v-close-popup @click="doDeleteRole(roleToDelete)" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </div>
 </template>
 
 <script>
-import SkeletonTable from 'components/SkeletonTable'
-import RuleDisplay from 'components/RuleDisplay'
+import SkeletonTable from 'components/SkeletonTable.vue'
+import RuleDisplay from 'components/RuleDisplay.vue'
+import ConfirmDelete from 'components/ConfirmDelete.vue'
 
 const roleColumns = [
   {
@@ -134,8 +122,6 @@ export default {
       loading: true,
       data: [],
       columns: roleColumns,
-      roleToDelete: '',
-      confirmDelete: false,
       newRolePrompt: false,
       newRoleName: ''
     }
@@ -181,8 +167,15 @@ export default {
     onConfirmDeleteRole (roleIdx, roleName) {
       // TODO: There is no server-side check for this yet - and there should be
       if (this.doAdminCheck()) { return }
-      this.roleToDelete = roleName
-      this.confirmDelete = true
+      this.$q.dialog({
+        component: ConfirmDelete,
+        parent: this,
+        resourceName: roleName
+      }).onOk(() => {
+        this.doDeleteRole(roleName)
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
 
     doUpdateRole ({ roleIdx, ruleIdx, roleName, payload, deleteRule }) {
@@ -279,12 +272,12 @@ export default {
 
   },
 
-  mounted () {
-    this.$nextTick().then(() => {
-      this.fetchData().then(() => {
-        this.loading = false
-      })
-    })
+  async mounted () {
+    await this.$nextTick()
+    this.loading = true
+    await new Promise((resolve, reject) => setTimeout(resolve, 500))
+    await this.fetchData()
+    this.loading = false
   }
 }
 </script>

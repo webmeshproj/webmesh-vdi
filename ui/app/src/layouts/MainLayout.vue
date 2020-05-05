@@ -7,7 +7,7 @@
 
         <q-toolbar-title>
           <q-avatar>
-            <!-- <img src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg"> -->
+            <img src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg">
           </q-avatar>
           kVDI
         </q-toolbar-title>
@@ -49,7 +49,14 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <transition
+        enter-active-class="animated fadeIn"
+        leave-active-class="animated fadeOut"
+        appear
+        :duration="200"
+      >
+        <router-view />
+      </transition>
     </q-page-container>
 
   </q-layout>

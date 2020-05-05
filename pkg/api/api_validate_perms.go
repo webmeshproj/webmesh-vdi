@@ -86,7 +86,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbRead,
 				ResourceType: v1alpha1.ResourceUsers,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
 		"PUT": {
@@ -94,7 +94,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbUpdate,
 				ResourceType: v1alpha1.ResourceUsers,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 			ExtraCheckFunc:   denyUserElevatePerms,
 		},
@@ -103,7 +103,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbDelete,
 				ResourceType: v1alpha1.ResourceUsers,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			ResourceNameFunc: apiutil.GetUserFromRequest,
 		},
 	},
 	"/api/users/{user}/mfa": {
@@ -112,7 +112,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbRead,
 				ResourceType: v1alpha1.ResourceUsers,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
 		"PUT": {
@@ -120,7 +120,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbUpdate,
 				ResourceType: v1alpha1.ResourceUsers,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["user"] },
+			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
 	},
@@ -145,14 +145,14 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbRead,
 				ResourceType: v1alpha1.ResourceRoles,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
+			ResourceNameFunc: apiutil.GetRoleFromRequest,
 		},
 		"PUT": {
 			Action: v1alpha1.APIAction{
 				Verb:         v1alpha1.VerbUpdate,
 				ResourceType: v1alpha1.ResourceRoles,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
+			ResourceNameFunc: apiutil.GetRoleFromRequest,
 			ExtraCheckFunc:   denyUserElevatePerms,
 		},
 		"DELETE": {
@@ -160,7 +160,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbDelete,
 				ResourceType: v1alpha1.ResourceRoles,
 			},
-			ResourceNameFunc: func(r *http.Request) string { return mux.Vars(r)["role"] },
+			ResourceNameFunc: apiutil.GetRoleFromRequest,
 		},
 	},
 	"/api/templates": {
@@ -169,6 +169,35 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 				Verb:         v1alpha1.VerbRead,
 				ResourceType: v1alpha1.ResourceTemplates,
 			},
+		},
+		"POST": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbCreate,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+		},
+	},
+	"/api/templates/{template}": {
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbRead,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: apiutil.GetTemplateFromRequest,
+		},
+		"PUT": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUpdate,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: apiutil.GetTemplateFromRequest,
+		},
+		"DELETE": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbDelete,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: apiutil.GetTemplateFromRequest,
 		},
 	},
 	"/api/sessions": {

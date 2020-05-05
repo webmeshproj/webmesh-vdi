@@ -6,14 +6,33 @@ A Kubernetes-native Virtual Desktop Infrastructure.
 ![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/tinyzimmer/kvdi)
 
-**This is a very heavy work-in-progress and not even remotely close to ready for production usage**
+**This is a fast-changing work in progress and not recommended for production usage**
 
  - [API Reference](doc/crds.md)
+ - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
  - [Screenshots](#screenshots)
 
-I'll write up CONTRIBUTING docs soon, but I am getting to the point where it'd be cool to have some collaboration.
+I'll write up better CONTRIBUTING docs soon, but I am getting to the point where it'd be cool to have some collaboration.
 If you are wanting this to become a real thing (or are just interested in trying it out), and you run into any issues, feel free to open an issue here and I can try to help out.
+
+## Features
+
+  - Containerized user desktops running on Kubernetes with no virtualization required (`libvirt` options may come in the future).
+
+    - All traffic between the end user and the "desktop" is encrypted.
+
+
+  - Support for persistent user-data
+
+  - Customizable RBAC system for managing user access
+
+    - For example, desktops can be launched in specific namespaces, and users can be limited to specific templates and namespaces.
+
+
+  - MFA Support
+
+  - TODO: More authentication options such as `LDAP`, `oauth`, etc.
 
 ## Requirements
 
@@ -32,7 +51,7 @@ For building and running locally you will need:
 
 For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md).
 
-The [API Reference]((doc/crds.md)) can also be used for details on `kVDI` app-level configurations.
+The [API Reference](doc/crds.md) can also be used for details on `kVDI` app-level configurations.
 
 Assuming you have `cert-manager` installed and running in the cluster already:
 

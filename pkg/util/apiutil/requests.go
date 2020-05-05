@@ -58,6 +58,12 @@ func GetRoleFromRequest(r *http.Request) string {
 	return vars["role"]
 }
 
+// GetTemplateFromRequest will retrieve the template variable from a request path.
+func GetTemplateFromRequest(r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars["template"]
+}
+
 // GetGorillaPath will retrieve the URL path as it was configured in mux.
 func GetGorillaPath(r *http.Request) string {
 	vars := mux.Vars(r)

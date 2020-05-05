@@ -1,58 +1,27 @@
 <template>
   <q-dialog ref="dialog" @hide="onDialogHide">
     <q-card>
+      <!-- Verbs -->
       <q-card-section>
         <div class="text-h6">Actions</div>
         <q-checkbox v-for="opt in verbOptions" v-model="verbSelections[opt.name]" :key="opt.name" :label="toTitleCase(opt.name)" :color="opt.color" />
       </q-card-section>
+      <!-- Resources -->
       <q-card-section>
         <div class="text-h6">Resources</div>
         <q-checkbox v-for="opt in resourceOptions" v-model="resourceSelections[opt.name]" :key="opt.name" :label="toTitleCase(opt.name)" :color="opt.color" />
       </q-card-section>
+      <!-- Resource Patterns -->
       <q-card-section>
         <div class="text-h6">Patterns</div>
-        <q-select
-          label="Resource patterns (Use '.*' All)"
-          v-model="resourcePatternSelections"
-          use-input
-          use-chips
-          bottom-slots
-          multiple
-          clearable
-          dense
-          hide-dropdown-icon
-          input-debounce="0"
-          new-value-mode="add-unique"
-          :v-close-popup="false"
-          hint="Press Enter to add patterns"
-        />
+        <PatternSelector ref="patterns" />
       </q-card-section>
+      <!-- Namespaces -->
       <q-card-section>
         <div class="text-h6">Namespaces</div>
-        <q-select
-          v-model="namespaceSelections"
-          use-input
-          use-chips
-          multiple
-          clearable
-          dense
-          :loading="loading"
-          transition-show="scale"
-          transition-hide="scale"
-          :virtual-scroll-slice-size="5"
-          @filter="namespaceFilterFn"
-          label="Namespaces"
-          :options="namespaceOptions"
-        >
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey">
-                No results
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
+        <NamespaceSelector ref="namespaces" :showAllOption="true" :multiSelect="true" />
       </q-card-section>
+      <!-- Actions -->
       <q-card-section>
         <q-btn flat label="Cancel" v-close-popup @click="onCancelClick" />
         <q-btn flat label="Save Rule" v-close-popup @click="onOKClick" />
@@ -62,9 +31,13 @@
 </template>
 
 <script>
+import PatternSelector from 'components/PatternSelector.vue'
+import NamespaceSelector from 'components/NamespaceSelector.vue'
 
 export default {
   name: 'RuleEditor',
+
+  components: { PatternSelector, NamespaceSelector },
 
   props: {
     verbs: {
@@ -97,7 +70,6 @@ export default {
         { name: 'roles', color: 'blue' },
         { name: 'templates', color: 'teal' }
       ],
-      namespaceOptions: [],
       verbSelections: {
         create: false,
         read: false,
@@ -111,34 +83,11 @@ export default {
         roles: false,
         templates: false
       },
-      resourcePatternSelections: [],
-      namespaceSelections: []
+      resourcePatternSelections: []
     }
   },
 
   methods: {
-
-    async namespaceFilterFn (val, update) {
-      this.loading = true
-      try {
-        const res = await this.$axios.get('/api/namespaces')
-        if (res.data.length === 1) {
-          this.namespaces = res.data[0]
-        }
-        if (val === '') {
-          update(() => {
-            this.namespaceOptions = res.data.unshift('*')
-          })
-        }
-        update(() => {
-          const needle = val.toLowerCase()
-          this.namespaceOptions = res.data.filter(v => v.toLowerCase().indexOf(needle) > -1)
-        })
-      } catch (err) {
-        this.$root.$emit('notify-error', err)
-      }
-      this.loading = false
-    },
 
     toTitleCase (str) {
       return str.replace(/\w\S*/g, (txt) => {
@@ -150,8 +99,8 @@ export default {
       return {
         verbs: this.getVerbs(),
         resources: this.getResources(),
-        resourcePatterns: this.resourcePatternSelections,
-        namespaces: this.namespaceSelections
+        resourcePatterns: this.$refs.patterns.selection,
+        namespaces: this.$refs.namespaces.selection
       }
     },
 
@@ -216,7 +165,8 @@ export default {
     }
   },
 
-  mounted () {
+  async mounted () {
+    await this.$nextTick()
     if (this.verbs !== undefined) {
       this.verbs.forEach((verb) => {
         if (verb === '*') {
@@ -247,14 +197,14 @@ export default {
       })
     }
     if (this.resourcePatterns !== undefined) {
-      this.resourcePatternSelections = this.resourcePatterns
+      this.$refs.patterns.selection = this.resourcePatterns
     } else {
-      this.resourcePatternSelections = []
+      this.$refs.patterns.selection = []
     }
     if (this.namespaces !== undefined) {
-      this.namespaceSelections = this.namespaces
+      this.$refs.namespaces.selection = this.namespaces
     } else {
-      this.namespaceSelections = []
+      this.$refs.namespaces.selection = []
     }
   }
 }
