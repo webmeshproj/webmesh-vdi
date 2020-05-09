@@ -70,6 +70,9 @@ By default there are no desktop templates configured. If you'd like, you can app
 
 The `Makefiles` contain helpers for testing the full solution locally using `kind`.
 
+_If you choose to pull the images from the registry instead of building and loading first - you probably want to set `VERSION=latest` (or a previous version) in your environment also.
+The `Makefile` is usually pointed at the next version to be released and published images may not exist yet_.
+
 ```bash
 # Builds all the docker images (optional, they are also available in the quay repo)
 $> make build-all
