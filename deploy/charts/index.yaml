@@ -3,7 +3,7 @@ entries:
   kvdi:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2020-05-08T08:40:49.081395+03:00"
+    created: "2020-05-09T13:44:00.461955+03:00"
     description: A Kubernetes-Native Virtual Desktop Infrastructure
     digest: 1e2a60b320d8caa3d2ee716ec97b3ebbe9685b75582589100ab47c037b54636d
     name: kvdi
@@ -13,12 +13,12 @@ entries:
     version: 0.0.1
   - apiVersion: v2
     appVersion: latest
-    created: "2020-05-08T08:40:49.082236+03:00"
+    created: "2020-05-09T13:44:00.462928+03:00"
     description: A Kubernetes-Native Virtual Desktop Infrastructure
-    digest: 431d4466b038134b4d8492b450e42f1eda1663aaab976cfd8d6cdbeb2a2ae5bb
+    digest: f1f3d1a9d717cacf1c07c314ab392886551ec7a1fae6339b3d185d0b37461fcd
     name: kvdi
     type: application
     urls:
     - kvdi-latest.tgz
     version: latest
-generated: "2020-05-08T08:40:49.076488+03:00"
+generated: "2020-05-09T13:44:00.460099+03:00"
