@@ -16,6 +16,9 @@
         There are no active desktop sessions
       </div>
     </div>
+    <div v-if="connected" class="toolbar">
+      <q-btn push rounded unelevated stretch color="grey" size="xs" icon="more_horiz" @mouseover="showControls"/>
+    </div>
   </q-page>
 </template>
 
@@ -23,6 +26,7 @@
 import RFB from '@novnc/novnc/core/rfb'
 import { init_logging as initLogging } from '@novnc/novnc/core/util/logging.js'
 
+import VNCControls from 'components/dialogs/VNCControls.vue'
 import WSAudioPlayer from '../lib/wsaudio.js'
 
 initLogging('error')
@@ -45,7 +49,8 @@ export default {
       currentSession: null,
       connected: false,
       statusLines: [],
-      className: 'info'
+      className: 'info',
+      audioEnabled: false
     }
   },
 
@@ -61,6 +66,32 @@ export default {
   },
 
   methods: {
+
+    showControls () {
+      this.$q.dialog({
+        component: VNCControls,
+        parent: this,
+        audioState: this.audioEnabled,
+        onToggleAudio: () => { this.toggleAudio() }
+      }).onOk(() => {
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
+    },
+
+    toggleAudio () {
+      if (!this.audioEnabled) {
+        const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
+        console.log(audioUrl)
+        const playerCfg = { server: { url: audioUrl } }
+        this.player = new WSAudioPlayer(playerCfg)
+        this.player.start()
+      } else {
+        this.player.stop()
+        this.player = null
+      }
+      this.audioEnabled = !this.audioEnabled
+    },
 
     handleSessionsChange (mutation, state) {
       const activeSession = this.$desktopSessions.getters.activeSession
@@ -183,11 +214,6 @@ export default {
     async connectedToServer () {
       this.rfb.scaleViewport = true
       this.rfb.resizeSession = true
-      const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-      console.log(audioUrl)
-      const playerCfg = { server: { url: audioUrl } }
-      this.player = new WSAudioPlayer(playerCfg)
-      this.player.start()
     },
 
     disconnectedFromServer (e) {
@@ -237,9 +263,11 @@ export default {
 .to-header-height {
   height: calc(100vh - 100px);
 }
+
 .full-screen {
   height: 100vh;
 }
+
 .info {
   position: absolute;
   top: 25%;
@@ -247,5 +275,13 @@ export default {
   margin: 0 auto;
   text-align: center;
   font-size: 16px;
+}
+
+.toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  /* transform: translate(-50%, 50%);
+  margin: 0 auto; */
 }
 </style>

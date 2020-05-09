@@ -4,7 +4,6 @@
 
 <script>
 import SwaggerUIBundle from 'swagger-ui'
-// import 'swagger-ui/dist/swagger-ui.css'
 
 export default {
   name: 'APIExplorer',

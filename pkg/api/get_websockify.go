@@ -69,9 +69,7 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 //   type: string
 //   required: false
 // responses:
-//   "200":
-//     content:
-//       audio/mp3:
+//   "UPGRADE": {}
 //   "400":
 //     "$ref": "#/responses/error"
 //   "403":

@@ -88,7 +88,7 @@
 <script>
 import SkeletonTable from 'components/SkeletonTable.vue'
 import RuleDisplay from 'components/RuleDisplay.vue'
-import ConfirmDelete from 'components/ConfirmDelete.vue'
+import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
 
 const roleColumns = [
   {

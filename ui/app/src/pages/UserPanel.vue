@@ -82,10 +82,11 @@
 
 <script>
 import SkeletonTable from 'components/SkeletonTable.vue'
-import NewUserDialog from 'components/NewUserDialog.vue'
-import EditUserDialog from 'components/EditUserDialog.vue'
 import RuleDisplay from 'components/RuleDisplay.vue'
-import ConfirmDelete from 'components/ConfirmDelete.vue'
+
+import NewUserDialog from 'components/dialogs/NewUserDialog.vue'
+import EditUserDialog from 'components/dialogs/EditUserDialog.vue'
+import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
 
 const userColumns = [
   {},

@@ -44,8 +44,8 @@
 </template>
 
 <script>
-import PasswordInput from 'components/PasswordInput.vue'
-import MFAConfig from 'components/MFAConfig.vue'
+import PasswordInput from 'components/inputs/PasswordInput.vue'
+import MFAConfig from 'components/inputs/MFAConfig.vue'
 
 export default {
   name: 'Profile',

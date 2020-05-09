@@ -84,9 +84,9 @@
 
 <script>
 import SkeletonTable from 'components/SkeletonTable.vue'
-import NamespaceSelector from 'components/NamespaceSelector.vue'
-import TemplateEditor from 'components/TemplateEditor.vue'
-import ConfirmDelete from 'components/ConfirmDelete.vue'
+import NamespaceSelector from 'components/inputs/NamespaceSelector.vue'
+import TemplateEditor from 'components/dialogs/TemplateEditor.vue'
+import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
 
 const templateColums = [
   {

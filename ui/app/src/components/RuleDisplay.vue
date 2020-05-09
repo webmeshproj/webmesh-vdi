@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import RuleEditor from 'components/RuleEditor.vue'
+import RuleEditor from 'components/dialogs/RuleEditor.vue'
 
 export default {
   name: 'RuleDisplay',

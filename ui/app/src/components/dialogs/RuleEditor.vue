@@ -31,8 +31,8 @@
 </template>
 
 <script>
-import PatternSelector from 'components/PatternSelector.vue'
-import NamespaceSelector from 'components/NamespaceSelector.vue'
+import PatternSelector from 'components/inputs/PatternSelector.vue'
+import NamespaceSelector from 'components/inputs/NamespaceSelector.vue'
 
 export default {
   name: 'RuleEditor',

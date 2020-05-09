@@ -29,7 +29,7 @@
 </template>
 
 <script >
-import MFADialog from 'components/MFADialog.vue'
+import MFADialog from 'components/dialogs/MFADialog.vue'
 
 export default {
   name: 'Login',

@@ -104,18 +104,7 @@ export default {
           title: 'Control',
           icon: 'cast',
           link: 'control',
-          active: false,
-          children: [
-            {
-              title: 'Fullscreen',
-              icon: 'fullscreen',
-              link: 'control',
-              onClick: () => {
-                this.$root.$emit('set-active-title', 'Control')
-                this.$q.fullscreen.request()
-              }
-            }
-          ]
+          active: false
         },
         {
           title: 'Settings',
