@@ -1,10 +1,11 @@
 ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:arch-base
 FROM ${BASE_IMAGE}
 
-RUN pacman -S --noconfirm xfce4 xfce4-goodies \
+RUN pacman -Sy --noconfirm xfce4 xfce4-goodies pulseaudio pavucontrol chromium \
   && yes | pacman -Scc --noconfirm
 
 COPY systemd/xfce.service /etc/systemd/user/desktop.service
 COPY systemd/default/desktop /etc/default/desktop
 
-RUN systemctl --user --global enable desktop.service
+RUN systemctl --user --global enable desktop.service \
+  && systemctl --user --global enable pulseaudio

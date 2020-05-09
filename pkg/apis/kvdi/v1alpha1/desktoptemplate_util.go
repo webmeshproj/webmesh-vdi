@@ -129,6 +129,7 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 		capabilities = append(capabilities, t.Spec.Config.Capabilities...)
 	}
 	return &corev1.SecurityContext{
+		Privileged: &trueVal,
 		Capabilities: &corev1.Capabilities{
 			Add: capabilities,
 		},
@@ -141,6 +142,18 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 	volumes := []corev1.Volume{
 		corev1.Volume{
 			Name: "tmp",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: "run",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		corev1.Volume{
+			Name: "run-lock",
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -200,30 +213,7 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 					},
 				},
 			},
-			corev1.Volume{
-				Name: "run",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
-				},
-			},
-			corev1.Volume{
-				Name: "run-lock",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
-				},
-			},
 		}...)
-	}
-
-	if t.SoundEnabled() {
-		volumes = append(volumes, corev1.Volume{
-			Name: "sound",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/dev/snd",
-				},
-			},
-		})
 	}
 
 	return volumes
@@ -236,6 +226,14 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 		{
 			Name:      "tmp",
 			MountPath: "/tmp",
+		},
+		{
+			Name:      "run",
+			MountPath: "/run",
+		},
+		{
+			Name:      "run-lock",
+			MountPath: "/run/lock",
 		},
 		{
 			Name:      "vnc-sock",
@@ -256,21 +254,7 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 				Name:      "cgroup",
 				MountPath: "/sys/fs/cgroup",
 			},
-			{
-				Name:      "run",
-				MountPath: "/run",
-			},
-			{
-				Name:      "run-lock",
-				MountPath: "/run/lock",
-			},
 		}...)
-	}
-	if t.SoundEnabled() {
-		mounts = append(mounts, corev1.VolumeMount{
-			Name:      "sound",
-			MountPath: "/dev/snd",
-		})
 	}
 	return mounts
 }
@@ -289,6 +273,14 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "run",
+				MountPath: "/run",
+			},
+			{
+				Name:      "run-lock",
+				MountPath: "/run/lock",
+			},
 			{
 				Name:      "tls",
 				MountPath: ServerCertificateMountPath,

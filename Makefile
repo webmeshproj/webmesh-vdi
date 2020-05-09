@@ -45,6 +45,9 @@ chart-yaml:
 package-chart: ${HELM} chart-yaml
 	cd deploy/charts && helm package kvdi
 
+package-index:
+	cd deploy/charts && helm repo index .
+
 ###
 # Codegen
 ###
@@ -76,8 +79,7 @@ ${GOLANGCI_LINT}:
 	ln -s golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64/golangci-lint ${GOLANGCI_LINT}
 
 # Lint files
-lint: ${GOLANGCI_LINT} ${HELM} chart-yaml
-	${HELM} lint deploy/charts/kvdi
+lint: ${GOLANGCI_LINT} 
 	${GOLANGCI_LINT} run -v --timeout 300s
 
 # Tests

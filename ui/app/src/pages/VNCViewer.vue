@@ -23,10 +23,16 @@
 import RFB from '@novnc/novnc/core/rfb'
 import { init_logging as initLogging } from '@novnc/novnc/core/util/logging.js'
 
+import WSAudioPlayer from '../lib/wsaudio.js'
+
 initLogging('error')
 
 function getWebsockifyAddr (namespace, name, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/websockify/${namespace}/${name}?token=${token}`
+  return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/websockify?token=${token}`
+}
+
+function getWebsockifyAudioAddr (namespace, name, token) {
+  return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/wsaudio?token=${token}`
 }
 
 export default {
@@ -35,6 +41,7 @@ export default {
   data () {
     return {
       rfb: null,
+      player: null,
       currentSession: null,
       connected: false,
       statusLines: [],
@@ -50,6 +57,7 @@ export default {
   beforeDestroy () {
     this.unsubscribeSessions()
     this.$root.$off('set-fullscreen', this.setFullscreen)
+    this.disconnect()
   },
 
   methods: {
@@ -172,10 +180,14 @@ export default {
       this.rfb = rfb
     },
 
-    connectedToServer () {
+    async connectedToServer () {
       this.rfb.scaleViewport = true
       this.rfb.resizeSession = true
-      // this.rfb._requestRemoteResize()
+      const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
+      console.log(audioUrl)
+      const playerCfg = { server: { url: audioUrl } }
+      this.player = new WSAudioPlayer(playerCfg)
+      this.player.start()
     },
 
     disconnectedFromServer (e) {
@@ -200,6 +212,10 @@ export default {
       if (this.rfb !== null) {
         this.rfb.disconnect()
         this.rfb = null
+      }
+      if (this.player !== null) {
+        this.player.stop()
+        this.player = null
       }
     }
   },

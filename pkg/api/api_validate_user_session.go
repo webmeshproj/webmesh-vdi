@@ -18,7 +18,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 		// get the auth token
 		authToken := r.Header.Get(TokenHeader)
 		if authToken == "" {
-			// the websocket route cannot parse request headers, so the token is passed
+			// the websocket route does not receive request headers from noVNC, so the token is passed
 			// as a query argument. This effectively gives that option to all routes.
 			if keys, ok := r.URL.Query()["token"]; ok {
 				authToken = keys[0]

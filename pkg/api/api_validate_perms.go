@@ -244,14 +244,32 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc: allowSessionOwner,
 		},
 	},
-	"/api/websockify/{namespace}/{name}": {
+	"/api/desktops/{namespace}/{name}/websockify": {
 		"GET": {
 			Action: v1alpha1.APIAction{
 				Verb:         v1alpha1.VerbUse,
 				ResourceType: v1alpha1.ResourceTemplates,
 			},
 			ResourceNameFunc: func(r *http.Request) string {
-				return fmt.Sprintf("%s/%s", mux.Vars(r)["namespace"], mux.Vars(r)["name"])
+				return mux.Vars(r)["name"]
+			},
+			ResourceNamespaceFunc: func(r *http.Request) string {
+				return mux.Vars(r)["namespace"]
+			},
+			OverrideFunc: allowSessionOwner,
+		},
+	},
+	"/api/desktops/{namespace}/{name}/wsaudio": {
+		"GET": {
+			Action: v1alpha1.APIAction{
+				Verb:         v1alpha1.VerbUse,
+				ResourceType: v1alpha1.ResourceTemplates,
+			},
+			ResourceNameFunc: func(r *http.Request) string {
+				return mux.Vars(r)["name"]
+			},
+			ResourceNamespaceFunc: func(r *http.Request) string {
+				return mux.Vars(r)["namespace"]
 			},
 			OverrideFunc: allowSessionOwner,
 		},

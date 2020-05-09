@@ -1,11 +1,16 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // TokenHeader is the HTTP header containing the user's session token
@@ -45,6 +50,15 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser,
 		User:       user,
 		Authorized: authorized,
 	}, w)
+}
+
+func (d *desktopAPI) getEndpointURL(r *http.Request) (*url.URL, error) {
+	nn := apiutil.GetNamespacedNameFromRequest(r)
+	found := &corev1.Service{}
+	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+		return nil, err
+	}
+	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1alpha1.WebPort))
 }
 
 // Session response

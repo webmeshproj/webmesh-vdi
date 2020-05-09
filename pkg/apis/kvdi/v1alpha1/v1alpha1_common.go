@@ -28,6 +28,7 @@ const (
 	WebPort = 8443
 	// The port for the app service
 	PublicWebPort = 443
+	DesktopRunDir = "/var/run/kvdi"
 )
 
 // Defaults

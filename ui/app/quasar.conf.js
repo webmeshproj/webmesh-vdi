@@ -106,7 +106,7 @@ module.exports = function (/* ctx */) {
       port: 8080,
       open: true, // opens browser window automatically
       proxy: {
-        '/api/websockify': {
+        '/api/desktops': {
           target: 'wss://localhost:8443',
           changeOrigin: true,
           ws: true,

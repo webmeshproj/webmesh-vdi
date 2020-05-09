@@ -17,8 +17,6 @@ nodes:
   extraMounts:
   - hostPath: /dev/shm
     containerPath: /dev/shm
-  - hostPath: /dev/snd
-    containerPath: /dev/snd
 endef
 
 define METALLB_CONFIG

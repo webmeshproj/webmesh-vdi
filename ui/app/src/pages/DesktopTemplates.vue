@@ -19,6 +19,18 @@
         v-if="!loading"
         ref="table"
       >
+
+        <!-- No results -->
+        <template v-slot:no-data>
+          <div class="full-width row flex-left text-secondary q-gutter-md">
+            <q-icon size="2em" name="sentiment_dissatisfied" />
+            <span style="display:inline-block; margin-top: 19px">
+              No DesktopTemplates found
+            </span>
+            <q-btn flat size="sm" :loading="refreshLoading" color="secondary" @click="refreshData" label="Refresh" />
+          </div>
+        </template>
+
         <template v-slot:body="props">
           <q-tr :props="props">
 
@@ -126,6 +138,7 @@ export default {
   data () {
     return {
       loading: false,
+      refreshLoading: false,
       columns: templateColums,
       data: []
     }
@@ -227,6 +240,14 @@ export default {
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
+    },
+
+    async refreshData () {
+      this.data = []
+      this.refreshLoading = true
+      await new Promise((resolve, reject) => setTimeout(resolve, 500))
+      this.fetchData()
+      this.refreshLoading = false
     },
 
     async fetchData () {

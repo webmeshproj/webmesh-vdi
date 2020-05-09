@@ -37,7 +37,9 @@ RUN go build \
 ###############
 # Final Image #
 ###############
-FROM scratch
+FROM alpine
+
+RUN apk add --update pulseaudio-utils vorbis-tools lame sudo && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/novnc-proxy /novnc-proxy
 

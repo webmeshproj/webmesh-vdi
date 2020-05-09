@@ -62,7 +62,8 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE")
 
 	// Websockify proxy
-	protected.HandleFunc("/websockify/{namespace}/{name}", d.mtlsWebsockify)
+	protected.HandleFunc("/desktops/{namespace}/{name}/websockify", d.GetWebsockify)
+	protected.HandleFunc("/desktops/{namespace}/{name}/wsaudio", d.GetWebsockifyAudio)
 
 	// Validate the user session on all requests
 	protected.Use(d.ValidateUserSession)

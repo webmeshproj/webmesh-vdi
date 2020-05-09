@@ -24,7 +24,7 @@
     </thead>
 
     <tbody>
-      <tr v-for="n in 5" :key="n">
+      <tr v-for="n in 3" :key="n">
         <td class="text-left">
           <q-skeleton :class="skeletonClass" :animation="skeletonAnimation" type="text" width="85px" />
         </td>
