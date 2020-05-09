@@ -65,7 +65,8 @@ Then visit https://localhost:8443 to use `kVDI`.
 | vdi.spec.app.resources | object | `{}` | Resource limits for the app pods. |
 | vdi.spec.appNamespace | string | `"default"` | The namespace where the `kvdi` app will run. This is different than the chart namespace. The chart lays down the manager and a VDI configuration, and the manager takes care of the rest. |
 | vdi.spec.auth | object | The values described below are the same as the `VDICluster` CRD defaults. | Authentication configurations for `kVDI`. |
-| vdi.spec.auth.allowAnonymous | bool | `false` | The secret to store the generated admin password in. |
+| vdi.spec.auth.adminSecret | string | `"kvdi-admin-secret"` | The secret to store the generated admin password in. |
+| vdi.spec.auth.allowAnonymous | bool | `false` | Allow anonymous users to launch and use desktops. |
 | vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is currently the only supported auth provider, however more may come in the future. |
 | vdi.spec.certManagerNamespace | string | `"cert-manager"` | The namespace where `cert-manager` is running. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |

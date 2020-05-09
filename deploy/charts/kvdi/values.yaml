@@ -75,7 +75,7 @@ vdi:
     auth:
       # vdi.spec.auth.allowAnonymous -- Allow anonymous users to launch and use desktops.
       allowAnonymous: false
-      # vdi.spec.auth.allowAnonymous -- The secret to store the generated admin password in.
+      # vdi.spec.auth.adminSecret -- The secret to store the generated admin password in.
       adminSecret: kvdi-admin-secret
       # vdi.spec.auth.localAuth -- Use local-auth for the authentication backend.
       # This is currently the only supported auth provider, however more may come in the future.
