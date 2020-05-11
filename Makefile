@@ -79,7 +79,7 @@ ${GOLANGCI_LINT}:
 	ln -s golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64/golangci-lint ${GOLANGCI_LINT}
 
 # Lint files
-lint: ${GOLANGCI_LINT} 
+lint: ${GOLANGCI_LINT}
 	${GOLANGCI_LINT} run -v --timeout 300s
 
 # Tests
@@ -145,6 +145,29 @@ test-certmanager: ${KUBECTL} ${HELM}
 		--set extraArgs[0]="--enable-certificate-owner-ref=true" \
 		--wait
 
+test-vault: ${KUBECTL} ${HELM}
+	${HELM} repo add hashicorp https://helm.releases.hashicorp.com
+	${HELM} --kubeconfig ${KIND_KUBECONFIG} upgrade --install vault hashicorp/vault \
+		--set server.dev.enabled=true \
+		--wait
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} wait --for=condition=ready pod vault-0 --timeout=300s
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault auth enable kubernetes
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} \
+		config view --raw --minify --flatten -o jsonpath='{.clusters[].cluster.certificate-authority-data}' | \
+		base64 --decode > ca.crt
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault write auth/kubernetes/config \
+		token_reviewer_jwt=`${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
+		kubernetes_host=https://kubernetes.default:443 \
+		kubernetes_ca_cert="`cat ca.crt`"
+	rm ca.crt
+	echo "$$VAULT_POLICY" | ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault policy write kvdi -
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault secrets enable --path=kvdi/ kv
+	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault write auth/kubernetes/role/kvdi \
+	    bound_service_account_names=kvdi-app,kvdi-manager \
+	    bound_service_account_namespaces=default \
+	    policies=kvdi \
+	    ttl=1h
+
 example-vdi-templates: ${KUBECTL}
 	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply \
 		-f deploy/examples/example-desktop-templates.yaml
@@ -181,6 +204,7 @@ get-admin-password: ${KUBECTL}
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
 .PHONY: deploy
+HELM_ARGS ?=
 deploy: ${HELM} package-chart
 	${HELM} upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME}-${VERSION}.tgz ${HELM_ARGS} --wait
 

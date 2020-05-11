@@ -97,3 +97,6 @@ func (k *Provider) WriteSecret(name string, content []byte) error {
 	}
 	return nil
 }
+
+// Close just returns nil because no cleanup is necessary.
+func (k *Provider) Close() error { return nil }

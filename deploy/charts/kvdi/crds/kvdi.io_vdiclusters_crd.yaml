@@ -105,11 +105,40 @@ spec:
               properties:
                 k8sSecret:
                   description: Use a kubernetes secret for storing sensitive values.
+                    If no other coniguration is provided then this is the fallback.
                   properties:
                     secretName:
                       description: The name of the secret backing the values. Default
                         is `<cluster-name>-app-secrets`.
                       type: string
+                  type: object
+                vault:
+                  description: Use vault for storing sensitive values. Requires kubernetes
+                    service account authentication.
+                  properties:
+                    address:
+                      description: The full URL to the vault server. Same as the `VAULT_ADDR`
+                        variable.
+                      type: string
+                    authRole:
+                      description: The auth role to assume when authenticating against
+                        vault. Defaults to `kvdi`.
+                      type: string
+                    caCertBase64:
+                      description: The base64 encoded CA certificate for verifying
+                        the vault server certificate.
+                      type: string
+                    insecure:
+                      description: Set to true to disable TLS verification.
+                      type: boolean
+                    secretsPath:
+                      description: The base path to store secrets in vault.
+                      type: string
+                    tlsServerName:
+                      description: Optionally set the SNI when connecting using HTTPS.
+                      type: string
+                  required:
+                  - address
                   type: object
               type: object
             userdataSpec:

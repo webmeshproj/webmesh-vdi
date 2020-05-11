@@ -32,6 +32,8 @@ If you are wanting this to become a real thing (or are just interested in trying
 
   - MFA Support
 
+  - Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
+
   - TODO: More authentication options such as `LDAP`, `oauth`, etc.
 
 ## Requirements

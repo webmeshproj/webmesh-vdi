@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/lock"
+
+	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
+	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/vault"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -46,11 +49,17 @@ type cacheItem struct {
 	expiresAt time.Time
 }
 
-// GetSecretEngine returns a new secret engine for the given cluster. This is
-// where variable providers will be checked.
+// GetSecretEngine returns a new secret engine for the given cluster.
 func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
+	var backend v1alpha1.SecretsProvider
+	switch cluster.GetSecretsBackend() {
+	case v1alpha1.SecretsBackendVault:
+		backend = vault.New()
+	default:
+		backend = k8secret.New()
+	}
 	engine := &SecretEngine{
-		backend: k8secret.New(),
+		backend: backend,
 		cluster: cluster,
 		cache:   make(map[string]*cacheItem),
 	}
@@ -161,3 +170,6 @@ func (s *SecretEngine) Release() {
 	}
 	s.lock = nil
 }
+
+// Close calls close on the backend
+func (s *SecretEngine) Close() error { return s.backend.Close() }

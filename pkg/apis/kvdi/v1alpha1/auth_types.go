@@ -11,8 +11,8 @@ import (
 )
 
 // AuthProvider defines an interface for handling login attempts. Currently
-// only Local auth (db-based) is supported, however other integrations such as
-// LDAP or OAuth can implement this interface.
+// only local auth (using the secrets backend) is supported, however other integrations
+// such as LDAP or OAuth can implement this interface.
 type AuthProvider interface {
 	// Reconcile should ensure any k8s resources required for this authentication
 	// provider.
@@ -21,12 +21,12 @@ type AuthProvider interface {
 	// to setup any resources it needs to serve requests.
 	Setup(client.Client, *VDICluster) error
 
-	// HTTP methods
+	// API helper methods
 	// Not all providers will be able to implement all of these methods. When
 	// they can't they should serve a concise error message as to why.
 
 	// Authenticate is called for API authentication requests. It should generate
-	// a new JWTClaims object and serve a SessionResponse back to the user.
+	// a new JWTClaims object and serve an AuthResult back to the API.
 	Authenticate(*LoginRequest) (*AuthResult, error)
 	// GetUsers should return a list of VDIUsers.
 	GetUsers() ([]*VDIUser, error)

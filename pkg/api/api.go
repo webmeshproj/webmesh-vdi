@@ -77,15 +77,15 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 		}
 	}
 
-	// get the auth provider
-	authProvider := auth.GetAuthProvider(found)
-	if err := authProvider.Setup(client, found); err != nil {
-		return nil, err
-	}
-
 	// setup the secrets engine
 	secretsEngine := secrets.GetSecretEngine(found)
 	if err := secretsEngine.Setup(client, found); err != nil {
+		return nil, err
+	}
+
+	// setup the auth provider
+	authProvider := auth.GetAuthProvider(found)
+	if err := authProvider.Setup(client, found); err != nil {
 		return nil, err
 	}
 

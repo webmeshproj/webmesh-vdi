@@ -1,0 +1,55 @@
+# This file would be passed to the helm install arguments to configure
+# a vault backend.
+#
+# To use vault you will first need to ensure the following:
+#   - Kubernetes auth enabled with a role bound to the app and manager service
+#     accounts. With the other default configurations this would be `kvdi-app`
+#     and `kvdi-manager` respectively.
+#   - A vault KV mount with allowed access from the above kubernetes auth role.
+#
+# To accomplish the above you will need to do some form of the following:
+#
+# $> vault auth enable kubernetes
+#
+# $> vault write auth/kubernetes/config \
+#      token_reviewer_jwt=... \
+#      kubernetes_host=... \
+#      kubernetes_ca_cert=...
+#
+# $> cat << EOF | vault policy write kvdi -
+# path "kvdi/*" {
+#   capabilities = ["create", "read", "update", "delete", "list"]
+# }
+# EOF
+#
+# $> vault write auth/kubernetes/role/kvdi \
+#      bound_service_account_names=kvdi-app,kvdi-manager \
+#      bound_service_account_namespaces=default \
+#      policies=kvdi \
+#      ttl=1h    # You can set this to whatever you want, the services will renew
+#                # tokens as needed.
+#
+# $> vault secrets enable --path=kvdi/ kv
+#
+# ---
+# Extra values to pass to the chart
+vdi:
+  spec:
+    # Append the secrets configuartion.
+    secrets:
+      vault:
+        address: http://vault:8200 # This is the address of vault when using
+                                   # `make test-vault`.
+        # Should not be used in a production scenario.
+        insecure: true
+        # # The base64 encoded CA certificate for verifying the vault server
+        # # certificate.
+        # caCertBase64: Cg==
+        # # The SNI value to use when doing TLS verification.
+        # tlsServerName: kvdi.local
+        # # The authentication role to use when requesting a token. Defaults to
+        # # `kvdi`. Only kubernetes auth is supported.
+        # authRole: kvdi
+        # # The path to store secrets in vault. Defaults to `kvdi/`. Trailing
+        # # slashes are ignored.
+        # secretsPath: kvdi

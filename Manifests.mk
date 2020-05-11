@@ -34,7 +34,12 @@ data:
       - 172.17.255.1-172.17.255.250
 endef
 
+define VAULT_POLICY
+path "kvdi/*" {
+    capabilities = ["create", "read", "update", "delete", "list"]
+}
+endef
 
 export KIND_CLUSTER_MANIFEST
 export METALLB_CONFIG
-##
+export VAULT_POLICY

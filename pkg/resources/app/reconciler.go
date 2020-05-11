@@ -39,6 +39,11 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 	if err := secretsEngine.Setup(f.client, instance); err != nil {
 		return err
 	}
+	defer func() {
+		if err := secretsEngine.Close(); err != nil {
+			reqLogger.Error(err, "Error cleaning up secrets engine")
+		}
+	}()
 
 	if _, err := secretsEngine.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {

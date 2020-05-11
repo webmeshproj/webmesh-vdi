@@ -13,4 +13,9 @@ type SecretsProvider interface {
 	// WriteSecret should store a secret, replacing any existing one with the
 	// same name.
 	WriteSecret(name string, contents []byte) error
+	// Close should handle any cleanup logic for the backend. This method is invoked
+	// after temporary usages of the secret engine. This shouldn't be destructive,
+	// but it should ensure any opened sockets are closed cleanly, spawned
+	// goroutines are finished, and no other dangling references left behind.
+	Close() error
 }

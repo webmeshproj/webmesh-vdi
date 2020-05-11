@@ -1,37 +1,42 @@
 package local
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	"github.com/go-logr/logr"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const passwdKey = "passwd"
 
 func (l *LocalAuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
-	adminRole := cluster.GetAdminRole()
-	hash, err := common.HashPassword(adminPass)
-	if err != nil {
+	secretsEngine := secrets.GetSecretEngine(cluster)
+	if err := secretsEngine.Setup(c, cluster); err != nil {
 		return err
 	}
+	defer func() {
+		if err := secretsEngine.Close(); err != nil {
+			reqLogger.Error(err, "Error cleaning up secrets engine")
+		}
+	}()
 
-	nn := types.NamespacedName{Name: cluster.GetAppSecretsName(), Namespace: cluster.GetCoreNamespace()}
-	secret := &corev1.Secret{}
-	if err := c.Get(context.TODO(), nn, secret); err != nil {
-		return err
-	}
-	if _, ok := secret.Data[passwdKey]; !ok {
-		secret.Data[passwdKey] = []byte(fmt.Sprintf("admin:%s:%s\n", adminRole.GetName(), hash))
-		if err := c.Update(context.TODO(), secret); err != nil {
+	if _, err := secretsEngine.ReadSecret(passwdKey, false); err != nil {
+		if !errors.IsSecretNotFoundError(err) {
 			return err
 		}
-	} // else check if password is correct or no?
+		adminRole := cluster.GetAdminRole()
+		hash, err := common.HashPassword(adminPass)
+		if err != nil {
+			return err
+		}
+		if err := secretsEngine.WriteSecret(passwdKey, []byte(fmt.Sprintf("admin:%s:%s\n", adminRole.GetName(), hash))); err != nil {
+			return err
+		}
+	}
 	return nil
 }

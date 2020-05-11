@@ -34,6 +34,9 @@ $> kubectl port-forward svc/kvdi-app 8443:443
 
 Then visit https://localhost:8443 to use `kVDI`.
 
+If you'd like to see an example of the `helm` values for using vault as the secrets backend,
+you can find documentation in the [examples](../../examples/example-vault-helm-values.yaml) folder.
+
 {{ template "chart.requirementsSection" . }}
 
 {{ template "chart.valuesSection" . }}

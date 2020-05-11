@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `0.0.1`
+Current chart version is `0.0.3`
 
 
 
@@ -34,6 +34,9 @@ $> kubectl port-forward svc/kvdi-app 8443:443
 ```
 
 Then visit https://localhost:8443 to use `kVDI`.
+
+If you'd like to see an example of the `helm` values for using vault as the secrets backend,
+you can find documentation in the [examples](../../examples/example-vault-helm-values.yaml) folder.
 
 
 
@@ -71,7 +74,7 @@ Then visit https://localhost:8443 to use `kVDI`.
 | vdi.spec.certManagerNamespace | string | `"cert-manager"` | The namespace where `cert-manager` is running. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
 | vdi.spec.secrets | object | The values described below are the same as the `VDICluster` CRD defaults. | Secret storage configurations for `kVDI`. |
-| vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. |
+| vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. This is the default if no other configuration is provided. For now, see the API reference for what to use in place of these values if using a different backend. |
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
 | vdi.spec.userdataSpec | object | `{}` | If configured, enables userdata persistence with the given PVC spec. Every user will receive their own PV with the provided configuration. |
 | vdi.templates | list | `[]` | Not implemented in the chart yet. This will be a place to preload desktop-templates into the cluster. |

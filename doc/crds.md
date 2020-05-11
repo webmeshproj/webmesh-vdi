@@ -43,6 +43,7 @@ Types
 -   [VDIRole](#%23kvdi.io%2fv1alpha1.VDIRole)
 -   [VDIUser](#%23kvdi.io%2fv1alpha1.VDIUser)
 -   [VDIUserRole](#%23kvdi.io%2fv1alpha1.VDIUserRole)
+-   [VaultConfig](#%23kvdi.io%2fv1alpha1.VaultConfig)
 -   [Verb](#%23kvdi.io%2fv1alpha1.Verb)
 
 kvdi.io/v1alpha1
@@ -123,8 +124,8 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 ### AuthProvider
 
 AuthProvider defines an interface for handling login attempts. Currently
-only Local auth (db-based) is supported, however other integrations such
-as LDAP or OAuth can implement this interface.
+only local auth (using the secrets backend) is supported, however other
+integrations such as LDAP or OAuth can implement this interface.
 
 ### AuthResult
 
@@ -616,9 +617,7 @@ addition of a namespace selector.
 
 (*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
 
-SecretsConfig will be for secrets backend configurations. Currently only
-K8s secret storage is supported, but the idea is to support multiple
-key/value stores such as vault.
+SecretsConfig configurese the backend for secrets management.
 
 <table>
 <thead>
@@ -630,7 +629,11 @@ key/value stores such as vault.
 <tbody>
 <tr class="odd">
 <td><code>k8sSecret</code> <em><a href="#kvdi.io/v1alpha1.K8SSecretConfig">K8SSecretConfig</a></em></td>
-<td><p>Use a kubernetes secret for storing sensitive values.</p></td>
+<td><p>Use a kubernetes secret for storing sensitive values. If no other coniguration is provided then this is the fallback.</p></td>
+</tr>
+<tr class="even">
+<td><code>vault</code> <em><a href="#kvdi.io/v1alpha1.VaultConfig">VaultConfig</a></em></td>
+<td><p>Use vault for storing sensitive values. Requires kubernetes service account authentication.</p></td>
 </tr>
 </tbody>
 </table>
@@ -967,6 +970,48 @@ inflate the token.
 </tbody>
 </table>
 
+### VaultConfig
+
+(*Appears on:* [SecretsConfig](#kvdi.io/v1alpha1.SecretsConfig))
+
+VaultConfig represents the configurations for connecting to a vault
+server.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>address</code> <em>string</em></td>
+<td><p>The full URL to the vault server. Same as the <code>VAULT_ADDR</code> variable.</p></td>
+</tr>
+<tr class="even">
+<td><code>caCertBase64</code> <em>string</em></td>
+<td><p>The base64 encoded CA certificate for verifying the vault server certificate.</p></td>
+</tr>
+<tr class="odd">
+<td><code>insecure</code> <em>bool</em></td>
+<td><p>Set to true to disable TLS verification.</p></td>
+</tr>
+<tr class="even">
+<td><code>tlsServerName</code> <em>string</em></td>
+<td><p>Optionally set the SNI when connecting using HTTPS.</p></td>
+</tr>
+<tr class="odd">
+<td><code>authRole</code> <em>string</em></td>
+<td><p>The auth role to assume when authenticating against vault. Defaults to <code>kvdi</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>secretsPath</code> <em>string</em></td>
+<td><p>The base path to store secrets in vault.</p></td>
+</tr>
+</tbody>
+</table>
+
 Verb (`string` alias)
 
 (*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
@@ -975,4 +1020,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `8b97f81`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `5e04983`.*

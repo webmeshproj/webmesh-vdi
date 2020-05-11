@@ -53,12 +53,14 @@ type AuthConfig struct {
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 }
 
-// SecretsConfig will be for secrets backend configurations. Currently only K8s
-// secret storage is supported, but the idea is to support multiple key/value stores
-// such as vault.
+// SecretsConfig configurese the backend for secrets management.
 type SecretsConfig struct {
-	// Use a kubernetes secret for storing sensitive values.
+	// Use a kubernetes secret for storing sensitive values. If no other coniguration is provided
+	// then this is the fallback.
 	K8SSecret *K8SSecretConfig `json:"k8sSecret,omitempty"`
+	// Use vault for storing sensitive values. Requires kubernetes service account
+	// authentication.
+	Vault *VaultConfig `json:"vault,omitempty"`
 }
 
 // LocalAuthConfig represents a local, 'passwd'-like authentication driver.
@@ -68,6 +70,22 @@ type LocalAuthConfig struct{}
 type K8SSecretConfig struct {
 	// The name of the secret backing the values. Default is `<cluster-name>-app-secrets`.
 	SecretName string `json:"secretName,omitempty"`
+}
+
+// VaultConfig represents the configurations for connecting to a vault server.
+type VaultConfig struct {
+	// The full URL to the vault server. Same as the `VAULT_ADDR` variable.
+	Address string `json:"address"`
+	// The base64 encoded CA certificate for verifying the vault server certificate.
+	CACertBase64 string `json:"caCertBase64,omitempty"`
+	// Set to true to disable TLS verification.
+	Insecure bool `json:"insecure,omitempty"`
+	// Optionally set the SNI when connecting using HTTPS.
+	TLSServerName string `json:"tlsServerName,omitempty"`
+	// The auth role to assume when authenticating against vault. Defaults to `kvdi`.
+	AuthRole string `json:"authRole,omitempty"`
+	// The base path to store secrets in vault.
+	SecretsPath string `json:"secretsPath,omitempty"`
 }
 
 // VDIClusterStatus defines the observed state of VDICluster

@@ -83,7 +83,9 @@ vdi:
     # vdi.spec.secrets -- Secret storage configurations for `kVDI`.
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     secrets:
-      # vdi.spec.secrets.k8sSecret -- Use the Kubernetes secret storage backend.
+      # vdi.spec.secrets.k8sSecret -- Use the Kubernetes secret storage backend. This is the default
+      # if no other configuration is provided. For now, see the API reference for what to
+      # use in place of these values if using a different backend.
       k8sSecret:
         # vdi.spec.secrets.k8sSecret.secretName -- The name of the Kubernetes `Secret`.
         # backing the secret storage.
