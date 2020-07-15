@@ -1,5 +1,3 @@
-<!-- WIP: I'd like to use a custom viewer component instead of the embedded noVNC html -->
-
 <template>
   <q-page flex>
     <div id="view" :class="className">
@@ -24,12 +22,9 @@
 
 <script>
 import RFB from '@novnc/novnc/core/rfb'
-import { init_logging as initLogging } from '@novnc/novnc/core/util/logging.js'
 
 import VNCControls from 'components/dialogs/VNCControls.vue'
 import WSAudioPlayer from '../lib/wsaudio.js'
-
-initLogging('error')
 
 function getWebsockifyAddr (namespace, name, token) {
   return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/websockify?token=${token}`
