@@ -1,6 +1,6 @@
--include Makevars.mk
--include Manifests.mk
--include MakeDesktops.mk
+-include hack/Makevars.mk
+-include hack/Manifests.mk
+-include hack/MakeDesktops.mk
 
 ###
 # Building
@@ -127,18 +127,21 @@ load-app: ${KIND} build-app
 load-novnc-proxy: ${KIND} build-novnc-proxy
 	$(call load_image,${NOVNC_PROXY_IMAGE})
 
+KUBECTL_KIND = ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG}
+HELM_KIND = ${HELM} --kubeconfig ${KIND_KUBECONFIG}
+
 # Deploys metallb load balancer to the kind cluster
 test-ingress: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/namespace.yaml
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/metallb.yaml
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} create secret generic -n metallb-system memberlist --from-literal=secretkey="`openssl rand -base64 128`" || echo
-	echo "$$METALLB_CONFIG" | ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply -f -
+	${KUBECTL_KIND} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/namespace.yaml
+	${KUBECTL_KIND} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/metallb.yaml
+	${KUBECTL_KIND} create secret generic -n metallb-system memberlist --from-literal=secretkey="`openssl rand -base64 128`" || echo
+	echo "$$METALLB_CONFIG" | ${KUBECTL_KIND} apply -f -
 
 test-certmanager: ${KUBECTL} ${HELM}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} create namespace cert-manager
+	${KUBECTL_KIND} apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml
+	${KUBECTL_KIND} create namespace cert-manager
 	${HELM} repo add jetstack https://charts.jetstack.io && ${HELM} repo update
-	${HELM} --kubeconfig ${KIND_KUBECONFIG} install \
+	${HELM_KIND} install \
 		cert-manager jetstack/cert-manager \
 		--namespace cert-manager \
 		--version ${CERT_MANAGER_VERSION} \
@@ -147,66 +150,66 @@ test-certmanager: ${KUBECTL} ${HELM}
 
 test-vault: ${KUBECTL} ${HELM}
 	${HELM} repo add hashicorp https://helm.releases.hashicorp.com
-	${HELM} --kubeconfig ${KIND_KUBECONFIG} upgrade --install vault hashicorp/vault \
+	${HELM_KIND} upgrade --install vault hashicorp/vault \
 		--set server.dev.enabled=true \
 		--wait
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} wait --for=condition=ready pod vault-0 --timeout=300s
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault auth enable kubernetes
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} \
+	${KUBECTL_KIND} wait --for=condition=ready pod vault-0 --timeout=300s
+	${KUBECTL_KIND} exec -it vault-0 -- vault auth enable kubernetes
+	${KUBECTL_KIND} \
 		config view --raw --minify --flatten -o jsonpath='{.clusters[].cluster.certificate-authority-data}' | \
 		base64 --decode > ca.crt
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault write auth/kubernetes/config \
-		token_reviewer_jwt=`${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
+	${KUBECTL_KIND} exec -it vault-0 -- vault write auth/kubernetes/config \
+		token_reviewer_jwt=`${KUBECTL_KIND} exec -it vault-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
 		kubernetes_host=https://kubernetes.default:443 \
 		kubernetes_ca_cert="`cat ca.crt`"
 	rm ca.crt
-	echo "$$VAULT_POLICY" | ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault policy write kvdi -
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault secrets enable --path=kvdi/ kv
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} exec -it vault-0 -- vault write auth/kubernetes/role/kvdi \
+	echo "$$VAULT_POLICY" | ${KUBECTL_KIND} exec -it vault-0 -- vault policy write kvdi -
+	${KUBECTL_KIND} exec -it vault-0 -- vault secrets enable --path=kvdi/ kv
+	${KUBECTL_KIND} exec -it vault-0 -- vault write auth/kubernetes/role/kvdi \
 	    bound_service_account_names=kvdi-app,kvdi-manager \
 	    bound_service_account_namespaces=default \
 	    policies=kvdi \
 	    ttl=1h
 
 example-vdi-templates: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} apply \
+	${KUBECTL_KIND} apply \
 		-f deploy/examples/example-desktop-templates.yaml
 
 full-test-cluster: test-cluster test-ingress test-certmanager
 
 restart-manager: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete pod -l component=kvdi-manager
+	${KUBECTL_KIND} delete pod -l component=kvdi-manager
 
 restart-app: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete pod -l vdiComponent=app
+	${KUBECTL_KIND} delete pod -l vdiComponent=app
 
 restart: restart-manager restart-app
 
 clean-cluster: ${KUBECTL} ${HELM}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found -f deploy/examples
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} delete --ignore-not-found certificate --all
-	${HELM} del kvdi
+	${KUBECTL_KIND} delete --ignore-not-found -f deploy/examples
+	${KUBECTL_KIND} delete --ignore-not-found certificate --all
+	${HELM_KIND} del kvdi
 
 remove-cluster: ${KIND}
 	${KIND} delete cluster --name ${CLUSTER_NAME}
 	rm -f ${KIND_KUBECONFIG}
 
 forward-app: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get pod | grep app | awk '{print$$1}' | xargs -I% ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} port-forward % 8443
+	${KUBECTL_KIND} get pod | grep app | awk '{print$$1}' | xargs -I% ${KUBECTL_KIND} port-forward % 8443
 
 get-app-secret: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
+	${KUBECTL_KIND} get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
+	${KUBECTL_KIND} get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
+	${KUBECTL_KIND} get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
 get-admin-password: ${KUBECTL}
-	${KUBECTL} --kubeconfig ${KIND_KUBECONFIG} get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
+	${KUBECTL_KIND} get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
 
 # Builds and deploys the manager into a local kind cluster, requires helm.
 .PHONY: deploy
 HELM_ARGS ?=
 deploy: ${HELM} package-chart
-	${HELM} upgrade --install --kubeconfig ${KIND_KUBECONFIG} ${NAME} deploy/charts/${NAME}-${VERSION}.tgz ${HELM_ARGS} --wait
+	${HELM_KIND} upgrade --install ${NAME} deploy/charts/${NAME}-${VERSION}.tgz --wait ${HELM_ARGS}
 
 ## Doc generation
 
@@ -221,6 +224,6 @@ ${REFDOCS}: ${REFDOCS_CLONE}
 ${HELM_DOCS}:
 	$(call get_helm_docs)
 
-HELM_DOCS_VERSION ?= v0.13.0
+HELM_DOCS_VERSION ?= 0.13.0
 helm-docs: ${HELM_DOCS} chart-yaml
 	${HELM_DOCS}
