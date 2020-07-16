@@ -51,6 +51,8 @@ type AuthConfig struct {
 	AdminSecret string `json:"adminSecret,omitempty"`
 	// Use local auth (secret-backed) authentication
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
+	// Use LDAP for authentication.
+	LDAPAuth *LDAPConfig `json:"ldapAuth,omitempty"`
 }
 
 // SecretsConfig configurese the backend for secrets management.
@@ -65,6 +67,36 @@ type SecretsConfig struct {
 
 // LocalAuthConfig represents a local, 'passwd'-like authentication driver.
 type LocalAuthConfig struct{}
+
+// LDAPConfig represents the configurations for using LDAP as the authentication
+// backend.
+type LDAPConfig struct {
+	// The URL to the LDAP server.
+	URL string `json:"url,omitempty"`
+	// Set to true to skip TLS verification of an `ldaps` connection.
+	TLSInsecureSkipVerify bool `json:"tlsInsecureSkipVerify,omitempty"`
+	// The base64 encoded CA certificate to use when verifying the TLS certificate of
+	// the LDAP server.
+	TLSCACert string `json:"tlsCACert,omitempty"`
+	// If you want to use the built-in secrets backend (vault or k8s currently),
+	// set this to either the name of the secret in the vault path, or the key of
+	// the secret used in `k8sSecret.secretName. In default configurations this is`
+	// `kvdi-app-secrets`. Defaults to `ldap-userdn`.
+	BindUserDNSecretKey string `json:"bindUserDNSecretKey,omitempty"`
+	// Similar to the `bindUserDNSecretKey`, but for the location of the password
+	// secret. Defaults to `ldap-password`.
+	BindPasswordSecretKey string `json:"bindPasswordSecretKey,omitempty"`
+	// If you'd rather create a separate k8s secret (instead of the configured backend)
+	// for the LDAP credentials, set its name here. The keys in the secret need to
+	// be defined in the other fields still. Default is to use the secret backend.
+	BindCredentialsSecret string `json:"bindCredentialsSecret,omitempty"`
+	// Group DNs that are allowed administrator access to the cluster. Kubernetes
+	// admins will still have the ability to change configurations via the CRDs.
+	AdminGroups []string `json:"adminGroups,omitempty"`
+	// The base scope to search for users in. Default is to search the entire
+	// directory.
+	UserSearchBase string `json:"userSearchBase,omitempty"`
+}
 
 // K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.
 type K8SSecretConfig struct {

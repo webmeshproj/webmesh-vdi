@@ -34,3 +34,6 @@ func (a *LocalAuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster)
 	a.secrets = secrets.GetSecretEngine(cluster)
 	return a.secrets.Setup(c, cluster)
 }
+
+// Close returns nil automatically as no cleanup is required.
+func (a *LocalAuthProvider) Close() error { return nil }

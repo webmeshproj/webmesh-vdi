@@ -20,6 +20,9 @@ type AuthProvider interface {
 	// Setup is called when the kVDI app launches and is a chance for the provider
 	// to setup any resources it needs to serve requests.
 	Setup(client.Client, *VDICluster) error
+	// Close is called after temporary uses of the auth provider. It should close
+	// any open connections and perform cleanup. It should be non-destructive.
+	Close() error
 
 	// API helper methods
 	// Not all providers will be able to implement all of these methods. When
@@ -32,9 +35,9 @@ type AuthProvider interface {
 	GetUsers() ([]*VDIUser, error)
 	// GetUser should retrieve a single VDIUser.
 	GetUser(string) (*VDIUser, error)
-	// PostUser should handle any logic required to register a new user in kVDI.
+	// CreateUser should handle any logic required to register a new user in kVDI.
 	CreateUser(*CreateUserRequest) error
-	// PutUser should update a VDIUser.
+	// UpdateUser should update a VDIUser.
 	UpdateUser(string, *UpdateUserRequest) error
 	// DeleteUser should remove a VDIUser.
 	DeleteUser(string) error

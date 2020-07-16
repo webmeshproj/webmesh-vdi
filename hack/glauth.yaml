@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kvdi-app-secrets
+data:
+  ldap-userdn: Y249a3ZkaS1zdmMsb3U9c3ZjYWNjdHMsZGM9a3ZkaSxkYz1pbw==
+  ldap-password: bXlzZWNyZXQ=
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: glauth-config
+data:
+  config.cfg: |
+    #################
+    # glauth.conf
+
+    #################
+    # General configuration.
+    debug = true
+    # syslog = true
+    #
+    # Enable hot-reload of configuration on changes
+    # - does NOT work [ldap], [ldaps], [backend] or [api] sections
+    watchconfig = true
+
+    #################
+    # Server configuration.
+    #
+    [ldap]
+      enabled = true
+      listen = "0.0.0.0:389"
+
+    [ldaps]
+      enabled = false
+
+    #################
+    # The backend section controls the data store.
+    [backend]
+      datastore = "config"
+      baseDN = "dc=kvdi,dc=io"
+
+      ## Configure dn format to use structures like
+      ## "uid=serviceuser,cn=svcaccts,$BASEDN" instead of "cn=serviceuser,ou=svcaccts,$BASEDN"
+      ## to help ease migrations from other LDAP systems
+      # nameformat = "uid"
+      # groupformat = "cn"
+
+      ## Configure ssh-key attribute name, default is 'sshPublicKey'
+      # sshkeyattr = "ipaSshPubKey"
+
+    #################
+    # The users section contains a hardcoded list of valid users.
+    #   to create a passSHA256:   echo -n "mysecret" | openssl dgst -sha256
+    [[users]]
+      name = "kvdi-admin"
+      unixid = 5001
+      primarygroup = 5500
+      otherGroups = [5501,5502]
+      passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a" # dogood
+
+    # This user record shows all of the possible fields available
+    [[users]]
+      name = "johndoe"
+      givenname="John"
+      sn="Doe"
+      mail = "jdoe@kvdi.com"
+      unixid = 5002
+      primarygroup = 5500
+      otherGroups = [5502]
+      loginShell = "/bin/sh"
+      passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a" # dogood
+
+    # Test user showing 2 factor auth authentication
+    [[users]]
+      name = "otpuser"
+      unixid = 5003
+      primarygroup = 5500
+      otherGroups = [5502]
+      passsha256 = "652c7dc687d98c9889304ed2e408c74b611e86a40caa51c4b43f1dd5913c5cd0" # mysecret
+      otpsecret = "3hnvnk4ycv44glzigd6s25j4dougs3rk"
+
+    [[users]]
+      name = "kvdi-svc"
+      unixid = 5004
+      primarygroup = 5503
+      passsha256 = "652c7dc687d98c9889304ed2e408c74b611e86a40caa51c4b43f1dd5913c5cd0" # mysecret
+
+
+    #################
+    # The groups section contains a hardcoded list of valid groups.
+    [[groups]]
+      name = "users"
+      unixid = 5500
+
+    [[groups]]
+      name = "kvdi-admins"
+      unixid = 5501
+
+    [[groups]]
+      name = "kvdi-users"
+      unixid = 5502
+
+    [[groups]]
+      name = "svcaccts"
+      unixid = 5503
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: glauth
+  labels:
+    app: glauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: glauth
+  template:
+    metadata:
+      labels:
+        app: glauth
+    spec:
+      containers:
+      - name: glauth
+        image: glauth/glauth:v1.1.2
+        ports:
+        - name: ldap
+          containerPort: 389
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+      volumes:
+      - name: config
+        configMap:
+          name: glauth-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: glauth
+spec:
+  selector:
+    app: glauth
+  ports:
+  - name: ldap
+    protocol: TCP
+    port: 389
+    targetPort: 389

@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -58,4 +61,32 @@ func CreationSpecsEqual(m1 metav1.ObjectMeta, m2 metav1.ObjectMeta) bool {
 		return false
 	}
 	return spec1 == spec2
+}
+
+func GetThisPodName() (string, error) {
+	if podName := os.Getenv("POD_NAME"); podName != "" {
+		return podName, nil
+	}
+	return "", errors.New("No POD_NAME in the environment")
+}
+
+func GetThisPodNamespace() (string, error) {
+	if podNS := os.Getenv("POD_NAMESPACE"); podNS != "" {
+		return podNS, nil
+	}
+	return "", errors.New("No POD_NAMESPACE in the environment")
+}
+
+func GetThisPod(c client.Client) (*corev1.Pod, error) {
+	podName, err := GetThisPodName()
+	if err != nil {
+		return nil, err
+	}
+	podNamespace, err := GetThisPodNamespace()
+	if err != nil {
+		return nil, err
+	}
+	nn := types.NamespacedName{Name: podName, Namespace: podNamespace}
+	pod := &corev1.Pod{}
+	return pod, c.Get(context.TODO(), nn, pod)
 }

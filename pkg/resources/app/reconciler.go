@@ -35,6 +35,7 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		return err
 	}
 
+	// Set up a temporary connection to the secrets engine
 	secretsEngine := secrets.GetSecretEngine(instance)
 	if err := secretsEngine.Setup(f.client, instance); err != nil {
 		return err
@@ -45,6 +46,7 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		}
 	}()
 
+	// Reconcile a secret for generating JWT tokens
 	if _, err := secretsEngine.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err
@@ -55,6 +57,7 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		}
 	}
 
+	// Reconcile the built-in roles.
 	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
 		return err
 	}
@@ -64,8 +67,13 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 	}
 
 	// reconcile any resources needed for the auth provider
-	if err := auth.GetAuthProvider(instance).Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
+	authProvider := auth.GetAuthProvider(instance)
+	if err := authProvider.Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
 		return err
+	} else {
+		if err := authProvider.Close(); err != nil {
+			reqLogger.Error(err, "Failed to close auth provider cleanly")
+		}
 	}
 
 	// Service account and cluster role/binding
@@ -94,11 +102,6 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		return err
 	}
 	if err := reconcile.ReconcileService(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
-		return err
-	}
-
-	// The built-in admin role
-	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
 		return err
 	}
 

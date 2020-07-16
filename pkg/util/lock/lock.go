@@ -3,11 +3,11 @@ package lock
 import (
 	"context"
 	"errors"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -52,7 +52,7 @@ func New(c client.Client, name string, timeout time.Duration) *Lock {
 // acquired or the timeout is reached.
 func (l *Lock) Acquire() error {
 	lockLogger.Info("Acquiring lock", "Lock.Name", l.name)
-	pod, err := l.getCurrentPod()
+	pod, err := k8sutil.GetThisPod(l.client)
 	if err != nil {
 		lockLogger.Error(err, "Error retrieving current pod, could not acquire lock")
 		return err
@@ -134,22 +134,6 @@ func (l *Lock) Release() error {
 func (l *Lock) releaseStaleLock(ctx context.Context, lock *corev1.ConfigMap) error {
 	lockLogger.Info("Releasing stale lock", "PreviousOwner", lock.OwnerReferences[0])
 	return client.IgnoreNotFound(l.client.Delete(ctx, lock))
-}
-
-// getCurrentPod returns the curently running pod based off environment variables
-// populated from the metadata of the instance.
-func (l *Lock) getCurrentPod() (*corev1.Pod, error) {
-	podName := os.Getenv("POD_NAME")
-	if podName == "" {
-		return nil, errors.New("Cannot get lock, no POD_NAME in environment")
-	}
-	podNamespace := os.Getenv("POD_NAMESPACE")
-	if podNamespace == "" {
-		return nil, errors.New("Cannot get lock, no POD_NAMESPACE in environment")
-	}
-	nn := types.NamespacedName{Name: podName, Namespace: podNamespace}
-	pod := &corev1.Pod{}
-	return pod, l.client.Get(context.TODO(), nn, pod)
 }
 
 // newConfigMapForLock returns a new configmap for locking.

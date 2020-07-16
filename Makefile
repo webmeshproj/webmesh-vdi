@@ -171,6 +171,9 @@ test-vault: ${KUBECTL} ${HELM}
 	    policies=kvdi \
 	    ttl=1h
 
+test-ldap:
+	${KUBECTL_KIND} apply -f hack/glauth.yaml
+
 example-vdi-templates: ${KUBECTL}
 	${KUBECTL_KIND} apply \
 		-f deploy/examples/example-desktop-templates.yaml

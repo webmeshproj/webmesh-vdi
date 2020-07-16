@@ -81,6 +81,49 @@ spec:
                 allowAnonymous:
                   description: Allow anonymous users to create desktop instances
                   type: boolean
+                ldapAuth:
+                  description: Use LDAP for authentication.
+                  properties:
+                    adminGroups:
+                      description: Group DNs that are allowed administrator access
+                        to the cluster. Kubernetes admins will still have the ability
+                        to change configurations via the CRDs.
+                      items:
+                        type: string
+                      type: array
+                    bindCredentialsSecret:
+                      description: If you'd rather create a separate k8s secret (instead
+                        of the configured backend) for the LDAP credentials, set its
+                        name here. The keys in the secret need to be defined in the
+                        other fields still. Default is to use the secret backend.
+                      type: string
+                    bindPasswordSecretKey:
+                      description: Similar to the `bindUserDNSecretKey`, but for the
+                        location of the password secret. Defaults to `ldap-password`.
+                      type: string
+                    bindUserDNSecretKey:
+                      description: If you want to use the built-in secrets backend
+                        (vault or k8s currently), set this to either the name of the
+                        secret in the vault path, or the key of the secret used in
+                        `k8sSecret.secretName. In default configurations this is`
+                        `kvdi-app-secrets`. Defaults to `ldap-userdn`.
+                      type: string
+                    tlsCACert:
+                      description: The base64 encoded CA certificate to use when verifying
+                        the TLS certificate of the LDAP server.
+                      type: string
+                    tlsInsecureSkipVerify:
+                      description: Set to true to skip TLS verification of an `ldaps`
+                        connection.
+                      type: boolean
+                    url:
+                      description: The URL to the LDAP server.
+                      type: string
+                    userSearchBase:
+                      description: The base scope to search for users in. Default
+                        is to search the entire directory.
+                      type: string
+                  type: object
                 localAuth:
                   description: Use local auth (secret-backed) authentication
                   type: object

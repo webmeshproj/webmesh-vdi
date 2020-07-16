@@ -34,7 +34,11 @@ If you are wanting this to become a real thing (or are just interested in trying
 
   - Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
 
-  - TODO: More authentication options such as `LDAP`, `oauth`, etc.
+  - Use built-in local authentication or an LDAP backend
+
+    - TODO: More auth options `oauth`, `saml`, etc. More docs on LDAP configuration.
+
+      - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml).
 
 ## Requirements
 
@@ -42,7 +46,6 @@ Cluster requirements
 
   - `cert-manager >= 0.14.1`
     - The manager uses the `v1alpha3` API for certificate provisioning
-  - `snd-aloop` host-kernel support (optional, for sound emulation)
 
 For building and running locally you will need:
 
@@ -63,8 +66,10 @@ $> helm install kvdi tinyzimmer/kvdi
 ```
 
 It will take a minute or two for all the parts to start running after the install command.
-Once the app is launched, you can retrieve the admin password from `kvdi-admin-secret` in your cluster.
-To access the app interface either do a `port-forward` (`make forward-app` is another helper for that), or go to the "LoadBalancer" IP of the service.
+Once the app is launched, you can retrieve the admin password from `kvdi-admin-secret` in your cluster (if you are using `ldap` auth, log in with a user in one of the `adminGroups`).
+
+
+To access the app interface either do a `port-forward` (`make forward-app` is another helper for that when developing locally with `kind`), or go to the "LoadBalancer" IP of the service.
 
 By default there are no desktop templates configured. If you'd like, you can apply the ones in `deploy/examples/example-desktop-templates.yaml` to get started quickly.
 
@@ -84,9 +89,11 @@ $> make full-test-cluster
 $> make load-all
 # Deploy the manager, kvdi, and setup the example templates
 $> make deploy example-vdi-templates
+# To test using custom helm values
+$> HELM_ARGS="-f my_values.yaml" make deploy
 ```
 
-After the manager has started the `app` instance, get the IP of its service with `kubectl get svc` to access the frontend.
+After the manager has started the `app` instance, get the IP of its service with `kubectl get svc` to access the frontend, or you can run `make-forward-app` to start a local port-forward.
 
 If not using anonymous auth, look for `kvdi-admin-secret` to retrieve the `admin` password.
 

@@ -1,0 +1,9 @@
+vdi:
+  spec:
+    auth:
+      ldapAuth:
+        url: "ldap://glauth.default.svc:389"
+        bindUserDNSecretKey: "ldap-userdn"
+        bindPasswordSecretKey: "ldap-password"
+        adminGroups: ["cn=kvdi-admins,ou=groups,dc=kvdi,dc=io"]
+        userSearchBase: "ou=users,dc=kvdi,dc=io"

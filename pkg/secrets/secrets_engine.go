@@ -68,6 +68,10 @@ func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
 
 // Setup sets the local client inteface and calls Setup on the backend.
 func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
+	if err := s.Lock(); err != nil {
+		return err
+	}
+	defer s.Release()
 	s.client = c
 	// rewrite cluster since this is a method that can be used to refresh
 	// configuration also.

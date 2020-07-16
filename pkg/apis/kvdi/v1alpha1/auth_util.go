@@ -4,15 +4,23 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetAdminRole returns an admin role for this VDICluster.
 func (v *VDICluster) GetAdminRole() *VDIRole {
+	var annotations map[string]string
+	if v.IsUsingLDAPAuth() {
+		annotations = map[string]string{
+			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), ";"),
+		}
+	}
 	return &VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-admin", v.GetName()),
+			Name:        fmt.Sprintf("%s-admin", v.GetName()),
+			Annotations: annotations,
 			Labels: map[string]string{
 				RoleClusterRefLabel: v.GetName(),
 			},

@@ -1,0 +1,19 @@
+apiVersion: kvdi.io/v1alpha1
+kind: VDIRole
+metadata:
+  name: kvdi-ldap-users
+  annotations:
+    kvdi.io/ldap-groups: cn=kvdi-users,ou=groups,dc=kvdi,dc=io
+  labels:
+    kvdi.io/cluster-ref: kvdi
+rules:
+- namespaces:
+  - '*'
+  resourcePatterns:
+  - .*
+  resources:
+  - templates
+  verbs:
+  - read
+  - use
+  - launch
