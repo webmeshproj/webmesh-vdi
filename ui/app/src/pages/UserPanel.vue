@@ -2,7 +2,9 @@
   <div class="q-pa-md" stretch>
 
     <div style="float: right">
-      <q-btn flat color="primary" icon-right="add" label="New User" @click="onNewUser" />
+      <q-btn flat color="primary" icon-right="add" label="New User" @click="onNewUser" :disabled="editUsersDisabled" >
+        <q-tooltip v-if="editUsersDisabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">The current server configuration does not allow creating users</q-tooltip>
+      </q-btn>
     </div>
 
     <div style="clear: right">
@@ -43,11 +45,13 @@
               </q-td>
 
               <q-td key="updateUser">
-                <q-btn round dense flat icon="create"  size="sm" color="grey" @click="onEditUser(props.row.name)">
-                  <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit User</q-tooltip>
+                <q-btn round dense flat icon="create"  size="sm" color="grey" @click="onEditUser(props.row.name)" :disabled="editUsersDisabled" >
+                  <q-tooltip v-if="!editUsersDisabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit User</q-tooltip>
+                  <q-tooltip v-if="editUsersDisabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">The current server configuration does not allow editing users</q-tooltip>
                 </q-btn>
-                <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteUser(props.row.name)">
-                  <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete User</q-tooltip>
+                <q-btn round dense flat icon="remove_circle"  size="sm" color="red" @click="onConfirmDeleteUser(props.row.name)" :disabled="editUsersDisabled">
+                  <q-tooltip v-if="!editUsersDisabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete User</q-tooltip>
+                  <q-tooltip v-if="editUsersDisabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">The current server configuration does not allow deleting users</q-tooltip>
                 </q-btn>
               </q-td>
 
@@ -137,6 +141,16 @@ export default {
 
   beforeDestroy () {
     this.$root.$off('reload-users', this.fetchData)
+  },
+
+  computed: {
+    editUsersDisabled () {
+      const auth = this.$configStore.getters.authMethod
+      if (auth === 'ldap') {
+        return true
+      }
+      return false
+    }
   },
 
   methods: {

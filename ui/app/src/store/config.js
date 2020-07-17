@@ -40,7 +40,15 @@ export const ConfigStore = new Vuex.Store({
 
   getters: {
     localConfig: state => state.localConfig,
-    serverConfig: state => state.serverConfig
+    serverConfig: state => state.serverConfig,
+    authMethod: state => {
+      if (state.serverConfig.auth !== undefined) {
+        if (state.serverConfig.auth.ldapAuth !== undefined) {
+          return 'ldap'
+        }
+      }
+      return 'local'
+    }
   }
 
 })

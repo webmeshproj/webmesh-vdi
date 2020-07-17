@@ -189,7 +189,6 @@ restart-app: ${KUBECTL}
 restart: restart-manager restart-app
 
 clean-cluster: ${KUBECTL} ${HELM}
-	${KUBECTL_KIND} delete --ignore-not-found -f deploy/examples
 	${KUBECTL_KIND} delete --ignore-not-found certificate --all
 	${HELM_KIND} del kvdi
 
