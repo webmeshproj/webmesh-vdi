@@ -41,7 +41,8 @@ func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 func (d *desktopAPI) newRoleFromRequest(req *v1alpha1.CreateRoleRequest) *v1alpha1.VDIRole {
 	return &v1alpha1.VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: req.Name,
+			Name:        req.GetName(),
+			Annotations: req.GetAnnotations(),
 			Labels: map[string]string{
 				v1alpha1.RoleClusterRefLabel: d.vdiCluster.GetName(),
 			},

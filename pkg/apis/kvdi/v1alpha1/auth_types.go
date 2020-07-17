@@ -70,7 +70,6 @@ const (
 // to take an authentication request and generate a JWT with claims defining
 // this object.
 type VDIUser struct {
-	VDIRole `json:"-"`
 	// A unique name for the user
 	Name string `json:"name"`
 	// A list of roles applide to the user. The grants associated with each user

@@ -101,9 +101,17 @@ type UpdateMFAResponse struct {
 type CreateRoleRequest struct {
 	// The name of the new role
 	Name string `json:"name"`
+	// Annotations to apply to the role
+	Annotations map[string]string `json:"annotations"`
 	// Rules to apply to the new role.
 	Rules []Rule `json:"rules"`
 }
+
+// GetName returns the name of the new role
+func (r *CreateRoleRequest) GetName() string { return r.Name }
+
+// GetAnnotations returns the annotations provided in the request
+func (r *CreateRoleRequest) GetAnnotations() map[string]string { return r.Annotations }
 
 // Validate the CreateRoleRequest
 func (r *CreateRoleRequest) Validate() error {
@@ -132,12 +140,17 @@ func (r *CreateRoleRequest) GetRules() []Rule {
 	return r.Rules
 }
 
-// UpdateRoleRequest requests updates to an existing role. Note that all rules will be
-// replaces with those in the request.
+// UpdateRoleRequest requests updates to an existing role. The existing attributes
+// will be entirely replaced with those supplied in the payload.
 type UpdateRoleRequest struct {
+	// The new annotations for the role
+	Annotations map[string]string `json:"annotations"`
 	// The new rules for the role.
 	Rules []Rule `json:"rules"`
 }
+
+// GetAnnotations returns the annotations provided in the request
+func (r *UpdateRoleRequest) GetAnnotations() map[string]string { return r.Annotations }
 
 // GetRules returns the rules for an update role request, or a single-element slice with
 // a deny-all rule if none are provided.

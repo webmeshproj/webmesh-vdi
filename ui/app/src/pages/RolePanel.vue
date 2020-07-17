@@ -30,6 +30,7 @@
         title="Roles"
         :data="data"
         :columns="columns"
+        dense
         row-key="idx"
         v-if="!loading"
         ref="table"
@@ -54,6 +55,16 @@
                   style="float: left;"
                 />
               </div>
+            </q-td>
+
+            <q-td key="annotations" :props="props">
+              <RoleAnnotations
+                v-bind="props.row"
+                :roleIdx="props.row.idx"
+                :annotations="props.row.metadata.annotations"
+                :editable="props.row.editable"
+                :ref="'annotations-' + props.row.idx"
+              />
             </q-td>
 
             <q-td key="updateRole" :props="props">
@@ -87,7 +98,10 @@
 
 <script>
 import SkeletonTable from 'components/SkeletonTable.vue'
+
 import RuleDisplay from 'components/RuleDisplay.vue'
+import RoleAnnotations from 'components/RoleAnnotations.vue'
+
 import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
 
 const roleColumns = [
@@ -108,6 +122,11 @@ const roleColumns = [
     label: 'Rules'
   },
   {
+    name: 'annotations',
+    align: 'left',
+    label: 'Annotations'
+  },
+  {
     name: 'updateRole',
     align: 'center'
   }
@@ -115,7 +134,7 @@ const roleColumns = [
 
 export default {
   name: 'RolesPanel',
-  components: { SkeletonTable, RuleDisplay },
+  components: { SkeletonTable, RuleDisplay, RoleAnnotations },
 
   data () {
     return {
@@ -161,6 +180,8 @@ export default {
     onCancelEdit (roleIdx, roleName) {
       this.$root.$off(roleName, this.doUpdateRole)
       this.data[roleIdx].editable = false
+      const annotationRef = this.$refs[`annotations-${roleIdx}`]
+      annotationRef.reset()
       this.fetchData()
     },
 
@@ -178,12 +199,12 @@ export default {
       })
     },
 
-    doUpdateRole ({ roleIdx, ruleIdx, roleName, payload, deleteRule }) {
+    doUpdateRole ({ roleIdx, ruleIdx, roleName, rulePayload, deleteRule }) {
       if (deleteRule === true) {
         this.data[roleIdx].rules.splice(ruleIdx, 1)
         return
       }
-      this.data[roleIdx].rules.splice(ruleIdx, 1, payload)
+      this.data[roleIdx].rules.splice(ruleIdx, 1, rulePayload)
     },
 
     doAdminCheck (roleName) {
@@ -226,7 +247,13 @@ export default {
 
     async doSaveRole (roleIdx, roleName) {
       try {
-        await this.$axios.put(`/api/roles/${roleName}`, { rules: this.data[roleIdx].rules })
+        const annotationRef = this.$refs[`annotations-${roleIdx}`]
+        const roleAnnotations = await annotationRef.currentAnnotations()
+        const payload = {
+          rules: this.data[roleIdx].rules,
+          annotations: roleAnnotations
+        }
+        await this.$axios.put(`/api/roles/${roleName}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -288,6 +315,8 @@ export default {
   width: 100vh
 
 .roles-table
+  background-color: $grey-3
+
   /* height or max-height is important */
   max-height: 500px
 

@@ -15,8 +15,16 @@ import (
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
 func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthResult, error) {
-	a.mux.Lock()
-	defer a.mux.Unlock()
+	conn, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	if err := a.bind(conn); err != nil {
+		return nil, err
+	}
+
 	// fetch the role mappings
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
@@ -30,7 +38,7 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 		userAttrs,
 		nil,
 	)
-	sr, err := a.conn.Search(searchRequest)
+	sr, err := conn.Search(searchRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -41,17 +49,12 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 
 	user := sr.Entries[0]
 
-	// perform a bind to check the credentials
-	if err := a.conn.Bind(user.DN, req.Password); err != nil {
-		// rebind to svc account first
-		if rbErr := a.bind(); rbErr != nil {
-			ldapLog.Error(rbErr, "Failed to rebind to service account")
-		}
-		return nil, err
+	if strings.ToLower(user.GetAttributeValue("accountStatus")) != "active" {
+		return nil, fmt.Errorf("User account %s is disabled", user.GetAttributeValue("uid"))
 	}
 
-	// rebind to svc account first
-	if err = a.bind(); err != nil {
+	// perform a bind to check the credentials
+	if err := conn.Bind(user.DN, req.Password); err != nil {
 		return nil, err
 	}
 
@@ -68,8 +71,12 @@ RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroups, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				boundGroups := strings.Split(ldapGroups, ";")
+				boundGroups := strings.Split(ldapGroups, v1alpha1.LDAPGroupSeparator)
+			GroupLoop:
 				for _, group := range boundGroups {
+					if group == "" {
+						continue GroupLoop
+					}
 					if common.StringSliceContains(user.GetAttributeValues("memberOf"), group) {
 						boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
 						continue RoleLoop

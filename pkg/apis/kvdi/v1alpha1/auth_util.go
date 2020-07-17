@@ -14,7 +14,7 @@ func (v *VDICluster) GetAdminRole() *VDIRole {
 	var annotations map[string]string
 	if v.IsUsingLDAPAuth() {
 		annotations = map[string]string{
-			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), ";"),
+			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), LDAPGroupSeparator),
 		}
 	}
 	return &VDIRole{
@@ -75,11 +75,11 @@ func (u *VDIUser) Evaluate(action *APIAction) bool {
 // by any of the permissions in the provided rule.
 func (u *VDIUser) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
 	for _, role := range u.Roles {
-		if ok := role.IncludesRule(ruleToCheck, resourceGetter); !ok {
-			return false
+		if ok := role.IncludesRule(ruleToCheck, resourceGetter); ok {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // FilterNamespaces will take a list of namespaces, and filter them based off
@@ -131,11 +131,11 @@ func (r *VDIUserRole) Evaluate(action *APIAction) bool {
 // by any of the permissions in the provided rule.
 func (r *VDIUserRole) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
 	for _, rule := range r.Rules {
-		if ok := rule.IncludesRule(ruleToCheck, resourceGetter); !ok {
-			return false
+		if ok := rule.IncludesRule(ruleToCheck, resourceGetter); ok {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // Evaluate checks if this rule allows the given action. First the verb is matched,

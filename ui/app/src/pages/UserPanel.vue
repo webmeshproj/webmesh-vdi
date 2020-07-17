@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md" stretch>
+  <div class="q-pa-md ">
 
     <div style="float: right">
       <q-btn flat color="primary" icon-right="add" label="New User" @click="onNewUser" :disabled="editUsersDisabled" >
@@ -234,6 +234,8 @@ export default {
 
 <style lang="sass" scoped>
 .user-table
+  background-color: $grey-3
+
   /* height or max-height is important */
   max-height: 500px
 

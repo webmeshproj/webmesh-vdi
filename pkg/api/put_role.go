@@ -55,7 +55,8 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
-	vdiRole.Rules = params.Rules
+	vdiRole.Annotations = params.GetAnnotations()
+	vdiRole.Rules = params.GetRules()
 	if err := d.client.Update(context.TODO(), vdiRole); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

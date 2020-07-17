@@ -285,6 +285,9 @@ export default {
   display: inline
 
 .templates-table
+
+  background-color: $grey-3
+
   /* height or max-height is important */
   max-height: 500px
 

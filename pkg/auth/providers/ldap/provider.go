@@ -3,24 +3,18 @@ package ldap
 import (
 	"crypto/tls"
 	"strings"
-	"sync"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 
-	ldapv3 "github.com/go-ldap/ldap/v3"
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const userFilter = "(uid=%s)"
 const groupUsersFilter = "(memberOf=%s)"
 
-// secretsLog is the logr interface for the secrets engine
-var ldapLog = logf.Log.WithName("ldap")
-
-var userAttrs = []string{"cn", "dn", "memberOf", "accountStatus"}
+var userAttrs = []string{"cn", "dn", "uid", "memberOf", "accountStatus"}
 
 // AuthProvider implements an auth provider that uses an LDAP server as the
 // authentication backend. Access to groups in LDAP is supplied through annotations
@@ -40,12 +34,8 @@ type AuthProvider struct {
 	bindPassw string
 	// a tls configuration if using TLS
 	tlsConfig *tls.Config
-	// the underlying ldap connection
-	conn *ldapv3.Conn
 	// the base DN for the connected LDAP server
 	baseDN string
-	// mutex for local locking
-	mux sync.Mutex
 }
 
 // Blank assignment to make sure AuthProvider satisfies the interface.
@@ -87,15 +77,15 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 	}
 	a.baseDN = strings.Join(baseDnFields, ",")
 
-	if a.conn == nil {
-		a.conn, err = a.connect()
-		if err != nil {
-			return err
-		}
-		err = a.bind()
+	// verify we can connect to the ldap server
+	conn, err := a.connect()
+	if err != nil {
+		return err
 	}
 
-	return err
+	// verify credentials work
+	defer conn.Close()
+	return a.bind(conn)
 }
 
 // Reconcile just makes sure that we are able to succesfully set up a connection.
@@ -104,12 +94,7 @@ func (a *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster
 	return a.Setup(c, cluster)
 }
 
-// Close closes the underlying LDAP connection if it exists and then returns nil.
+// Close just returns nil as connections are not persistent
 func (a *AuthProvider) Close() error {
-	if a.conn != nil {
-		a.conn.Close()
-		a.conn = nil
-		return nil
-	}
 	return nil
 }

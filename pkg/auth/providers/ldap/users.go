@@ -13,8 +13,15 @@ import (
 
 // GetUsers should return a list of VDIUsers.
 func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
-	a.mux.Lock()
-	defer a.mux.Unlock()
+	conn, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	if err := a.bind(conn); err != nil {
+		return nil, err
+	}
 	// fetch the role mappings
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
@@ -28,8 +35,12 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				groups := strings.Split(ldapGroupStr, ";")
+				groups := strings.Split(ldapGroupStr, v1alpha1.LDAPGroupSeparator)
+			GroupLoop:
 				for _, group := range groups {
+					if group == "" {
+						continue GroupLoop
+					}
 					searchRequest := ldapv3.NewSearchRequest(
 						a.getUserBase(),
 						ldapv3.ScopeWholeSubtree, ldapv3.NeverDerefAliases, 0, 0, false,
@@ -37,12 +48,12 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 						userAttrs,
 						nil,
 					)
-					sr, err := a.conn.Search(searchRequest)
+					sr, err := conn.Search(searchRequest)
 					if err != nil {
 						return nil, err
 					}
 					for _, entry := range sr.Entries {
-						vdiUsers = appendUser(vdiUsers, entry.GetAttributeValue("cn"), userRole)
+						vdiUsers = appendUser(vdiUsers, entry.GetAttributeValue("uid"), userRole)
 					}
 				}
 			}
@@ -55,6 +66,16 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 
 // GetUser should retrieve a single VDIUser.
 func (a *AuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
+	conn, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	if err := a.bind(conn); err != nil {
+		return nil, err
+	}
+
 	// fetch the role mappings
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
@@ -68,7 +89,7 @@ func (a *AuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
 		userAttrs,
 		nil,
 	)
-	sr, err := a.conn.Search(searchRequest)
+	sr, err := conn.Search(searchRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +109,11 @@ RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				for _, group := range strings.Split(ldapGroupStr, ";") {
+			GroupLoop:
+				for _, group := range strings.Split(ldapGroupStr, v1alpha1.LDAPGroupSeparator) {
+					if group == "" {
+						continue GroupLoop
+					}
 					if common.StringSliceContains(user.GetAttributeValues("memberOf"), group) {
 						vdiUser.Roles = append(vdiUser.Roles, role.ToUserRole())
 						continue RoleLoop

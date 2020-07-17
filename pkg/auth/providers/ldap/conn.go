@@ -16,8 +16,8 @@ func (a *AuthProvider) connect() (*ldapv3.Conn, error) {
 	return ldapv3.DialURL(a.cluster.GetLDAPURL())
 }
 
-func (a *AuthProvider) bind() error {
-	return a.conn.Bind(a.bindDN, a.bindPassw)
+func (a *AuthProvider) bind(conn *ldapv3.Conn) error {
+	return conn.Bind(a.bindDN, a.bindPassw)
 }
 
 func (a *AuthProvider) fetchAndSetBindCredentials() error {

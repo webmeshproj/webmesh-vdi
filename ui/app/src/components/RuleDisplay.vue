@@ -79,7 +79,7 @@ export default {
           roleName: this.roleName,
           roleIdx: this.roleIdx,
           ruleIdx: this.ruleIdx,
-          payload: payload
+          rulePayload: payload
         })
       }).onCancel(() => {
         console.log('Cancelled rule edit')

@@ -1,9 +1,16 @@
 <template>
-  <div class="q-pa-md" stretch>
-    <q-toggle
-      label="Allow multiple sessions when using persistence"
-      v-model="readWriteMany"
-    />
+  <div>
+    <p class="text-h4">Server settings</p>
+    <div class="q-px-xl q-mx-xl">
+      <q-markdown no-line-numbers :src="serverConfig" />
+    </div>
+    <p class="text-h4 q-pt-md">Local settings</p>
+    <div class="q-px-xl" stretch>
+      <q-toggle
+        label="Allow multiple sessions when using persistence"
+        v-model="readWriteMany"
+      />
+    </div>
   </div>
 </template>
 
@@ -18,6 +25,14 @@ export default {
       set (val) {
         this.$configStore.dispatch('setReadWriteMany', val)
       }
+    },
+    serverConfig () {
+      const cfg = this.$configStore.getters.serverConfig
+      return `
+\`\`\`js
+${JSON.stringify(cfg, undefined, 4)}
+\`\`\`
+`
     }
   }
 }

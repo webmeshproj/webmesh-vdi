@@ -15,15 +15,15 @@
     <q-separator />
 
     <q-tab-panels v-model="tab" animated style="text-align: center">
-      <q-tab-panel name="users" >
+      <q-tab-panel name="users" class="tab-panel-bg">
         <UserPanel />
       </q-tab-panel>
 
-      <q-tab-panel name="roles">
+      <q-tab-panel name="roles" class="tab-panel-bg">
         <RolePanel />
       </q-tab-panel>
 
-      <q-tab-panel name="config">
+      <q-tab-panel name="config" class="tab-panel-bg">
         <VDIConfigPanel />
       </q-tab-panel>
     </q-tab-panels>
