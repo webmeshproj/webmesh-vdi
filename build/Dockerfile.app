@@ -51,6 +51,7 @@ RUN apk add --update python2 build-base \
   && yarn global add @quasar/cli
 
 COPY ui/app/package.json /build/package.json
+COPY ui/app/yarn.lock /build/yarn.lock
 RUN cd /build && yarn
 
 COPY ui/app/ /build/

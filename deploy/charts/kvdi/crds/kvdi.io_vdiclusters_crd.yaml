@@ -127,6 +127,65 @@ spec:
                 localAuth:
                   description: Use local auth (secret-backed) authentication
                   type: object
+                oidcAuth:
+                  description: Use OIDC for authentication
+                  properties:
+                    adminGroups:
+                      description: Groups that are allowed administrator access to
+                        the cluster. Kubernetes admins will still have the ability
+                        to change rbac configurations via the CRDs.
+                      items:
+                        type: string
+                      type: array
+                    allowNonGroupedReadOnly:
+                      description: Set to true if the OIDC provider does not support
+                        the "groups" claim (or any valid alternative) and/or you would
+                        like to allow any authenticated user read-only access.
+                      type: boolean
+                    clientCredentialsSecret:
+                      description: When creating your own kubernets secret with the
+                        `clientIDKey` and `clientSecretKey`, set this to the name
+                        of the created secret. It must be in the same namespace as
+                        the manager and app instances.
+                      type: string
+                    clientIDKey:
+                      description: When using the built-in secrets backend, the key
+                        to where the client-id is stored. When configuring `clientCredentialsSecret`,
+                        set this to the key in that secret. Defaults to `oidc-clientid`.
+                      type: string
+                    clientSecretKey:
+                      description: Similar to `clientIDKey`, but for the location
+                        of the client secret. Defaults to `oidc-clientsecret`.
+                      type: string
+                    groupScope:
+                      description: If your OIDC provider does not return a `groups`
+                        object, set this to the user attribute to use for binding
+                        authenticated users to VDIRoles. Defaults to `groups`.
+                      type: string
+                    issuerURL:
+                      description: The OIDC issuer URL used for discovery
+                      type: string
+                    redirectURL:
+                      description: The redirect URL path configured in the OIDC provider.
+                        This should be the full path where kvdi is hosted followed
+                        by `/api/login`. For example, if `kvdi` is hosted at https://kvdi.local,
+                        then this value should be set `https://kvdi.local/api/login`.
+                      type: string
+                    scopes:
+                      description: The scopes to request with the authentication request.
+                        Defaults to `["openid", "email", "profile", "groups"]`.
+                      items:
+                        type: string
+                      type: array
+                    tlsCACert:
+                      description: The base64 encoded CA certificate to use when verifying
+                        the TLS certificate of the OIDC provider.
+                      type: string
+                    tlsInsecureSkipVerify:
+                      description: Set to true to skip TLS verification of an OIDC
+                        provider.
+                      type: boolean
+                  type: object
               type: object
             certManagerNamespace:
               description: The namespace cert-manager is running in. Defaults to `cert-manager`.

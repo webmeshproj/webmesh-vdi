@@ -8,8 +8,12 @@ const (
 	// to LDAP groups. A semicolon-separated list can bind a VDIRole to multiple
 	// LDAP groups.
 	LDAPGroupRoleAnnotation = "kvdi.io/ldap-groups"
-	// LDAPGroupSeparator is the separator used when parsing lists of groups from a string.
-	LDAPGroupSeparator = ";"
+	// OIDCGroupRoleAnnotation is the annotation applied to VDIRoles to "bind" them
+	// to groups provided in claims from an OIDC provider. A semicolon separated list can
+	// bind a role to multiple groups.
+	OIDCGroupRoleAnnotation = "kvdi.io/oidc-groups"
+	// AuthGroupSeparator is the separator used when parsing lists of groups from a string.
+	AuthGroupSeparator = ";"
 	// VDIClusterLabel is the label attached to resources to reference their parents VDI cluster
 	VDIClusterLabel = "vdiCluster"
 	// ComponentLabel is the label primarily used for service selectors

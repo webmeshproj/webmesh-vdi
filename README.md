@@ -34,11 +34,9 @@ If you are wanting this to become a real thing (or are just interested in trying
 
   - Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
 
-  - Use built-in local authentication or an LDAP backend
+  - Use built-in local authentication, LDAP, or OpenID.
 
-    - TODO: More auth options `oauth`, `saml`, etc. More docs on LDAP configuration.
-
-      - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml).
+      - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml). There are corresponding examples for the `oidc` auth as well.
 
 ## Requirements
 

@@ -36,13 +36,18 @@ import (
 func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 
-	if _, err := d.auth.GetUser(username); err != nil {
-		if errors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPINotFound(err, w)
+	// Only verify user if not using OIDC. We don't have a way to verify the user
+	// otherwise. This does leave the door open for someone with access to this endpoint
+	// to go rogue and flood the secrets with bad users.
+	if !d.vdiCluster.IsUsingOIDCAuth() {
+		if _, err := d.auth.GetUser(username); err != nil {
+			if errors.IsUserNotFoundError(err) {
+				apiutil.ReturnAPINotFound(err, w)
+				return
+			}
+			apiutil.ReturnAPIError(err, w)
 			return
 		}
-		apiutil.ReturnAPIError(err, w)
-		return
 	}
 
 	req := apiutil.GetRequestObject(r).(*v1alpha1.UpdateMFARequest)

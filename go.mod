@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.54.0 // indirect
+	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-ldap/ldap/v3 v3.2.2
 	github.com/go-logr/logr v0.1.0
@@ -23,6 +24,7 @@ require (
 	github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.18.0

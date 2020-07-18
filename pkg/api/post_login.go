@@ -18,31 +18,74 @@ const userAnonymous = "anonymous"
 //   403: error
 //   500: error
 func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
+
+	// If this is a GET request, we are at the second-phase of a redirect auth-flow.
+	if r.Method == http.MethodGet {
+		// Create a login request to pass to the auth backend containing just the
+		// raw request object. The backend provider should know how to use it to
+		// return valid claims.
+		loginRequest := &v1alpha1.LoginRequest{}
+		loginRequest.SetRequest(r)
+
+		// pass the request object to the auth backend, it should know how to handle a
+		// GET separately. The backend needs to generate claims that it can then
+		// provide on a subsequent POST with the initial state token.
+		_, err := d.auth.Authenticate(loginRequest)
+		if err != nil {
+			apiLogger.Error(err, "Failure handling auth callback")
+			apiutil.ReturnAPIError(err, w)
+			return
+		}
+
+		// redirect back to home page. the ui knows to use it's existing state token
+		// and attempt anonymous login. The next POST should return the proper claims.
+		http.Redirect(w, r, "/#/login", http.StatusFound)
+		return
+	}
+
+	// Retrieve the request object
 	req := apiutil.GetRequestObject(r).(*v1alpha1.LoginRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
 
-	// Allow anonymous if set in the configuration
-	if req.Username == userAnonymous && d.vdiCluster.AnonymousAllowed() {
-		user := &v1alpha1.VDIUser{
-			Name:  userAnonymous,
-			Roles: []*v1alpha1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
-		}
-		d.returnNewJWT(w, user, true)
-		return
-	}
+	// Not needed at the moment, but in case further use of the request object
+	// is needed in the authentication flow.
+	req.SetRequest(r)
 
-	// Pass the request to the provider, any error is a failure.
+	// Pass the request to the provider
 	result, err := d.auth.Authenticate(req)
 	if err != nil {
+		apiLogger.Error(err, "Authentication failed, checking if anonymous is allowed")
+		// Allow anonymous if set in the configuration
+		if req.Username == userAnonymous && d.vdiCluster.AnonymousAllowed() {
+			user := &v1alpha1.VDIUser{
+				Name:  userAnonymous,
+				Roles: []*v1alpha1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
+			}
+			d.returnNewJWT(w, user, true)
+			return
+		}
 		// If it's not an actual credential error, it will still be logged server side,
 		// but always tell the user 'Invalid credentials'.
 		apiutil.ReturnAPIForbidden(err, "Invalid credentials", w)
 		return
 	}
 
+	// Check if the auth provider requires a redirect
+	if result.RedirectURL != "" {
+		w.Header().Set("X-Redirect", result.RedirectURL)
+		apiutil.WriteJSON(map[string]string{
+			"message": "Authentication requires sign-in to an external resource",
+		}, w)
+		return
+	}
+
+	d.checkMFAAndReturnJWT(w, result)
+}
+
+func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1alpha1.AuthResult) {
 	// check if MFA is configured for the user
 	if _, err := d.mfa.GetUserSecret(result.User.Name); err != nil {
 		if !errors.IsUserNotFoundError(err) {

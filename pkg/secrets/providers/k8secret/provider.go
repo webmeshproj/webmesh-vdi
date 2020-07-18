@@ -91,7 +91,11 @@ func (k *Provider) WriteSecret(name string, content []byte) error {
 	if secret.Data == nil {
 		secret.Data = make(map[string][]byte)
 	}
-	secret.Data[name] = content
+	if content == nil {
+		delete(secret.Data, name)
+	} else {
+		secret.Data[name] = content
+	}
 	if err := k.client.Update(context.TODO(), secret); err != nil {
 		return err
 	}

@@ -48,6 +48,9 @@ type AuthProvider interface {
 type AuthResult struct {
 	// The authenticated user and their roles
 	User *VDIUser
+	// The provider can populate this field to signify a redirect is required,
+	// e.g. for OIDC.
+	RedirectURL string
 }
 
 // JWTClaims represents the claims used when issuing JWT tokens.

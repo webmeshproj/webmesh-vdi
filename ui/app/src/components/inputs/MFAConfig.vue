@@ -46,7 +46,9 @@ export default {
         this.enabled = false
         this.provisioningURI = ''
       }
-      this.$root.$emit('reload-users')
+      if (this.$configStore.getters.authMethod !== 'oidc') {
+        this.$root.$emit('reload-users')
+      }
     },
     enableMFA (val) {
       if (this.newUser) { return }

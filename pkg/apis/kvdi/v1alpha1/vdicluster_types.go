@@ -53,6 +53,8 @@ type AuthConfig struct {
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 	// Use LDAP for authentication.
 	LDAPAuth *LDAPConfig `json:"ldapAuth,omitempty"`
+	// Use OIDC for authentication
+	OIDCAuth *OIDCConfig `json:"oidcAuth,omitempty"`
 }
 
 // SecretsConfig configurese the backend for secrets management.
@@ -96,6 +98,46 @@ type LDAPConfig struct {
 	// The base scope to search for users in. Default is to search the entire
 	// directory.
 	UserSearchBase string `json:"userSearchBase,omitempty"`
+}
+
+// OIDCConfig represents configurations for using an OIDC/OAuth provider for
+// authentication.
+type OIDCConfig struct {
+	// The OIDC issuer URL used for discovery
+	IssuerURL string `json:"issuerURL,omitempty"`
+	// When using the built-in secrets backend, the key to where the client-id is
+	// stored. When configuring `clientCredentialsSecret`, set this to the key in
+	// that secret. Defaults to `oidc-clientid`.
+	ClientIDKey string `json:"clientIDKey,omitempty"`
+	// Similar to `clientIDKey`, but for the location of the client secret. Defaults
+	// to `oidc-clientsecret`.
+	ClientSecretKey string `json:"clientSecretKey,omitempty"`
+	// When creating your own kubernets secret with the `clientIDKey` and `clientSecretKey`,
+	// set this to the name of the created secret. It must be in the same namespace
+	// as the manager and app instances.
+	ClientCredentialsSecret string `json:"clientCredentialsSecret,omitempty"`
+	// The redirect URL path configured in the OIDC provider. This should be the full
+	// path where kvdi is hosted followed by `/api/login`. For example, if `kvdi` is
+	// hosted at https://kvdi.local, then this value should be set `https://kvdi.local/api/login`.
+	RedirectURL string `json:"redirectURL,omitempty"`
+	// The scopes to request with the authentication request. Defaults to
+	// `["openid", "email", "profile", "groups"]`.
+	Scopes []string `json:"scopes,omitempty"`
+	// If your OIDC provider does not return a `groups` object, set this to the user
+	// attribute to use for binding authenticated users to VDIRoles. Defaults to `groups`.
+	GroupScope string `json:"groupScope,omitempty"`
+	// Groups that are allowed administrator access to the cluster. Kubernetes
+	// admins will still have the ability to change rbac configurations via the CRDs.
+	AdminGroups []string `json:"adminGroups,omitempty"`
+	// Set to true to skip TLS verification of an OIDC provider.
+	TLSInsecureSkipVerify bool `json:"tlsInsecureSkipVerify,omitempty"`
+	// The base64 encoded CA certificate to use when verifying the TLS certificate of
+	// the OIDC provider.
+	TLSCACert string `json:"tlsCACert,omitempty"`
+	// Set to true if the OIDC provider does not support the "groups" claim (or any
+	// valid alternative) and/or you would like to allow any authenticated user
+	// read-only access.
+	AllowNonGroupedReadOnly bool `json:"allowNonGroupedReadOnly,omitempty"`
 }
 
 // K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.

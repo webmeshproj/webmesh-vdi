@@ -14,7 +14,11 @@ func (v *VDICluster) GetAdminRole() *VDIRole {
 	var annotations map[string]string
 	if v.IsUsingLDAPAuth() {
 		annotations = map[string]string{
-			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), LDAPGroupSeparator),
+			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), AuthGroupSeparator),
+		}
+	} else if v.IsUsingOIDCAuth() {
+		annotations = map[string]string{
+			OIDCGroupRoleAnnotation: strings.Join(v.GetOIDCAdminGroups(), AuthGroupSeparator),
 		}
 	}
 	return &VDIRole{

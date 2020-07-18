@@ -1,9 +1,7 @@
 package v1alpha1
 
 import (
-	"encoding/base64"
 	"fmt"
-	"strings"
 )
 
 // GetAdminSecret returns the name of the secret for storing the admin password.
@@ -35,36 +33,6 @@ func (c *VDICluster) IsUsingLocalAuth() bool {
 	return false
 }
 
-// IsUsingLDAPAuth returns true if the cluster is using the ldap authentication
-// driver.
-func (c *VDICluster) IsUsingLDAPAuth() bool {
-	if c.Spec.Auth != nil {
-		if c.Spec.Auth.LDAPAuth != nil {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *VDICluster) GetLDAPURL() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.URL
-	}
-	return ""
-}
-
-// IsUsingLDAPOverTLS returns true if the configured LDAP server is using TLS.
-func (c *VDICluster) IsUsingLDAPOverTLS() bool {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		if c.Spec.Auth.LDAPAuth.URL != "" {
-			if strings.HasPrefix(c.Spec.Auth.LDAPAuth.URL, "ldaps") {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // AuthIsUsingSecretEngine returns true if the secrets for the configured auth
 // backend are using the built-in secrets engine and not a separate kubernetes
 // secret.
@@ -72,6 +40,11 @@ func (c *VDICluster) AuthIsUsingSecretEngine() bool {
 	if c.Spec.Auth != nil {
 		if c.Spec.Auth.LDAPAuth != nil {
 			if c.Spec.Auth.LDAPAuth.BindCredentialsSecret != "" {
+				return false
+			}
+		}
+		if c.Spec.Auth.OIDCAuth != nil {
+			if c.Spec.Auth.OIDCAuth.ClientCredentialsSecret != "" {
 				return false
 			}
 		}
@@ -83,56 +56,13 @@ func (c *VDICluster) AuthIsUsingSecretEngine() bool {
 // the name of the app secret, however, the caller should only be using this function
 // because they know they are not using the built-in secrets.
 func (c *VDICluster) GetAuthK8sSecret() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil && c.Spec.Auth.LDAPAuth.BindCredentialsSecret != "" {
-		return c.Spec.Auth.LDAPAuth.BindCredentialsSecret
+	if c.Spec.Auth != nil {
+		if c.Spec.Auth.LDAPAuth != nil && c.Spec.Auth.LDAPAuth.BindCredentialsSecret != "" {
+			return c.Spec.Auth.LDAPAuth.BindCredentialsSecret
+		}
+		if c.Spec.Auth.OIDCAuth != nil && c.Spec.Auth.OIDCAuth.ClientCredentialsSecret != "" {
+			return c.Spec.Auth.OIDCAuth.ClientCredentialsSecret
+		}
 	}
 	return c.GetAppSecretsName()
-}
-
-func (c *VDICluster) GetLDAPUserDNKey() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		if c.Spec.Auth.LDAPAuth.BindUserDNSecretKey != "" {
-			return c.Spec.Auth.LDAPAuth.BindUserDNSecretKey
-		}
-	}
-	return "ldap-userdn"
-}
-
-func (c *VDICluster) GetLDAPPasswordKey() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		if c.Spec.Auth.LDAPAuth.BindPasswordSecretKey != "" {
-			return c.Spec.Auth.LDAPAuth.BindPasswordSecretKey
-		}
-	}
-	return "ldap-password"
-}
-
-func (c *VDICluster) GetLDAPInsecureSkipVerify() bool {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.TLSInsecureSkipVerify
-	}
-	return false
-}
-
-func (c *VDICluster) GetLDAPCA() ([]byte, error) {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		if c.Spec.Auth.LDAPAuth.TLSCACert != "" {
-			return base64.StdEncoding.DecodeString(c.Spec.Auth.LDAPAuth.TLSCACert)
-		}
-	}
-	return nil, nil
-}
-
-func (c *VDICluster) GetLDAPSearchBase() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.UserSearchBase
-	}
-	return ""
-}
-
-func (c *VDICluster) GetLDAPAdminGroups() []string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.AdminGroups
-	}
-	return []string{}
 }

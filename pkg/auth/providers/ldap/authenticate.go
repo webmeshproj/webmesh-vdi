@@ -71,7 +71,7 @@ RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroups, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				boundGroups := strings.Split(ldapGroups, v1alpha1.LDAPGroupSeparator)
+				boundGroups := strings.Split(ldapGroups, v1alpha1.AuthGroupSeparator)
 			GroupLoop:
 				for _, group := range boundGroups {
 					if group == "" {

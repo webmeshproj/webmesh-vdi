@@ -31,15 +31,6 @@ import (
 func (d *desktopAPI) GetUserMFA(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 
-	if _, err := d.auth.GetUser(username); err != nil {
-		if errors.IsUserNotFoundError(err) {
-			apiutil.ReturnAPINotFound(err, w)
-			return
-		}
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
 	secret, err := d.mfa.GetUserSecret(username)
 	if err != nil {
 		if errors.IsUserNotFoundError(err) {

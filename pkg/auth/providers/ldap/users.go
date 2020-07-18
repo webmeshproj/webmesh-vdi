@@ -35,7 +35,7 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				groups := strings.Split(ldapGroupStr, v1alpha1.LDAPGroupSeparator)
+				groups := strings.Split(ldapGroupStr, v1alpha1.AuthGroupSeparator)
 			GroupLoop:
 				for _, group := range groups {
 					if group == "" {
@@ -110,7 +110,7 @@ RoleLoop:
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
 			GroupLoop:
-				for _, group := range strings.Split(ldapGroupStr, v1alpha1.LDAPGroupSeparator) {
+				for _, group := range strings.Split(ldapGroupStr, v1alpha1.AuthGroupSeparator) {
 					if group == "" {
 						continue GroupLoop
 					}

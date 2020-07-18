@@ -15,7 +15,9 @@ func (d *desktopAPI) buildRouter() error {
 
 	// Login route is not protected since it generates the tokens for which a user
 	// can use the protected routes.
-	r.PathPrefix("/api/login").HandlerFunc(d.PostLogin).Methods("POST")
+	// TODO: Route accepts GET also to support the oidc flow. Method should probably
+	// be renamed.
+	r.PathPrefix("/api/login").HandlerFunc(d.PostLogin).Methods("POST", "GET")
 
 	// Main HTTP routes
 

@@ -41,6 +41,10 @@ func (p *Provider) ReadSecret(name string) ([]byte, error) {
 // WriteSecret implements SecretsProvider and will write the secret to the vault
 // backend.
 func (p *Provider) WriteSecret(name string, content []byte) error {
+	if content == nil {
+		_, err := p.client.Logical().Delete(p.getSecretPath(name))
+		return err
+	}
 	_, err := p.client.Logical().Write(p.getSecretPath(name), map[string]interface{}{
 		"data": content,
 	})

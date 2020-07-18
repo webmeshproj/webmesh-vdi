@@ -11,7 +11,7 @@ type SecretsProvider interface {
 	// ReadSecret should return the contents of a secret by name.
 	ReadSecret(name string) (contents []byte, err error)
 	// WriteSecret should store a secret, replacing any existing one with the
-	// same name.
+	// same name. When contents is nil, the intent is that the secret is removed.
 	WriteSecret(name string, contents []byte) error
 	// Close should handle any cleanup logic for the backend. This method is invoked
 	// after temporary usages of the secret engine. This shouldn't be destructive,

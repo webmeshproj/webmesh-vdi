@@ -98,6 +98,18 @@ vdi:
       #   adminGroups: ["cn=kvdi-admins,ou=groups,dc=kvdi,dc=io"]
       #   # vdi.spec.auth.ldapAuth.userSearchBase --
       #   userSearchBase: "ou=users,dc=kvdi,dc=io"
+      # oidcAuth:
+      #   issuerURL: "https://example.com"
+      #   clientIDKey: "oidc-clientid"
+      #   clientSecretKey: "oidc-clientsecret"
+      #   clientCredentialsSecret: "",
+      #   redirectURL: "https://kvdi.local/api/login"
+      #   scopes: ["openid", "profile", "email", "groups"]
+      #   groupScope: "groups"
+      #   adminGroups: []
+      #   tlsInsecureSkipVerify: false
+      #   tlsCACert: Cg==
+      #   allowNonGroupedReadOnly: false
     # vdi.spec.secrets -- Secret storage configurations for `kVDI`.
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     secrets:

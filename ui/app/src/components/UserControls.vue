@@ -64,6 +64,8 @@
 </template>
 
 <script>
+import MFADialog from 'components/dialogs/MFADialog.vue'
+
 export default {
   name: 'UserControls',
 
@@ -76,27 +78,31 @@ export default {
     }
   },
 
-  created () {
+  async created () {
     this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
     this.$root.$on('set-active-title', this.setActive)
-    this.$userStore.dispatch('initStore')
-      .then(() => {
-        if (this.$userStore.getters.isLoggedIn) {
-          this.$configStore.dispatch('getServerConfig')
-            .catch((err) => {
-              this.$root.$emit('notify-error', err)
-            })
-          this.pushIfNotCurrent('templates')
-          this.$root.$emit('set-active-title', 'Desktop Templates')
-          this.setLoggedIn()
-        } else {
-          this.pushIfNotCurrent('login')
-        }
-      })
-      .catch((err) => {
-        this.$root.$emit('notify-error', err)
+    await this.$userStore.dispatch('initStore')
+    try {
+      if (this.$userStore.getters.requiresMFA) {
+        await this.$q.dialog({
+          component: MFADialog,
+          parent: this
+        }).onOk(() => {
+          this.handleLoggedIn()
+        }).onCancel(() => {
+        }).onDismiss(() => {
+        })
+        return
+      }
+      if (this.$userStore.getters.isLoggedIn) {
+        this.handleLoggedIn()
+      } else {
         this.pushIfNotCurrent('login')
-      })
+      }
+    } catch (err) {
+      this.$root.$emit('notify-error', err)
+      this.pushIfNotCurrent('login')
+    }
   },
 
   beforeDestroy () {
@@ -105,6 +111,13 @@ export default {
   },
 
   methods: {
+
+    async handleLoggedIn () {
+      await this.$configStore.dispatch('getServerConfig')
+      this.pushIfNotCurrent('templates')
+      this.$root.$emit('set-active-title', 'Desktop Templates')
+      this.setLoggedIn()
+    },
 
     onLogout () {
       this.$userStore.dispatch('logout')

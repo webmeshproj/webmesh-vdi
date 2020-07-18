@@ -43,10 +43,33 @@ export default {
   },
 
   methods: {
+    async initAuthFlow () {
+      try {
+        await this.$userStore.dispatch('initStore')
+        const requiresMFA = this.$userStore.getters.requiresMFA
+        if (requiresMFA) {
+          // MFA Required
+          await this.$q.dialog({
+            component: MFADialog,
+            parent: this
+          }).onOk(() => {
+            this.notifyLoggedIn()
+          }).onCancel(() => {
+          }).onDismiss(() => {
+          })
+          return
+        }
+        await this.notifyLoggedIn()
+      } catch (err) {
+        this.$root.$emit('notify-error', err)
+      }
+    },
+
     async onSubmit () {
       try {
         await this.$userStore.dispatch('login', { username: this.username, password: this.password })
-        if (!this.$userStore.getters.isLoggedIn) {
+        const requiresMFA = this.$userStore.getters.requiresMFA
+        if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
             component: MFADialog,
