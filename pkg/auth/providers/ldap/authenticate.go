@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -14,7 +14,7 @@ import (
 
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
-func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthResult, error) {
+func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
 	conn, err := a.connect()
 	if err != nil {
 		return nil, err
@@ -59,9 +59,9 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 	}
 
 	// make a new user object
-	vdiUser := &v1alpha1.VDIUser{
+	vdiUser := &v1.VDIUser{
 		Name:  req.Username,
-		Roles: make([]*v1alpha1.VDIUserRole, 0),
+		Roles: make([]*v1.VDIUserRole, 0),
 	}
 
 	// we'll have to iterate our available roles and check if any have an annotation
@@ -70,8 +70,8 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
-			if ldapGroups, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				boundGroups := strings.Split(ldapGroups, v1alpha1.AuthGroupSeparator)
+			if ldapGroups, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
+				boundGroups := strings.Split(ldapGroups, v1.AuthGroupSeparator)
 			GroupLoop:
 				for _, group := range boundGroups {
 					if group == "" {
@@ -89,5 +89,5 @@ RoleLoop:
 	vdiUser.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
 
 	// user is a regular user, check their ldap groups against any bound VDIRoles.
-	return &v1alpha1.AuthResult{User: vdiUser}, nil
+	return &v1.AuthResult{User: vdiUser}, nil
 }

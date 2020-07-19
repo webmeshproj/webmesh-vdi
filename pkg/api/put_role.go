@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +52,7 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	params := apiutil.GetRequestObject(r).(*v1alpha1.UpdateRoleRequest)
+	params := apiutil.GetRequestObject(r).(*v1.UpdateRoleRequest)
 	if params == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -68,5 +70,5 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters putRoleRequest
 type swaggerUpdateRoleRequest struct {
 	// in:body
-	Body v1alpha1.UpdateRoleRequest
+	Body v1.UpdateRoleRequest
 }

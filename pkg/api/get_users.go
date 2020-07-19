@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -77,12 +77,12 @@ func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 // swagger:response usersResponse
 type swaggerUsersResponse struct {
 	// in:body
-	Body []v1alpha1.VDIUser
+	Body []v1.VDIUser
 }
 
 // A single user
 // swagger:response userResponse
 type swaggerUserResponse struct {
 	// in:body
-	Body v1alpha1.VDIUser
+	Body v1.VDIUser
 }

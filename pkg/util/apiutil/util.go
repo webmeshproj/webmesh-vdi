@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	verrors "github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -26,14 +27,14 @@ func WriteOrLogError(out []byte, w http.ResponseWriter) {
 // message.
 func ReturnAPIError(err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusBadRequest)
-	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(err).JSON(), w)
 }
 
 // ReturnAPINotFound returns a NotFound status code with a json encoded error
 // message.
 func ReturnAPINotFound(err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	WriteOrLogError(verrors.ToAPIError(err).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(err).JSON(), w)
 }
 
 // ReturnAPIForbidden returns a Forbidden status code with a json encoded error
@@ -43,7 +44,7 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
 	w.WriteHeader(http.StatusForbidden)
-	WriteOrLogError(verrors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w)
 }
 
 // WriteJSON encodes the provided interface to JSON and writes it to the response
@@ -77,12 +78,12 @@ func WriteOK(w http.ResponseWriter) {
 
 // GenerateJWT will create a new JWT with the given user object's fields
 // embedded in the claims.
-func GenerateJWT(secret []byte, user *v1alpha1.VDIUser, authorized bool) (v1alpha1.JWTClaims, string, error) {
-	claims := v1alpha1.JWTClaims{
+func GenerateJWT(secret []byte, user *v1.VDIUser, authorized bool) (v1.JWTClaims, string, error) {
+	claims := v1.JWTClaims{
 		User:       user,
 		Authorized: authorized,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(v1alpha1.DefaultSessionLength).Unix(),
+			ExpiresAt: time.Now().Add(v1.DefaultSessionLength).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 	}
@@ -93,8 +94,8 @@ func GenerateJWT(secret []byte, user *v1alpha1.VDIUser, authorized bool) (v1alph
 
 // FilterUserRolesByNames returns a list of UserRoles matching the provided names
 // and cluster
-func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1alpha1.VDIUserRole {
-	userRoles := make([]*v1alpha1.VDIUserRole, 0)
+func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1.VDIUserRole {
+	userRoles := make([]*v1.VDIUserRole, 0)
 	for _, name := range names {
 		for _, role := range roles {
 			if role.GetName() == name {

@@ -2,6 +2,11 @@ package v1alpha1
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetAdminSecret returns the name of the secret for storing the admin password.
@@ -65,4 +70,56 @@ func (c *VDICluster) GetAuthK8sSecret() string {
 		}
 	}
 	return c.GetAppSecretsName()
+}
+
+// GetAdminRole returns an admin role for this VDICluster.
+func (v *VDICluster) GetAdminRole() *VDIRole {
+	var annotations map[string]string
+	if v.IsUsingLDAPAuth() {
+		annotations = map[string]string{
+			v1.LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), v1.AuthGroupSeparator),
+		}
+	} else if v.IsUsingOIDCAuth() {
+		annotations = map[string]string{
+			v1.OIDCGroupRoleAnnotation: strings.Join(v.GetOIDCAdminGroups(), v1.AuthGroupSeparator),
+		}
+	}
+	return &VDIRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        fmt.Sprintf("%s-admin", v.GetName()),
+			Annotations: annotations,
+			Labels: map[string]string{
+				v1.RoleClusterRefLabel: v.GetName(),
+			},
+		},
+		Rules: []v1.Rule{
+			{
+				Verbs:            []v1.Verb{v1.VerbAll},
+				Resources:        []v1.Resource{v1.ResourceAll},
+				ResourcePatterns: []string{".*"},
+				Namespaces:       []string{v1.NamespaceAll},
+			},
+		},
+	}
+}
+
+// GetLaunchTemplatesRole returns a launch-templates role for a cluster.
+// This role is used if anonymous auth is enabled.
+func (v *VDICluster) GetLaunchTemplatesRole() *VDIRole {
+	return &VDIRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("%s-launch-templates", v.GetName()),
+			Labels: map[string]string{
+				v1.RoleClusterRefLabel: v.GetName(),
+			},
+		},
+		Rules: []v1.Rule{
+			{
+				Verbs:            []v1.Verb{v1.VerbRead, v1.VerbUse, v1.VerbLaunch},
+				Resources:        []v1.Resource{v1.ResourceTemplates},
+				ResourcePatterns: []string{".*"},
+				Namespaces:       []string{v1.NamespaceAll},
+			},
+		},
+	}
 }

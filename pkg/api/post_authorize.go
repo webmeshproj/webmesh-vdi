@@ -3,7 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -32,7 +33,7 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// retrieve the OTP from the request
-	req := apiutil.GetRequestObject(r).(*v1alpha1.AuthorizeRequest)
+	req := apiutil.GetRequestObject(r).(*v1.AuthorizeRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -52,5 +53,5 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters authorizeRequest
 type swaggerAuthorizeRequest struct {
 	// in:body
-	Body v1alpha1.AuthorizeRequest
+	Body v1.AuthorizeRequest
 }

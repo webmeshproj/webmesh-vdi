@@ -3,6 +3,8 @@ package v1alpha1
 import (
 	"context"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,8 +41,8 @@ func (d *Desktop) OwnerReferences() []metav1.OwnerReference {
 			Kind:               d.Kind,
 			Name:               d.GetName(),
 			UID:                d.GetUID(),
-			Controller:         &trueVal,
-			BlockOwnerDeletion: &falseVal,
+			Controller:         &v1.TrueVal,
+			BlockOwnerDeletion: &v1.FalseVal,
 		},
 	}
 }

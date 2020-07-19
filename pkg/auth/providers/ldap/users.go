@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -12,7 +12,7 @@ import (
 )
 
 // GetUsers should return a list of VDIUsers.
-func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
+func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 	conn, err := a.connect()
 	if err != nil {
 		return nil, err
@@ -28,14 +28,14 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 		return nil, err
 	}
 
-	vdiUsers := make([]*v1alpha1.VDIUser, 0)
+	vdiUsers := make([]*v1.VDIUser, 0)
 	for _, role := range roles {
 
 		userRole := role.ToUserRole()
 
 		if annotations := role.GetAnnotations(); annotations != nil {
-			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
-				groups := strings.Split(ldapGroupStr, v1alpha1.AuthGroupSeparator)
+			if ldapGroupStr, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
+				groups := strings.Split(ldapGroupStr, v1.AuthGroupSeparator)
 			GroupLoop:
 				for _, group := range groups {
 					if group == "" {
@@ -65,7 +65,7 @@ func (a *AuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 }
 
 // GetUser should retrieve a single VDIUser.
-func (a *AuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
+func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 	conn, err := a.connect()
 	if err != nil {
 		return nil, err
@@ -100,17 +100,17 @@ func (a *AuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
 
 	user := sr.Entries[0]
 
-	vdiUser := &v1alpha1.VDIUser{
+	vdiUser := &v1.VDIUser{
 		Name:  username,
-		Roles: make([]*v1alpha1.VDIUserRole, 0),
+		Roles: make([]*v1.VDIUserRole, 0),
 	}
 
 RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
-			if ldapGroupStr, ok := annotations[v1alpha1.LDAPGroupRoleAnnotation]; ok {
+			if ldapGroupStr, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
 			GroupLoop:
-				for _, group := range strings.Split(ldapGroupStr, v1alpha1.AuthGroupSeparator) {
+				for _, group := range strings.Split(ldapGroupStr, v1.AuthGroupSeparator) {
 					if group == "" {
 						continue GroupLoop
 					}
@@ -127,12 +127,12 @@ RoleLoop:
 }
 
 // CreateUser should handle any logic required to register a new user in kVDI.
-func (a *AuthProvider) CreateUser(*v1alpha1.CreateUserRequest) error {
+func (a *AuthProvider) CreateUser(*v1.CreateUserRequest) error {
 	return errors.New("Creating users is not supported when using LDAP authentication")
 }
 
 // UpdateUser should update a VDIUser.
-func (a *AuthProvider) UpdateUser(string, *v1alpha1.UpdateUserRequest) error {
+func (a *AuthProvider) UpdateUser(string, *v1.UpdateUserRequest) error {
 	return errors.New("Updating users is not supported when using LDAP authentication")
 }
 
@@ -141,7 +141,7 @@ func (a *AuthProvider) DeleteUser(string) error {
 	return errors.New("Deleting users is not supported when using LDAP authentication")
 }
 
-func appendUser(vdiUsers []*v1alpha1.VDIUser, name string, role *v1alpha1.VDIUserRole) []*v1alpha1.VDIUser {
+func appendUser(vdiUsers []*v1.VDIUser, name string, role *v1.VDIUserRole) []*v1.VDIUser {
 	for _, user := range vdiUsers {
 		if user.Name == name {
 			for _, userRole := range user.Roles {
@@ -153,8 +153,8 @@ func appendUser(vdiUsers []*v1alpha1.VDIUser, name string, role *v1alpha1.VDIUse
 			return vdiUsers
 		}
 	}
-	return append(vdiUsers, &v1alpha1.VDIUser{
+	return append(vdiUsers, &v1.VDIUser{
 		Name:  name,
-		Roles: []*v1alpha1.VDIUserRole{role},
+		Roles: []*v1.VDIUserRole{role},
 	})
 }

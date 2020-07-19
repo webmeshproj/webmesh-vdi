@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -17,9 +17,9 @@ var auditLogger = logf.Log.WithName("api_audit")
 type AuditResult struct {
 	Allowed     bool
 	FromOwner   bool
-	Action      *v1alpha1.APIAction
+	Action      *v1.APIAction
 	Resource    string
-	UserSession *v1alpha1.JWTClaims
+	UserSession *v1.JWTClaims
 	Request     *http.Request
 }
 

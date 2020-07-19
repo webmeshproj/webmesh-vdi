@@ -9,8 +9,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/api"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -67,7 +68,7 @@ func newServer(cfg *rest.Config, vdiCluster string, enableCORS bool) (*http.Serv
 
 	return &http.Server{
 		Handler:      wrappedRouter,
-		Addr:         fmt.Sprintf(":%d", v1alpha1.WebPort),
+		Addr:         fmt.Sprintf(":%d", v1.WebPort),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}, nil

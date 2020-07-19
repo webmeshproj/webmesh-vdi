@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 
 	"github.com/go-logr/logr"
@@ -20,7 +21,7 @@ var userAttrs = []string{"cn", "dn", "uid", "memberOf", "accountStatus"}
 // authentication backend. Access to groups in LDAP is supplied through annotations
 // on VDIRoles.
 type AuthProvider struct {
-	v1alpha1.AuthProvider
+	common.AuthProvider
 
 	// k8s client
 	client client.Client
@@ -39,10 +40,10 @@ type AuthProvider struct {
 }
 
 // Blank assignment to make sure AuthProvider satisfies the interface.
-var _ v1alpha1.AuthProvider = &AuthProvider{}
+var _ common.AuthProvider = &AuthProvider{}
 
 // New returns a new LDAPAuthProvider.
-func New() v1alpha1.AuthProvider {
+func New() common.AuthProvider {
 	return &AuthProvider{}
 }
 

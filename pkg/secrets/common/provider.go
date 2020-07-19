@@ -1,13 +1,17 @@
-package v1alpha1
+package common
 
-import "sigs.k8s.io/controller-runtime/pkg/client"
+import (
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 // SecretsProvider provides an interface for an app instance to get and store
 // any secrets it needs. Currenetly there is only a k8s secret provider, but
 // this intreface could be implemented for things like vault.
 type SecretsProvider interface {
 	// Setup is called before the interface is used for any operations
-	Setup(client.Client, *VDICluster) error
+	Setup(client.Client, *v1alpha1.VDICluster) error
 	// ReadSecret should return the contents of a secret by name.
 	ReadSecret(name string) (contents []byte, err error)
 	// WriteSecret should store a secret, replacing any existing one with the

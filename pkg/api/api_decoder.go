@@ -5,36 +5,38 @@ import (
 	"reflect"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 var Decoders = map[string]map[string]interface{}{
 	"/api/authorize": {
-		"POST": v1alpha1.AuthorizeRequest{},
+		"POST": v1.AuthorizeRequest{},
 	},
 	"/api/sessions": {
-		"POST": v1alpha1.CreateSessionRequest{},
+		"POST": v1.CreateSessionRequest{},
 	},
 	"/api/users": {
-		"POST": v1alpha1.CreateUserRequest{},
+		"POST": v1.CreateUserRequest{},
 	},
 	"/api/users/{user}": {
-		"PUT": v1alpha1.UpdateUserRequest{},
+		"PUT": v1.UpdateUserRequest{},
 	},
 	"/api/users/{user}/mfa": {
-		"PUT": v1alpha1.UpdateMFARequest{},
+		"PUT": v1.UpdateMFARequest{},
 	},
 	"/api/roles": {
-		"POST": v1alpha1.CreateRoleRequest{},
+		"POST": v1.CreateRoleRequest{},
 	},
 	"/api/templates": {
 		"POST": v1alpha1.DesktopTemplate{},
 	},
 	"/api/roles/{role}": {
-		"PUT": v1alpha1.UpdateRoleRequest{},
+		"PUT": v1.UpdateRoleRequest{},
 	},
 	"/api/login": {
-		"POST": v1alpha1.LoginRequest{},
+		"POST": v1.LoginRequest{},
 	},
 }
 

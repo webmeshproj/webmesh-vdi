@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/go-oidc"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
@@ -22,7 +21,7 @@ import (
 // authentication backend. Access to groups provided in the claims is supplied
 // through annotations on VDIRoles.
 type AuthProvider struct {
-	v1alpha1.AuthProvider
+	common.AuthProvider
 
 	// k8s client
 	client client.Client
@@ -39,10 +38,10 @@ type AuthProvider struct {
 }
 
 // Blank assignment to make sure AuthProvider satisfies the interface.
-var _ v1alpha1.AuthProvider = &AuthProvider{}
+var _ common.AuthProvider = &AuthProvider{}
 
 // New returns a new OIDC AuthProvider.
-func New() v1alpha1.AuthProvider {
+func New() common.AuthProvider {
 	return &AuthProvider{}
 }
 
@@ -85,7 +84,7 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 	}
 
 	a.ctx = gooidc.ClientContext(context.Background(), httpClient)
-	provider, err := oidc.NewProvider(a.ctx, a.cluster.GetOIDCIssuerURL())
+	provider, err := gooidc.NewProvider(a.ctx, a.cluster.GetOIDCIssuerURL())
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 		Endpoint:     provider.Endpoint(),
 		Scopes:       a.cluster.GetOIDCScopes(),
 	}
-	a.verifier = provider.Verifier(&oidc.Config{ClientID: oidcSecrets[clientIDKey]})
+	a.verifier = provider.Verifier(&gooidc.Config{ClientID: oidcSecrets[clientIDKey]})
 
 	return nil
 }

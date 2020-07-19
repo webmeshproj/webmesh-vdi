@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -14,7 +16,7 @@ func (c *VDICluster) GetCoreNamespace() string {
 	if c.Spec.AppNamespace != "" {
 		return c.Spec.AppNamespace
 	}
-	return defaultNamespace
+	return v1.DefaultNamespace
 }
 
 func (c *VDICluster) NamespacedName() types.NamespacedName {
@@ -30,22 +32,22 @@ func (c *VDICluster) GetComponentLabels(component string) map[string]string {
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	labels[VDIClusterLabel] = c.GetName()
-	labels[ComponentLabel] = component
+	labels[v1.VDIClusterLabel] = c.GetName()
+	labels[v1.ComponentLabel] = component
 	return labels
 }
 
 func (c *VDICluster) GetUserDesktopsSelector(username string) client.MatchingLabels {
 	return client.MatchingLabels{
-		UserLabel:       username,
-		VDIClusterLabel: c.GetName(),
+		v1.UserLabel:       username,
+		v1.VDIClusterLabel: c.GetName(),
 	}
 }
 
 func (c *VDICluster) GetUserDesktopLabels(username string) map[string]string {
 	return map[string]string{
-		UserLabel:       username,
-		VDIClusterLabel: c.GetName(),
+		v1.UserLabel:       username,
+		v1.VDIClusterLabel: c.GetName(),
 	}
 }
 
@@ -54,10 +56,10 @@ func (c *VDICluster) GetDesktopLabels(desktop *Desktop) map[string]string {
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	labels[UserLabel] = desktop.Spec.User
-	labels[VDIClusterLabel] = c.GetName()
-	labels[ComponentLabel] = "desktop"
-	labels[DesktopNameLabel] = desktop.GetName()
+	labels[v1.UserLabel] = desktop.Spec.User
+	labels[v1.VDIClusterLabel] = c.GetName()
+	labels[v1.ComponentLabel] = "desktop"
+	labels[v1.DesktopNameLabel] = desktop.GetName()
 	return labels
 }
 
@@ -70,8 +72,8 @@ func (c *VDICluster) OwnerReferences() []metav1.OwnerReference {
 			Kind:               c.Kind,
 			Name:               c.GetName(),
 			UID:                c.GetUID(),
-			Controller:         &trueVal,
-			BlockOwnerDeletion: &falseVal,
+			Controller:         &v1.TrueVal,
+			BlockOwnerDeletion: &v1.FalseVal,
 		},
 	}
 }

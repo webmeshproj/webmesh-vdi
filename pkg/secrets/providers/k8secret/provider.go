@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ import (
 // Provider implements a SecretsProvider that matches secret names to
 // keys in a single configured secret.
 type Provider struct {
-	v1alpha1.SecretsProvider
+	common.SecretsProvider
 
 	// the k8s client
 	client client.Client
@@ -25,7 +26,7 @@ type Provider struct {
 
 // Blank assignmnt to make sure Provider satisfies the SecretsProvider
 // interface.
-var _ v1alpha1.SecretsProvider = &Provider{}
+var _ common.SecretsProvider = &Provider{}
 
 // New returns a new Provider.
 func New() *Provider {

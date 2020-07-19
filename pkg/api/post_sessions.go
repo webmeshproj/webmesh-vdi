@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	"github.com/google/uuid"
@@ -18,7 +20,7 @@ import (
 // swagger:parameters postSessionRequest
 type swaggerCreateSessionRequest struct {
 	// in:body
-	Body v1alpha1.CreateSessionRequest
+	Body v1.CreateSessionRequest
 }
 
 // CreateSessionResponse returns the name of the Desktop and what namespace
@@ -43,7 +45,7 @@ type swaggerCreateSessionResponse struct {
 //   403: error
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
 	sess := apiutil.GetRequestUserSession(r)
-	req := apiutil.GetRequestObject(r).(*v1alpha1.CreateSessionRequest)
+	req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -63,7 +65,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 }
 
 // newDesktopForRequest builds a new Desktop object from the request parameters.
-func (d *desktopAPI) newDesktopForRequest(req *v1alpha1.CreateSessionRequest, username string) *v1alpha1.Desktop {
+func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),

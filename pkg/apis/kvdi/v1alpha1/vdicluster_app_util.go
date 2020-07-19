@@ -3,7 +3,9 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/version"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -15,7 +17,7 @@ func (c *VDICluster) GetAppReplicas() *int32 {
 	if c.Spec.App != nil && c.Spec.App.Replicas != 0 {
 		return &c.Spec.App.Replicas
 	}
-	return &defaultReplicas
+	return &v1.DefaultReplicas
 }
 
 func (c *VDICluster) GetAppResources() corev1.ResourceRequirements {
@@ -38,9 +40,9 @@ func (c *VDICluster) GetAppPullPolicy() corev1.PullPolicy {
 
 func (c *VDICluster) GetAppSecurityContext() *corev1.PodSecurityContext {
 	return &corev1.PodSecurityContext{
-		RunAsUser:    &defaultUser,
-		RunAsGroup:   &defaultUser,
-		RunAsNonRoot: &trueVal,
+		RunAsUser:    &v1.DefaultUser,
+		RunAsGroup:   &v1.DefaultUser,
+		RunAsNonRoot: &v1.TrueVal,
 	}
 }
 

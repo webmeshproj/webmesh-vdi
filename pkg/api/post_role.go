@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +17,7 @@ import (
 // swagger:parameters postRoleRequest
 type swaggerCreateRoleRequest struct {
 	// in:body
-	Body v1alpha1.CreateRoleRequest
+	Body v1.CreateRoleRequest
 }
 
 // swagger:route POST /api/roles Roles postRoleRequest
@@ -25,7 +27,7 @@ type swaggerCreateRoleRequest struct {
 //   400: error
 //   403: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
-	req := apiutil.GetRequestObject(r).(*v1alpha1.CreateRoleRequest)
+	req := apiutil.GetRequestObject(r).(*v1.CreateRoleRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -38,13 +40,13 @@ func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 	apiutil.WriteOK(w)
 }
 
-func (d *desktopAPI) newRoleFromRequest(req *v1alpha1.CreateRoleRequest) *v1alpha1.VDIRole {
+func (d *desktopAPI) newRoleFromRequest(req *v1.CreateRoleRequest) *v1alpha1.VDIRole {
 	return &v1alpha1.VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        req.GetName(),
 			Annotations: req.GetAnnotations(),
 			Labels: map[string]string{
-				v1alpha1.RoleClusterRefLabel: d.vdiCluster.GetName(),
+				v1.RoleClusterRefLabel: d.vdiCluster.GetName(),
 			},
 		},
 		Rules: req.GetRules(),

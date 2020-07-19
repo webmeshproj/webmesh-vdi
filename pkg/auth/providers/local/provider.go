@@ -2,6 +2,7 @@ package local
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -11,7 +12,7 @@ import (
 // to a passwd file to authenticate users and map them to roles. This is primarily
 // intended for testing and ideally external auth providers would be supported.
 type LocalAuthProvider struct {
-	v1alpha1.AuthProvider
+	common.AuthProvider
 
 	// k8s client
 	client client.Client
@@ -22,7 +23,7 @@ type LocalAuthProvider struct {
 }
 
 // New returns a new LocalAuthProvider.
-func New() v1alpha1.AuthProvider {
+func New() common.AuthProvider {
 	return &LocalAuthProvider{}
 }
 

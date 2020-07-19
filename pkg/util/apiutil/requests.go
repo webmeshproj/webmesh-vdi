@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -20,13 +20,13 @@ const ContextUserKey = 0
 const ContextRequestObjectKey = 1
 
 // SetRequestUserSession writes the user session to the request context
-func SetRequestUserSession(r *http.Request, sess *v1alpha1.JWTClaims) {
+func SetRequestUserSession(r *http.Request, sess *v1.JWTClaims) {
 	context.Set(r, ContextUserKey, sess)
 }
 
 // GetRequestUserSession retrieves the user session from the request context.
-func GetRequestUserSession(r *http.Request) *v1alpha1.JWTClaims {
-	return context.Get(r, ContextUserKey).(*v1alpha1.JWTClaims)
+func GetRequestUserSession(r *http.Request) *v1.JWTClaims {
+	return context.Get(r, ContextUserKey).(*v1.JWTClaims)
 }
 
 // SetRequestObject sets the given interface to the decoded request object in the context.

@@ -1,13 +1,13 @@
 package local
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 // GetUsers implements AuthProvider and serves a GET /api/users request
-func (a *LocalAuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
+func (a *LocalAuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
 		return nil, err
@@ -16,9 +16,9 @@ func (a *LocalAuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := make([]*v1alpha1.VDIUser, 0)
+	res := make([]*v1.VDIUser, 0)
 	for _, user := range users {
-		res = append(res, &v1alpha1.VDIUser{
+		res = append(res, &v1.VDIUser{
 			Name:  user.Username,
 			Roles: apiutil.FilterUserRolesByNames(roles, user.Groups),
 		})
@@ -28,7 +28,7 @@ func (a *LocalAuthProvider) GetUsers() ([]*v1alpha1.VDIUser, error) {
 }
 
 // CreateUser implements AuthProvider and serves a POST /api/users request
-func (a *LocalAuthProvider) CreateUser(req *v1alpha1.CreateUserRequest) error {
+func (a *LocalAuthProvider) CreateUser(req *v1.CreateUserRequest) error {
 	passwdHash, err := common.HashPassword(req.Password)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func (a *LocalAuthProvider) CreateUser(req *v1alpha1.CreateUserRequest) error {
 }
 
 // GetUser implements AuthProvider and serves a GET /api/users/{user} request
-func (a *LocalAuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) {
+func (a *LocalAuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 	user, err := a.getUser(username)
 	if err != nil {
 		return nil, err
@@ -53,14 +53,14 @@ func (a *LocalAuthProvider) GetUser(username string) (*v1alpha1.VDIUser, error) 
 		return nil, err
 	}
 
-	return &v1alpha1.VDIUser{
+	return &v1.VDIUser{
 		Name:  user.Username,
 		Roles: apiutil.FilterUserRolesByNames(roles, user.Groups),
 	}, nil
 }
 
 // UpdateUser implements AuthProvider and serves a PUT /api/users/{user} request
-func (a *LocalAuthProvider) UpdateUser(username string, req *v1alpha1.UpdateUserRequest) error {
+func (a *LocalAuthProvider) UpdateUser(username string, req *v1.UpdateUserRequest) error {
 	user := &LocalUser{Username: username}
 	if len(req.Roles) != 0 {
 		user.Groups = req.Roles

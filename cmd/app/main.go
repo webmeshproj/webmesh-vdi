@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
@@ -39,7 +40,7 @@ func main() {
 	}
 
 	// serve
-	applogger.Info(fmt.Sprintf("Starting VDI cluster frontend on :%d", v1alpha1.WebPort))
+	applogger.Info(fmt.Sprintf("Starting VDI cluster frontend on :%d", v1.WebPort))
 	if err := srvr.ListenAndServeTLS(tlsutil.ServerKeypair()); err != nil {
 		applogger.Error(err, "Failed to start https server")
 		os.Exit(1)

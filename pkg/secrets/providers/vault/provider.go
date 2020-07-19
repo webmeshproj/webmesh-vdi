@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
 
 	"github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,7 +16,7 @@ var vaultLogger = logf.Log.WithName("vault_secrets")
 // Provider implements a SecretsProvider that matches secret names to keys in
 // vault.
 type Provider struct {
-	v1alpha1.SecretsProvider
+	common.SecretsProvider
 
 	initialized bool
 	crConfig    *v1alpha1.VaultConfig
@@ -26,7 +27,7 @@ type Provider struct {
 
 // Blank assignmnt to make sure Provider satisfies the SecretsProvider
 // interface.
-var _ v1alpha1.SecretsProvider = &Provider{}
+var _ common.SecretsProvider = &Provider{}
 
 // New returns a new Provider.
 func New() *Provider {

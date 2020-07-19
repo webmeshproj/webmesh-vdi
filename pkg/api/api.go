@@ -7,6 +7,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/auth"
+	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/auth/mfa"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
@@ -39,7 +40,7 @@ type desktopAPI struct {
 	// our parent vdi cluster
 	vdiCluster *v1alpha1.VDICluster
 	// the user auth provider
-	auth v1alpha1.AuthProvider
+	auth common.AuthProvider
 	// the secrets backend
 	secrets *secrets.SecretEngine
 	// the mfa backend for setting and retrieving OTP secrets

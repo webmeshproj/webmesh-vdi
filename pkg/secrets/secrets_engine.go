@@ -9,6 +9,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/lock"
 
+	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/vault"
 
@@ -28,7 +29,7 @@ var cacheTTL = time.Duration(1) * time.Hour
 // Read/Write methods that the backends provide.
 type SecretEngine struct {
 	// the provider backend
-	backend v1alpha1.SecretsProvider
+	backend common.SecretsProvider
 	// the cluster configuration
 	cluster *v1alpha1.VDICluster
 	// the k8s client
@@ -51,7 +52,7 @@ type cacheItem struct {
 
 // GetSecretEngine returns a new secret engine for the given cluster.
 func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
-	var backend v1alpha1.SecretsProvider
+	var backend common.SecretsProvider
 	switch cluster.GetSecretsBackend() {
 	case v1alpha1.SecretsBackendVault:
 		backend = vault.New()

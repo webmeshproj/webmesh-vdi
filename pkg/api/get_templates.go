@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/user"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,7 +27,7 @@ func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(sess.User.FilterTemplates(tmpls.Items), w)
+	apiutil.WriteJSON(user.FilterTemplates(sess.User, tmpls.Items), w)
 }
 
 // getAllDesktopTemplates lists the DesktopTemplates registered in the api servers.

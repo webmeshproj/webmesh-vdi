@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -28,9 +29,9 @@ func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
 }
 
 // returnNewJWT will return a new JSON web token to the requestor.
-func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser, authorized bool) {
+func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1.VDIUser, authorized bool) {
 	// fetch the JWT signing secret
-	secret, err := d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
+	secret, err := d.secrets.ReadSecret(v1.JWTSecretKey, true)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -44,7 +45,7 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1alpha1.VDIUser,
 	}
 
 	// return the token to the user
-	apiutil.WriteJSON(&v1alpha1.SessionResponse{
+	apiutil.WriteJSON(&v1.SessionResponse{
 		Token:      newToken,
 		ExpiresAt:  claims.ExpiresAt,
 		User:       user,
@@ -58,14 +59,14 @@ func (d *desktopAPI) getEndpointURL(r *http.Request) (*url.URL, error) {
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return nil, err
 	}
-	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1alpha1.WebPort))
+	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1.WebPort))
 }
 
 // Session response
 // swagger:response sessionResponse
 type swaggerSessionResponse struct {
 	// in:body
-	Body v1alpha1.SessionResponse
+	Body v1.SessionResponse
 }
 
 // Success response

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
 	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
@@ -18,10 +18,10 @@ import (
 )
 
 // serverCertMountPath redeclared locally for mocking
-var serverCertMountPath = v1alpha1.ServerCertificateMountPath
+var serverCertMountPath = v1.ServerCertificateMountPath
 
 // clientCertMountPath redeclared locally for mocking
-var clientCertMountPath = v1alpha1.ClientCertificateMountPath
+var clientCertMountPath = v1.ClientCertificateMountPath
 
 // The minimum TLS version required for all mTLS traffic
 var minTLSVersion = uint16(tls.VersionTLS12)

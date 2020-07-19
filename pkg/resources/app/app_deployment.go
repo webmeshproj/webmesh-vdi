@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -82,18 +83,18 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",
-									ContainerPort: v1alpha1.WebPort,
+									ContainerPort: v1.WebPort,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "tls-server",
-									MountPath: v1alpha1.ServerCertificateMountPath,
+									MountPath: v1.ServerCertificateMountPath,
 									ReadOnly:  true,
 								},
 								{
 									Name:      "tls-client",
-									MountPath: v1alpha1.ClientCertificateMountPath,
+									MountPath: v1.ClientCertificateMountPath,
 									ReadOnly:  true,
 								},
 							},

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -14,7 +14,7 @@ import (
 
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
-func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthResult, error) {
+func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
 	r := req.GetRequest()
 
 	// POST methods are the start and end of an oidc flow. If we recorded claims
@@ -37,7 +37,7 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 			// If the secret is not found it means we have not generated claims yet
 			// for this user. Return the oauth redirect.
 			if errors.IsSecretNotFoundError(err) {
-				return &v1alpha1.AuthResult{
+				return &v1.AuthResult{
 					RedirectURL: a.oauthCfg.AuthCodeURL(req.State),
 				}, nil
 			}
@@ -51,7 +51,7 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 		if err := a.secrets.WriteSecret(stateKey, nil); err != nil {
 			return nil, err
 		}
-		authResult := &v1alpha1.AuthResult{}
+		authResult := &v1.AuthResult{}
 		return authResult, json.Unmarshal(existingClaim, authResult)
 	}
 
@@ -89,9 +89,9 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 	if err != nil {
 		return nil, err
 	}
-	user := &v1alpha1.VDIUser{
+	user := &v1.VDIUser{
 		Name:  username,
-		Roles: make([]*v1alpha1.VDIUserRole, 0),
+		Roles: make([]*v1.VDIUserRole, 0),
 	}
 
 	// check if we can handle group membership
@@ -100,8 +100,8 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 		// if we can't determine group membership, check if cluster configuration
 		// allows the user in anyway.
 		if a.cluster.AllowNonGroupedReadOnly() {
-			user.Roles = []*v1alpha1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
-			return nil, a.marshalClaimsToSecret(stateKey, &v1alpha1.AuthResult{User: user})
+			user.Roles = []*v1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
+			return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{User: user})
 		}
 		return nil, errors.New("No groups provided in claims and allow non-grouped users is set to false")
 	}
@@ -121,8 +121,8 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 RoleLoop:
 	for _, role := range roles {
 		if annotations := role.GetAnnotations(); annotations != nil {
-			if oidcGroupStr, ok := annotations[v1alpha1.OIDCGroupRoleAnnotation]; ok {
-				oidcGroups := strings.Split(oidcGroupStr, v1alpha1.AuthGroupSeparator)
+			if oidcGroupStr, ok := annotations[v1.OIDCGroupRoleAnnotation]; ok {
+				oidcGroups := strings.Split(oidcGroupStr, v1.AuthGroupSeparator)
 				for _, group := range oidcGroups {
 					if common.StringSliceContains(userGroupSlc, group) {
 						boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
@@ -138,10 +138,10 @@ RoleLoop:
 
 	// save the claims to the secret backend, they will be retrieved on the next POST
 	// for this state.
-	return nil, a.marshalClaimsToSecret(stateKey, &v1alpha1.AuthResult{User: user})
+	return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{User: user})
 }
 
-func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1alpha1.AuthResult) error {
+func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1.AuthResult) error {
 	if err := a.secrets.Lock(); err != nil {
 		return err
 	}

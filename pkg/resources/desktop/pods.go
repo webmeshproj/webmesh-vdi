@@ -2,6 +2,7 @@ package desktop
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,8 +56,8 @@ func newServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "novnc-proxy",
-					Port:       v1alpha1.WebPort,
-					TargetPort: intstr.FromInt(v1alpha1.WebPort),
+					Port:       v1.WebPort,
+					TargetPort: intstr.FromInt(v1.WebPort),
 				},
 			},
 		},

@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +44,7 @@ func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj runtime.Object) erro
 	if _, err := h.Write(spec); err != nil {
 		return err
 	}
-	annotations[v1alpha1.CreationSpecAnnotation] = fmt.Sprintf("%x", h.Sum(nil))
+	annotations[v1.CreationSpecAnnotation] = fmt.Sprintf("%x", h.Sum(nil))
 	meta.SetAnnotations(annotations)
 	return nil
 }
@@ -52,11 +53,11 @@ func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj runtime.Object) erro
 func CreationSpecsEqual(m1 metav1.ObjectMeta, m2 metav1.ObjectMeta) bool {
 	m1ann := m1.GetAnnotations()
 	m2ann := m2.GetAnnotations()
-	spec1, ok := m1ann[v1alpha1.CreationSpecAnnotation]
+	spec1, ok := m1ann[v1.CreationSpecAnnotation]
 	if !ok {
 		return false
 	}
-	spec2, ok := m2ann[v1alpha1.CreationSpecAnnotation]
+	spec2, ok := m2ann[v1.CreationSpecAnnotation]
 	if !ok {
 		return false
 	}

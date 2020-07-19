@@ -2,6 +2,8 @@ package app
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
@@ -47,12 +49,12 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 	}()
 
 	// Reconcile a secret for generating JWT tokens
-	if _, err := secretsEngine.ReadSecret(v1alpha1.JWTSecretKey, false); err != nil {
+	if _, err := secretsEngine.ReadSecret(v1.JWTSecretKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err
 		}
 		jwtSecret := common.GeneratePassword(32)
-		if err := secretsEngine.WriteSecret(v1alpha1.JWTSecretKey, []byte(jwtSecret)); err != nil {
+		if err := secretsEngine.WriteSecret(v1.JWTSecretKey, []byte(jwtSecret)); err != nil {
 			return err
 		}
 	}

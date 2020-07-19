@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -34,7 +34,7 @@ func (d *desktopAPI) GetUserMFA(w http.ResponseWriter, r *http.Request) {
 	secret, err := d.mfa.GetUserSecret(username)
 	if err != nil {
 		if errors.IsUserNotFoundError(err) {
-			apiutil.WriteJSON(&v1alpha1.UpdateMFAResponse{
+			apiutil.WriteJSON(&v1.UpdateMFAResponse{
 				Enabled: false,
 			}, w)
 			return
@@ -43,7 +43,7 @@ func (d *desktopAPI) GetUserMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiutil.WriteJSON(&v1alpha1.UpdateMFAResponse{
+	apiutil.WriteJSON(&v1.UpdateMFAResponse{
 		Enabled:         true,
 		ProvisioningURI: gotp.NewDefaultTOTP(secret).ProvisioningUri(username, "kVDI"),
 	}, w)
@@ -53,5 +53,5 @@ func (d *desktopAPI) GetUserMFA(w http.ResponseWriter, r *http.Request) {
 // swagger:response getMFAResponse
 type swaggerGetMFAResponse struct {
 	// in:body
-	Body v1alpha1.UpdateMFAResponse
+	Body v1.UpdateMFAResponse
 }

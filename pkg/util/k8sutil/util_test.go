@@ -6,6 +6,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -54,7 +55,7 @@ func TestCreationSpecAnnotations(t *testing.T) {
 	if cr.GetAnnotations() == nil {
 		t.Error("Expected a new set of annotations, got nil")
 	}
-	if _, ok := cr.Annotations[v1alpha1.CreationSpecAnnotation]; !ok {
+	if _, ok := cr.Annotations[v1.CreationSpecAnnotation]; !ok {
 		t.Error("Expected creation spec annotation to be set")
 	}
 

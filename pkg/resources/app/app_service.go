@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,8 +24,8 @@ func newAppServiceForCR(instance *v1alpha1.VDICluster) *corev1.Service {
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
-					Port:       v1alpha1.PublicWebPort,
-					TargetPort: intstr.FromInt(v1alpha1.WebPort),
+					Port:       v1.PublicWebPort,
+					TargetPort: intstr.FromInt(v1.WebPort),
 				},
 			},
 		},

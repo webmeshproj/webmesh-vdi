@@ -1,6 +1,8 @@
-package v1alpha1
+package v1
 
 const (
+	// RoleClusterRefLabel marks for which cluster a role belongs
+	RoleClusterRefLabel = "kvdi.io/cluster-ref"
 	// CreationSpecAnnotation contains the serialized creation spec of a resource
 	// to be compared against desired state.
 	CreationSpecAnnotation = "kvdi.io/creation-spec"
@@ -39,18 +41,56 @@ const (
 	PublicWebPort = 443
 	// DesktopRunDir is the dir mounted for internal runtime files
 	DesktopRunDir = "/var/run/kvdi"
+	// DefaultNamespace is the default namespace to provision resources in
+	DefaultNamespace string = "default"
 )
 
-// Defaults
+// NamespaceAll represents all namespaces
+const NamespaceAll = "*"
+
+// Resource represents the target of an API action
+type Resource string
+
+// Resource options
 const (
-	// defaultNamespace is the default namespace to provision resources in
-	defaultNamespace string = "default"
+	// ResourceUsers represents users of kVDI. This action would only apply
+	// when using local auth.
+	ResourceUsers Resource = "users"
+	// ResourceRoles represents the auth roles in kVDI. This would allow a user
+	// to manipulate policies via the app API.
+	ResourceRoles = "roles"
+	// ResourceTeemplates represents desktop templates in kVDI. Mainly the ability
+	// to launch seessions from them and connect to them.
+	ResourceTemplates = "templates"
+	// ResourceAll matches all resources
+	ResourceAll = "*"
+)
+
+// Verb represents an API action
+type Verb string
+
+// Verb options
+const (
+	// Create operations
+	VerbCreate Verb = "create"
+	// Read operations
+	VerbRead = "read"
+	// Update operations
+	VerbUpdate = "update"
+	// Delete operations
+	VerbDelete = "delete"
+	// Use operations
+	VerbUse = "use"
+	// Launch operations
+	VerbLaunch = "launch"
+	// VerbAll matches all actions
+	VerbAll = "*"
 )
 
 // Other defaults that we need to the address of
 var (
-	defaultUser     int64 = 1000
-	defaultReplicas int32 = 1
-	trueVal               = true
-	falseVal              = false
+	DefaultUser     int64 = 1000
+	DefaultReplicas int32 = 1
+	TrueVal               = true
+	FalseVal              = false
 )

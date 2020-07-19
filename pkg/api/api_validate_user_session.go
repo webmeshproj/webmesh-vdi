@@ -4,7 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -38,7 +39,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 				return nil, errors.New("Incorrect signing algorithm on token")
 			}
 			// use cache for the JWT secret, since we use it for every request
-			return d.secrets.ReadSecret(v1alpha1.JWTSecretKey, true)
+			return d.secrets.ReadSecret(v1.JWTSecretKey, true)
 		})
 
 		// check token validity
@@ -66,7 +67,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 		// Retrieve the token claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			// decode the claims into a session object
-			session := &v1alpha1.JWTClaims{}
+			session := &v1.JWTClaims{}
 			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 				TagName: "json",
 				Result:  session,

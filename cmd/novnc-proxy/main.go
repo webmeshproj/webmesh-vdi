@@ -10,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/audio"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
@@ -62,7 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info(fmt.Sprintf("Starting mTLS enabled novnc proxy on :%d", v1alpha1.WebPort))
+	log.Info(fmt.Sprintf("Starting mTLS enabled novnc proxy on :%d", v1.WebPort))
 	if err := server.ListenAndServeTLS(tlsutil.ServerKeypair()); err != nil {
 		log.Error(err, "Failed to start https server")
 		os.Exit(1)
@@ -175,7 +176,7 @@ func newServer() (*http.Server, error) {
 
 	return &http.Server{
 		Handler:      wrapped,
-		Addr:         fmt.Sprintf(":%d", v1alpha1.WebPort),
+		Addr:         fmt.Sprintf(":%d", v1.WebPort),
 		TLSConfig:    tlsConfig,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,

@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 var elevateDenyReason = "The requested operation grants more privileges than the user has."
 
-func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Request) (allowed bool, reason string, err error) {
+func denyUserElevatePerms(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed bool, reason string, err error) {
 
 	// This is an ugly hack at the moment. This will be triggered if called from
 	// allowSameUser while configuring MFA options. No need to check.
@@ -18,7 +19,7 @@ func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Requ
 	}
 
 	// Check that a POST /users will not grant permissions the user does not have.
-	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.CreateUserRequest); ok {
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1.CreateUserRequest); ok {
 		vdiRoles, err := d.vdiCluster.GetRoles(d.client)
 		if err != nil {
 			return false, "", err
@@ -38,7 +39,7 @@ func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Requ
 	}
 
 	// Check that a PUT /users/{user} will not grant permissions the user does not have.
-	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.UpdateUserRequest); ok {
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1.UpdateUserRequest); ok {
 		vdiRoles, err := d.vdiCluster.GetRoles(d.client)
 		if err != nil {
 			return false, "", err
@@ -58,7 +59,7 @@ func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Requ
 	}
 
 	// Check that a POST /roles will not grant permissions the user does not have.
-	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.CreateRoleRequest); ok {
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1.CreateRoleRequest); ok {
 		for _, rule := range reqObj.GetRules() {
 			if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
 				return false, elevateDenyReason, nil
@@ -68,7 +69,7 @@ func denyUserElevatePerms(d *desktopAPI, reqUser *v1alpha1.VDIUser, r *http.Requ
 	}
 
 	// Check that a PUT /roles/{role} will not grant permissions the user does not have.
-	if reqObj, ok := apiutil.GetRequestObject(r).(*v1alpha1.UpdateRoleRequest); ok {
+	if reqObj, ok := apiutil.GetRequestObject(r).(*v1.UpdateRoleRequest); ok {
 		for _, rule := range reqObj.GetRules() {
 			if !reqUser.IncludesRule(rule, NewResourceGetter(d)) {
 				return false, elevateDenyReason, nil

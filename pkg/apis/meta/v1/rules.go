@@ -1,145 +1,25 @@
-package v1alpha1
+package v1
 
 import (
-	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetAdminRole returns an admin role for this VDICluster.
-func (v *VDICluster) GetAdminRole() *VDIRole {
-	var annotations map[string]string
-	if v.IsUsingLDAPAuth() {
-		annotations = map[string]string{
-			LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), AuthGroupSeparator),
-		}
-	} else if v.IsUsingOIDCAuth() {
-		annotations = map[string]string{
-			OIDCGroupRoleAnnotation: strings.Join(v.GetOIDCAdminGroups(), AuthGroupSeparator),
-		}
-	}
-	return &VDIRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        fmt.Sprintf("%s-admin", v.GetName()),
-			Annotations: annotations,
-			Labels: map[string]string{
-				RoleClusterRefLabel: v.GetName(),
-			},
-		},
-		Rules: []Rule{
-			{
-				Verbs:            []Verb{VerbAll},
-				Resources:        []Resource{ResourceAll},
-				ResourcePatterns: []string{".*"},
-				Namespaces:       []string{NamespaceAll},
-			},
-		},
-	}
-}
-
-// GetLaunchTemplatesRole returns a launch-templates role for a cluster.
-// This role is used if anonymous auth is enabled.
-func (v *VDICluster) GetLaunchTemplatesRole() *VDIRole {
-	return &VDIRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-launch-templates", v.GetName()),
-			Labels: map[string]string{
-				RoleClusterRefLabel: v.GetName(),
-			},
-		},
-		Rules: []Rule{
-			{
-				Verbs:            []Verb{VerbRead, VerbUse, VerbLaunch},
-				Resources:        []Resource{ResourceTemplates},
-				ResourcePatterns: []string{".*"},
-				Namespaces:       []string{NamespaceAll},
-			},
-		},
-	}
-}
-
-// GetName returns the name of a VDIUser.
-func (u *VDIUser) GetName() string { return u.Name }
-
-// Evaluate will iterate the user's roles and return true if any of them have
-// a rule that allows the given action.
-func (u *VDIUser) Evaluate(action *APIAction) bool {
-	for _, role := range u.Roles {
-		if ok := role.Evaluate(action); ok {
-			return true
-		}
-	}
-	return false
-}
-
-// IncludesRule returns true if the rules applied to this user are not elevated
-// by any of the permissions in the provided rule.
-func (u *VDIUser) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
-	for _, role := range u.Roles {
-		if ok := role.IncludesRule(ruleToCheck, resourceGetter); ok {
-			return true
-		}
-	}
-	return false
-}
-
-// FilterNamespaces will take a list of namespaces, and filter them based off
-// the ones this user can provision desktops in.
-func (u *VDIUser) FilterNamespaces(nss []string) []string {
-	filtered := make([]string, 0)
-	for _, ns := range nss {
-		action := &APIAction{
-			Verb:              VerbLaunch,
-			ResourceType:      ResourceTemplates,
-			ResourceNamespace: ns,
-		}
-		if u.Evaluate(action) {
-			filtered = append(filtered, ns)
-		}
-	}
-	return filtered
-}
-
-// FilterTemplates will take a list of DesktopTemplates and filter them based
-// off which ones the user is allowed to use.
-func (u *VDIUser) FilterTemplates(tmpls []DesktopTemplate) []DesktopTemplate {
-	filtered := make([]DesktopTemplate, 0)
-	for _, tmpl := range tmpls {
-		action := &APIAction{
-			Verb:         VerbLaunch,
-			ResourceType: ResourceTemplates,
-			ResourceName: tmpl.GetName(),
-		}
-		if u.Evaluate(action) {
-			filtered = append(filtered, tmpl)
-		}
-	}
-	return filtered
-}
-
-// Evaluate iterates all the rules in this role and returns true if any of them
-// allow the provided action.
-func (r *VDIUserRole) Evaluate(action *APIAction) bool {
-	for _, rule := range r.Rules {
-		if ok := rule.Evaluate(action); ok {
-			return true
-		}
-	}
-	return false
-}
-
-// IncludesRule returns true if the rules applied to this role are not elevated
-// by any of the permissions in the provided rule.
-func (r *VDIUserRole) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
-	for _, rule := range r.Rules {
-		if ok := rule.IncludesRule(ruleToCheck, resourceGetter); ok {
-			return true
-		}
-	}
-	return false
+// Rule represents a set of permissions applied to a VDIRole. It mostly resembles
+// an rbacv1.PolicyRule, with resources being a regex and the addition of a
+// namespace selector.
+type Rule struct {
+	// The actions this rule applies for. VerbAll matches all actions.
+	Verbs []Verb `json:"verbs,omitempty"`
+	// Resources this rule applies to. ResourceAll matches all resources.
+	Resources []Resource `json:"resources,omitempty"`
+	// Resource regexes that match this rule. This can be template patterns, role
+	// names or user names. There is no All representation because * will have
+	// that effect on its own when the regex is evaluated.
+	ResourcePatterns []string `json:"resourcePatterns,omitempty"`
+	// Namespaces this rule applies to. Only evaluated for template launching
+	// permissions. NamespaceAll matches all namespaces.
+	Namespaces []string `json:"namespaces,omitempty"`
 }
 
 // Evaluate checks if this rule allows the given action. First the verb is matched,
@@ -226,7 +106,7 @@ func (r *Rule) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) boo
 				return false
 			}
 			for _, tmpl := range templates {
-				if ruleToCheck.MatchesResourceName(tmpl.GetName()) && !r.MatchesResourceName(tmpl.GetName()) {
+				if ruleToCheck.MatchesResourceName(tmpl) && !r.MatchesResourceName(tmpl) {
 					return false
 				}
 			}

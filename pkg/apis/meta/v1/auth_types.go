@@ -1,4 +1,4 @@
-package v1alpha1
+package v1
 
 import (
 	"fmt"
@@ -6,41 +6,36 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// AuthProvider defines an interface for handling login attempts. Currently
-// only local auth (using the secrets backend) is supported, however other integrations
-// such as LDAP or OAuth can implement this interface.
-type AuthProvider interface {
-	// Reconcile should ensure any k8s resources required for this authentication
-	// provider.
-	Reconcile(logr.Logger, client.Client, *VDICluster, string) error
-	// Setup is called when the kVDI app launches and is a chance for the provider
-	// to setup any resources it needs to serve requests.
-	Setup(client.Client, *VDICluster) error
-	// Close is called after temporary uses of the auth provider. It should close
-	// any open connections and perform cleanup. It should be non-destructive.
-	Close() error
+// ResourceGetter is an interface for retrieving lists of kVDI related resources.
+// Its primary purpose is to pass an interface to rbac evaluations so they can
+// check permissions against present resources.
+type ResourceGetter interface {
+	// Retrieves DesktopTemplates
+	TemplatesGetter
+	// Retrieves VDIUsers
+	UsersGetter
+	// Retrieves VDIRoles
+	RolesGetter
+}
 
-	// API helper methods
-	// Not all providers will be able to implement all of these methods. When
-	// they can't they should serve a concise error message as to why.
+// TemplatesGetter is an interface that can be used to retrieve available
+// templates while checking user permissions.
+type TemplatesGetter interface {
+	GetTemplates() ([]string, error)
+}
 
-	// Authenticate is called for API authentication requests. It should generate
-	// a new JWTClaims object and serve an AuthResult back to the API.
-	Authenticate(*LoginRequest) (*AuthResult, error)
-	// GetUsers should return a list of VDIUsers.
-	GetUsers() ([]*VDIUser, error)
-	// GetUser should retrieve a single VDIUser.
-	GetUser(string) (*VDIUser, error)
-	// CreateUser should handle any logic required to register a new user in kVDI.
-	CreateUser(*CreateUserRequest) error
-	// UpdateUser should update a VDIUser.
-	UpdateUser(string, *UpdateUserRequest) error
-	// DeleteUser should remove a VDIUser.
-	DeleteUser(string) error
+// UsersGetter is an interface that can be used to retrieve available
+// users while checking user permissions.
+type UsersGetter interface {
+	GetUsers() ([]VDIUser, error)
+}
+
+// RolesGetter is an interface that can be used to retrieve available
+// roles while checking user permissions.
+type RolesGetter interface {
+	GetRoles() ([]VDIUserRole, error)
 }
 
 // AuthResult represents a response from an authentication attempt to a provider.
@@ -82,6 +77,48 @@ type VDIUser struct {
 	MFAEnabled bool `json:"mfaEnabled"`
 }
 
+// GetName returns the name of a VDIUser.
+func (u *VDIUser) GetName() string { return u.Name }
+
+// Evaluate will iterate the user's roles and return true if any of them have
+// a rule that allows the given action.
+func (u *VDIUser) Evaluate(action *APIAction) bool {
+	for _, role := range u.Roles {
+		if ok := role.Evaluate(action); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// IncludesRule returns true if the rules applied to this user are not elevated
+// by any of the permissions in the provided rule.
+func (u *VDIUser) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
+	for _, role := range u.Roles {
+		if ok := role.IncludesRule(ruleToCheck, resourceGetter); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// FilterNamespaces will take a list of namespaces, and filter them based off
+// the ones this user can provision desktops in.
+func (u *VDIUser) FilterNamespaces(nss []string) []string {
+	filtered := make([]string, 0)
+	for _, ns := range nss {
+		action := &APIAction{
+			Verb:              VerbLaunch,
+			ResourceType:      ResourceTemplates,
+			ResourceNamespace: ns,
+		}
+		if u.Evaluate(action) {
+			filtered = append(filtered, ns)
+		}
+	}
+	return filtered
+}
+
 // VDIUserRole represents a VDIRole, but only with the data that is to be
 // embedded in the JWT. Primarily, leaving out useless metadata that will inflate
 // the token.
@@ -91,6 +128,31 @@ type VDIUserRole struct {
 	Name string `json:"name"`
 	// The rules for this role.
 	Rules []Rule `json:"rules"`
+}
+
+// GetName returns the name of the role
+func (r *VDIUserRole) GetName() string { return r.Name }
+
+// Evaluate iterates all the rules in this role and returns true if any of them
+// allow the provided action.
+func (r *VDIUserRole) Evaluate(action *APIAction) bool {
+	for _, rule := range r.Rules {
+		if ok := rule.Evaluate(action); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// IncludesRule returns true if the rules applied to this role are not elevated
+// by any of the permissions in the provided rule.
+func (r *VDIUserRole) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) bool {
+	for _, rule := range r.Rules {
+		if ok := rule.IncludesRule(ruleToCheck, resourceGetter); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // APIAction represents an API action to evaluate against a user's roles.
@@ -129,34 +191,4 @@ func (a *APIAction) String() string {
 		str = str + fmt.Sprintf(" %s", resourceName)
 	}
 	return str
-}
-
-// ResourceGetter is an interface for retrieving lists of kVDI related resources.
-// Its primary purpose is to pass an interface to rbac evaluations so they can
-// check permissions against present resources.
-type ResourceGetter interface {
-	// Retrieves DesktopTemplates
-	TemplatesGetter
-	// Retrieves VDIUsers
-	UsersGetter
-	// Retrieves VDIRoles
-	RolesGetter
-}
-
-// TemplatesGetter is an interface that can be used to retrieve available
-// templates while checking user permissions.
-type TemplatesGetter interface {
-	GetTemplates() ([]DesktopTemplate, error)
-}
-
-// UsersGetter is an interface that can be used to retrieve available
-// users while checking user permissions.
-type UsersGetter interface {
-	GetUsers() ([]VDIUser, error)
-}
-
-// RolesGetter is an interface that can be used to retrieve available
-// roles while checking user permissions.
-type RolesGetter interface {
-	GetRoles() ([]VDIRole, error)
 }

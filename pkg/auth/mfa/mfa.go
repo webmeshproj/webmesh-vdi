@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -25,7 +25,7 @@ func NewManager(secrets *secrets.SecretEngine) *Manager {
 
 // GetMFAUsers will return a string slice of all MFA user names.
 func (m *Manager) GetMFAUsers() ([]string, error) {
-	users, err := m.secrets.ReadSecret(v1alpha1.OTPUsersSecretKey, false)
+	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil {
 		if errors.IsSecretNotFoundError(err) {
 			return []string{}, nil
@@ -56,7 +56,7 @@ func (m *Manager) GetMFAUsers() ([]string, error) {
 // GetUserSecret will retrieve the OTP secret for the given user. If there is
 // no secret for this user, a UserNotFound error is returned.
 func (m *Manager) GetUserSecret(name string) (string, error) {
-	users, err := m.secrets.ReadSecret(v1alpha1.OTPUsersSecretKey, false)
+	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil {
 		if errors.IsSecretNotFoundError(err) {
 			return "", errors.NewUserNotFoundError(name)
@@ -73,7 +73,7 @@ func (m *Manager) SetUserSecret(name, secret string) error {
 		return err
 	}
 	defer m.secrets.Release()
-	users, err := m.secrets.ReadSecret(v1alpha1.OTPUsersSecretKey, false)
+	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil && !errors.IsSecretNotFoundError(err) {
 		return err
 	} else if errors.IsSecretNotFoundError(err) {
@@ -83,7 +83,7 @@ func (m *Manager) SetUserSecret(name, secret string) error {
 	if err != nil {
 		return err
 	}
-	return m.secrets.WriteSecret(v1alpha1.OTPUsersSecretKey, newData)
+	return m.secrets.WriteSecret(v1.OTPUsersSecretKey, newData)
 }
 
 // DeleteUserSecret will remove OTP data for the given username.
@@ -92,7 +92,7 @@ func (m *Manager) DeleteUserSecret(name string) error {
 		return err
 	}
 	defer m.secrets.Release()
-	users, err := m.secrets.ReadSecret(v1alpha1.OTPUsersSecretKey, false)
+	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil && !errors.IsSecretNotFoundError(err) {
 		return err
 	} else if errors.IsSecretNotFoundError(err) {
@@ -102,7 +102,7 @@ func (m *Manager) DeleteUserSecret(name string) error {
 	if err != nil {
 		return err
 	}
-	return m.secrets.WriteSecret(v1alpha1.OTPUsersSecretKey, newData)
+	return m.secrets.WriteSecret(v1.OTPUsersSecretKey, newData)
 }
 
 // getUserSecretFromReader will scan a given Reader interface for the provided

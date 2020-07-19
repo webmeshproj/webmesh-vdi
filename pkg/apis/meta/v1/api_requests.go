@@ -1,4 +1,4 @@
-package v1alpha1
+package v1
 
 import (
 	"errors"
@@ -67,7 +67,7 @@ type CreateUserRequest struct {
 	Roles []string `json:"roles"`
 }
 
-// Validates a new user request
+// Validate validates a new user request
 func (r *CreateUserRequest) Validate() error {
 	if r.Username == "" || r.Password == "" {
 		return errors.New("'username' and 'password' must be provided in the request")
@@ -231,5 +231,5 @@ func (r *CreateSessionRequest) GetNamespace() string {
 	if r.Namespace != "" {
 		return r.Namespace
 	}
-	return defaultNamespace
+	return DefaultNamespace
 }

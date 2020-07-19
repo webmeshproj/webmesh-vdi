@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/version"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -111,7 +113,7 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 // from this template.
 func (t *DesktopTemplate) GetDesktopPodSecurityContext() *corev1.PodSecurityContext {
 	return &corev1.PodSecurityContext{
-		RunAsNonRoot: &falseVal,
+		RunAsNonRoot: &v1.FalseVal,
 	}
 }
 
@@ -129,7 +131,7 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 		capabilities = append(capabilities, t.Spec.Config.Capabilities...)
 	}
 	return &corev1.SecurityContext{
-		Privileged: &trueVal,
+		Privileged: &v1.TrueVal,
 		Capabilities: &corev1.Capabilities{
 			Add: capabilities,
 		},
@@ -269,7 +271,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          "web",
-				ContainerPort: WebPort,
+				ContainerPort: v1.WebPort,
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
@@ -283,7 +285,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			},
 			{
 				Name:      "tls",
-				MountPath: ServerCertificateMountPath,
+				MountPath: v1.ServerCertificateMountPath,
 				ReadOnly:  true,
 			},
 			{

@@ -3,7 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -34,7 +35,7 @@ import (
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
-	req := apiutil.GetRequestObject(r).(*v1alpha1.UpdateUserRequest)
+	req := apiutil.GetRequestObject(r).(*v1.UpdateUserRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -56,5 +57,5 @@ func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters putUserRequest
 type swaggerUpdateUserRequest struct {
 	// in:body
-	Body v1alpha1.UpdateUserRequest
+	Body v1.UpdateUserRequest
 }
