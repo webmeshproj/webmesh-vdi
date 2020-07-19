@@ -7,46 +7,46 @@ kVDI CRD Reference
 
 Types
 
--   [AppConfig](#%23kvdi.io%2fv1alpha1.AppConfig)
--   [AuthConfig](#%23kvdi.io%2fv1alpha1.AuthConfig)
--   [AuthProvider](#%23kvdi.io%2fv1alpha1.AuthProvider)
--   [AuthResult](#%23kvdi.io%2fv1alpha1.AuthResult)
--   [AuthorizeRequest](#%23kvdi.io%2fv1alpha1.AuthorizeRequest)
--   [CreateRoleRequest](#%23kvdi.io%2fv1alpha1.CreateRoleRequest)
--   [CreateSessionRequest](#%23kvdi.io%2fv1alpha1.CreateSessionRequest)
--   [CreateUserRequest](#%23kvdi.io%2fv1alpha1.CreateUserRequest)
--   [Desktop](#%23kvdi.io%2fv1alpha1.Desktop)
--   [DesktopConfig](#%23kvdi.io%2fv1alpha1.DesktopConfig)
--   [DesktopInit](#%23kvdi.io%2fv1alpha1.DesktopInit)
--   [DesktopSpec](#%23kvdi.io%2fv1alpha1.DesktopSpec)
--   [DesktopTemplate](#%23kvdi.io%2fv1alpha1.DesktopTemplate)
--   [DesktopTemplateSpec](#%23kvdi.io%2fv1alpha1.DesktopTemplateSpec)
--   [JWTClaims](#%23kvdi.io%2fv1alpha1.JWTClaims)
--   [K8SSecretConfig](#%23kvdi.io%2fv1alpha1.K8SSecretConfig)
--   [LDAPConfig](#%23kvdi.io%2fv1alpha1.LDAPConfig)
--   [LocalAuthConfig](#%23kvdi.io%2fv1alpha1.LocalAuthConfig)
--   [LoginRequest](#%23kvdi.io%2fv1alpha1.LoginRequest)
--   [OIDCConfig](#%23kvdi.io%2fv1alpha1.OIDCConfig)
--   [Resource](#%23kvdi.io%2fv1alpha1.Resource)
--   [ResourceGetter](#%23kvdi.io%2fv1alpha1.ResourceGetter)
--   [RolesGetter](#%23kvdi.io%2fv1alpha1.RolesGetter)
--   [Rule](#%23kvdi.io%2fv1alpha1.Rule)
--   [SecretsConfig](#%23kvdi.io%2fv1alpha1.SecretsConfig)
--   [SecretsProvider](#%23kvdi.io%2fv1alpha1.SecretsProvider)
--   [SessionResponse](#%23kvdi.io%2fv1alpha1.SessionResponse)
--   [TemplatesGetter](#%23kvdi.io%2fv1alpha1.TemplatesGetter)
--   [UpdateMFARequest](#%23kvdi.io%2fv1alpha1.UpdateMFARequest)
--   [UpdateMFAResponse](#%23kvdi.io%2fv1alpha1.UpdateMFAResponse)
--   [UpdateRoleRequest](#%23kvdi.io%2fv1alpha1.UpdateRoleRequest)
--   [UpdateUserRequest](#%23kvdi.io%2fv1alpha1.UpdateUserRequest)
--   [UsersGetter](#%23kvdi.io%2fv1alpha1.UsersGetter)
--   [VDICluster](#%23kvdi.io%2fv1alpha1.VDICluster)
--   [VDIClusterSpec](#%23kvdi.io%2fv1alpha1.VDIClusterSpec)
--   [VDIRole](#%23kvdi.io%2fv1alpha1.VDIRole)
--   [VDIUser](#%23kvdi.io%2fv1alpha1.VDIUser)
--   [VDIUserRole](#%23kvdi.io%2fv1alpha1.VDIUserRole)
--   [VaultConfig](#%23kvdi.io%2fv1alpha1.VaultConfig)
--   [Verb](#%23kvdi.io%2fv1alpha1.Verb)
+-   [AppConfig](#AppConfig)
+-   [AuthConfig](#AuthConfig)
+-   [AuthProvider](#AuthProvider)
+-   [AuthResult](#AuthResult)
+-   [AuthorizeRequest](#AuthorizeRequest)
+-   [CreateRoleRequest](#CreateRoleRequest)
+-   [CreateSessionRequest](#CreateSessionRequest)
+-   [CreateUserRequest](#CreateUserRequest)
+-   [Desktop](#Desktop)
+-   [DesktopConfig](#DesktopConfig)
+-   [DesktopInit](#DesktopInit)
+-   [DesktopSpec](#DesktopSpec)
+-   [DesktopTemplate](#DesktopTemplate)
+-   [DesktopTemplateSpec](#DesktopTemplateSpec)
+-   [JWTClaims](#JWTClaims)
+-   [K8SSecretConfig](#K8SSecretConfig)
+-   [LDAPConfig](#LDAPConfig)
+-   [LocalAuthConfig](#LocalAuthConfig)
+-   [LoginRequest](#LoginRequest)
+-   [OIDCConfig](#OIDCConfig)
+-   [Resource](#Resource)
+-   [ResourceGetter](#ResourceGetter)
+-   [RolesGetter](#RolesGetter)
+-   [Rule](#Rule)
+-   [SecretsConfig](#SecretsConfig)
+-   [SecretsProvider](#SecretsProvider)
+-   [SessionResponse](#SessionResponse)
+-   [TemplatesGetter](#TemplatesGetter)
+-   [UpdateMFARequest](#UpdateMFARequest)
+-   [UpdateMFAResponse](#UpdateMFAResponse)
+-   [UpdateRoleRequest](#UpdateRoleRequest)
+-   [UpdateUserRequest](#UpdateUserRequest)
+-   [UsersGetter](#UsersGetter)
+-   [VDICluster](#VDICluster)
+-   [VDIClusterSpec](#VDIClusterSpec)
+-   [VDIRole](#VDIRole)
+-   [VDIUser](#VDIUser)
+-   [VDIUserRole](#VDIUserRole)
+-   [VaultConfig](#VaultConfig)
+-   [Verb](#Verb)
 
 kvdi.io/v1alpha1
 ----------------
@@ -58,7 +58,7 @@ Resource Types:
 
 ### AppConfig
 
-(*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
 
 AppConfig represents app configurations for the VDI cluster
 
@@ -95,7 +95,7 @@ AppConfig represents app configurations for the VDI cluster
 
 ### AuthConfig
 
-(*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
 
 AuthConfig will be for authentication driver configurations. The goal is
 to support multiple backends, e.g. local, oauth, ldap, etc.
@@ -117,15 +117,15 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 <td><p>A secret where a generated admin password will be stored</p></td>
 </tr>
 <tr class="odd">
-<td><code>localAuth</code> <em><a href="#kvdi.io/v1alpha1.LocalAuthConfig">LocalAuthConfig</a></em></td>
+<td><code>localAuth</code> <em><a href="#LocalAuthConfig">LocalAuthConfig</a></em></td>
 <td><p>Use local auth (secret-backed) authentication</p></td>
 </tr>
 <tr class="even">
-<td><code>ldapAuth</code> <em><a href="#kvdi.io/v1alpha1.LDAPConfig">LDAPConfig</a></em></td>
+<td><code>ldapAuth</code> <em><a href="#LDAPConfig">LDAPConfig</a></em></td>
 <td><p>Use LDAP for authentication.</p></td>
 </tr>
 <tr class="odd">
-<td><code>oidcAuth</code> <em><a href="#kvdi.io/v1alpha1.OIDCConfig">OIDCConfig</a></em></td>
+<td><code>oidcAuth</code> <em><a href="#OIDCConfig">OIDCConfig</a></em></td>
 <td><p>Use OIDC for authentication</p></td>
 </tr>
 </tbody>
@@ -152,7 +152,7 @@ requirements.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>User</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td><code>User</code> <em><a href="#VDIUser">VDIUser</a></em></td>
 <td><p>The authenticated user and their roles</p></td>
 </tr>
 <tr class="even">
@@ -203,7 +203,7 @@ CreateRoleRequest represents a request for a new role.
 <td><p>Annotations to apply to the role</p></td>
 </tr>
 <tr class="odd">
-<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><code>rules</code> <em><a href="#Rule">[]Rule</a></em></td>
 <td><p>Rules to apply to the new role.</p></td>
 </tr>
 </tbody>
@@ -283,7 +283,7 @@ Desktop is the Schema for the desktops API
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
-<td><code>spec</code> <em><a href="#kvdi.io/v1alpha1.DesktopSpec">DesktopSpec</a></em></td>
+<td><code>spec</code> <em><a href="#DesktopSpec">DesktopSpec</a></em></td>
 <td><br />
 <br />
 
@@ -305,7 +305,7 @@ Desktop is the Schema for the desktops API
 </table></td>
 </tr>
 <tr class="odd">
-<td><code>status</code> <em><a href="#kvdi.io/v1alpha1.DesktopStatus">DesktopStatus</a></em></td>
+<td><code>status</code> <em><a href="#DesktopStatus">DesktopStatus</a></em></td>
 <td></td>
 </tr>
 </tbody>
@@ -314,7 +314,7 @@ Desktop is the Schema for the desktops API
 ### DesktopConfig
 
 (*Appears on:*
-[DesktopTemplateSpec](#kvdi.io/v1alpha1.DesktopTemplateSpec))
+[DesktopTemplateSpec](#DesktopTemplateSpec))
 
 DesktopConfig represents configurations for the template and desktops
 booted from it.
@@ -352,7 +352,7 @@ booted from it.
 <td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
 <tr class="odd">
-<td><code>init</code> <em><a href="#kvdi.io/v1alpha1.DesktopInit">DesktopInit</a></em></td>
+<td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
 <td><p>The type of init system inside the image, currently only supervisord and systemd are supported. Defaults to <code>supervisord</code> (but depending on how much I like systemd in this use case, that could change).</p></td>
 </tr>
 </tbody>
@@ -360,13 +360,13 @@ booted from it.
 
 DesktopInit (`string` alias)
 
-(*Appears on:* [DesktopConfig](#kvdi.io/v1alpha1.DesktopConfig))
+(*Appears on:* [DesktopConfig](#DesktopConfig))
 
 DesktopInit represents the init system that the desktop container uses.
 
 ### DesktopSpec
 
-(*Appears on:* [Desktop](#kvdi.io/v1alpha1.Desktop))
+(*Appears on:* [Desktop](#Desktop))
 
 DesktopSpec defines the desired state of Desktop
 
@@ -414,7 +414,7 @@ DesktopTemplate is the Schema for the desktoptemplates API
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
-<td><code>spec</code> <em><a href="#kvdi.io/v1alpha1.DesktopTemplateSpec">DesktopTemplateSpec</a></em></td>
+<td><code>spec</code> <em><a href="#DesktopTemplateSpec">DesktopTemplateSpec</a></em></td>
 <td><br />
 <br />
 
@@ -437,7 +437,7 @@ DesktopTemplate is the Schema for the desktoptemplates API
 <td><p>Resource requirements to apply to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
-<td><code>config</code> <em><a href="#kvdi.io/v1alpha1.DesktopConfig">DesktopConfig</a></em></td>
+<td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
 <td><p>Configuration options for the instances. This is highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
@@ -448,7 +448,7 @@ DesktopTemplate is the Schema for the desktoptemplates API
 </table></td>
 </tr>
 <tr class="odd">
-<td><code>status</code> <em><a href="#kvdi.io/v1alpha1.DesktopTemplateStatus">DesktopTemplateStatus</a></em></td>
+<td><code>status</code> <em><a href="#DesktopTemplateStatus">DesktopTemplateStatus</a></em></td>
 <td></td>
 </tr>
 </tbody>
@@ -456,7 +456,7 @@ DesktopTemplate is the Schema for the desktoptemplates API
 
 ### DesktopTemplateSpec
 
-(*Appears on:* [DesktopTemplate](#kvdi.io/v1alpha1.DesktopTemplate))
+(*Appears on:* [DesktopTemplate](#DesktopTemplate))
 
 DesktopTemplateSpec defines the desired state of DesktopTemplate
 
@@ -485,7 +485,7 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 <td><p>Resource requirements to apply to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
-<td><code>config</code> <em><a href="#kvdi.io/v1alpha1.DesktopConfig">DesktopConfig</a></em></td>
+<td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
 <td><p>Configuration options for the instances. This is highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
@@ -508,7 +508,7 @@ JWTClaims represents the claims used when issuing JWT tokens.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td><code>user</code> <em><a href="#VDIUser">VDIUser</a></em></td>
 <td><p>The user with their permissions when the token was generated</p></td>
 </tr>
 <tr class="even">
@@ -524,7 +524,7 @@ JWTClaims represents the claims used when issuing JWT tokens.
 
 ### K8SSecretConfig
 
-(*Appears on:* [SecretsConfig](#kvdi.io/v1alpha1.SecretsConfig))
+(*Appears on:* [SecretsConfig](#SecretsConfig))
 
 K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive
 values.
@@ -546,7 +546,7 @@ values.
 
 ### LDAPConfig
 
-(*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
+(*Appears on:* [AuthConfig](#AuthConfig))
 
 LDAPConfig represents the configurations for using LDAP as the
 authentication backend.
@@ -596,7 +596,7 @@ authentication backend.
 
 ### LocalAuthConfig
 
-(*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
+(*Appears on:* [AuthConfig](#AuthConfig))
 
 LocalAuthConfig represents a local, ‘passwd’-like authentication driver.
 
@@ -636,7 +636,7 @@ return a JWT token that contains a fulfilled VDIUser.
 
 ### OIDCConfig
 
-(*Appears on:* [AuthConfig](#kvdi.io/v1alpha1.AuthConfig))
+(*Appears on:* [AuthConfig](#AuthConfig))
 
 OIDCConfig represents configurations for using an OIDC/OAuth provider
 for authentication.
@@ -698,7 +698,7 @@ for authentication.
 
 Resource (`string` alias)
 
-(*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
+(*Appears on:* [Rule](#Rule))
 
 Resource represents the target of an API action
 
@@ -715,10 +715,10 @@ while checking user permissions.
 
 ### Rule
 
-(*Appears on:* [CreateRoleRequest](#kvdi.io/v1alpha1.CreateRoleRequest),
-[UpdateRoleRequest](#kvdi.io/v1alpha1.UpdateRoleRequest),
-[VDIRole](#kvdi.io/v1alpha1.VDIRole),
-[VDIUserRole](#kvdi.io/v1alpha1.VDIUserRole))
+(*Appears on:* [CreateRoleRequest](#CreateRoleRequest),
+[UpdateRoleRequest](#UpdateRoleRequest),
+[VDIRole](#VDIRole),
+[VDIUserRole](#VDIUserRole))
 
 Rule represents a set of permissions applied to a VDIRole. It mostly
 resembles an rbacv1.PolicyRule, with resources being a regex and the
@@ -733,11 +733,11 @@ addition of a namespace selector.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>verbs</code> <em><a href="#kvdi.io/v1alpha1.Verb">[]Verb</a></em></td>
+<td><code>verbs</code> <em><a href="#Verb">[]Verb</a></em></td>
 <td><p>The actions this rule applies for. VerbAll matches all actions.</p></td>
 </tr>
 <tr class="even">
-<td><code>resources</code> <em><a href="#kvdi.io/v1alpha1.Resource">[]Resource</a></em></td>
+<td><code>resources</code> <em><a href="#Resource">[]Resource</a></em></td>
 <td><p>Resources this rule applies to. ResourceAll matches all resources.</p></td>
 </tr>
 <tr class="odd">
@@ -753,7 +753,7 @@ addition of a namespace selector.
 
 ### SecretsConfig
 
-(*Appears on:* [VDIClusterSpec](#kvdi.io/v1alpha1.VDIClusterSpec))
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
 
 SecretsConfig configurese the backend for secrets management.
 
@@ -766,11 +766,11 @@ SecretsConfig configurese the backend for secrets management.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>k8sSecret</code> <em><a href="#kvdi.io/v1alpha1.K8SSecretConfig">K8SSecretConfig</a></em></td>
+<td><code>k8sSecret</code> <em><a href="#K8SSecretConfig">K8SSecretConfig</a></em></td>
 <td><p>Use a kubernetes secret for storing sensitive values. If no other coniguration is provided then this is the fallback.</p></td>
 </tr>
 <tr class="even">
-<td><code>vault</code> <em><a href="#kvdi.io/v1alpha1.VaultConfig">VaultConfig</a></em></td>
+<td><code>vault</code> <em><a href="#VaultConfig">VaultConfig</a></em></td>
 <td><p>Use vault for storing sensitive values. Requires kubernetes service account authentication.</p></td>
 </tr>
 </tbody>
@@ -803,7 +803,7 @@ SessionResponse represents a response with a new session token
 <td><p>The time the token expires.</p></td>
 </tr>
 <tr class="odd">
-<td><code>user</code> <em><a href="#kvdi.io/v1alpha1.VDIUser">VDIUser</a></em></td>
+<td><code>user</code> <em><a href="#VDIUser">VDIUser</a></em></td>
 <td><p>Information about the authenticated user and their permissions.</p></td>
 </tr>
 <tr class="even">
@@ -879,7 +879,7 @@ attributes will be entirely replaced with those supplied in the payload.
 <td><p>The new annotations for the role</p></td>
 </tr>
 <tr class="even">
-<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><code>rules</code> <em><a href="#Rule">[]Rule</a></em></td>
 <td><p>The new rules for the role.</p></td>
 </tr>
 </tbody>
@@ -936,7 +936,7 @@ VDICluster is the Schema for the vdiclusters API
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
-<td><code>spec</code> <em><a href="#kvdi.io/v1alpha1.VDIClusterSpec">VDIClusterSpec</a></em></td>
+<td><code>spec</code> <em><a href="#VDIClusterSpec">VDIClusterSpec</a></em></td>
 <td><br />
 <br />
 
@@ -959,22 +959,22 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
-<td><code>app</code> <em><a href="#kvdi.io/v1alpha1.AppConfig">AppConfig</a></em></td>
+<td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
 <tr class="even">
-<td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
+<td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
 <tr class="odd">
-<td><code>secrets</code> <em><a href="#kvdi.io/v1alpha1.SecretsConfig">SecretsConfig</a></em></td>
+<td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
 </tbody>
 </table></td>
 </tr>
 <tr class="odd">
-<td><code>status</code> <em><a href="#kvdi.io/v1alpha1.VDIClusterStatus">VDIClusterStatus</a></em></td>
+<td><code>status</code> <em><a href="#VDIClusterStatus">VDIClusterStatus</a></em></td>
 <td></td>
 </tr>
 </tbody>
@@ -982,7 +982,7 @@ VDICluster is the Schema for the vdiclusters API
 
 ### VDIClusterSpec
 
-(*Appears on:* [VDICluster](#kvdi.io/v1alpha1.VDICluster))
+(*Appears on:* [VDICluster](#VDICluster))
 
 VDIClusterSpec defines the desired state of VDICluster
 
@@ -1011,15 +1011,15 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="odd">
-<td><code>app</code> <em><a href="#kvdi.io/v1alpha1.AppConfig">AppConfig</a></em></td>
+<td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
 <tr class="even">
-<td><code>auth</code> <em><a href="#kvdi.io/v1alpha1.AuthConfig">AuthConfig</a></em></td>
+<td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
 <tr class="odd">
-<td><code>secrets</code> <em><a href="#kvdi.io/v1alpha1.SecretsConfig">SecretsConfig</a></em></td>
+<td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
 </tbody>
@@ -1042,7 +1042,7 @@ VDIRole is the Schema for the vdiroles API
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
-<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><code>rules</code> <em><a href="#Rule">[]Rule</a></em></td>
 <td><p>A list of rules granting access to resources in the VDICluster.</p></td>
 </tr>
 </tbody>
@@ -1050,9 +1050,9 @@ VDIRole is the Schema for the vdiroles API
 
 ### VDIUser
 
-(*Appears on:* [AuthResult](#kvdi.io/v1alpha1.AuthResult),
-[JWTClaims](#kvdi.io/v1alpha1.JWTClaims),
-[SessionResponse](#kvdi.io/v1alpha1.SessionResponse))
+(*Appears on:* [AuthResult](#AuthResult),
+[JWTClaims](#JWTClaims),
+[SessionResponse](#SessionResponse))
 
 VDIUser represents a user in kVDI. It is the auth providers
 responsibility to take an authentication request and generate a JWT with
@@ -1071,7 +1071,7 @@ claims defining this object.
 <td><p>A unique name for the user</p></td>
 </tr>
 <tr class="even">
-<td><code>roles</code> <em><a href="#kvdi.io/v1alpha1.*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
+<td><code>roles</code> <em><a href="#*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
 <td><p>A list of roles applide to the user. The grants associated with each user are embedded in the JWT signed when authenticating.</p></td>
 </tr>
 <tr class="odd">
@@ -1100,7 +1100,7 @@ inflate the token.
 <td><p>The name of the role, this must match the VDIRole from which this object derives.</p></td>
 </tr>
 <tr class="even">
-<td><code>rules</code> <em><a href="#kvdi.io/v1alpha1.Rule">[]Rule</a></em></td>
+<td><code>rules</code> <em><a href="#Rule">[]Rule</a></em></td>
 <td><p>The rules for this role.</p></td>
 </tr>
 </tbody>
@@ -1108,7 +1108,7 @@ inflate the token.
 
 ### VaultConfig
 
-(*Appears on:* [SecretsConfig](#kvdi.io/v1alpha1.SecretsConfig))
+(*Appears on:* [SecretsConfig](#SecretsConfig))
 
 VaultConfig represents the configurations for connecting to a vault
 server.
@@ -1150,10 +1150,10 @@ server.
 
 Verb (`string` alias)
 
-(*Appears on:* [Rule](#kvdi.io/v1alpha1.Rule))
+(*Appears on:* [Rule](#Rule))
 
 Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `3de519e`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `a251039`.*

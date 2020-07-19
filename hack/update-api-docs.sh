@@ -38,4 +38,7 @@ cd "$gitdir"
 
 
 pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/crds.md"
+sed -i 's/#kvdi\.io\/v1alpha1\./#/g' ${REPO_ROOT}/doc/crds.md
+sed -i 's/#%23kvdi\.io%2fv1alpha1\./#/g' "${REPO_ROOT}/doc/crds.md"
+
 echo "Generated reference documentation"
