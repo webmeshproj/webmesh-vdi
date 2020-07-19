@@ -47,11 +47,12 @@
                 <RuleDisplay
                   v-for="(rule, idx) in props.row.rules"
                   v-bind="rule"
+                  :key="'rules' + props.row.idx + '-' + idx"
+                  :ref="'rules' + props.row.idx + '-' + idx"
                   :roleIdx="props.row.idx"
                   :roleName="props.row.metadata.name"
                   :ruleIdx="idx"
                   :editable="props.row.editable"
-                  :key="idx"
                   style="float: left;"
                 />
               </div>
@@ -172,9 +173,11 @@ export default {
     },
 
     onAddRule (roleIdx, roleName) {
-      this.data[roleIdx].rules.push({
-        verbs: [], resources: [], resourcePatterns: [], namespaces: []
-      })
+      if (this.data[roleIdx].rules !== undefined) {
+        this.data[roleIdx].rules.push({ verbs: [], resources: [], resourcePatterns: [], namespaces: [] })
+        return
+      }
+      this.data[roleIdx].rules = [{ verbs: [], resources: [], resourcePatterns: [], namespaces: [] }]
     },
 
     onCancelEdit (roleIdx, roleName) {
@@ -199,12 +202,14 @@ export default {
       })
     },
 
-    doUpdateRole ({ roleIdx, ruleIdx, roleName, rulePayload, deleteRule }) {
-      if (deleteRule === true) {
-        this.data[roleIdx].rules.splice(ruleIdx, 1)
-        return
+    doUpdateRole ({ roleIdx, ruleIdx, rulePayload, deleteRule }) {
+      if (this.data[roleIdx].rules !== undefined) {
+        if (deleteRule === true) {
+          this.data[roleIdx].rules.splice(ruleIdx, 1)
+          return
+        }
+        this.data[roleIdx].rules.splice(ruleIdx, 1, rulePayload)
       }
-      this.data[roleIdx].rules.splice(ruleIdx, 1, rulePayload)
     },
 
     doAdminCheck (roleName) {
@@ -250,7 +255,7 @@ export default {
         const annotationRef = this.$refs[`annotations-${roleIdx}`]
         const roleAnnotations = await annotationRef.currentAnnotations()
         const payload = {
-          rules: this.data[roleIdx].rules,
+          rules: this.data[roleIdx].rules || [],
           annotations: roleAnnotations
         }
         await this.$axios.put(`/api/roles/${roleName}`, payload)
@@ -286,11 +291,11 @@ export default {
         const res = await this.$axios.get('/api/roles')
         this.data = []
         res.data.forEach((val, idx) => {
-          this.data.push({
-            idx: idx,
-            editable: false,
-            ...val
-          })
+          const item = { idx: idx, editable: false, ...val }
+          if (item.rules === undefined) {
+            item.rules = []
+          }
+          this.data.push(item)
         })
       } catch (err) {
         this.$root.$emit('notify-error', err)

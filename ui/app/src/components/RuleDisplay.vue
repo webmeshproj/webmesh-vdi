@@ -58,7 +58,6 @@ export default {
   methods: {
     onDeleteRule () {
       this.$root.$emit(this.roleName, {
-        roleName: this.roleName,
         roleIdx: this.roleIdx,
         ruleIdx: this.ruleIdx,
         deleteRule: true
@@ -76,7 +75,6 @@ export default {
         namespaces: this.namespaces
       }).onOk((payload) => {
         this.$root.$emit(this.roleName, {
-          roleName: this.roleName,
           roleIdx: this.roleIdx,
           ruleIdx: this.ruleIdx,
           rulePayload: payload

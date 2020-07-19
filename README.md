@@ -56,11 +56,20 @@ For more complete installation instructions see the `helm` chart docs [here](dep
 
 The [API Reference](doc/crds.md) can also be used for details on `kVDI` app-level configurations.
 
-Assuming you have `cert-manager` installed and running in the cluster already:
-
 ```bash
-$> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
-$> helm install kvdi tinyzimmer/kvdi
+# Add the jetstack and kvdi repo
+helm repo add jetstack https://charts.jetstack.io
+helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
+helm repo update  # sync your repositories
+
+# If you don't have cert-manager installed already, install it first
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.2/cert-manager.crds.yaml
+kubectl create namespace cert-manager
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v0.15.2 --wait \
+    --set extraArgs[0]="--enable-certificate-owner-ref=true" # set this to enable secret garbage collection
+                                                             # new certificates are generated for every desktop session
+# Install kVDI
+helm install kvdi tinyzimmer/kvdi
 ```
 
 It will take a minute or two for all the parts to start running after the install command.
