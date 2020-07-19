@@ -23,6 +23,10 @@
         {
           "typeMatchPrefix": "^github\\.com/jetstack/cert-manager/pkg/apis/meta/v1\\.ObjectReference$",
           "docsURLTemplate": "https://godoc.org/github.com/jetstack/cert-manager/pkg/apis/meta/v1#ObjectReference"
+        },
+        {
+          "typeMatchPrefix": "^github\\.com/tinyzimmer/kvdi/pkg/apis/meta/v1\\.Rule$",
+          "docsURLTemplate": "./metav1.md#Rule"
         }
     ],
     "typeDisplayNamePrefixOverrides": {

@@ -633,7 +633,7 @@ VDIRole is the Schema for the vdiroles API
 <td>Refer to the Kubernetes API documentation for the fields of the <code>metadata</code> field.</td>
 </tr>
 <tr class="even">
-<td><code>rules</code> <em>[]github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.Rule</em></td>
+<td><code>rules</code> <em><a href="./metav1.md#Rule">[]github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.Rule</a></em></td>
 <td><p>A list of rules granting access to resources in the VDICluster.</p></td>
 </tr>
 </tbody>
@@ -683,4 +683,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `9dc9293`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `6f535d2`.*

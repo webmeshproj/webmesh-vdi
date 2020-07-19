@@ -42,4 +42,16 @@ sed -i 's/#kvdi\.io\/v1alpha1\./#/g' "${REPO_ROOT}/doc/crds.md"
 sed -i 's/#%23kvdi\.io%2fv1alpha1\./#/g' "${REPO_ROOT}/doc/crds.md"
 sed -i 's:#\*github\.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1\.:#:g' "${REPO_ROOT}/doc/crds.md"
 
+
+"${REPO_ROOT}/_bin/refdocs" \
+  --config "${REPO_ROOT}/doc/refdocs.json" \
+  --template-dir "${REPO_ROOT}/doc/template" \
+  --api-dir "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1" \
+  --out-file "${GOPATH}/out.html"
+
+pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/metav1.md"
+sed -i 's/#kvdi\.io\/v1\./#/g' "${REPO_ROOT}/doc/metav1.md"
+sed -i 's/#%23kvdi\.io%2fv1\./#/g' "${REPO_ROOT}/doc/metav1.md"
+sed -i 's:#\*github\.com/tinyzimmer/kvdi/pkg/apis/meta/v1\.:#:g' "${REPO_ROOT}/doc/metav1.md"
+
 echo "Generated reference documentation"
