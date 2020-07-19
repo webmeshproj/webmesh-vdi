@@ -1071,7 +1071,7 @@ claims defining this object.
 <td><p>A unique name for the user</p></td>
 </tr>
 <tr class="even">
-<td><code>roles</code> <em><a href="#*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
+<td><code>roles</code> <em><a href="#VDIUserRole">[]*github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1.VDIUserRole</a></em></td>
 <td><p>A list of roles applide to the user. The grants associated with each user are embedded in the JWT signed when authenticating.</p></td>
 </tr>
 <tr class="odd">
@@ -1156,4 +1156,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `a251039`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1798380`.*
