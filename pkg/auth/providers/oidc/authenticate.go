@@ -34,6 +34,8 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 		stateKey := getStateSecretKey(req.State)
 		existingClaim, err := a.secrets.ReadSecret(stateKey, true)
 		if err != nil {
+			// If the secret is not found it means we have not generated claims yet
+			// for this user. Return the oauth redirect.
 			if errors.IsSecretNotFoundError(err) {
 				return &v1alpha1.AuthResult{
 					RedirectURL: a.oauthCfg.AuthCodeURL(req.State),
@@ -95,6 +97,8 @@ func (a *AuthProvider) Authenticate(req *v1alpha1.LoginRequest) (*v1alpha1.AuthR
 	// check if we can handle group membership
 	groups, ok := claims[a.cluster.GetOIDCGroupScope()]
 	if !ok {
+		// if we can't determine group membership, check if cluster configuration
+		// allows the user in anyway.
 		if a.cluster.AllowNonGroupedReadOnly() {
 			user.Roles = []*v1alpha1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
 			return nil, a.marshalClaimsToSecret(stateKey, &v1alpha1.AuthResult{User: user})
@@ -131,6 +135,9 @@ RoleLoop:
 
 	user.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
 	fmt.Println("Saving claims to state key", stateKey)
+
+	// save the claims to the secret backend, they will be retrieved on the next POST
+	// for this state.
 	return nil, a.marshalClaimsToSecret(stateKey, &v1alpha1.AuthResult{User: user})
 }
 
