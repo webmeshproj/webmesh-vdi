@@ -26,6 +26,7 @@ func (c *VDICluster) GetOIDCIssuerURL() string {
 	return ""
 }
 
+// GetOIDCClientIDKey returns the key in the secret where the client ID can be retrieved.
 func (c *VDICluster) GetOIDCClientIDKey() string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		if c.Spec.Auth.OIDCAuth.ClientIDKey != "" {
@@ -35,6 +36,7 @@ func (c *VDICluster) GetOIDCClientIDKey() string {
 	return "oidc-clientid"
 }
 
+// GetOIDCClientSecretKey returns the key in the secret where client secret can be retrieved.
 func (c *VDICluster) GetOIDCClientSecretKey() string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		if c.Spec.Auth.OIDCAuth.ClientSecretKey != "" {
@@ -44,6 +46,7 @@ func (c *VDICluster) GetOIDCClientSecretKey() string {
 	return "oidc-clientsecret"
 }
 
+// GetOIDCScopes returns the list of scopes to request from the OpenID provider.
 func (c *VDICluster) GetOIDCScopes() []string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		if c.Spec.Auth.OIDCAuth.Scopes != nil {
@@ -53,6 +56,7 @@ func (c *VDICluster) GetOIDCScopes() []string {
 	return []string{oidc.ScopeOpenID, "email", "profile", "groups"}
 }
 
+// GetOIDCGroupScope returns the scope to use for matching a user's groups to VDI roles.
 func (c *VDICluster) GetOIDCGroupScope() string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		if c.Spec.Auth.OIDCAuth.GroupScope != "" {
@@ -62,6 +66,7 @@ func (c *VDICluster) GetOIDCGroupScope() string {
 	return "groups"
 }
 
+// GetOIDCAdminGroups returns the values in the groups claim that will map to administrator access.
 func (c *VDICluster) GetOIDCAdminGroups() []string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		return c.Spec.Auth.OIDCAuth.AdminGroups
@@ -69,6 +74,7 @@ func (c *VDICluster) GetOIDCAdminGroups() []string {
 	return []string{}
 }
 
+// GetOIDCInsecureSkipVerify returns whether or not to verify the TLS certificate of the OIDC provider.
 func (c *VDICluster) GetOIDCInsecureSkipVerify() bool {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		return c.Spec.Auth.OIDCAuth.TLSInsecureSkipVerify
@@ -76,6 +82,8 @@ func (c *VDICluster) GetOIDCInsecureSkipVerify() bool {
 	return false
 }
 
+// GetOIDCCA returns the CA certificate to use when verifying the OIDC provider certificate. The
+// value is base64 decoded and returned to the caller.
 func (c *VDICluster) GetOIDCCA() ([]byte, error) {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		if c.Spec.Auth.OIDCAuth.TLSCACert != "" {
@@ -85,6 +93,8 @@ func (c *VDICluster) GetOIDCCA() ([]byte, error) {
 	return nil, nil
 }
 
+// GetOIDCRedirectURL returns the URL that the OIDC provider should redirect to after a successful
+// authentication.
 func (c *VDICluster) GetOIDCRedirectURL() string {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		return c.Spec.Auth.OIDCAuth.RedirectURL
@@ -92,6 +102,8 @@ func (c *VDICluster) GetOIDCRedirectURL() string {
 	return ""
 }
 
+// AllowNonGroupedReadOnly returns true if non-grouped users from the OpenID provider should
+// be allowed read-only access to kVDI.
 func (c *VDICluster) AllowNonGroupedReadOnly() bool {
 	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
 		return c.Spec.Auth.OIDCAuth.AllowNonGroupedReadOnly

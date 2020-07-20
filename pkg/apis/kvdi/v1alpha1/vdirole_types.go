@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -18,8 +18,11 @@ type VDIRole struct {
 	Rules []v1.Rule `json:"rules,omitempty"`
 }
 
+// GetRules returns the rules for this VDIRole.
 func (v *VDIRole) GetRules() []v1.Rule { return v.Rules }
 
+// ToUserRole converts this VDIRole to the VDIUserRole format. The VDIUserRole is
+// a condensed representation meant to be stored in JWTs.
 func (v *VDIRole) ToUserRole() *v1.VDIUserRole {
 	return &v1.VDIUserRole{
 		Name:  v.GetName(),

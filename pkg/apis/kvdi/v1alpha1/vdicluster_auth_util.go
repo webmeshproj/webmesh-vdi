@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -73,23 +73,23 @@ func (c *VDICluster) GetAuthK8sSecret() string {
 }
 
 // GetAdminRole returns an admin role for this VDICluster.
-func (v *VDICluster) GetAdminRole() *VDIRole {
+func (c *VDICluster) GetAdminRole() *VDIRole {
 	var annotations map[string]string
-	if v.IsUsingLDAPAuth() {
+	if c.IsUsingLDAPAuth() {
 		annotations = map[string]string{
-			v1.LDAPGroupRoleAnnotation: strings.Join(v.GetLDAPAdminGroups(), v1.AuthGroupSeparator),
+			v1.LDAPGroupRoleAnnotation: strings.Join(c.GetLDAPAdminGroups(), v1.AuthGroupSeparator),
 		}
-	} else if v.IsUsingOIDCAuth() {
+	} else if c.IsUsingOIDCAuth() {
 		annotations = map[string]string{
-			v1.OIDCGroupRoleAnnotation: strings.Join(v.GetOIDCAdminGroups(), v1.AuthGroupSeparator),
+			v1.OIDCGroupRoleAnnotation: strings.Join(c.GetOIDCAdminGroups(), v1.AuthGroupSeparator),
 		}
 	}
 	return &VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        fmt.Sprintf("%s-admin", v.GetName()),
+			Name:        fmt.Sprintf("%s-admin", c.GetName()),
 			Annotations: annotations,
 			Labels: map[string]string{
-				v1.RoleClusterRefLabel: v.GetName(),
+				v1.RoleClusterRefLabel: c.GetName(),
 			},
 		},
 		Rules: []v1.Rule{
@@ -105,12 +105,12 @@ func (v *VDICluster) GetAdminRole() *VDIRole {
 
 // GetLaunchTemplatesRole returns a launch-templates role for a cluster.
 // This role is used if anonymous auth is enabled.
-func (v *VDICluster) GetLaunchTemplatesRole() *VDIRole {
+func (c *VDICluster) GetLaunchTemplatesRole() *VDIRole {
 	return &VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("%s-launch-templates", v.GetName()),
+			Name: fmt.Sprintf("%s-launch-templates", c.GetName()),
 			Labels: map[string]string{
-				v1.RoleClusterRefLabel: v.GetName(),
+				v1.RoleClusterRefLabel: c.GetName(),
 			},
 		},
 		Rules: []v1.Rule{

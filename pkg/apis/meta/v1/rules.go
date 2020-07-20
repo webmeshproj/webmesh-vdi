@@ -40,6 +40,7 @@ func (r *Rule) Evaluate(action *APIAction) bool {
 	return true
 }
 
+// DeepEqual returns true if the provided rule matches this one exactly.
 func (r *Rule) DeepEqual(rule Rule) bool {
 	return reflect.DeepEqual(r.Verbs, rule.Verbs) &&
 		reflect.DeepEqual(r.Resources, rule.Resources) &&
