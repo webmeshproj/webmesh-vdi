@@ -77,7 +77,7 @@ generate: ${OPERATOR_SDK}
 
 ## make manifests           # Generates CRD manifest.
 manifests: ${OPERATOR_SDK}
-	${OPERATOR_SDK} generate crds -${OPERATOR_SDK}-verbose
+	${OPERATOR_SDK} generate crds --verbose
 
 ##
 ## # Linting and Testing
