@@ -122,6 +122,7 @@ test-cluster: ${KIND}
 			--kubeconfig ${KIND_KUBECONFIG}
 	$(MAKE) test-ingress
 
+##
 ## make load-all               # Load all the docker images into the local kind cluster.
 load-all: load-manager load-app load-novnc-proxy
 
@@ -140,7 +141,7 @@ load-novnc-proxy: ${KIND} build-novnc-proxy
 KUBECTL_KIND = ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG}
 HELM_KIND = ${HELM} --kubeconfig ${KIND_KUBECONFIG}
 
-## make test-ingress           # Deploys metallb load balancer to the kind cluster.
+## make test-ingress           # Deploys metallb load balancer to the kind cluster. This gets called automatically with `test-cluster`.
 test-ingress: ${KUBECTL}
 	${KUBECTL_KIND} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/namespace.yaml
 	${KUBECTL_KIND} apply -f https://raw.githubusercontent.com/google/metallb/${METALLB_VERSION}/manifests/metallb.yaml
@@ -171,6 +172,10 @@ test-vault: ${KUBECTL} ${HELM}
 	    policies=kvdi \
 	    ttl=1h
 
+## make get-vault-token        # Returns a token that can be used to login to vault from the CLI or UI.
+get-vault-token:
+	${KUBECTL_KIND} exec -it vault-0 -- vault token create | grep token | head -n1
+
 ## make test-ldap              # Deploys a test LDAP server into the kind cluster.
 test-ldap:
 	${KUBECTL_KIND} apply -f hack/glauth.yaml
@@ -178,6 +183,27 @@ test-ldap:
 ## make test-oidc              # Deploys a test OIDC provider using dex
 test-oidc:
 	${KUBECTL_KIND} apply -f hack/oidc.yaml
+
+##
+## make deploy                 # Deploys kVDI into the local kind cluster.
+.PHONY: deploy
+HELM_ARGS ?=
+deploy: ${HELM} package-chart
+	${HELM_KIND} upgrade --install ${NAME} deploy/charts/${NAME}-${VERSION}.tgz --wait ${HELM_ARGS}
+
+## make deploy-with-vault      # Deploys kVDI into the kind cluster with a vault configuration for the product of `test-vault`.
+deploy-with-vault:
+	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-vault-helm-values.yaml"
+
+## make deploy-with-ldap       # Deploys kVDI into the kind cluster with an LDAP configuration for the product of `test-ldap`.
+deploy-with-ldap:
+	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-ldap-helm-values.yaml"
+
+## make deploy-with-oidc       # Deploys kVDI into the kind cluster with an OIDC configuration for the product of `test-oidc`.
+##                             # Requires you set kvdi.local to the load balancer IP of the app service while testing in /etc/hosts.
+##                             # (Default: 172.17.255.1)
+deploy-with-oidc:
+	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-oidc-helm-values.yaml"
 
 ##
 ## make example-vdi-templates  # Deploys the example VDITemplates into the kind cluster.
@@ -224,12 +250,6 @@ get-app-secret: ${KUBECTL}
 ## make get-admin-password  # Get the generated admin password for kVDI.
 get-admin-password: ${KUBECTL}
 	${KUBECTL_KIND} get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
-
-# Builds and deploys the manager into a local kind cluster, requires helm.
-.PHONY: deploy
-HELM_ARGS ?=
-deploy: ${HELM} package-chart
-	${HELM_KIND} upgrade --install ${NAME} deploy/charts/${NAME}-${VERSION}.tgz --wait ${HELM_ARGS}
 
 ##
 ## # Doc generation

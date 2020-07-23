@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
+	mrand "math/rand"
 	"net"
 	"time"
 
@@ -40,7 +41,7 @@ func newCACertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
 
 func newAppServerCertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
 	return &x509.Certificate{
-		SerialNumber: big.NewInt(2),
+		SerialNumber: big.NewInt(int64(mrand.Intn(9999))),
 		Subject: pkix.Name{
 			CommonName:   cluster.GetAppName(),
 			Organization: ouName,
