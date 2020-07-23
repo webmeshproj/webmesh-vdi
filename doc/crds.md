@@ -668,11 +668,11 @@ server.
 </tr>
 <tr class="even">
 <td><code>secretsPath</code> <em>string</em></td>
-<td><p>The base path to store secrets in vault.</p></td>
+<td><p>The base path to store secrets in vault. “Keys” for other configurations in the context of the vault backend can be put at <code>&lt;secretsPath&gt;/&lt;secretKey&gt;.data</code>. This will change in the future to support keys inside the secret itself, instead of assuming <code>data</code>.</p></td>
 </tr>
 </tbody>
 </table>
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `ce4546f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `54a4ee3`.*

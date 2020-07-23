@@ -156,7 +156,10 @@ type VaultConfig struct {
 	TLSServerName string `json:"tlsServerName,omitempty"`
 	// The auth role to assume when authenticating against vault. Defaults to `kvdi`.
 	AuthRole string `json:"authRole,omitempty"`
-	// The base path to store secrets in vault.
+	// The base path to store secrets in vault. "Keys" for other configurations in the
+	// context of the vault backend can be put at `<secretsPath>/<secretKey>.data`. This
+	// will change in the future to support keys inside the secret itself, instead of assuming
+	// `data`.
 	SecretsPath string `json:"secretsPath,omitempty"`
 }
 

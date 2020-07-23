@@ -231,7 +231,11 @@ spec:
                       description: Set to true to disable TLS verification.
                       type: boolean
                     secretsPath:
-                      description: The base path to store secrets in vault.
+                      description: The base path to store secrets in vault. "Keys"
+                        for other configurations in the context of the vault backend
+                        can be put at `<secretsPath>/<secretKey>.data`. This will
+                        change in the future to support keys inside the secret itself,
+                        instead of assuming `data`.
                       type: string
                     tlsServerName:
                       description: Optionally set the SNI when connecting using HTTPS.
