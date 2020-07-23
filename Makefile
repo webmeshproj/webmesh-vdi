@@ -1,3 +1,8 @@
+# includes
+-include hack/Makevars.mk
+-include hack/Manifests.mk
+-include hack/MakeDesktops.mk
+
 ## # Building Images
 ##
 
@@ -72,7 +77,7 @@ generate: ${OPERATOR_SDK}
 
 ## make manifests           # Generates CRD manifest.
 manifests: ${OPERATOR_SDK}
-	${OPERATOR_SDK} generate crds --verbose
+	${OPERATOR_SDK} generate crds -${OPERATOR_SDK}-verbose
 
 ##
 ## # Linting and Testing
@@ -284,9 +289,3 @@ helm-docs: ${HELM_DOCS} chart-yaml
 help:
 	@echo "# MAKEFILE USAGE" && echo
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
-
-
-# includes
--include hack/Makevars.mk
--include hack/Manifests.mk
--include hack/MakeDesktops.mk
