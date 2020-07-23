@@ -1,4 +1,4 @@
-## Cluster manifests
+# Cluster manifests
 
 ifeq ($(strip $(DOCKER_HOST)),)
 export API_SERVER_ADDRESS=127.0.0.1

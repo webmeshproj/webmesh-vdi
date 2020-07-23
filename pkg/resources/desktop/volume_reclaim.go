@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (f *DesktopReconciler) reclaimVolumes(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) reclaimVolumes(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
 	cluster, err := instance.GetVDICluster(f.client)
 	if err != nil {
 		return err

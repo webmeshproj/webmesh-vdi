@@ -50,8 +50,6 @@ vdi:
     appNamespace: default
     # vdi.spec.imagePullSecrets -- Image pull secrets to use for app containers.
     imagePullSecrets: []
-    # vdi.spec.certManagerNamespace -- The namespace where `cert-manager` is running.
-    certManagerNamespace: cert-manager
     # vdi.spec.userdataSpec -- If configured, enables userdata persistence with
     # the given PVC spec. Every user will receive their own PV with the provided configuration.
     userdataSpec: {}

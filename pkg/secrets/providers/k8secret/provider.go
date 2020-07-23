@@ -2,6 +2,8 @@ package k8secret
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
@@ -101,6 +103,43 @@ func (k *Provider) WriteSecret(name string, content []byte) error {
 		return err
 	}
 	return nil
+}
+
+// ReadSecretMap implements SecretsProvider and returns a stored map secret.
+func (k *Provider) ReadSecretMap(name string) (map[string][]byte, error) {
+	contents, err := k.ReadSecret(name)
+	if err != nil {
+		return nil, err
+	}
+	// json marshalled bytes are encoded with base64
+	outEncoded := make(map[string]string)
+	if err := json.Unmarshal(contents, &outEncoded); err != nil {
+		return nil, err
+	}
+	out := make(map[string][]byte)
+	for k, v := range outEncoded {
+		vBytes, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return nil, err
+		}
+		out[k] = vBytes
+	}
+	return out, nil
+}
+
+// WriteSecretMap implements SecretsProvider and will write the key-value pair
+// to the secrets backend. The secret can be read back in the same fashion.
+// This will be the preferred function going forward.
+func (k *Provider) WriteSecretMap(name string, content map[string][]byte) error {
+	if content == nil {
+		return k.WriteSecret(name, nil)
+	}
+	// json will base64 encode the byte slices
+	out, err := json.Marshal(content)
+	if err != nil {
+		return err
+	}
+	return k.WriteSecret(name, out)
 }
 
 // Close just returns nil because no cleanup is necessary.

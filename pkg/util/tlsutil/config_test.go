@@ -6,11 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
-	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,7 +28,7 @@ func writeTLSCerts(t *testing.T) (string, func(), error) {
 		clean()
 		return "", nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, cmmeta.TLSCAKey), testCA, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, "ca.crt"), testCA, 0644); err != nil {
 		clean()
 		return "", nil, err
 	}
@@ -87,7 +84,7 @@ func TestNewClientTLSConfig(t *testing.T) {
 	}
 
 	// cause the CA error
-	os.Remove(filepath.Join(clientCertMountPath, cmmeta.TLSCAKey))
+	os.Remove(filepath.Join(clientCertMountPath, "ca.crt"))
 	if _, err := NewClientTLSConfig(); err == nil {
 		t.Error("Expected error for missing ca certs")
 	}
@@ -105,7 +102,7 @@ func TestNewClientTLSConfigFromSecret(t *testing.T) {
 	secret.Name = "test-secret"
 	secret.Namespace = "test-namespace"
 	secret.Data = map[string][]byte{
-		cmmeta.TLSCAKey:         testCA,
+		"ca.crt":                testCA,
 		corev1.TLSCertKey:       testCert,
 		corev1.TLSPrivateKeyKey: testKey,
 	}
@@ -125,7 +122,7 @@ func TestNewClientTLSConfigFromSecret(t *testing.T) {
 		t.Error("Expected error for invalid cert, got nil")
 	}
 
-	delete(secret.Data, cmmeta.TLSCAKey)
+	delete(secret.Data, "ca.crt")
 	c.Update(context.TODO(), secret)
 	if _, err := NewClientTLSConfigFromSecret(c, "test-secret", "test-namespace"); err == nil {
 		t.Error("Expected error for missing secret key, got nil")
@@ -149,15 +146,5 @@ func TestClientKeypair(t *testing.T) {
 		t.Error("Got wrong cert path for client keypair:", cert)
 	} else if key != filepath.Join(clientCertMountPath, corev1.TLSPrivateKeyKey) {
 		t.Error("Got wrong key path for client keypair:", cert)
-	}
-}
-
-// just a sanity check so if it's changed it makes you come here to think about it
-// this part was very fragile at first.
-// Has the benefit of hitting every other function for coverage
-func TestCAUsages(t *testing.T) {
-	requiredCAUsages := append(ServerMTLSUsages(), cm.UsageSigning, cm.UsageCertSign, cm.UsageCRLSign, cm.UsageOCSPSigning)
-	if !reflect.DeepEqual(CAUsages(), requiredCAUsages) {
-		t.Error("Required CA usages are different")
 	}
 }

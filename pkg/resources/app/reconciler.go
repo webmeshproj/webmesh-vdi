@@ -2,9 +2,10 @@ package app
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/auth"
+	"github.com/tinyzimmer/kvdi/pkg/pki"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
@@ -16,21 +17,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type AppReconciler struct {
+// Reconciler implements a reconciler for app-related resources.
+type Reconciler struct {
 	resources.VDIReconciler
 
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-var _ resources.VDIReconciler = &AppReconciler{}
+var _ resources.VDIReconciler = &Reconciler{}
 
 // New returns a new App reconciler
 func New(c client.Client, s *runtime.Scheme) resources.VDIReconciler {
-	return &AppReconciler{client: c, scheme: s}
+	return &Reconciler{client: c, scheme: s}
 }
 
-func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
+// Reconcile reconciles all the core-components of a kVDI cluster.
+func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
 	// Generate the admin secret
 	adminPass, err := f.reconcileAdminSecret(reqLogger, instance)
 	if err != nil {
@@ -72,10 +75,9 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 	authProvider := auth.GetAuthProvider(instance)
 	if err := authProvider.Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
 		return err
-	} else {
-		if err := authProvider.Close(); err != nil {
-			reqLogger.Error(err, "Failed to close auth provider cleanly")
-		}
+	}
+	if err := authProvider.Close(); err != nil {
+		reqLogger.Error(err, "Failed to close auth provider cleanly")
 	}
 
 	// Service account and cluster role/binding
@@ -89,13 +91,9 @@ func (f *AppReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIC
 		return err
 	}
 
-	// Server certificate
-	if err := reconcile.ReconcileCertificate(reqLogger, f.client, newAppCertForCR(instance), true); err != nil {
-		return err
-	}
-
-	// Client certificate for novnc/db connections
-	if err := reconcile.ReconcileCertificate(reqLogger, f.client, newAppClientCertForCR(instance), true); err != nil {
+	// Reconcile the PKI. This will ensure a CA as well as both server and client certificates
+	// for the app deployment.
+	if err := pki.New(f.client, instance, secretsEngine).Reconcile(reqLogger); err != nil {
 		return err
 	}
 

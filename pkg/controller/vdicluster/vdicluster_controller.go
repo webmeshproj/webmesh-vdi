@@ -8,10 +8,8 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/resources/app"
-	"github.com/tinyzimmer/kvdi/pkg/resources/pki"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
-	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -63,15 +61,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to secondary resource Deployments and requeue the owner VDICluster
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &v1alpha1.VDICluster{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource Certificates and requeue the owner VDICluster
-	err = c.Watch(&source.Kind{Type: &cm.Certificate{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &v1alpha1.VDICluster{},
 	})
@@ -133,7 +122,7 @@ func (r *ReconcileVDICluster) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// Build our reconcilers for this instance
 	reconcilers := []resources.VDIReconciler{
-		pki.New(r.client, r.scheme),
+		// pki.New(r.client, r.scheme),
 		app.New(r.client, r.scheme),
 	}
 

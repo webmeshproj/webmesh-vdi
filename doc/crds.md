@@ -542,22 +542,18 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
-<td><code>certManagerNamespace</code> <em>string</em></td>
-<td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
-</tr>
-<tr class="even">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
@@ -594,22 +590,18 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
-<td><code>certManagerNamespace</code> <em>string</em></td>
-<td><p>The namespace cert-manager is running in. Defaults to <code>cert-manager</code>.</p></td>
-</tr>
-<tr class="even">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
 <td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
@@ -683,4 +675,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `6f535d2`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `b6f76ad`.*

@@ -4,14 +4,6 @@ import (
 	"fmt"
 )
 
-// GetCertManagerNamespace returns the namespace where cert-manager is running.
-func (c *VDICluster) GetCertManagerNamespace() string {
-	if c.Spec.CertManagerNamespace != "" {
-		return c.Spec.CertManagerNamespace
-	}
-	return "cert-manager"
-}
-
 // GetSignerName returns the name of the signing certificate for the VDICluster.
 func (c *VDICluster) GetSignerName() string {
 	return fmt.Sprintf("%s-mtls-signer.%s.svc", c.GetName(), c.GetCoreNamespace())

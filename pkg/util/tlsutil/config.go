@@ -4,14 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
-	cm "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha3"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -68,7 +67,7 @@ func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls
 	if err := c.Get(context.TODO(), nn, secret); err != nil {
 		return nil, err
 	}
-	for _, key := range []string{cmmeta.TLSCAKey, corev1.TLSCertKey, corev1.TLSPrivateKeyKey} {
+	for _, key := range []string{"ca.crt", corev1.TLSCertKey, corev1.TLSPrivateKeyKey} {
 		if _, ok := secret.Data[key]; !ok {
 			return nil, fmt.Errorf("%s missing from TLS secret", key)
 		}
@@ -78,7 +77,9 @@ func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls
 		return nil, err
 	}
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(secret.Data[cmmeta.TLSCAKey])
+	if ok := caCertPool.AppendCertsFromPEM(secret.Data["ca.crt"]); !ok {
+		return nil, errors.New("Failed to create CA certificate pool")
+	}
 	return &tls.Config{
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{cert},
@@ -101,32 +102,14 @@ func ClientKeypair() (string, string) {
 // getCACertPool creates a CA Certificate pool from the CA found at the given
 // mount point.
 func getCACertPool(mountPath string) (*x509.CertPool, error) {
-	caCertFile := filepath.Join(mountPath, cmmeta.TLSCAKey)
+	caCertFile := filepath.Join(mountPath, "ca.crt")
 	caCert, err := ioutil.ReadFile(caCertFile)
 	if err != nil {
 		return nil, err
 	}
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	return caCertPool, nil
-}
-
-// CAUsages returns the key usages for a CA certificate. It must have every usage
-// that will be given to a certificate signed from it.
-func CAUsages() []cm.KeyUsage {
-	return append(ServerMTLSUsages(), cm.UsageSigning, cm.UsageCertSign, cm.UsageCRLSign, cm.UsageOCSPSigning)
-}
-
-// ServerMTLSUsages returns the key usages to use for a server side TLS certificate.
-func ServerMTLSUsages() []cm.KeyUsage {
-	return append(ClientMTLSUsages(), cm.UsageServerAuth)
-}
-
-// ClientMTLSUsages returns the key usages for a client side TLS certificate.
-func ClientMTLSUsages() []cm.KeyUsage {
-	return []cm.KeyUsage{
-		cm.UsageKeyEncipherment,
-		cm.UsageDigitalSignature,
-		cm.UsageClientAuth,
+	if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+		return nil, errors.New("Failed to create CA cert pool")
 	}
+	return caCertPool, nil
 }

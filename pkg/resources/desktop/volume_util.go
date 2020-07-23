@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (f *DesktopReconciler) freePV(pv *corev1.PersistentVolume) (bool, error) {
+func (f *Reconciler) freePV(pv *corev1.PersistentVolume) (bool, error) {
 	var changed bool
 	if pv.Spec.PersistentVolumeReclaimPolicy != corev1.PersistentVolumeReclaimRetain {
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
@@ -27,7 +27,7 @@ func (f *DesktopReconciler) freePV(pv *corev1.PersistentVolume) (bool, error) {
 	return changed, nil
 }
 
-func (f *DesktopReconciler) getPVCForInstance(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) (*corev1.PersistentVolumeClaim, error) {
+func (f *Reconciler) getPVCForInstance(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) (*corev1.PersistentVolumeClaim, error) {
 	pvcNN := types.NamespacedName{
 		Name:      cluster.GetUserdataVolumeName(instance.GetUser()),
 		Namespace: instance.GetNamespace(),
@@ -36,12 +36,12 @@ func (f *DesktopReconciler) getPVCForInstance(cluster *v1alpha1.VDICluster, inst
 	return pvc, f.client.Get(context.TODO(), pvcNN, pvc)
 }
 
-func (f *DesktopReconciler) getPV(name string) (*corev1.PersistentVolume, error) {
+func (f *Reconciler) getPV(name string) (*corev1.PersistentVolume, error) {
 	pv := &corev1.PersistentVolume{}
 	return pv, f.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: metav1.NamespaceAll}, pv)
 }
 
-func (f *DesktopReconciler) getVolMapForCluster(cluster *v1alpha1.VDICluster) (*corev1.ConfigMap, error) {
+func (f *Reconciler) getVolMapForCluster(cluster *v1alpha1.VDICluster) (*corev1.ConfigMap, error) {
 	cmName := cluster.GetUserdataVolumeMapName()
 	volMapCM := &corev1.ConfigMap{}
 	if err := f.client.Get(context.TODO(), cmName, volMapCM); err != nil {

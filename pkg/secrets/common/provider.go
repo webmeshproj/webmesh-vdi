@@ -14,9 +14,14 @@ type SecretsProvider interface {
 	Setup(client.Client, *v1alpha1.VDICluster) error
 	// ReadSecret should return the contents of a secret by name.
 	ReadSecret(name string) (contents []byte, err error)
+	// ReadSecretMap should return the contents of a secret map by name.
+	ReadSecretMap(name string) (contents map[string][]byte, err error)
 	// WriteSecret should store a secret, replacing any existing one with the
 	// same name. When contents is nil, the intent is that the secret is removed.
 	WriteSecret(name string, contents []byte) error
+	// WriteSecretMap should write a map to the secret backend. It should be written in
+	// a way that it can be retrieved back into a map of the same types.
+	WriteSecretMap(name string, contents map[string][]byte) error
 	// Close should handle any cleanup logic for the backend. This method is invoked
 	// after temporary usages of the secret engine. This shouldn't be destructive,
 	// but it should ensure any opened sockets are closed cleanly, spawned

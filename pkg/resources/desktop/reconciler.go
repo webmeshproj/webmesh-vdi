@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/pki"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
@@ -16,23 +18,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type DesktopReconciler struct {
+// Reconciler implements a reconciler for Desktop instance related resources.
+type Reconciler struct {
 	resources.DesktopReconciler
 
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-var _ resources.DesktopReconciler = &DesktopReconciler{}
+var _ resources.DesktopReconciler = &Reconciler{}
 
 var userdataReclaimFinalizer = "kvdi.io/userdata-reclaim"
 
 // New returns a new Desktop reconciler
 func New(c client.Client, s *runtime.Scheme) resources.DesktopReconciler {
-	return &DesktopReconciler{client: c, scheme: s}
+	return &Reconciler{client: c, scheme: s}
 }
 
-func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+// Reconcile ensures the required resources for a desktop session.
+func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
 	if instance.GetDeletionTimestamp() != nil {
 		return f.runFinalizers(reqLogger, instance)
 	}
@@ -70,8 +74,19 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 		return errors.NewRequeueError("Desktop service has not yet been assigned an IP", 2)
 	}
 
+	// Set up a temporary connection to the secrets engine
+	secretsEngine := secrets.GetSecretEngine(cluster)
+	if err := secretsEngine.Setup(f.client, cluster); err != nil {
+		return err
+	}
+	defer func() {
+		if err := secretsEngine.Close(); err != nil {
+			reqLogger.Error(err, "Error cleaning up secrets engine")
+		}
+	}()
+
 	// ensure a certificate for novnc over mtls
-	if err := reconcile.ReconcileCertificate(reqLogger, f.client, newDesktopProxyCert(cluster, instance, desktopSvc.Spec.ClusterIP), true); err != nil {
+	if err := pki.New(f.client, cluster, secretsEngine).ReconcileDesktop(reqLogger, instance, desktopSvc.Spec.ClusterIP); err != nil {
 		return err
 	}
 
@@ -116,7 +131,7 @@ func (f *DesktopReconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.
 	return nil
 }
 
-func (f *DesktopReconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.Desktop, pod *corev1.Pod, msg string) error {
+func (f *Reconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.Desktop, pod *corev1.Pod, msg string) error {
 	instance.Status.Running = false
 	instance.Status.PodPhase = pod.Status.Phase
 	if err := f.client.Status().Update(context.TODO(), instance); err != nil {
@@ -125,7 +140,7 @@ func (f *DesktopReconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.
 	return errors.NewRequeueError(msg, 3)
 }
 
-func (f *DesktopReconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
 	if !common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		instance.SetFinalizers(append(instance.GetFinalizers(), userdataReclaimFinalizer))
 		if err := f.client.Update(context.TODO(), instance); err != nil {
@@ -138,7 +153,7 @@ func (f *DesktopReconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1
 	return nil
 }
 
-func (f *DesktopReconciler) runFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) runFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
 	var updated bool
 	if common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		if err := f.reclaimVolumes(reqLogger, instance); err != nil {

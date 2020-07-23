@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (f *DesktopReconciler) reconcileVolumes(reqLogger logr.Logger, cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) reconcileVolumes(reqLogger logr.Logger, cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) error {
 	volMapCM, err := f.getVolMapForCluster(cluster)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (f *DesktopReconciler) reconcileVolumes(reqLogger logr.Logger, cluster *v1a
 	return reconcile.ReconcilePersistentVolumeClaim(reqLogger, f.client, pvc)
 }
 
-func (f *DesktopReconciler) reconcileUserdataMapping(reqLogger logr.Logger, cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) reconcileUserdataMapping(reqLogger logr.Logger, cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) error {
 
 	pvc, err := f.getPVCForInstance(cluster, instance)
 	if err != nil {

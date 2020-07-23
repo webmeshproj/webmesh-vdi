@@ -16,7 +16,7 @@ import (
 
 const passwordKey = "password"
 
-func (r *AppReconciler) reconcileAdminSecret(reqLogger logr.Logger, cluster *v1alpha1.VDICluster) (password string, err error) {
+func (r *Reconciler) reconcileAdminSecret(reqLogger logr.Logger, cluster *v1alpha1.VDICluster) (password string, err error) {
 	nn := types.NamespacedName{Name: cluster.GetAdminSecret(), Namespace: cluster.GetCoreNamespace()}
 	found := &corev1.Secret{}
 	if err := r.client.Get(context.TODO(), nn, found); err != nil {

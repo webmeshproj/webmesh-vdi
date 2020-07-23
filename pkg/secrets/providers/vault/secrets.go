@@ -11,6 +11,27 @@ import (
 // from vault. Since it is assume that all secrets are []byte, when reading the
 // secret we have to decode the base64 that vault returns it as.
 func (p *Provider) ReadSecret(name string) ([]byte, error) {
+	secretMap, err := p.ReadSecretMap(name)
+	if err != nil {
+		return nil, err
+	}
+	data, ok := secretMap["data"]
+	if !ok {
+		return nil, errors.NewSecretNotFoundError(name)
+	}
+	return data, nil
+}
+
+// WriteSecret implements SecretsProvider and will write the secret to the vault
+// backend.
+func (p *Provider) WriteSecret(name string, content []byte) error {
+	return p.WriteSecretMap(name, map[string][]byte{
+		"data": content,
+	})
+}
+
+// ReadSecretMap returns a map from the vault server.
+func (p *Provider) ReadSecretMap(name string) (map[string][]byte, error) {
 	path := p.getSecretPath(name)
 	res, err := p.client.Logical().Read(path)
 	if err != nil {
@@ -20,34 +41,36 @@ func (p *Provider) ReadSecret(name string) ([]byte, error) {
 		vaultLogger.Info("Secret data is nil, assuming doesn't exist", "Path", path)
 		return nil, errors.NewSecretNotFoundError(name)
 	}
-	contents, ok := res.Data["data"]
-	if !ok {
-		vaultLogger.Info("No 'data' key found in the secret", "Path", path)
-		return nil, errors.NewSecretNotFoundError(name)
+	out := make(map[string][]byte)
+	for k, v := range res.Data {
+		data, ok := v.(string)
+		if !ok {
+			vaultLogger.Info("Could not assert secret data to string, probably empty", "Path", path)
+			return nil, errors.NewSecretNotFoundError(name)
+		}
+		outBytes, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			vaultLogger.Info("Could not decode vault base64 data", "Path", path)
+			return nil, errors.NewSecretNotFoundError(name)
+		}
+		out[k] = outBytes
 	}
-	out, ok := contents.(string)
-	if !ok {
-		vaultLogger.Info("Could not assert secret data to string, probably empty", "Path", path)
-		return nil, errors.NewSecretNotFoundError(name)
-	}
-	outBytes, err := base64.StdEncoding.DecodeString(out)
-	if err != nil {
-		vaultLogger.Info("Could not decode vault base64 data", "Path", path)
-		return nil, errors.NewSecretNotFoundError(name)
-	}
-	return outBytes, nil
+	return out, nil
 }
 
-// WriteSecret implements SecretsProvider and will write the secret to the vault
-// backend.
-func (p *Provider) WriteSecret(name string, content []byte) error {
+// WriteSecretMap implements SecretsProvider and will write the key-value pair
+// to the secrets backend. The secret can be read back in the same fashion.
+// This will be the preferred function going forward.
+func (p *Provider) WriteSecretMap(name string, content map[string][]byte) error {
 	if content == nil {
 		_, err := p.client.Logical().Delete(p.getSecretPath(name))
 		return err
 	}
-	_, err := p.client.Logical().Write(p.getSecretPath(name), map[string]interface{}{
-		"data": content,
-	})
+	out := make(map[string]interface{})
+	for k, v := range content {
+		out[k] = v
+	}
+	_, err := p.client.Logical().Write(p.getSecretPath(name), out)
 	return err
 }
 

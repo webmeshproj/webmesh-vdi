@@ -44,8 +44,10 @@ type SecretEngine struct {
 
 // cacheItem is a cached item in the SecretEngine
 type cacheItem struct {
-	// the contents of the secret
+	// the contents of a bytes secret
 	contents []byte
+	// the contents of a map secret
+	contentsMap map[string][]byte
 	// when this cache item expires
 	expiresAt time.Time
 }
@@ -91,12 +93,32 @@ func (s *SecretEngine) readCache(name string) []byte {
 	return nil
 }
 
-// writeCache writes a new value to the cache, replacing an existing one of the
+// readCacheMap will return the contents of a secret from the cache if still valid.
+// Otherwise it returns nil.
+func (s *SecretEngine) readCacheMap(name string) map[string][]byte {
+	if cached, ok := s.cache[name]; ok {
+		if cached.expiresAt.Before(time.Now()) {
+			return cached.contentsMap
+		}
+	}
+	return nil
+}
+
+// writeCache writes a new bytes value to the cache, replacing an existing one of the
 // same name.
 func (s *SecretEngine) writeCache(name string, contents []byte) {
 	s.cache[name] = &cacheItem{
 		contents:  contents,
 		expiresAt: time.Now().Add(cacheTTL),
+	}
+}
+
+// writeCacheMap writes a new map value to the cache, replacing an existing one of the
+// same name.
+func (s *SecretEngine) writeCacheMap(name string, contents map[string][]byte) {
+	s.cache[name] = &cacheItem{
+		contentsMap: contents,
+		expiresAt:   time.Now().Add(cacheTTL),
 	}
 }
 
@@ -119,6 +141,25 @@ func (s *SecretEngine) ReadSecret(name string, cache bool) ([]byte, error) {
 	return secret, nil
 }
 
+// ReadSecretMap will fetch the requested secret from the backend. If cache is true,
+// the cache will be checked first, and if not found, then the result of a backend
+// query will be written to the cache.
+func (s *SecretEngine) ReadSecretMap(name string, cache bool) (map[string][]byte, error) {
+	if cache {
+		if val := s.readCacheMap(name); val != nil {
+			return val, nil
+		}
+	}
+	secret, err := s.backend.ReadSecretMap(name)
+	if err != nil {
+		return nil, err
+	}
+	if cache {
+		s.writeCacheMap(name, secret)
+	}
+	return secret, nil
+}
+
 // WriteSecret writes the given secret to the backend. If it is also found in
 // the cache, then the contents of the value in the cache are replaced with the
 // new value.
@@ -128,6 +169,19 @@ func (s *SecretEngine) WriteSecret(name string, contents []byte) error {
 	}
 	if val := s.readCache(name); val != nil {
 		s.writeCache(name, contents)
+	}
+	return nil
+}
+
+// WriteSecretMap writes the given secret map to the backend. If it is also found
+// in the cache, then the contents of the value in the cache are replaced with the
+// new values.
+func (s *SecretEngine) WriteSecretMap(name string, contents map[string][]byte) error {
+	if err := s.backend.WriteSecretMap(name, contents); err != nil {
+		return err
+	}
+	if val := s.readCache(name); val != nil {
+		s.writeCacheMap(name, contents)
 	}
 	return nil
 }

@@ -12,8 +12,6 @@ type VDIClusterSpec struct {
 	AppNamespace string `json:"appNamespace,omitempty"`
 	// Pull secrets to use when pulling container images
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	// The namespace cert-manager is running in. Defaults to `cert-manager`.
-	CertManagerNamespace string `json:"certManagerNamespace,omitempty"`
 	// The configuration for user volumes. *NOTE:* Even though the controller
 	// will try to force the reclaim policy on created volumes to `Retain`, you
 	// may want to set it explicitly on your storage-class controller as an extra

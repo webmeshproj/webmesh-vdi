@@ -40,11 +40,6 @@ If you are wanting this to become a real thing (or are just interested in trying
 
 ## Requirements
 
-Cluster requirements
-
-  - `cert-manager >= 0.14.1`
-    - The manager uses the `v1alpha3` API for certificate provisioning
-
 For building and running locally you will need:
 
   - `go >= 1.14`
@@ -57,17 +52,10 @@ For more complete installation instructions see the `helm` chart docs [here](dep
 The [API Reference](doc/crds.md) can also be used for details on `kVDI` app-level configurations.
 
 ```bash
-# Add the jetstack and kvdi repo
-helm repo add jetstack https://charts.jetstack.io
+# Add the kvdi repo
 helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
 helm repo update  # sync your repositories
 
-# If you don't have cert-manager installed already, install it first
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.2/cert-manager.crds.yaml
-kubectl create namespace cert-manager
-helm install cert-manager jetstack/cert-manager --namespace cert-manager --version v0.15.2 --wait \
-    --set extraArgs[0]="--enable-certificate-owner-ref=true" # set this to enable secret garbage collection
-                                                             # new certificates are generated for every desktop session
 # Install kVDI
 helm install kvdi tinyzimmer/kvdi
 ```
@@ -82,7 +70,7 @@ By default there are no desktop templates configured. If you'd like, you can app
 
 ## Building and Running Locally
 
-The `Makefiles` contain helpers for testing the full solution locally using `kind`.
+The `Makefiles` contain helpers for testing the full solution locally using `kind`. Run `make help` to see all the available options.
 
 _If you choose to pull the images from the registry instead of building and loading first - you probably want to set `VERSION=latest` (or a previous version) in your environment also.
 The `Makefile` is usually pointed at the next version to be released and published images may not exist yet_.

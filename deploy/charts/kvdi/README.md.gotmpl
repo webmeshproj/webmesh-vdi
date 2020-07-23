@@ -7,13 +7,6 @@
 
 ## Installation
 
-For the time being `kVDI` depends on `cert-manager >= 0.14.1` for provisioning mTLS certificates.
-The chart does not set this up for you.
-
-_This requirement will probably be removed at some point_
-
-Once `cert-manager` is running:
-
 ```bash
 $> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
 $> helm install kvdi tinyzimmer/kvdi

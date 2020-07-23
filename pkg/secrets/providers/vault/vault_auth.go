@@ -16,9 +16,9 @@ import (
 // container.
 const DefaultTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
-// VaultAuthRequest represents a request for a vault token using the k8s JWT.
+// AuthRequest represents a request for a vault token using the k8s JWT.
 // There is probably a struct defined in the libary for this somewhere.
-type VaultAuthRequest struct {
+type AuthRequest struct {
 	JWT  string `json:"jwt"`
 	Role string `json:"role"`
 }
@@ -31,7 +31,7 @@ func (p *Provider) getClientToken() (*api.Secret, error) {
 		return nil, err
 	}
 	authURLStr := fmt.Sprintf("%s/v1/auth/kubernetes/login", p.vaultConfig.Address)
-	body, err := json.Marshal(&VaultAuthRequest{JWT: string(tokenBytes), Role: p.crConfig.GetAuthRole()})
+	body, err := json.Marshal(&AuthRequest{JWT: string(tokenBytes), Role: p.crConfig.GetAuthRole()})
 	if err != nil {
 		return nil, err
 	}

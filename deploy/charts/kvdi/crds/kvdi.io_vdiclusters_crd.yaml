@@ -187,9 +187,6 @@ spec:
                       type: boolean
                   type: object
               type: object
-            certManagerNamespace:
-              description: The namespace cert-manager is running in. Defaults to `cert-manager`.
-              type: string
             imagePullSecrets:
               description: Pull secrets to use when pulling container images
               items:

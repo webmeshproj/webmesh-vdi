@@ -2,18 +2,11 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `0.0.3`
+Current chart version is `0.0.4`
 
 
 
 ## Installation
-
-For the time being `kVDI` depends on `cert-manager >= 0.14.1` for provisioning mTLS certificates.
-The chart does not set this up for you.
-
-_This requirement will probably be removed at some point_
-
-Once `cert-manager` is running:
 
 ```bash
 $> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
@@ -73,7 +66,6 @@ There is an example for LDAP authentication in the same folder.
 | vdi.spec.auth.adminSecret | string | `"kvdi-admin-secret"` | The secret to store the generated admin password in. |
 | vdi.spec.auth.allowAnonymous | bool | `false` | Allow anonymous users to launch and use desktops. |
 | vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is currently the only supported auth provider, however more may come in the future. |
-| vdi.spec.certManagerNamespace | string | `"cert-manager"` | The namespace where `cert-manager` is running. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
 | vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. This is the default if no other configuration is provided. For now, see the API reference for what to use in place of these values if using a different backend. |
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
