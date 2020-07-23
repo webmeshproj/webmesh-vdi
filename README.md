@@ -78,8 +78,8 @@ The `Makefile` is usually pointed at the next version to be released and publish
 ```bash
 # Builds all the docker images (optional, they are also available in the quay repo)
 $> make build-all
-# Spin up a kind cluster and load cert-manager and metallb into it
-$> make full-test-cluster
+# Spin up a kind cluster for local testing
+$> make test-cluster
 # Load all the docker images into the kind cluster (optional for same reason as build)
 $> make load-all
 # Deploy the manager, kvdi, and setup the example templates

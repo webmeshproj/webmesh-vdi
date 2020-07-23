@@ -120,6 +120,7 @@ test-cluster: ${KIND}
 			--image kindest/node:${KUBERNETES_VERSION} \
 			--name ${CLUSTER_NAME} \
 			--kubeconfig ${KIND_KUBECONFIG}
+	$(MAKE) test-ingress
 
 ## make load-all               # Load all the docker images into the local kind cluster.
 load-all: load-manager load-app load-novnc-proxy
@@ -174,9 +175,9 @@ test-vault: ${KUBECTL} ${HELM}
 test-ldap:
 	${KUBECTL_KIND} apply -f hack/glauth.yaml
 
-##
-## make full-test-cluster      # Builds a kind cluster with metallb and cert-manager installed.
-full-test-cluster: test-cluster test-ingress test-certmanager
+## make test-oidc              # Deploys a test OIDC provider using dex
+test-oidc:
+	${KUBECTL_KIND} apply -f hack/oidc.yaml
 
 ##
 ## make example-vdi-templates  # Deploys the example VDITemplates into the kind cluster.
