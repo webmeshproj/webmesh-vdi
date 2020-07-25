@@ -6,6 +6,7 @@ ENV container docker
 RUN pacman --noconfirm -Syyu \
   && pacman --noconfirm -S \
       sudo net-tools xz dbus xorg-apps alsa-utils mesa xpra tigervnc libcanberra \
+      pulseaudio pavucontrol chromium vim coreutils iputils dnsutils \
   && yes | pacman -Scc --noconfirm \
   && rm -f /usr/lib/systemd/system/systemd-firstboot.service \
   && (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \

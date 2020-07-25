@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= 0.0.4
+VERSION ?= 0.0.5
 
 # Go options
 GO111MODULE ?= auto
@@ -38,7 +38,7 @@ OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/
 
 # Kind Options
 KIND_VERSION ?= v0.7.0
-KUBERNETES_VERSION ?= v1.18.2
+KUBERNETES_VERSION ?= v1.18.4
 METALLB_VERSION ?= v0.9.3
 CERT_MANAGER_VERSION ?= v0.14.1
 HELM_VERSION ?= v3.1.2

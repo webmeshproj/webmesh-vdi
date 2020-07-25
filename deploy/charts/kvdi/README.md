@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `0.0.4`
+Current chart version is `0.0.5`
 
 
 

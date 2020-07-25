@@ -44,6 +44,7 @@ find /etc/default -type f -exec \
       -e "s|%USER%|${USER}|g" \
       -e "s|%UID%|${USER_ID}|g" \
       -e "s|%UNIX_SOCK%|${VNC_SOCK_ADDR}|g" \
+      -e "s|%USER_ID%|${USER_ID}|g" \
       -e "s|%HOME%|${HOME}|g" {} +
 
 

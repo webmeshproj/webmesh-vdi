@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/audio"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
@@ -32,6 +32,7 @@ var log = logf.Log.WithName("novnc_proxy")
 
 // vnc configurations
 var vncAddr string
+var userID string
 var vncConnectProto, vncConnectAddr string
 
 // main application entry point
@@ -39,8 +40,8 @@ func main() {
 
 	// parse flags and setup logging
 	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "tcp://127.0.0.1:5900", "The tcp or unix-socket address of the vnc server")
+	pflag.CommandLine.StringVar(&userID, "user-id", "9000", "The user ID directory in /run/usr where sockets are located")
 	common.ParseFlagsAndSetupLogging()
-
 	common.PrintVersion(log)
 
 	// Set the location of our vnc socket appropriatly
@@ -125,8 +126,9 @@ func newServer() (*http.Server, error) {
 
 			wsconn.PayloadType = websocket.BinaryFrame
 
-			audioBuffer := audio.NewBuffer()
-			if err := audioBuffer.Start("mp3"); err != nil {
+			audioBuffer := audio.NewBuffer(log, userID, audio.BufferTypeGST)
+
+			if err := audioBuffer.Start(audio.CodecOpus); err != nil {
 				log.Error(err, "Error setting up audio buffer")
 				return
 			}
@@ -137,13 +139,24 @@ func newServer() (*http.Server, error) {
 				}
 			}()
 
-			// Replacing wsconn below and using this bufferedWriter instance will
-			// buffer the audio data server-side.
-			// bufferedWriter := bufio.NewWriterSize(wsconn, audioBufferSize)
+			go func() {
 
-			if _, err := io.Copy(wsconn, audioBuffer); err != nil {
-				log.Error(err, "Error while copying stream from audio stream to websocket connection")
-				log.Info(audioBuffer.Stderr())
+				if _, err := io.Copy(wsconn, audioBuffer); err != nil {
+					log.Error(err, "Error while copying from audio stream to websocket connection")
+				}
+			}()
+
+			if err := audioBuffer.Wait(); err != nil {
+				if err := audioBuffer.Error(); err != nil {
+					log.Error(err, "Error while streaming audio")
+					if _, err := wsconn.Write(append([]byte(err.Error()), []byte("\n")...)); err != nil {
+						log.Error(err, "Failed to write error to websocket client")
+					}
+				}
+			}
+
+			if err := wsconn.Close(); err != nil {
+				log.Error(err, "Error closing websocket connection")
 			}
 
 			log.Info("Finishing proxying audio stream")
@@ -155,8 +168,8 @@ func newServer() (*http.Server, error) {
 	r.Path("/api/desktops/{namespace}/{name}/audio").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Info(fmt.Sprintf("Received validated proxy request, connecting to audio stream"))
 
-		audioBuffer := audio.NewBuffer()
-		if err := audioBuffer.Start("mp3"); err != nil {
+		audioBuffer := audio.NewBuffer(log, userID, audio.BufferTypeGST)
+		if err := audioBuffer.Start(audio.CodecOpus); err != nil {
 			log.Error(err, "Error setting up audio buffer")
 			return
 		}
@@ -183,6 +196,7 @@ func newServer() (*http.Server, error) {
 	}, nil
 }
 
+// LogOutput represents a log message
 type LogOutput struct {
 	Time       time.Time `json:"time"`
 	Method     string    `json:"method"`

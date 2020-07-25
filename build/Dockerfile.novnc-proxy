@@ -39,7 +39,9 @@ RUN go build \
 ###############
 FROM alpine
 
-RUN apk add --update pulseaudio-utils vorbis-tools lame sudo && adduser -D -u 9000 audioproxy
+RUN apk add --update --no-cache \
+        gstreamer gstreamer-tools gst-plugins-good pulseaudio-utils vorbis-tools lame sudo \
+      && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/novnc-proxy /novnc-proxy
 

@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as base-system
+FROM ubuntu:latest as base-system
 
 RUN sed -i 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
 
@@ -7,22 +7,32 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
     && apt-get dist-upgrade -y \
     && apt-get install -y --no-install-recommends \
-        sudo software-properties-common curl supervisor net-tools zenity xz-utils apt-utils \
+        coreutils iputils-ping sudo software-properties-common curl net-tools zenity xz-utils apt-utils \
         dbus-x11 x11-utils alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
+        systemd systemd-sysv pulseaudio pavucontrol firefox vim \
     && apt-get autoclean -y \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
-
-# Tini to fix subreap
-ARG TINI_VERSION=v0.18.0
-RUN echo "Installing tini version: ${TINI_VERSION}" \
-  && curl -JL -o /bin/tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini \
-  && chmod +x /bin/tini
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && cd /usr/lib/systemd/system/sysinit.target.wants/ \
+    && ls | grep -v systemd-tmpfiles-setup | xargs rm -f $1 \
+    && rm -f /usr/lib/systemd/system/multi-user.target.wants/* \
+        /etc/systemd/system/*.wants/* \
+        /usr/lib/systemd/system/local-fs.target.wants/* \
+        /usr/lib/systemd/system/sockets.target.wants/*udev* \
+        /usr/lib/systemd/system/sockets.target.wants/*initctl* \
+        /usr/lib/systemd/system/basic.target.wants/* \
+        /usr/lib/systemd/system/anaconda.target.wants/* \
+        /usr/lib/systemd/system/plymouth* \
+        /usr/lib/systemd/system/systemd-update-utmp*
 
 # Filesystem
 COPY rootfs /
 
-# Start
+# At the very least we want an isolated systemd-user process and Xvnc enabled.
+# Extending images can put anything they want behind its display.
+RUN chmod +x /root/startup.sh && chmod +x /root/fakegetty.sh \
+  && systemctl --user --global enable display.service
+
 WORKDIR /root
-ENV SHELL=/bin/bash
+VOLUME ["/sys/fs/cgroup"]
 ENTRYPOINT ["/root/startup.sh"]
