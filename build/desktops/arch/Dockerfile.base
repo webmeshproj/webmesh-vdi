@@ -22,8 +22,8 @@ COPY rootfs /
 
 # At the very least we want an isolated systemd-user process and Xvnc enabled.
 # Extending images can put anything they want behind its display.
-RUN chmod +x /root/startup.sh && chmod +x /root/fakegetty.sh \
+RUN chmod +x /usr/local/sbin/init && chmod +x /usr/local/sbin/fakegetty \
   && systemctl --user --global enable display.service
 
 VOLUME [ "/sys/fs/cgroup" ]
-ENTRYPOINT ["/root/startup.sh"]
+ENTRYPOINT ["/usr/local/sbin/init"]

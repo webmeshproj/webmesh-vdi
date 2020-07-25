@@ -32,7 +32,7 @@ However, the configuration files may not be as straight-forward as some, and the
 
 #### _UPDATE_
 
-In the middle of porting these images to systemd. So they are largely defunt and updates are not being pushed at the moment. The published ones still work and can be extended.
+This has been ported to systemd. The setup is much like the arch one below.
 
 ### Arch/Systemd
 

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:ubuntu20.04-base
+ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:ubuntu-base
 FROM ${BASE_IMAGE}
 
 # Window manager install
@@ -16,4 +16,6 @@ COPY systemd/default/desktop /etc/default/desktop
 COPY systemd/${DESKTOP_PACKAGE}.service /etc/systemd/user/desktop.service
 
 RUN systemctl --user --global enable desktop.service \
-  && systemctl --user --global enable pulseaudio
+  && systemctl disable display-manager \
+  && systemctl disable wpa_supplicant \
+  && systemctl disable ModemManager

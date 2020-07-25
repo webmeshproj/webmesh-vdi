@@ -9,7 +9,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         coreutils iputils-ping sudo software-properties-common curl net-tools zenity xz-utils apt-utils \
         dbus-x11 x11-utils alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
-        systemd systemd-sysv pulseaudio pavucontrol firefox vim \
+        systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty \
     && apt-get autoclean -y \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
@@ -30,9 +30,12 @@ COPY rootfs /
 
 # At the very least we want an isolated systemd-user process and Xvnc enabled.
 # Extending images can put anything they want behind its display.
-RUN chmod +x /root/startup.sh && chmod +x /root/fakegetty.sh \
-  && systemctl --user --global enable display.service
+RUN chmod +x /usr/local/sbin/init && chmod +x /usr/local/sbin/fakegetty \
+  && systemctl --user --global enable display.service \
+  && systemctl enable user-init \
+  && systemctl --user --global enable pulseaudio
+
 
 WORKDIR /root
 VOLUME ["/sys/fs/cgroup"]
-ENTRYPOINT ["/root/startup.sh"]
+ENTRYPOINT ["/usr/local/sbin/init"]
