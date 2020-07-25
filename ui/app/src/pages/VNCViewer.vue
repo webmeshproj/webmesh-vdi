@@ -48,15 +48,25 @@ export default {
   created () {
     this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
     this.$root.$on('set-fullscreen', this.setFullscreen)
+    this.$root.$on('paste-clipboard', this.onPaste)
   },
 
   beforeDestroy () {
     this.unsubscribeSessions()
     this.$root.$off('set-fullscreen', this.setFullscreen)
+    this.$root.$off('paste-clipboard', this.onPaste)
     this.disconnect()
   },
 
   methods: {
+    onPaste (data) {
+      if (this.rfb !== null) {
+        console.log(`Copying clipboard contents: ${data}`)
+        this.rfb.clipboardPasteFrom(data)
+        this.rfb.sendKey('ctrl', true)
+        this.rfb.sendKey('v')
+      }
+    },
 
     enableAudio () {
       const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)

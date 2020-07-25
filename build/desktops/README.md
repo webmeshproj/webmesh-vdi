@@ -40,7 +40,7 @@ The `archlinux` based images use `systemd` as an init system inside the containe
 This gives you quite a bit of flexibility with having almost the entire `systemd` ecosystem at your disposal.
 
 The configuration is a bit more complex, but at the end of the day you are still just defining processes to run at launch.
-Some `pam`/`getty` hackery in the base image will cause a `systemd --user` process to spawn when the container launches, and then essentially any process enabled with `systemctl enable --global --user my-process.service` will start with the containr, and running as the desktop user.
+Some `pam`/`getty` hackery in the base image will cause a `systemd --user` process to spawn when the container launches, and then essentially any process enabled with `systemctl enable --global --user my-process.service` will start with the container, and running as the desktop user.
 
 This does provide more process isolation to a degree, but at the expense of requiring `CAP_SYS_ADMIN` on the pods themselves.
 

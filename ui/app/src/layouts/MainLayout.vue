@@ -67,7 +67,6 @@
               </q-item-section>
 
               <q-item-section>
-                <q-item-label>Fullscreen</q-item-label>
                 <q-item-label caption>Enter fullscreen mode</q-item-label>
               </q-item-section>
 
@@ -80,8 +79,19 @@
               </q-item-section>
 
               <q-item-section>
-                <q-item-label>{{ audioText }}</q-item-label>
                 <q-item-label caption>{{ audioCaption }}</q-item-label>
+              </q-item-section>
+
+            </q-item>
+
+            <q-item dense clickable @click="onPaste">
+
+              <q-item-section avatar>
+                <q-icon name="content_copy" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label caption>Sync clipboard to remote</q-item-label>
               </q-item-section>
 
             </q-item>
@@ -207,6 +217,15 @@ export default {
   },
 
   methods: {
+
+    async onPaste () {
+      try {
+        const text = await navigator.clipboard.readText()
+        this.$root.$emit('paste-clipboard', text)
+      } catch (err) {
+        console.log('This browser does not appear to support retrieving clipboard text')
+      }
+    },
 
     onClickDesktopTemplates () {
       this.desktopTemplatesActive = true
