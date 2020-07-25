@@ -8,10 +8,15 @@ const equal = function (o1, o2) {
 export const DesktopSessions = new Vuex.Store({
 
   state: {
-    sessions: []
+    sessions: [],
+    audioEnabled: false
   },
 
   mutations: {
+
+    toggle_audio (state, data) {
+      state.audioEnabled = data
+    },
 
     new_session (state, data) {
       data.active = true
@@ -43,6 +48,10 @@ export const DesktopSessions = new Vuex.Store({
   },
 
   actions: {
+    toggleAudio ({ commit }, data) {
+      commit('toggle_audio', data)
+    },
+
     async newSession ({ commit }, { template, namespace }) {
       if (!Vue.prototype.$configStore.getters.localConfig.readWriteMany) {
         if (this.getters.sessions.length > 0) {
@@ -77,6 +86,7 @@ export const DesktopSessions = new Vuex.Store({
   getters: {
     sessions: state => state.sessions,
     activeSession: state => state.sessions.filter(sess => sess.active)[0],
+    audioEnabled: state => state.audioEnabled,
     sessionStatus: (state) => async (data) => {
       try {
         const res = await Vue.prototype.$axios.get(

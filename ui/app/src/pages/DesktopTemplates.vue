@@ -220,7 +220,7 @@ export default {
     async doLaunchTemplate (payload) {
       try {
         await this.$desktopSessions.dispatch('newSession', payload)
-        this.$root.$emit('set-active-title', 'Control')
+        this.$root.$emit('set-control')
         this.$router.push('control')
       } catch (err) {
         this.$root.$emit('notify-error', err)

@@ -14,16 +14,12 @@
         There are no active desktop sessions
       </div>
     </div>
-    <div v-if="connected" class="toolbar">
-      <q-btn push rounded unelevated stretch color="grey" size="xs" icon="more_horiz" @mouseover="showControls"/>
-    </div>
   </q-page>
 </template>
 
 <script>
 import RFB from '@novnc/novnc/core/rfb'
 
-import VNCControls from 'components/dialogs/VNCControls.vue'
 import WSAudioPlayer from '../lib/wsaudio.js'
 
 function getWebsockifyAddr (namespace, name, token) {
@@ -62,49 +58,48 @@ export default {
 
   methods: {
 
-    showControls () {
-      this.$q.dialog({
-        component: VNCControls,
-        parent: this,
-        audioState: this.audioEnabled,
-        onToggleAudio: () => { this.toggleAudio() }
-      }).onOk(() => {
-      }).onCancel(() => {
-      }).onDismiss(() => {
-      })
+    enableAudio () {
+      const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
+      console.log(`Connecting to audio stream at ${audioUrl}`)
+      const playerCfg = { server: { url: audioUrl } }
+      this.player = new WSAudioPlayer(playerCfg)
+      this.player.start()
     },
 
-    toggleAudio () {
-      if (!this.audioEnabled) {
-        const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-        console.log(audioUrl)
-        const playerCfg = { server: { url: audioUrl } }
-        this.player = new WSAudioPlayer(playerCfg)
-        this.player.start()
-      } else {
+    disableAudio () {
+      if (this.player !== null) {
+        console.log('Stopping audio stream')
         this.player.stop()
         this.player = null
       }
-      this.audioEnabled = !this.audioEnabled
     },
 
     handleSessionsChange (mutation, state) {
-      const activeSession = this.$desktopSessions.getters.activeSession
-      console.log(`Received a session change to ${JSON.stringify(activeSession)}`)
-      if (activeSession === undefined) {
-        console.log('There are no more active sessions, disconnecting')
-        this.currentSession = null
-        this.disconnect()
-      } else {
-        if (this.currentSession === activeSession) {
-          console.log(`${activeSession.namespace}/${activeSession.name} is already the active session`)
-          return
+      if (mutation.type === 'set_active_session') {
+        const activeSession = this.$desktopSessions.getters.activeSession
+        console.log(`Received a session change to ${JSON.stringify(activeSession)}`)
+        if (activeSession === undefined) {
+          console.log('There are no more active sessions, disconnecting')
+          this.currentSession = null
+          this.disconnect()
+        } else {
+          if (this.currentSession === activeSession) {
+            console.log(`${activeSession.namespace}/${activeSession.name} is already the active session`)
+            return
+          }
+          console.log(`Disconnecting from ${this.currentSession.name} and connecting to ${activeSession.name}`)
+          this.disconnect().then(() => {
+            this.currentSession = activeSession
+            this.checkStatusAndConnect()
+          })
         }
-        console.log(`Disconnecting from ${this.currentSession.name} and connecting to ${activeSession.name}`)
-        this.disconnect().then(() => {
-          this.currentSession = activeSession
-          this.checkStatusAndConnect()
-        })
+      }
+      if (mutation.type === 'toggle_audio' && this.connected) {
+        if (this.$desktopSessions.getters.audioEnabled) {
+          this.enableAudio()
+        } else {
+          this.disableAudio()
+        }
       }
     },
 
@@ -186,6 +181,7 @@ export default {
 
     createConnection () {
       let rfb
+
       try {
         const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
         const target = document.getElementById('view')
@@ -219,6 +215,11 @@ export default {
         console.log('Something went wrong, connection is closed')
         this.checkStatusAndConnect()
       }
+      if (this.player !== null) {
+        this.player.stop()
+        this.player = null
+        this.$desktopSessions.dispatch('toggleAudio', false)
+      }
     },
 
     resetStatus () {
@@ -233,10 +234,6 @@ export default {
       if (this.rfb !== null) {
         this.rfb.disconnect()
         this.rfb = null
-      }
-      if (this.player !== null) {
-        this.player.stop()
-        this.player = null
       }
     }
   },
@@ -270,13 +267,5 @@ export default {
   margin: 0 auto;
   text-align: center;
   font-size: 16px;
-}
-
-.toolbar {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  /* transform: translate(-50%, 50%);
-  margin: 0 auto; */
 }
 </style>

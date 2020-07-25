@@ -53,7 +53,7 @@ export default {
       console.log(`Setting active session to ${this.namespace}/${this.name}`)
       this.$desktopSessions.dispatch('setActiveSession', this)
       if (this.$router.currentRoute.name !== 'control') {
-        this.$root.$emit('set-active-title', 'Control')
+        this.$root.$emit('set-control')
         this.$router.push('control')
       }
     },

@@ -38,6 +38,13 @@ If you are wanting this to become a real thing (or are just interested in trying
 
       - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml). There are corresponding examples for the `oidc` auth as well.
 
+### TODO
+
+  - "App Profiles"
+  - Harden images more
+  - UI needs serious makeover
+  - More testing and docs
+
 ## Requirements
 
 For building and running locally you will need:

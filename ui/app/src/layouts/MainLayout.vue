@@ -31,21 +31,99 @@
         >
           Menu
         </q-item-label>
-        <MenuItem
-          v-for="link in menuItems"
-          :key="link.title"
-          v-bind="link"
-          :onClick="() => {
-            if (link.onClick !== undefined) {
-              link.onClick()
-            } else {
-              emitActive(link.title)
-            }
-          }"
-        />
+
+        <!-- Desktop Templates  -->
+        <q-item clickable tag="a" href="#/templates" :active="desktopTemplatesActive" @click="onClickDesktopTemplates">
+
+          <q-item-section avatar>
+            <q-icon name="devices" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Desktop Templates</q-item-label>
+            <q-item-label caption>Containerized workspace environments</q-item-label>
+          </q-item-section>
+
+        </q-item>
+
+        <!-- Desktop session controls  -->
+        <q-expansion-item
+          v-model="controlActive"
+          label="Control"
+          caption="Interact with a desktop session"
+          icon="cast"
+          to="control"
+          :active="controlActive"
+          @click="onClickControl"
+          group="control"
+          :content-inset-level="0.2"
+        >
+
+          <q-list>
+            <q-item dense clickable @click="() => { this.$q.fullscreen.request() }">
+
+              <q-item-section avatar>
+                <q-icon name="fullscreen" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>Fullscreen</q-item-label>
+                <q-item-label caption>Enter fullscreen mode</q-item-label>
+              </q-item-section>
+
+            </q-item>
+
+            <q-item dense :active="audioEnabled" clickable @click="onClickAudio">
+
+              <q-item-section avatar>
+                <q-icon :name="audioIcon" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label>{{ audioText }}</q-item-label>
+                <q-item-label caption>{{ audioCaption }}</q-item-label>
+              </q-item-section>
+
+            </q-item>
+
+          </q-list>
+
+        </q-expansion-item>
+
+        <!-- Settings  -->
+        <q-item clickable tag="a" href="#/settings" :active="settingsActive" @click="onClickSettings">
+
+          <q-item-section avatar>
+            <q-icon name="settings" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Settings</q-item-label>
+            <q-item-label caption>Configure roles and users</q-item-label>
+          </q-item-section>
+
+        </q-item>
+
+        <!-- API Explorer  -->
+        <q-item clickable tag="a" href="#/swagger" :active="apiExplorerActive" @click="onClickAPIExplorer">
+
+          <q-item-section avatar>
+            <q-icon name="code" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>API Explorer</q-item-label>
+            <q-item-label caption>Interact with the kVDI API</q-item-label>
+          </q-item-section>
+
+        </q-item>
+
       </q-list>
+
       <q-separator />
+
       <UserControls />
+
     </q-drawer>
 
     <q-page-container>
@@ -56,6 +134,7 @@
         :duration="200"
       >
         <router-view />
+
       </transition>
     </q-page-container>
 
@@ -63,15 +142,15 @@
 </template>
 
 <script>
-import MenuItem from 'components/MenuItem'
 import UserControls from 'components/UserControls'
 import SessionTab from 'components/SessionTab'
+
+var menuTimeout = null
 
 export default {
   name: 'MainLayout',
 
   components: {
-    MenuItem,
     SessionTab,
     UserControls
   },
@@ -80,6 +159,10 @@ export default {
     this.subscribeToBuses()
     document.onfullscreenchange = this.handleFullScreenChange
     this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
+  },
+
+  mounted () {
+    window.addEventListener('mousemove', this.onMouseOver)
   },
 
   beforeDestroy () {
@@ -91,38 +174,75 @@ export default {
     return {
       openDrawer: true,
       revealHeader: true,
-      controlSessions: [],
-      menuItems: [
-        {
-          title: 'Desktop Templates',
-          caption: 'Containerized workspace environments',
-          icon: 'devices',
-          link: 'templates',
-          active: true
-        },
-        {
-          title: 'Control',
-          icon: 'cast',
-          link: 'control',
-          active: false
-        },
-        {
-          title: 'Settings',
-          icon: 'settings',
-          link: 'settings',
-          active: false
-        },
-        {
-          title: 'API Explorer',
-          icon: 'code',
-          link: 'swagger',
-          active: false
-        }
-      ]
+
+      desktopTemplatesActive: false,
+      controlActive: false,
+      settingsActive: false,
+      apiExplorerActive: false,
+
+      controlSessions: []
     }
   },
 
+  computed: {
+    audioText () {
+      if (this.audioEnabled) {
+        return 'Mute'
+      }
+      return 'Unmute'
+    },
+    audioCaption () {
+      if (this.audioEnabled) {
+        return 'Audio is currently enabled'
+      }
+      return 'Audio is currently disabled'
+    },
+    audioIcon () {
+      if (this.audioEnabled) {
+        return 'volume_up'
+      }
+      return 'volume_off'
+    },
+    audioEnabled () { return this.$desktopSessions.getters.audioEnabled }
+  },
+
   methods: {
+
+    onClickDesktopTemplates () {
+      this.desktopTemplatesActive = true
+
+      this.controlActive = false
+      this.settingsActive = false
+      this.apiExplorerActive = false
+    },
+
+    onClickControl () {
+      this.controlActive = true
+
+      this.desktopTemplatesActive = false
+      this.settingsActive = false
+      this.apiExplorerActive = false
+    },
+
+    onClickSettings () {
+      this.settingsActive = true
+
+      this.desktopTemplatesActive = false
+      this.controlActive = false
+      this.apiExplorerActive = false
+    },
+
+    onClickAPIExplorer () {
+      this.apiExplorerActive = true
+
+      this.desktopTemplatesActive = false
+      this.controlActive = false
+      this.settingsActive = false
+    },
+
+    onClickAudio () {
+      this.$desktopSessions.dispatch('toggleAudio', !this.audioEnabled)
+    },
 
     pushIfNotCurrent (route) {
       if (this.$router.currentRoute.name !== route) {
@@ -132,18 +252,16 @@ export default {
 
     subscribeToBuses () {
       this.$root.$on('notify-error', this.notifyError)
+      this.$root.$on('set-control', this.onClickControl)
     },
 
     unsubscribeFromBuses () {
       this.$root.$off('notify-error', this.notifyError)
+      this.$root.$off('set-control', this.onClickControl)
     },
 
     handleSessionsChange (mutation, state) {
       this.controlSessions = this.$desktopSessions.getters.sessions
-    },
-
-    emitActive (title) {
-      this.$root.$emit('set-active-title', title)
     },
 
     notifyError (err) {
@@ -159,6 +277,23 @@ export default {
         icon: 'error',
         message: error
       })
+    },
+
+    onMouseOver (event) {
+      if (document.fullscreenElement) {
+        if (event.pageX < 20) {
+          // Show the menu if mouse is within 20 pixels
+          // from the left or we are hovering over it
+          clearTimeout(menuTimeout)
+          menuTimeout = null
+          this.openDrawer = true
+        } else if (menuTimeout === null && event.pageX > 20) {
+          // Hide the menu if the mouse is further than 20 pixels
+          // from the left and it is not hovering over the menu
+          // and we aren't already scheduled to hide it
+          menuTimeout = setTimeout(() => { this.openDrawer = false }, 1000)
+        }
+      }
     },
 
     handleFullScreenChange (event) {
