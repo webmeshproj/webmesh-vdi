@@ -83,6 +83,7 @@ export default {
         }
         await this.notifyLoggedIn()
       } catch (err) {
+        console.error(err)
         this.$root.$emit('notify-error', err)
       }
     },

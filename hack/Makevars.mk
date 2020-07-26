@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= 0.0.6
+VERSION ?= 0.0.7
 
 # Go options
 GO111MODULE ?= auto
@@ -30,7 +30,7 @@ MANAGER_IMAGE ?= ${REPO}/${NAME}:manager-${VERSION}
 APP_IMAGE ?= ${REPO}/${NAME}:app-${VERSION}
 NOVNC_PROXY_IMAGE ?= ${REPO}/${NAME}:novnc-proxy-${VERSION}
 UBUNTU_BASE_IMAGE ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
-ARCH_BASE_IMAGE ?= ${REPO}/${NAME}:arch-base
+ARCH_BASE_IMAGE ?= ${REPO}/${NAME}:arch-base-${VERSION}
 
 # Operator SDK
 OPERATOR_SDK ?= _bin/operator-sdk
@@ -40,9 +40,9 @@ OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/
 KIND_VERSION ?= v0.7.0
 KUBERNETES_VERSION ?= v1.18.4
 METALLB_VERSION ?= v0.9.3
-CERT_MANAGER_VERSION ?= v0.14.1
 HELM_VERSION ?= v3.1.2
 HELM_DOCS_VERSION ?= 0.13.0
+
 CLUSTER_NAME ?= vdi
 KIND_DOWNLOAD_URL ?= https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(shell uname)-amd64
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl

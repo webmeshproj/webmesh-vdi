@@ -132,7 +132,54 @@
 
       <q-separator />
 
-      <UserControls />
+       <!-- Link to login when user is logged out -->
+      <q-item clickable tag="a" href="#/login" :active="loginActive" @click="onClickLogin" v-if="!isLoggedIn">
+        <q-item-section avatar>
+          <q-icon name="meeting_room" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>Login</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- User controls when logged in  -->
+      <q-expansion-item group="menu" :content-inset-level="0.2" v-if="isLoggedIn">
+
+        <template v-slot:header>
+
+          <q-item-section avatar>
+            <q-avatar color="teal" text-color="white">{{ user.name[0] }}</q-avatar>
+          </q-item-section>
+          <q-item-section>
+            {{ user.name }}
+          </q-item-section>
+
+        </template>
+
+        <q-list>
+          <!-- User profile for editing password/mfa settings -->
+          <q-item clickable tag="a" href="#/profile" :active="profileActive" @click="onClickProfile">
+            <q-item-section avatar>
+              <q-icon name="supervisor_account" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Profile</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <!-- Logout current session -->
+          <q-item clickable tag="a" @click="onClickLogout">
+            <q-item-section avatar>
+              <q-icon name="desktop_access_disabled" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Logout</q-item-label>
+            </q-item-section>
+          </q-item>
+
+        </q-list>
+
+      </q-expansion-item>
 
     </q-drawer>
 
@@ -152,23 +199,45 @@
 </template>
 
 <script>
-import UserControls from 'components/UserControls'
 import SessionTab from 'components/SessionTab'
+import MFADialog from 'components/dialogs/MFADialog'
 
 var menuTimeout = null
 
 export default {
   name: 'MainLayout',
 
-  components: {
-    SessionTab,
-    UserControls
-  },
+  components: { SessionTab },
 
-  created () {
+  async created () {
     this.subscribeToBuses()
     document.onfullscreenchange = this.handleFullScreenChange
     this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
+    // this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
+    await this.$userStore.dispatch('initStore')
+    try {
+      if (this.$userStore.getters.requiresMFA) {
+        await this.$q.dialog({
+          component: MFADialog,
+          parent: this
+        }).onOk(() => {
+          this.handleLoggedIn()
+        }).onCancel(() => {
+        }).onDismiss(() => {
+        })
+        return
+      }
+      if (this.$userStore.getters.isLoggedIn) {
+        this.handleLoggedIn()
+      } else {
+        this.onClickLogin()
+        this.pushIfNotCurrent('login')
+      }
+    } catch (err) {
+      this.$root.$emit('notify-error', err)
+      this.onClickLogin()
+      this.pushIfNotCurrent('login')
+    }
   },
 
   mounted () {
@@ -178,6 +247,7 @@ export default {
   beforeDestroy () {
     this.unsubscribeFromBuses()
     this.unsubscribeSessions()
+    this.unsubscribeUsers()
   },
 
   data () {
@@ -189,6 +259,8 @@ export default {
       controlActive: false,
       settingsActive: false,
       apiExplorerActive: false,
+      loginActive: false,
+      profileActive: false,
 
       controlSessions: []
     }
@@ -213,7 +285,9 @@ export default {
       }
       return 'volume_off'
     },
-    audioEnabled () { return this.$desktopSessions.getters.audioEnabled }
+    audioEnabled () { return this.$desktopSessions.getters.audioEnabled },
+    user () { return this.$userStore.getters.user },
+    isLoggedIn () { return this.$userStore.getters.isLoggedIn }
   },
 
   methods: {
@@ -233,6 +307,8 @@ export default {
       this.controlActive = false
       this.settingsActive = false
       this.apiExplorerActive = false
+      this.loginActive = false
+      this.profileActive = false
     },
 
     onClickControl () {
@@ -241,6 +317,8 @@ export default {
       this.desktopTemplatesActive = false
       this.settingsActive = false
       this.apiExplorerActive = false
+      this.loginActive = false
+      this.profileActive = false
     },
 
     onClickSettings () {
@@ -249,6 +327,8 @@ export default {
       this.desktopTemplatesActive = false
       this.controlActive = false
       this.apiExplorerActive = false
+      this.loginActive = false
+      this.profileActive = false
     },
 
     onClickAPIExplorer () {
@@ -257,10 +337,45 @@ export default {
       this.desktopTemplatesActive = false
       this.controlActive = false
       this.settingsActive = false
+      this.loginActive = false
+      this.profileActive = false
+    },
+
+    onClickLogin () {
+      this.loginActive = true
+
+      this.profileActive = false
+      this.apiExplorerActive = false
+      this.desktopTemplatesActive = false
+      this.controlActive = false
+      this.settingsActive = false
+    },
+
+    onClickProfile () {
+      this.profileActive = true
+
+      this.loginActive = false
+      this.apiExplorerActive = false
+      this.desktopTemplatesActive = false
+      this.controlActive = false
+      this.settingsActive = false
     },
 
     onClickAudio () {
       this.$desktopSessions.dispatch('toggleAudio', !this.audioEnabled)
+    },
+
+    async handleLoggedIn () {
+      await this.$configStore.dispatch('getServerConfig')
+      this.onClickDesktopTemplates()
+      this.pushIfNotCurrent('templates')
+    },
+
+    async onClickLogout () {
+      this.$desktopSessions.dispatch('clearSessions')
+      this.$userStore.dispatch('logout')
+      this.onClickLogin()
+      this.pushIfNotCurrent('login')
     },
 
     pushIfNotCurrent (route) {

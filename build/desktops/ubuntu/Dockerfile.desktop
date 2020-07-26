@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:ubuntu-base
+ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:ubuntu-base-latest
 FROM ${BASE_IMAGE}
 
 # Window manager install

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:arch-base
+ARG BASE_IMAGE=quay.io/tinyzimmer/kvdi:arch-base-latest
 FROM ${BASE_IMAGE}
 
 RUN pacman -Sy --noconfirm xfce4 xfce4-goodies pulseaudio pavucontrol chromium \
