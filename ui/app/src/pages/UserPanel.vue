@@ -40,8 +40,25 @@
               </q-td>
 
               <q-td key="mfaEnabled" :props="props">
-                <q-avatar v-if="props.row.mfaEnabled" size="27px" font-size="20px" color="green" text-color="white" icon="verified_user" />
-                <q-avatar v-if="!props.row.mfaEnabled" size="27px" font-size="20px" color="warning" text-color="white" icon="info" />
+                <q-btn flat>
+
+                  <q-avatar v-if="props.row.mfa.enabled && props.row.mfa.verified" size="27px" font-size="12px" color="green" text-color="white" icon="verified_user" />
+                  <q-avatar v-if="props.row.mfa.enabled && !props.row.mfa.verified" size="27px" font-size="12px" color="warning" text-color="white" icon="warning" />
+                  <q-avatar v-if="!props.row.mfa.enabled" size="27px" font-size="12px" color="red" text-color="white" icon="clear" />
+
+                  <q-tooltip v-if="props.row.mfa.enabled && props.row.mfa.verified" anchor="bottom middle" self="top middle" :offset="[10, 10]">
+                  MFA is enabled
+                  </q-tooltip>
+
+                  <q-tooltip v-if="props.row.mfa.enabled && !props.row.mfa.verified" anchor="bottom middle" self="top middle" :offset="[10, 10]">
+                  MFA is enabled, but has not been verified
+                  </q-tooltip>
+
+                  <q-tooltip v-if="!props.row.mfa.enabled" anchor="bottom middle" self="top middle" :offset="[10, 10]">
+                  MFA is disabled
+                  </q-tooltip>
+
+                </q-btn>
               </q-td>
 
               <q-td key="updateUser">

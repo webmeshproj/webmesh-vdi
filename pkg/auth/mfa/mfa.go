@@ -5,9 +5,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -23,27 +24,28 @@ func NewManager(secrets *secrets.SecretEngine) *Manager {
 	return &Manager{secrets: secrets}
 }
 
-// GetMFAUsers will return a string slice of all MFA user names.
-func (m *Manager) GetMFAUsers() ([]string, error) {
+// GetMFAUsers will return a map of all MFA user names and whether they
+// have been verified.
+func (m *Manager) GetMFAUsers() (map[string]bool, error) {
 	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil {
 		if errors.IsSecretNotFoundError(err) {
-			return []string{}, nil
+			return map[string]bool{}, nil
 		}
 		return nil, err
 	}
 	scanner := bufio.NewScanner(bytes.NewReader(users))
-	mfaUsers := make([]string, 0)
+	mfaUsers := make(map[string]bool)
 	for scanner.Scan() {
 		text := scanner.Text()
 		if text == "" {
 			continue
 		}
 		spl := strings.Split(text, ":")
-		if len(spl) < 2 {
+		if len(spl) < 3 {
 			continue
 		}
-		mfaUsers = append(mfaUsers, spl[0])
+		mfaUsers[spl[0]] = parseBool(spl[2])
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -53,22 +55,24 @@ func (m *Manager) GetMFAUsers() ([]string, error) {
 	return mfaUsers, nil
 }
 
-// GetUserSecret will retrieve the OTP secret for the given user. If there is
-// no secret for this user, a UserNotFound error is returned.
-func (m *Manager) GetUserSecret(name string) (string, error) {
+// GetUserMFAStatus will retrieve the OTP secret for the given user, and
+// whether it has been verified. If there is no secret for this user, a
+// UserNotFound error is returned.
+func (m *Manager) GetUserMFAStatus(name string) (string, bool, error) {
 	users, err := m.secrets.ReadSecret(v1.OTPUsersSecretKey, false)
 	if err != nil {
 		if errors.IsSecretNotFoundError(err) {
-			return "", errors.NewUserNotFoundError(name)
+			return "", false, errors.NewUserNotFoundError(name)
 		}
-		return "", err
+		return "", false, err
 	}
 
-	return m.getUserSecretFromReader(name, bytes.NewReader(users))
+	return m.getUserStatusFromReader(name, bytes.NewReader(users))
 }
 
-// SetUserSecret sets the value of the user's OTP secret.
-func (m *Manager) SetUserSecret(name, secret string) error {
+// SetUserMFAStatus sets the value of the user's OTP secret and whether it
+// is verified.
+func (m *Manager) SetUserMFAStatus(name, secret string, verified bool) error {
 	if err := m.secrets.Lock(); err != nil {
 		return err
 	}
@@ -79,7 +83,7 @@ func (m *Manager) SetUserSecret(name, secret string) error {
 	} else if errors.IsSecretNotFoundError(err) {
 		users = make([]byte, 0)
 	}
-	newData, err := m.updateUserSecretInReader(name, secret, bytes.NewReader(users))
+	newData, err := m.updateUserStatusInReader(name, secret, verified, bytes.NewReader(users))
 	if err != nil {
 		return err
 	}
@@ -105,10 +109,10 @@ func (m *Manager) DeleteUserSecret(name string) error {
 	return m.secrets.WriteSecret(v1.OTPUsersSecretKey, newData)
 }
 
-// getUserSecretFromReader will scan a given Reader interface for the provided
-// username and return the OTP secret if found, or a UserNotFound error if
-// the end of the data is reached.
-func (m *Manager) getUserSecretFromReader(name string, rdr io.Reader) (string, error) {
+// getUserStatusFromReader will scan a given Reader interface for the provided
+// username and return the OTP secret and verification status if found, or a
+// UserNotFound error if the end of the data is reached first.
+func (m *Manager) getUserStatusFromReader(name string, rdr io.Reader) (string, bool, error) {
 	scanner := bufio.NewScanner(rdr)
 
 	for scanner.Scan() {
@@ -118,24 +122,24 @@ func (m *Manager) getUserSecretFromReader(name string, rdr io.Reader) (string, e
 		}
 		if strings.HasPrefix(text, name) {
 			fields := strings.Split(text, ":")
-			if len(fields) < 2 {
-				return "", errors.New("User OTP data is malformed")
+			if len(fields) < 3 {
+				return "", false, errors.New("User OTP data is malformed")
 			}
-			return strings.Join(fields[1:], ":"), nil
+			return fields[1], parseBool(fields[2]), nil
 		}
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
-		return "", err
+		return "", false, err
 	}
 
-	return "", errors.NewUserNotFoundError(name)
+	return "", false, errors.NewUserNotFoundError(name)
 }
 
-// updateUserSecretInReader will iterate the given reader, replacing the user
-// data with the new value and producing a new secret for all users. If the user
+// updateUserStatusInReader will iterate the given reader, replacing the user
+// data with the new values and producing a new secret for all users. If the user
 // is not found in the secret, it's appended to the end.
-func (m *Manager) updateUserSecretInReader(name, secret string, rdr io.Reader) ([]byte, error) {
+func (m *Manager) updateUserStatusInReader(name, secret string, verified bool, rdr io.Reader) ([]byte, error) {
 	scanner := bufio.NewScanner(rdr)
 	var newData bytes.Buffer
 	var updated bool
@@ -147,7 +151,7 @@ func (m *Manager) updateUserSecretInReader(name, secret string, rdr io.Reader) (
 		}
 		// If it's the same user, write the new secret to the buffer
 		if strings.HasPrefix(text, name) {
-			if _, err := newData.WriteString(fmt.Sprintf("%s:%s\n", name, secret)); err != nil {
+			if _, err := newData.WriteString(fmt.Sprintf("%s:%s:%t\n", name, secret, verified)); err != nil {
 				return nil, err
 			}
 			updated = true
@@ -166,7 +170,7 @@ func (m *Manager) updateUserSecretInReader(name, secret string, rdr io.Reader) (
 
 	// If we didn't update anything, append the user info now
 	if !updated {
-		if _, err := newData.WriteString(fmt.Sprintf("%s:%s\n", name, secret)); err != nil {
+		if _, err := newData.WriteString(fmt.Sprintf("%s:%s:%t\n", name, secret, verified)); err != nil {
 			return nil, err
 		}
 	}
@@ -185,7 +189,7 @@ func (m *Manager) deleteUserFromReader(name string, rdr io.Reader) ([]byte, erro
 		if text == "" {
 			continue
 		}
-		// Only write to the new buffer if usernamee does not match
+		// Only write to the new buffer if username does not match
 		if !strings.HasPrefix(text, name) {
 			if _, err := newData.WriteString(text + "\n"); err != nil {
 				return nil, err
@@ -199,4 +203,14 @@ func (m *Manager) deleteUserFromReader(name string, rdr io.Reader) ([]byte, erro
 	}
 
 	return newData.Bytes(), nil
+}
+
+func parseBool(bs string) bool {
+	b, err := strconv.ParseBool(bs)
+	if err != nil {
+		// assume verified is false so when the next update happens
+		// we can fix the bad value
+		return false
+	}
+	return b
 }

@@ -3,9 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
@@ -27,8 +26,15 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, user := range users {
-		if common.StringSliceContains(mfaUsers, user.Name) {
-			user.MFAEnabled = true
+		if verified, ok := mfaUsers[user.Name]; ok {
+			user.MFA = &v1.UserMFAStatus{
+				Enabled:  true,
+				Verified: verified,
+			}
+		} else {
+			user.MFA = &v1.UserMFAStatus{
+				Enabled: false,
+			}
 		}
 	}
 	apiutil.WriteJSON(users, w)
@@ -64,11 +70,19 @@ func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	if _, err := d.mfa.GetUserSecret(username); err != nil && !errors.IsUserNotFoundError(err) {
-		apiutil.ReturnAPIError(err, w)
-		return
+	if _, verified, err := d.mfa.GetUserMFAStatus(username); err != nil {
+		if !errors.IsUserNotFoundError(err) {
+			apiutil.ReturnAPIError(err, w)
+			return
+		}
+		user.MFA = &v1.UserMFAStatus{
+			Enabled: false,
+		}
 	} else if err == nil {
-		user.MFAEnabled = true
+		user.MFA = &v1.UserMFAStatus{
+			Enabled:  true,
+			Verified: verified,
+		}
 	}
 	apiutil.WriteJSON(user, w)
 }

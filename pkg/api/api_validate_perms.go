@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	"github.com/gorilla/mux"
@@ -116,6 +116,16 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
+		"PUT": {
+			Action: v1.APIAction{
+				Verb:         v1.VerbUpdate,
+				ResourceType: v1.ResourceUsers,
+			},
+			ResourceNameFunc: apiutil.GetUserFromRequest,
+			OverrideFunc:     allowSameUser,
+		},
+	},
+	"/api/users/{user}/mfa/verify": {
 		"PUT": {
 			Action: v1.APIAction{
 				Verb:         v1.VerbUpdate,

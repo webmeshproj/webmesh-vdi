@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,8 +23,8 @@ func NewResourceGetter(d *desktopAPI) v1.ResourceGetter {
 	return &ResourceGetter{api: d}
 }
 
-// Leaving unimplemented. Only used by privilege escalation tests and checking
-// usernames is not important.
+// GetUsers is left unimplemented. Only used by privilege escalation tests
+// and checking usernames is not important right now.
 func (r *ResourceGetter) GetUsers() ([]v1.VDIUser, error) {
 	return []v1.VDIUser{}, nil
 }

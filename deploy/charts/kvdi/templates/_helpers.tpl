@@ -61,3 +61,8 @@ Create the name of the service account to use
     {{ default "default" .Values.rbac.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+
+{{- define "kvdi.managerTag" -}}
+{{ default (printf "manager-%s" .Chart.AppVersion) .Values.manager.image.tagOverride }}
+{{- end -}}

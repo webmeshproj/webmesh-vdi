@@ -73,8 +73,15 @@ type VDIUser struct {
 	// A list of roles applide to the user. The grants associated with each user
 	// are embedded in the JWT signed when authenticating.
 	Roles []*VDIUserRole `json:"roles"`
-	// Whether or not MFA is enabled for this user
-	MFAEnabled bool `json:"mfaEnabled"`
+	// MFA status for the user
+	MFA *UserMFAStatus `json:"mfa"`
+}
+
+// UserMFAStatus contains information about the MFA configurations
+// for the user.
+type UserMFAStatus struct {
+	Enabled  bool `json:"enabled"`
+	Verified bool `json:"verified"`
 }
 
 // GetName returns the name of a VDIUser.

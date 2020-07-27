@@ -106,12 +106,14 @@ type UpdateMFARequest struct {
 	Enabled bool `json:"enabled"`
 }
 
-// UpdateMFAResponse contains the response to an UpdateMFARequest.
-type UpdateMFAResponse struct {
+// MFAResponse contains the response to an UpdateMFARequest or GetMFARequest.
+type MFAResponse struct {
 	// Whether MFA is enabled for the user
 	Enabled bool `json:"enabled"`
 	// If enabled is set, a provisioning URI is also returned.
 	ProvisioningURI string `json:"provisioningURI"`
+	// If enabled is set, whether or not the user has verified their MFA setup
+	Verified bool `json:"verified"`
 }
 
 // CreateRoleRequest represents a request for a new role.

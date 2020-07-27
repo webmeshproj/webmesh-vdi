@@ -73,9 +73,8 @@ func (a *Buffer) buildGSTPipeline(codec Codec) string {
 	case CodecMP3:
 		pipeline = fmt.Sprintf("%s ! lamemp3enc", pipeline)
 	default:
-		fmt.Println("Invalid codec for gst pipeline:", codec)
-		fmt.Println("Defaulting ogg/vorbis")
-		pipeline = fmt.Sprintf("%s ! vorbisenc ! oggmux", pipeline)
+		a.logger.Info(fmt.Sprintf("Invalid codec for gst pipeline %s, defaulting to opus/webm", codec))
+		pipeline = fmt.Sprintf("%s ! cutter ! opusenc ! webmmux", pipeline)
 	}
 
 	return fmt.Sprintf("%s ! fdsink fd=1", pipeline)
@@ -90,8 +89,7 @@ func (a *Buffer) buildPaRecPipeline(codec Codec) string {
 	case CodecMP3:
 		pipeline = fmt.Sprintf("%s | lame -r -V0 -", pipeline)
 	default:
-		fmt.Println("Invalid codec for parec pipeline:", codec)
-		fmt.Println("Defaulting ogg/vorbis")
+		a.logger.Info(fmt.Sprintf("Invalid codec for parec pipeline %s, defaulting to ogg/vorbis", codec))
 		pipeline = fmt.Sprintf("%s | oggenc -b 192 -o - --raw -", pipeline)
 	}
 	return pipeline
@@ -124,7 +122,7 @@ func (a *Buffer) Start(codec Codec) error {
 
 	go func() {
 		if _, err := io.Copy(&a.stderr, errPipe); err != nil {
-			fmt.Println("Error reading stderr from recorder proceess:", err)
+			a.logger.Error(err, "Erroring reading stderr from recorder process")
 		}
 	}()
 

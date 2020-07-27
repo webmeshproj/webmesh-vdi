@@ -3,8 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -20,7 +19,7 @@ import (
 func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	userSession := apiutil.GetRequestUserSession(r)
 
-	secret, err := d.mfa.GetUserSecret(userSession.User.Name)
+	secret, verified, err := d.mfa.GetUserMFAStatus(userSession.User.Name)
 	if err != nil {
 		if !errors.IsUserNotFoundError(err) {
 			apiutil.ReturnAPIError(err, w)
@@ -29,6 +28,13 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 		// The user does not require MFA - this shouldn't happen but go ahead
 		// and send back an authorized token
 		d.returnNewJWT(w, userSession.User, true)
+		return
+	}
+
+	if !verified {
+		// The user has not verified their MFA secret yet.
+		// The login attempt should not have required MFA.
+		apiutil.ReturnAPIForbidden(nil, "MFA token has not been verified", w)
 		return
 	}
 

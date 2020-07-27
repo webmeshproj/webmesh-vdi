@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -87,9 +87,9 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1.AuthResult) {
-	// check if MFA is configured for the user
-	if _, err := d.mfa.GetUserSecret(result.User.Name); err != nil {
-		if !errors.IsUserNotFoundError(err) {
+	// check if MFA is configured for the user and that they have verified their secret
+	if _, verified, err := d.mfa.GetUserMFAStatus(result.User.Name); err != nil || !verified {
+		if err != nil && !errors.IsUserNotFoundError(err) {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}

@@ -21,8 +21,10 @@ manager:
   replicaCount: 1
   image:
     # manager.image.repository -- The repository to pull the manager image from.
-    # The tag is assumed to be `manager-<chart_version>`.
+    # The tag is assumed to be `manager-<chart_version>`, unless overwritten with `imageOverride`.
     repository: quay.io/tinyzimmer/kvdi
+    # manager.image.tagOverride -- Override the tag for the kVDI manager. Defaults to the chart version in the public repo.
+    tagOverride: ""
     # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.
     pullPolicy: IfNotPresent
   # manager.imagePullSecrets -- Image pull secrets for the manager pod.

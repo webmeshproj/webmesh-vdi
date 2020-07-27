@@ -28,7 +28,7 @@ spec:
         - name: {{ .Chart.Name }}-manager
           securityContext:
             {{- toYaml .Values.manager.securityContext | nindent 12 }}
-          image: "{{ .Values.manager.image.repository }}:manager-{{ .Chart.AppVersion }}"
+          image: "{{ .Values.manager.image.repository }}:{{ include "kvdi.managerTag" . }}"
           imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
           env:
             - name: OPERATOR_NAMESPACE

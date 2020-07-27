@@ -5,11 +5,13 @@ import (
 	"reflect"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
+// Decoders is a map of request paths/methods to the request object that
+// should be used for deserialization.
 var Decoders = map[string]map[string]interface{}{
 	"/api/authorize": {
 		"POST": v1.AuthorizeRequest{},
@@ -26,6 +28,9 @@ var Decoders = map[string]map[string]interface{}{
 	"/api/users/{user}/mfa": {
 		"PUT": v1.UpdateMFARequest{},
 	},
+	"/api/users/{user}/mfa/verify": {
+		"PUT": v1.AuthorizeRequest{},
+	},
 	"/api/roles": {
 		"POST": v1.CreateRoleRequest{},
 	},
@@ -40,12 +45,14 @@ var Decoders = map[string]map[string]interface{}{
 	},
 }
 
+// DecodeRequest will inspect the request object for the type of object
+// to deserialize the request to, and then apply the object to the request context.
 func DecodeRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := apiutil.GetGorillaPath(r)
 		if decoder, ok := Decoders[path]; ok {
 			if decoderType, ok := decoder[r.Method]; ok {
-				req, err := decodeRequest(r, decoderType)
+				req, err := reflectAndDecodeRequest(r, decoderType)
 				if err != nil {
 					apiutil.ReturnAPIError(err, w)
 					return
@@ -57,7 +64,7 @@ func DecodeRequest(next http.Handler) http.Handler {
 	})
 }
 
-func decodeRequest(r *http.Request, t interface{}) (interface{}, error) {
+func reflectAndDecodeRequest(r *http.Request, t interface{}) (interface{}, error) {
 	rType := reflect.TypeOf(t)
 	req := reflect.New(rType).Interface()
 	if err := apiutil.UnmarshalRequest(r, req); err != nil {

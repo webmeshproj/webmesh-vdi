@@ -14,6 +14,7 @@ Types
 -   [CreateUserRequest](#CreateUserRequest)
 -   [JWTClaims](#JWTClaims)
 -   [LoginRequest](#LoginRequest)
+-   [MFAResponse](#MFAResponse)
 -   [Resource](#Resource)
 -   [ResourceGetter](#ResourceGetter)
 -   [RolesGetter](#RolesGetter)
@@ -21,7 +22,6 @@ Types
 -   [SessionResponse](#SessionResponse)
 -   [TemplatesGetter](#TemplatesGetter)
 -   [UpdateMFARequest](#UpdateMFARequest)
--   [UpdateMFAResponse](#UpdateMFAResponse)
 -   [UpdateRoleRequest](#UpdateRoleRequest)
 -   [UpdateUserRequest](#UpdateUserRequest)
 -   [UsersGetter](#UsersGetter)
@@ -222,6 +222,34 @@ return a JWT token that contains a fulfilled VDIUser.
 </tbody>
 </table>
 
+### MFAResponse
+
+MFAResponse contains the response to an UpdateMFARequest or
+GetMFARequest.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>enabled</code> <em>bool</em></td>
+<td><p>Whether MFA is enabled for the user</p></td>
+</tr>
+<tr class="even">
+<td><code>provisioningURI</code> <em>string</em></td>
+<td><p>If enabled is set, a provisioning URI is also returned.</p></td>
+</tr>
+<tr class="odd">
+<td><code>verified</code> <em>bool</em></td>
+<td><p>If enabled is set, whether or not the user has verified their MFA setup</p></td>
+</tr>
+</tbody>
+</table>
+
 Resource (`string` alias)
 
 (*Appears on:* [Rule](#Rule))
@@ -332,29 +360,6 @@ provisioning URI will be returned.
 </tbody>
 </table>
 
-### UpdateMFAResponse
-
-UpdateMFAResponse contains the response to an UpdateMFARequest.
-
-<table>
-<thead>
-<tr class="header">
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>enabled</code> <em>bool</em></td>
-<td><p>Whether MFA is enabled for the user</p></td>
-</tr>
-<tr class="even">
-<td><code>provisioningURI</code> <em>string</em></td>
-<td><p>If enabled is set, a provisioning URI is also returned.</p></td>
-</tr>
-</tbody>
-</table>
-
 ### UpdateRoleRequest
 
 UpdateRoleRequest requests updates to an existing role. The existing
@@ -436,8 +441,8 @@ claims defining this object.
 <td><p>A list of roles applide to the user. The grants associated with each user are embedded in the JWT signed when authenticating.</p></td>
 </tr>
 <tr class="odd">
-<td><code>mfaEnabled</code> <em>bool</em></td>
-<td><p>Whether or not MFA is enabled for this user</p></td>
+<td><code>mfa</code> <em><a href="#UserMFAStatus">UserMFAStatus</a></em></td>
+<td><p>MFA status for the user</p></td>
 </tr>
 </tbody>
 </table>
@@ -475,4 +480,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `60b6811`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `443b19d`.*

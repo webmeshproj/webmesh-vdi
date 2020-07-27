@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -59,13 +59,16 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 
 	// We are enabling MFA
 	if req.Enabled {
+		// https://github.com/xlzd/gotp/blob/master/utils.go#L79
+		//Only uses uppercase characters and digits
 		newSecret := gotp.RandomSecret(32)
-		if err := d.mfa.SetUserSecret(username, newSecret); err != nil {
+		if err := d.mfa.SetUserMFAStatus(username, newSecret, false); err != nil {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}
-		apiutil.WriteJSON(&v1.UpdateMFAResponse{
+		apiutil.WriteJSON(&v1.MFAResponse{
 			Enabled:         true,
+			Verified:        false,
 			ProvisioningURI: gotp.NewDefaultTOTP(newSecret).ProvisioningUri(username, "kVDI"),
 		}, w)
 		return
@@ -77,7 +80,7 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiutil.WriteJSON(&v1.UpdateMFAResponse{
+	apiutil.WriteJSON(&v1.MFAResponse{
 		Enabled: false,
 	}, w)
 }
@@ -93,5 +96,5 @@ type swaggerUpdateMFARequest struct {
 // swagger:response updateMFAResponse
 type swaggerUpdateMFAResponse struct {
 	// in:body
-	Body v1.UpdateMFAResponse
+	Body v1.MFAResponse
 }
