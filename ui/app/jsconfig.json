@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "target": "ES6",
     "paths": {
       "src/*": [
         "src/*"
@@ -23,9 +24,12 @@
       "boot/*": [
         "src/boot/*"
       ],
+      "stores/*": [
+        "src/stores/*"
+      ],
       "vue$": [
         "node_modules/vue/dist/vue.esm.js"
-      ]
+      ],
     }
   },
   "exclude": [
