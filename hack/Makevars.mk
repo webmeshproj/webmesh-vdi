@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= 0.0.8
+VERSION ?= v0.0.8
 
 # Go options
 GO111MODULE ?= auto
