@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `0.0.5`
+Current chart version is `0.0.8`
 
 
 
@@ -42,7 +42,8 @@ There is an example for LDAP authentication in the same folder.
 | fullnameOverride | string | `""` | A full name override for resources created by the chart. |
 | manager.affinity | object | `{}` | Node affinity for the manager pod. |
 | manager.image.pullPolicy | string | `"IfNotPresent"` | The `ImagePullPolicy` to use for the manager pod. |
-| manager.image.repository | string | `"quay.io/tinyzimmer/kvdi"` | The repository to pull the manager image from. The tag is assumed to be `manager-<chart_version>`. |
+| manager.image.repository | string | `"quay.io/tinyzimmer/kvdi"` | The repository to pull the manager image from. The tag is assumed to be `manager-<chart_version>`, unless overwritten with `imageOverride`. |
+| manager.image.tagOverride | string | `""` | Override the tag for the kVDI manager. Defaults to the chart version in the public repo. |
 | manager.imagePullSecrets | list | `[]` | Image pull secrets for the manager pod. |
 | manager.nodeSelector | object | `{}` | Node selectors for the manager pod. |
 | manager.podSecurityContext | object | `{}` | The `PodSecurityContext` for the manager pod. |
