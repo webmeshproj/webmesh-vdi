@@ -1,14 +1,14 @@
 <template>
   <q-page flex>
     <div id="view" :class="className">
-      <div q-gutter-md row v-if="!connected && currentSession !== null">
+      <div q-gutter-md row v-if="status === 'disconnected' && currentSession !== null">
         <q-spinner-hourglass color="grey" size="4em" />
         <q-space />
         <div v-for="line in statusLines" :key="line">
           {{ line }}
         </div>
       </div>
-      <div q-gutter-md row items-center v-if="!connected && currentSession === null">
+      <div q-gutter-md row items-center v-if="status === 'disconnected' && currentSession === null">
         <q-icon name="warning" class="text-red" style="font-size: 4rem;" />
         <br />
         There are no active desktop sessions
@@ -21,6 +21,9 @@
 import RFB from '@novnc/novnc/core/rfb'
 
 import WSAudioPlayer from '../lib/wsaudio.js'
+
+// The view div for displays
+var view
 
 function getWebsockifyAddr (namespace, name, token) {
   return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/websockify?token=${token}`
@@ -35,10 +38,10 @@ export default {
 
   data () {
     return {
-      rfb: null,
+      client: null,
       player: null,
       currentSession: null,
-      connected: false,
+      status: 'disconnected',
       statusLines: [],
       className: 'info',
       audioEnabled: false
@@ -60,11 +63,11 @@ export default {
 
   methods: {
     onPaste (data) {
-      if (this.rfb !== null) {
-        console.log(`Copying clipboard contents: ${data}`)
-        this.rfb.clipboardPasteFrom(data)
-        this.rfb.sendKey('ctrl', true)
-        this.rfb.sendKey('v')
+      if (this.client !== null) {
+        if (this.currentSession.socketType === 'xvnc') {
+          console.log(`Copying clipboard contents: ${data}`)
+          this.client.clipboardPasteFrom(data)
+        }
       }
     },
 
@@ -104,7 +107,7 @@ export default {
           })
         }
       }
-      if (mutation.type === 'toggle_audio' && this.connected) {
+      if (mutation.type === 'toggle_audio' && this.status === 'connected') {
         if (this.$desktopSessions.getters.audioEnabled) {
           this.enableAudio()
         } else {
@@ -116,7 +119,7 @@ export default {
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
-      } else if (this.connected) {
+      } else if (this.status === 'connected') {
         this.className = 'no-margin to-header-height'
       } else {
         this.className = 'info'
@@ -189,32 +192,54 @@ export default {
       return status.podPhase === 'Running' && status.running
     },
 
-    createConnection () {
-      let rfb
+    async createConnection () {
+      console.log('Connecting to display server')
+      console.log(this.currentSession)
+
+      // set the view port for the display
+      view = document.getElementById('view')
+      if (view === null || view === undefined) {
+        return
+      }
+
+      // get the websocket address with the token included as a query argument
+      const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
 
       try {
-        const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-        const target = document.getElementById('view')
-        if (target === null || target === undefined) {
-          return
+        if (this.currentSession.socketType === 'xvnc') {
+          // create a vnc connection
+          await this.createRFBConnection(url)
+        } else {
+          // create an xpra connection
+          await this.createXpraConnection(url)
         }
-        rfb = new RFB(target, url)
-        rfb.addEventListener('connect', this.connectedToServer)
-        rfb.addEventListener('disconnect', this.disconnectedFromServer)
-        rfb.resizeSession = true
       } catch (err) {
-        console.error(`Unable to create RFB client: ${err}`)
+        console.error(`Unable to create display client: ${err}`)
         this.disconnectedFromServer({ detail: { clean: false } })
         return
       }
-      this.connected = true
+
+      this.status = 'connected'
       this.className = 'no-margin to-header-height'
-      this.rfb = rfb
     },
 
-    async connectedToServer () {
-      this.rfb.scaleViewport = true
-      this.rfb.resizeSession = true
+    async createRFBConnection (url) {
+      const rfb = new RFB(view, url)
+      rfb.addEventListener('connect', this.connectedToServer)
+      rfb.addEventListener('disconnect', this.disconnectedFromServer)
+      rfb.resizeSession = true
+      this.client = rfb
+    },
+
+    async createXpraConnection (url) {
+    },
+
+    connectedToServer () {
+      console.log('connected to display server!')
+      if (this.currentSession.socketType === 'xvnc') {
+        this.client.scaleViewport = true
+        this.client.resizeSession = true
+      }
     },
 
     disconnectedFromServer (e) {
@@ -234,16 +259,16 @@ export default {
 
     resetStatus () {
       this.connecting = false
-      this.connected = false
+      this.status = 'disconnected'
       this.statusLines = []
       this.className = 'info'
     },
 
     async disconnect () {
       this.resetStatus()
-      if (this.rfb !== null) {
-        this.rfb.disconnect()
-        this.rfb = null
+      if (this.client !== null) {
+        this.client.disconnect()
+        this.client = null
       }
     }
   },

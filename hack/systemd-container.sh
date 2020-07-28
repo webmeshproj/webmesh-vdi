@@ -8,5 +8,6 @@ docker run -it --rm \
   -e USER=admin \
   -e ENABLE_ROOT=true \
   --cap-add CAP_SYS_ADMIN \
-  ${ENTRYPOINT} \
+  --name desktop \
+  --entrypoint ${ENTRYPOINT:-/usr/local/sbin/init} \
   quay.io/tinyzimmer/kvdi:${IMAGE}

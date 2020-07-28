@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -53,13 +53,22 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, user *v1.VDIUser, autho
 	}, w)
 }
 
-func (d *desktopAPI) getEndpointURL(r *http.Request) (*url.URL, error) {
+func (d *desktopAPI) getDesktopWebsocketURL(r *http.Request) (*url.URL, error) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
 	found := &corev1.Service{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return nil, err
 	}
 	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1.WebPort))
+}
+
+func (d *desktopAPI) getDesktopWebURL(r *http.Request) (string, error) {
+	nn := apiutil.GetNamespacedNameFromRequest(r)
+	found := &corev1.Service{}
+	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("https://%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
 }
 
 // Session response

@@ -59,12 +59,19 @@ export const DesktopSessions = new Vuex.Store({
         }
       }
       try {
-        const data = { template: template, namespace: namespace }
+        const data = { template: template.metadata.name, namespace: namespace }
         const session = await Vue.prototype.$axios.post('/api/sessions', data)
+        // add the socket type from the template config so we know how to connect
+        // to the display
+        if (typeof template.spec.config.socketType === 'string') {
+          session.data.socketType = template.spec.config.socketType
+        } else {
+          session.data.socketType = 'xvnc'
+        }
         commit('new_session', session.data)
         commit('set_active_session', session.data)
       } catch (err) {
-        console.log(`Failed to launch new session from ${template}`)
+        console.log(`Failed to launch new session from ${template.metadata.name}`)
         console.error(err)
         throw err
       }

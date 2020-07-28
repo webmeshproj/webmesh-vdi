@@ -63,7 +63,7 @@
             </q-td>
 
             <q-td key="useTemplate" :props="props">
-              <q-btn round dense flat icon="cast"  size="md" color="blue" @click="onLaunchTemplate(props.row.idx, props.row.metadata.name)">
+              <q-btn round dense flat icon="cast"  size="md" color="blue" @click="onLaunchTemplate(props.row)">
                 <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Launch Template</q-tooltip>
               </q-btn>
               <q-btn round dense flat icon="create"  size="md" color="orange" @click="onEditTemplate(props.row)">
@@ -157,9 +157,9 @@ export default {
       })
     },
 
-    onLaunchTemplate (templateIdx, templateName) {
-      const ns = this.$refs[`ns-${templateIdx}`].selection
-      const payload = { template: templateName }
+    onLaunchTemplate (template) {
+      const ns = this.$refs[`ns-${template.idx}`].selection
+      const payload = { template: template }
       // When the attribute comes back as an object, it actually means
       // no selection
       if (typeof ns !== 'object') {

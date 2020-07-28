@@ -13,8 +13,8 @@ A Kubernetes-native Virtual Desktop Infrastructure.
  - [Security](#security)
  - [Screenshots](#screenshots)
 
-I'll write up better CONTRIBUTING docs soon, but I am getting to the point where it'd be cool to have some collaboration.
-If you are wanting this to become a real thing (or are just interested in trying it out), and you run into any issues, feel free to open an issue here and I can try to help out.
+If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
+I wrote up a [`CONTRIBUTING`](doc/CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
 
 ## Features
 

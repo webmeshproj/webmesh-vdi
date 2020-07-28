@@ -1,0 +1,55 @@
+FROM ubuntu:latest as base-system
+
+RUN sed -i 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
+
+# Core Dependencies
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update \
+    && apt-get dist-upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        sudo software-properties-common curl \
+        dbus-x11 x11-utils alsa-utils \
+        mesa-utils libgl1-mesa-dri xpra \
+        systemd systemd-sysv pulseaudio \
+    && apt-get autoclean -y \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && cd /usr/lib/systemd/system/sysinit.target.wants/ \
+    && ls | grep -v systemd-tmpfiles-setup | xargs rm -f $1 \
+    && rm -f /usr/lib/systemd/system/multi-user.target.wants/* \
+        /etc/systemd/system/*.wants/* \
+        /usr/lib/systemd/system/local-fs.target.wants/* \
+        /usr/lib/systemd/system/sockets.target.wants/*udev* \
+        /usr/lib/systemd/system/sockets.target.wants/*initctl* \
+        /usr/lib/systemd/system/basic.target.wants/* \
+        /usr/lib/systemd/system/anaconda.target.wants/* \
+        /usr/lib/systemd/system/plymouth* \
+        /usr/lib/systemd/system/systemd-update-utmp*
+
+# Filesystem
+COPY rootfs /
+
+# At the very least we want an isolated systemd-user process and a display enabled.
+# Extending images can put anything they want behind its display.
+#
+# The display.service for this image just launches an Xpra daemon. Then the extending
+# image would just install an app and mock a systemd unit for it using the Xpra DISPLAY.
+#
+# Another alternative is working out a way for the novnc-proxy to execute commands inside 
+# the destop container. I picture a small agent inside a desktop container listening on a 
+# unix socket shared with the sidecar. The same way the VNC works in the desktop images.
+# In this scenario really the extending image would only need to do a for example a,
+# `RUN apt-get install -y <package>`.
+RUN chmod +x /usr/local/sbin/init && chmod +x /usr/local/sbin/fakegetty \
+  && systemctl enable user-init \
+  && systemctl --user --global enable display \
+  && systemctl --user --global enable pulseaudio
+
+
+WORKDIR /root
+VOLUME ["/sys/fs/cgroup"]
+
+# ENV GDK_BACKEND=broadway 
+# ENV BROADWAY_DISPLAY=:10
+
+ENTRYPOINT ["/usr/local/sbin/init"]

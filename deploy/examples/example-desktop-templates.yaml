@@ -30,3 +30,21 @@ spec:
     os: archlinux
     desktop: xfce4
     applications: minimal
+
+# ---
+# apiVersion: kvdi.io/v1alpha1
+# kind: DesktopTemplate
+# metadata:
+#   name: app-profile
+# spec:
+#   image: quay.io/tinyzimmer/kvdi:app-base-0.0.8
+#   imagePullPolicy: IfNotPresent
+#   config:
+#     enableSound: true
+#     allowRoot: false
+#     init: systemd
+#     socketType: xpra
+#   tags:
+#     os: ubuntu
+#     desktop: ubuntu
+#     applications: none

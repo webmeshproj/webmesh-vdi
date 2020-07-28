@@ -74,10 +74,19 @@ spec:
                   type: string
                 socketAddr:
                   description: The address the VNC server listens on inside the image.
-                    This defaults to the UNIX socket /var/run/kvdi/vnc.sock. The novnc-proxy
-                    sidecar will forward websockify requests validated by mTLS to
-                    this socket. Must be in the format of `tcp://{host}:{port}` or
-                    `unix://{path}`.
+                    This defaults to the UNIX socket /var/run/kvdi/display.sock. The
+                    novnc-proxy sidecar will forward websockify requests validated
+                    by mTLS to this socket. Must be in the format of `tcp://{host}:{port}`
+                    or `unix://{path}`.
+                  type: string
+                socketType:
+                  description: The type of service listening on the configured socket.
+                    Can either be `xpra` or `xvnc`. Currently `xpra` is used to serve
+                    "app profiles" and `xvnc` to serve full desktops. Defaults to
+                    `xvnc`.
+                  enum:
+                  - xvnc
+                  - xpra
                   type: string
               type: object
             image:

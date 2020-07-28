@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= 0.0.7
+VERSION ?= 0.0.8
 
 # Go options
 GO111MODULE ?= auto
@@ -31,6 +31,7 @@ APP_IMAGE ?= ${REPO}/${NAME}:app-${VERSION}
 NOVNC_PROXY_IMAGE ?= ${REPO}/${NAME}:novnc-proxy-${VERSION}
 UBUNTU_BASE_IMAGE ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
 ARCH_BASE_IMAGE ?= ${REPO}/${NAME}:arch-base-${VERSION}
+APP_PROFILE_BASE_IMAGE ?= ${REPO}/${NAME}:app-base-${VERSION}
 
 # Operator SDK
 OPERATOR_SDK ?= _bin/operator-sdk

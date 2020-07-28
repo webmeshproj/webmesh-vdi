@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/version"
 
 	corev1 "k8s.io/api/core/v1"
@@ -80,12 +80,20 @@ func (t *DesktopTemplate) GetDesktopServiceAccount() string {
 	return ""
 }
 
-// GetVNCSocketAddr returns the VNC socket address to pass to the nonvnc-proxy.
-func (t *DesktopTemplate) GetVNCSocketAddr() string {
+// GetDisplaySocketAddr returns the display socket address to pass to the nonvnc-proxy.
+func (t *DesktopTemplate) GetDisplaySocketAddr() string {
 	if t.Spec.Config != nil && t.Spec.Config.SocketAddr != "" {
 		return t.Spec.Config.SocketAddr
 	}
-	return "unix:///var/run/kvdi/vnc.sock"
+	return v1.DefaultDisplaySocketAddr
+}
+
+// GetDisplaySocketType retrieves the service listening on the configured socket.
+func (t *DesktopTemplate) GetDisplaySocketType() SocketType {
+	if t.Spec.Config != nil && t.Spec.Config.SocketType != "" {
+		return t.Spec.Config.SocketType
+	}
+	return SocketXVNC
 }
 
 // GetDesktopEnvVars returns the environment variables for a desktop pod.
@@ -97,7 +105,7 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 		},
 		{
 			Name:  "VNC_SOCK_ADDR",
-			Value: "/var/run/kvdi/vnc.sock",
+			Value: strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://"),
 		},
 	}
 	if t.RootEnabled() {
@@ -239,7 +247,7 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 		},
 		{
 			Name:      "vnc-sock",
-			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetVNCSocketAddr(), "unix://"), "tcp://")),
+			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
 		},
 		{
 			Name:      "shm",
@@ -267,7 +275,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		Name:            "novnc-proxy",
 		Image:           t.GetNoVNCProxyImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Args:            []string{"--vnc-addr", t.GetVNCSocketAddr()},
+		Args:            []string{"--vnc-addr", t.GetDisplaySocketAddr()},
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          "web",
@@ -290,7 +298,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			},
 			{
 				Name:      "vnc-sock",
-				MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetVNCSocketAddr(), "unix://"), "tcp://")),
+				MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
 			},
 		},
 	}

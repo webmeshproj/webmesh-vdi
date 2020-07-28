@@ -81,7 +81,7 @@ func (d *desktopAPI) GetWebsockifyAudio(w http.ResponseWriter, r *http.Request) 
 }
 
 func (d *desktopAPI) ServeWebsocketProxy(w http.ResponseWriter, r *http.Request) {
-	endpointURL, err := d.getEndpointURL(r)
+	endpointURL, err := d.getDesktopWebsocketURL(r)
 	if err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(err, w)

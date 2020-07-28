@@ -1,30 +1,36 @@
 # Contributing to kVDI
 
-_TODO: Elaborate further everywhere. For now please refer to the [`godoc`](https://pkg.go.dev/github.com/tinyzimmer/kvdi) for finding your way around the code base_
-
-If you are familiar with other `operator` projects, then this code base should be relatively easy to navigate.
+If you are familiar with other `operator-sdk` projects, then this code base should be relatively easy to navigate. 
+The controllers and APIs were originally generated using it, so the overall structure of those areas remains in tact.
 
 Majority of types and K8s API definitions can be found in `pkg/apis`. These are still open to many change unless the project reaches a "stable release" phase.
 
-## Controllers/Managers
+You can use the [`godoc`](https://pkg.go.dev/github.com/tinyzimmer/kvdi) for navigating the code base and I'll definitely be trying to get comments on every exported object at some point. I've made good dents so far.
 
-### Relevant packages
+## Current TODOs
 
-  - `pkg/controller`
-  - `pkg/resources`
+If you are wanting to contribute I am open to discussions in an issue, PRs, whatever. 
+If you do intend to open a code-related PR, maybe just give a heads up in an Issue first since I might be playing around in the same part of the code base. 
+I occasionally go down the rabbit hole of things I wrote months ago and end up completely reworking them.
 
-## App/API
+Here are just some of the things I know still need to be done before this could be considered a stable project.
 
-### Relevant Packages
+- Tests everywhere
+  - Backend has some, needs way more coverage. 
+  - UI has none, primarily because I have no idea how to do it so need to learn
 
-  - `pkg/api`
-  - `pkg/auth`
-  - `pkg/secrets`
+- More elaborate docs. The APIs, backend methods, and app configurations are well documented for the most part, and I want to stick to doc generation where I can.
+  It's things like more snapshots and user docs that I need to make.
 
-## UI
+- The TLS options need more customization. Specifically user-control over the server certificate used on the app/api instance. This can also be accomplished easily with a reverse proxy in front of the app in the short term. The internal ones are probably safe to be kept generated on the fly, but I can see situations where a user might want to use a pre-existing setup for those in the future.
 
-The UI is written in `Vue.js` using the [`quasar`](https://quasar.dev/) framework (which is awesome).
+- The authentication/authorization methods could very likely have holes in them still. I'd definitely love more eyes on some of the mechanics in those.
+  - In that respect, I also need mechanics in place to handle expiration of internal certificates used for mTLS. Currently the expiration is set to 10 years for generated certs.
 
-### Relevant Packages
+- (**Not really required to be stable**) I'm currently in the middle of looking into "app profiles". Meaning, the ability to have a `DesktopTemplate` which just launches a single app on the display server and fills the viewport in the UI with it. I see two potential ways to accomplish this so far that don't require any major reworks.
 
-  - `ui/app`
+  - Using GTK3 `broadway` and proxying websocket connections to that. 
+    - One issue is that it looks like a custom client connector is needed, the other is that I'm not sure if this is still supported.
+
+  - Base desktop images already install `Xpra` for `XRANDR` support in `Xvnc` (dynamic screen resizing). `Xpra` can also launch a display server on any socket and there exist websocket client implementations in JS that can be experimented with on the frontend. At time of writing this is the one I am exploring further. 
+    - See the [`Dockerfile.base`](../build/desktops/app-profiles/Dockerfile.base) in the app-profiles build directory for more information on my progress with this.

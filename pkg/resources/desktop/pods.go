@@ -2,7 +2,7 @@ package desktop
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

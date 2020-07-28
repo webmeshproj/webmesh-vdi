@@ -10,6 +10,11 @@ build-arch-base:
 		-f Dockerfile.base \
 		-t ${ARCH_BASE_IMAGE}
 
+build-app-base:
+	cd build/desktops/app-profiles && docker build . \
+		-f Dockerfile.base \
+		-t ${APP_PROFILE_BASE_IMAGE}
+
 build-ubuntu-%:
 	cd build/desktops/ubuntu && docker build . \
 		-f Dockerfile.desktop \
@@ -44,3 +49,6 @@ load-ubuntu-%: ${KIND} build-ubuntu-%
 
 load-arch-%: ${KIND} build-arch-%
 	$(call load_image,${REPO}/${NAME}:arch-$*-${VERSION})
+
+load-app-%: ${KIND} build-app-%
+	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})

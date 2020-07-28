@@ -41,8 +41,10 @@ const (
 	PublicWebPort = 443
 	// DesktopRunDir is the dir mounted for internal runtime files
 	DesktopRunDir = "/var/run/kvdi"
+	// DefaultDisplaySocketAddr is the default path used for the display unix socket
+	DefaultDisplaySocketAddr = "unix:///var/run/kvdi/display.sock"
 	// DefaultNamespace is the default namespace to provision resources in
-	DefaultNamespace string = "default"
+	DefaultNamespace = "default"
 )
 
 // NamespaceAll represents all namespaces

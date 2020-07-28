@@ -16,6 +16,18 @@ const (
 	InitSystemd = "systemd"
 )
 
+// SocketType represents the type of service listening on the display socket
+// in the container image.
+// +kubebuilder:validation:Enum=xvnc;xpra
+type SocketType string
+
+const (
+	// SocketXVNC signals that Xvnc is used for the display server.
+	SocketXVNC SocketType = "xvnc"
+	// SocketXPRA signals that Xpra is used for the display server.
+	SocketXPRA SocketType = "xpra"
+)
+
 // DesktopTemplateSpec defines the desired state of DesktopTemplate
 type DesktopTemplateSpec struct {
 	// The docker repository and tag to use for desktops booted from this template.
@@ -49,10 +61,14 @@ type DesktopConfig struct {
 	// sudo with no password.
 	AllowRoot bool `json:"allowRoot,omitempty"`
 	// The address the VNC server listens on inside the image. This defaults to the
-	// UNIX socket /var/run/kvdi/vnc.sock. The novnc-proxy sidecar will forward
+	// UNIX socket /var/run/kvdi/display.sock. The novnc-proxy sidecar will forward
 	// websockify requests validated by mTLS to this socket.
 	// Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
 	SocketAddr string `json:"socketAddr,omitempty"`
+	// The type of service listening on the configured socket. Can either be `xpra` or
+	// `xvnc`. Currently `xpra` is used to serve "app profiles" and `xvnc` to serve full
+	// desktops. Defaults to `xvnc`.
+	SocketType SocketType `json:"socketType,omitempty"`
 	// The image to use for the sidecar that proxies mTLS connections to the local
 	// VNC server inside the Desktop. Defaults to the public novnc-proxy image
 	// matching the version of the currrently running manager.

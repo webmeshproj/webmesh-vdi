@@ -1,0 +1,11 @@
+[Unit]
+Description=Xpra Display
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/xpra --no-daemon --bind=${VNC_SOCK_ADDR} start ${DISPLAY}
+EnvironmentFile=/etc/default/display
+
+[Install]
+WantedBy=default.target
