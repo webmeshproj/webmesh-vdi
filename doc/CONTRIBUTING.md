@@ -33,4 +33,4 @@ Here are just some of the things I know still need to be done before this could 
     - One issue is that it looks like a custom client connector is needed, the other is that I'm not sure if this is still supported.
 
   - Base desktop images already install `Xpra` for `XRANDR` support in `Xvnc` (dynamic screen resizing). `Xpra` can also launch a display server on any socket and there exist websocket client implementations in JS that can be experimented with on the frontend. At time of writing this is the one I am exploring further. 
-    - See the [`Dockerfile.base`](../build/desktops/app-profiles/Dockerfile.base) in the app-profiles build directory for more information on my progress with this.
+    - There is a semi-working implementation of this on `master` branch at the moment. It requires the `DesktopTemplate` set `spec.config.socketType: xpra`. There remain some issues with fuzziness and scaling.

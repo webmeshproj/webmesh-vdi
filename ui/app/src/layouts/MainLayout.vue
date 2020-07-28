@@ -148,7 +148,7 @@
         <template v-slot:header>
 
           <q-item-section avatar>
-            <q-avatar color="teal" text-color="white">{{ user.name[0] }}</q-avatar>
+            <q-avatar color="teal" text-color="white">{{ userInitial }}</q-avatar>
           </q-item-section>
           <q-item-section>
             {{ user.name }}
@@ -267,6 +267,13 @@ export default {
   },
 
   computed: {
+    userInitial () {
+      const user = this.$userStore.getters.user
+      if (user.name !== undefined) {
+        return user.name[0]
+      }
+      return ''
+    },
     audioText () {
       if (this.audioEnabled) {
         return 'Mute'

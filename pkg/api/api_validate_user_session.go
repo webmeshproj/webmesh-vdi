@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
@@ -41,6 +41,10 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			// use cache for the JWT secret, since we use it for every request
 			return d.secrets.ReadSecret(v1.JWTSecretKey, true)
 		})
+		if err != nil {
+			apiutil.ReturnAPIForbidden(err, "Malformed token provided in request", w)
+			return
+		}
 
 		// check token validity
 		if !token.Valid {

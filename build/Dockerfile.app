@@ -55,7 +55,7 @@ COPY ui/app/yarn.lock /build/yarn.lock
 RUN cd /build && yarn
 
 COPY ui/app/ /build/
-RUN cd /build && quasar build
+RUN cd /build && quasar build --modern
 
 ###############
 # Final Image #

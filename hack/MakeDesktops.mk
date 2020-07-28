@@ -28,6 +28,12 @@ build-arch-%:
 		--build-arg BASE_IMAGE=${ARCH_BASE_IMAGE} \
 		-t ${REPO}/${NAME}:arch-$*-${VERSION}
 
+build-app-%:
+	cd build/desktops/app-profiles && docker build . \
+		-f Dockerfile.$* \
+		--build-arg BASE_IMAGE=${APP_PROFILE_BASE_IMAGE} \
+		-t ${REPO}/${NAME}:app-$*-${VERSION}
+
 # Pushers
 
 push-ubuntu-base: build-ubuntu-base
@@ -41,6 +47,9 @@ push-ubuntu-%: build-ubuntu-%
 
 push-arch-%: build-arch-%
 	docker push ${REPO}/${NAME}:arch-$*-${VERSION}
+
+push-app-%: build-app-%
+	docker push ${REPO}/${NAME}:app-$*-${VERSION}
 
 # Loaders
 

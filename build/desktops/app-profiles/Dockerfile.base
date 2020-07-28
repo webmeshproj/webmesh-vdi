@@ -8,12 +8,14 @@ RUN apt-get update \
     && apt-get dist-upgrade -y \
     && apt-get install -y --no-install-recommends \
         sudo software-properties-common curl \
-        dbus-x11 x11-utils alsa-utils \
+        dbus-x11 x11-utils alsa-utils python3-pip \
         mesa-utils libgl1-mesa-dri xpra \
         systemd systemd-sysv pulseaudio \
     && apt-get autoclean -y \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    # pillow is required for xpra client connections
+    && pip3 install pillow \
     && cd /usr/lib/systemd/system/sysinit.target.wants/ \
     && ls | grep -v systemd-tmpfiles-setup | xargs rm -f $1 \
     && rm -f /usr/lib/systemd/system/multi-user.target.wants/* \
@@ -48,8 +50,5 @@ RUN chmod +x /usr/local/sbin/init && chmod +x /usr/local/sbin/fakegetty \
 
 WORKDIR /root
 VOLUME ["/sys/fs/cgroup"]
-
-# ENV GDK_BACKEND=broadway 
-# ENV BROADWAY_DISPLAY=:10
 
 ENTRYPOINT ["/usr/local/sbin/init"]

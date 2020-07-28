@@ -8,7 +8,7 @@ const equal = function (o1, o2) {
 export const DesktopSessions = new Vuex.Store({
 
   state: {
-    sessions: [],
+    sessions: localStorage.getItem('desktopSessions') || [],
     audioEnabled: false
   },
 

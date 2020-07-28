@@ -13,14 +13,17 @@
         <br />
         There are no active desktop sessions
       </div>
+      <iframe :class="xpraClassname" v-if="status === 'connected' && currentSession.socketType === 'xpra'" :src="`https://xpra.org/html5/index.html?${xpraArgs}`" />
     </div>
   </q-page>
 </template>
 
 <script>
 import RFB from '@novnc/novnc/core/rfb'
+// import { createClient } from 'xpra-html5-client'
 
 import WSAudioPlayer from '../lib/wsaudio.js'
+// import { CreateApplication, addEventListeners } from '../lib/xpra.js'
 
 // The view div for displays
 var view
@@ -29,8 +32,35 @@ function getWebsockifyAddr (namespace, name, token) {
   return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/websockify?token=${token}`
 }
 
+function getXpraServerArgs (namespace, name, token) {
+  const host = window.location.hostname
+  const path = `/api/desktops/${namespace}/${name}/websockify?token=${token}`
+
+  let port = window.location.port
+  let secure = false
+
+  if (window.location.protocol.replace(/:$/g, '') === 'https') {
+    secure = true
+    if (port === '') {
+      port = 443
+    }
+  } else {
+    if (port === '') {
+      port = 80
+    }
+  }
+
+  return { host: host, path: path, port: port, secure: secure }
+}
+
 function getWebsockifyAudioAddr (namespace, name, token) {
   return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/wsaudio?token=${token}`
+}
+
+function iframeRef (frameRef) {
+  return frameRef.contentWindow
+    ? frameRef.contentWindow.document
+    : frameRef.contentDocument
 }
 
 export default {
@@ -44,6 +74,7 @@ export default {
       status: 'disconnected',
       statusLines: [],
       className: 'info',
+      xpraClassname: 'iframe-container',
       audioEnabled: false
     }
   },
@@ -59,6 +90,27 @@ export default {
     this.$root.$off('set-fullscreen', this.setFullscreen)
     this.$root.$off('paste-clipboard', this.onPaste)
     this.disconnect()
+  },
+
+  computed: {
+    xpraArgs () {
+      if (this.status !== 'connected') {
+        return ''
+      }
+      const args = getXpraServerArgs(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
+      return `\
+      server=${args.host}\
+      &port=${args.port}\
+      &path=${args.path}\
+      &ssl=${args.secure}\
+      &reconnect=true\
+      &dpi=96\
+      &notifications=false\
+      &clipboard=true\
+      &compression_level=1\
+      &floating_menu=false\
+      `.replace(/\s/g, '')
+    }
   },
 
   methods: {
@@ -88,8 +140,8 @@ export default {
     },
 
     handleSessionsChange (mutation, state) {
+      const activeSession = this.$desktopSessions.getters.activeSession
       if (mutation.type === 'set_active_session') {
-        const activeSession = this.$desktopSessions.getters.activeSession
         console.log(`Received a session change to ${JSON.stringify(activeSession)}`)
         if (activeSession === undefined) {
           console.log('There are no more active sessions, disconnecting')
@@ -107,6 +159,13 @@ export default {
           })
         }
       }
+      if (mutation.type === 'delete_session') {
+        const sessions = this.$desktopSessions.getters.sessions
+        if (sessions.length === 0) {
+          this.resetStatus()
+          this.currentSession = null
+        }
+      }
       if (mutation.type === 'toggle_audio' && this.status === 'connected') {
         if (this.$desktopSessions.getters.audioEnabled) {
           this.enableAudio()
@@ -119,10 +178,13 @@ export default {
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
+        this.xpraClassname = 'no-margin full-screen iframe-full-screen'
       } else if (this.status === 'connected') {
-        this.className = 'no-margin to-header-height'
+        this.className = 'no-margin display-container'
+        this.xpraClassname = 'iframe-container'
       } else {
         this.className = 'info'
+        this.xpraClassname = 'iframe-container'
       }
     },
 
@@ -220,7 +282,9 @@ export default {
       }
 
       this.status = 'connected'
-      this.className = 'no-margin to-header-height'
+      this.className = 'no-margin display-container'
+      var inside = iframeRef(document.getElementById('xpra'))
+      console.log(inside)
     },
 
     async createRFBConnection (url) {
@@ -232,6 +296,7 @@ export default {
     },
 
     async createXpraConnection (url) {
+      console.log(url)
     },
 
     connectedToServer () {
@@ -243,10 +308,10 @@ export default {
     },
 
     disconnectedFromServer (e) {
+      this.resetStatus()
       if (e.detail.clean) {
         console.log('Disconnected')
       } else {
-        this.resetStatus()
         console.log('Something went wrong, connection is closed')
         this.checkStatusAndConnect()
       }
@@ -287,12 +352,39 @@ export default {
 </script>
 
 <style scoped>
-.to-header-height {
+.display-container {
+  display: flex;
+  width: 100%;
   height: calc(100vh - 100px);
+  flex-direction: column;
+  background-color: blue;
+  overflow: hidden;
+}
+
+.iframe-container {
+  flex-grow: 1;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .full-screen {
   height: 100vh;
+}
+
+.iframe-full-screen {
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  right:0;
+  width:100%;
+  height:100%;
+  border:none;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  z-index:999999;
 }
 
 .info {

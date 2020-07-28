@@ -54,3 +54,10 @@ Will be looking into using it for all images, but at the time of writing have be
 These images are a little harder to test.
 The `kVDI` manager will take care of all needed configurations at launch time,
 but for running locally you will need to ensure the proper mounts and temp filesystems that `systemd` expects.
+
+### App Profiles
+
+_TODO_
+
+They actually work mostly the same way as the others, just with `xpra` as the display server instead of `xvnc`.
+Then the service enabled in the extending image is just a single app instead of a full window manager.
