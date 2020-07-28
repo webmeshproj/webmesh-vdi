@@ -41,3 +41,6 @@ jobs:
 
     - name: Build and push the app-profile Lens image
       run: VERSION=${{ steps.version.outputs.tag }} make build-app-lens push-app-lens
+
+    - name: Build and push the app-profile Postman image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-app-postman push-app-postman

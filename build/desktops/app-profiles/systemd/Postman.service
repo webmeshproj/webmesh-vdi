@@ -1,0 +1,14 @@
+[Unit]
+Description=Postman
+After=display.service
+Requires=display.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/local/bin/Postman
+EnvironmentFile=/etc/default/desktop
+
+[Install]
+WantedBy=default.target
+

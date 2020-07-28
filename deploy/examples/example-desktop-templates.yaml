@@ -46,3 +46,18 @@ spec:
     socketType: xpra
   tags:
     app-profile: Lens
+---
+apiVersion: kvdi.io/v1alpha1
+kind: DesktopTemplate
+metadata:
+  name: postman
+spec:
+  image: quay.io/tinyzimmer/kvdi:app-postman-latest
+  imagePullPolicy: IfNotPresent
+  config:
+    enableSound: true
+    allowRoot: true
+    init: systemd
+    socketType: xpra
+  tags:
+    app-profile: Postman
