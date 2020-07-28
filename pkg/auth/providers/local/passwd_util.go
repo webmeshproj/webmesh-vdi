@@ -9,7 +9,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
-func addUserToBuffer(file io.Reader, newUser *LocalUser) (io.Reader, error) {
+func addUserToBuffer(file io.Reader, newUser *User) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 
 	scanner := bufio.NewScanner(file)
@@ -41,10 +41,10 @@ func addUserToBuffer(file io.Reader, newUser *LocalUser) (io.Reader, error) {
 	return bytes.NewReader(buf.Bytes()), nil
 }
 
-func getAllUsersFromBuffer(file io.Reader) ([]*LocalUser, error) {
+func getAllUsersFromBuffer(file io.Reader) ([]*User, error) {
 	scanner := bufio.NewScanner(file)
 
-	out := make([]*LocalUser, 0)
+	out := make([]*User, 0)
 	for scanner.Scan() {
 		text := scanner.Text()
 		if text == "" {
@@ -62,7 +62,7 @@ func getAllUsersFromBuffer(file io.Reader) ([]*LocalUser, error) {
 	return out, nil
 }
 
-func getUserFromBuffer(file io.Reader, username string) (*LocalUser, error) {
+func getUserFromBuffer(file io.Reader, username string) (*User, error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -87,7 +87,7 @@ func getUserFromBuffer(file io.Reader, username string) (*LocalUser, error) {
 	return nil, errors.NewUserNotFoundError(username)
 }
 
-func updateUserInBuffer(file io.Reader, updated *LocalUser) (io.Reader, error) {
+func updateUserInBuffer(file io.Reader, updated *User) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 
 	var updatedUser bool

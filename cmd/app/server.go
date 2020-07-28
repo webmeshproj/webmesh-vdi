@@ -9,15 +9,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
 	"github.com/tinyzimmer/kvdi/pkg/api"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"k8s.io/client-go/rest"
 )
 
+// LogOutput is the object used to marshal log events to JSON.
 type LogOutput struct {
 	Time       time.Time `json:"time"`
 	Method     string    `json:"method"`

@@ -1,3 +1,5 @@
+// Package auth contains the methods for retrieving the AuthProvider for a
+// given cluster.
 package auth
 
 import (

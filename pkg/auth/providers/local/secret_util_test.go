@@ -14,22 +14,22 @@ const testUsername = "admin"
 const testGroup = "test-group"
 const testHash = "test-hash"
 
-func getTestUser(t *testing.T, name string) *LocalUser {
+func getTestUser(t *testing.T, name string) *User {
 	t.Helper()
-	return &LocalUser{
+	return &User{
 		Username:     name,
 		Groups:       []string{testGroup},
 		PasswordHash: testHash,
 	}
 }
 
-func providerSetUp(t *testing.T) *LocalAuthProvider {
+func providerSetUp(t *testing.T) *AuthProvider {
 	t.Helper()
 	client := getFakeClient(t)
 	cluster := &v1alpha1.VDICluster{}
 	cluster.Name = "test-cluster"
 	cluster.Spec = v1alpha1.VDIClusterSpec{}
-	provider := &LocalAuthProvider{
+	provider := &AuthProvider{
 		client:  client,
 		cluster: cluster,
 	}

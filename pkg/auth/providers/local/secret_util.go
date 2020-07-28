@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-func (a *LocalAuthProvider) getPasswdFile() (io.ReadWriter, error) {
+func (a *AuthProvider) getPasswdFile() (io.ReadWriter, error) {
 	data, err := a.secrets.ReadSecret(passwdKey, false)
 	if err != nil {
 		return nil, err
@@ -14,7 +14,7 @@ func (a *LocalAuthProvider) getPasswdFile() (io.ReadWriter, error) {
 	return bytes.NewBuffer(data), nil
 }
 
-func (a *LocalAuthProvider) updatePasswdFile(rdr io.Reader) error {
+func (a *AuthProvider) updatePasswdFile(rdr io.Reader) error {
 	body, err := ioutil.ReadAll(rdr)
 	if err != nil {
 		return err

@@ -1,10 +1,11 @@
+// The main entrypoint to the kVDI App/API server.
 package main
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"

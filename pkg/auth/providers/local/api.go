@@ -1,13 +1,13 @@
 package local
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 // GetUsers implements AuthProvider and serves a GET /api/users request
-func (a *LocalAuthProvider) GetUsers() ([]*v1.VDIUser, error) {
+func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
 		return nil, err
@@ -28,12 +28,12 @@ func (a *LocalAuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 }
 
 // CreateUser implements AuthProvider and serves a POST /api/users request
-func (a *LocalAuthProvider) CreateUser(req *v1.CreateUserRequest) error {
+func (a *AuthProvider) CreateUser(req *v1.CreateUserRequest) error {
 	passwdHash, err := common.HashPassword(req.Password)
 	if err != nil {
 		return err
 	}
-	user := &LocalUser{
+	user := &User{
 		Username:     req.Username,
 		PasswordHash: passwdHash,
 		Groups:       req.Roles,
@@ -42,7 +42,7 @@ func (a *LocalAuthProvider) CreateUser(req *v1.CreateUserRequest) error {
 }
 
 // GetUser implements AuthProvider and serves a GET /api/users/{user} request
-func (a *LocalAuthProvider) GetUser(username string) (*v1.VDIUser, error) {
+func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 	user, err := a.getUser(username)
 	if err != nil {
 		return nil, err
@@ -60,8 +60,8 @@ func (a *LocalAuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 }
 
 // UpdateUser implements AuthProvider and serves a PUT /api/users/{user} request
-func (a *LocalAuthProvider) UpdateUser(username string, req *v1.UpdateUserRequest) error {
-	user := &LocalUser{Username: username}
+func (a *AuthProvider) UpdateUser(username string, req *v1.UpdateUserRequest) error {
+	user := &User{Username: username}
 	if len(req.Roles) != 0 {
 		user.Groups = req.Roles
 	}
@@ -76,6 +76,6 @@ func (a *LocalAuthProvider) UpdateUser(username string, req *v1.UpdateUserReques
 }
 
 // DeleteUser implements AuthProvider and serves a DELETE /api/users/{user} request
-func (a *LocalAuthProvider) DeleteUser(username string) error {
+func (a *AuthProvider) DeleteUser(username string) error {
 	return a.deleteUser(username)
 }

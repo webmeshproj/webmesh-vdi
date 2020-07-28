@@ -1,3 +1,5 @@
+// Package common contains the core AuthProvider interface and utility functions
+// to be used by the auth providers.
 package common
 
 import (

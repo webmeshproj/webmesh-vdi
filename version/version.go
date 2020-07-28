@@ -1,3 +1,4 @@
+// Package version holds versioning info that is passed in at compilation time.
 package version
 
 var (

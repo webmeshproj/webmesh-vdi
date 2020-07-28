@@ -1,3 +1,5 @@
+// Package desktop contains the controller implementation for Desktop instance
+// related resources.
 package desktop
 
 import (

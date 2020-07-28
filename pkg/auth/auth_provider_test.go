@@ -10,7 +10,7 @@ import (
 
 func TestGetAuthProvider(t *testing.T) {
 	authProvider := GetAuthProvider(&v1alpha1.VDICluster{})
-	if reflect.TypeOf(authProvider) != reflect.TypeOf(&local.LocalAuthProvider{}) {
+	if reflect.TypeOf(authProvider) != reflect.TypeOf(&local.AuthProvider{}) {
 		t.Error("Should have received a local auth provider")
 	}
 }

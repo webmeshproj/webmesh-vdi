@@ -1,3 +1,4 @@
+// Package common defines the core interface for various secrets backends to implement.
 package common
 
 import (

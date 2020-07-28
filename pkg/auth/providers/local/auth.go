@@ -3,13 +3,13 @@ package local
 import (
 	"errors"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 // Authenticate implements AuthProvider and simply checks the provided password
 // in the request against the hash in the file.
-func (a *LocalAuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
+func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
 
 	user := &v1.VDIUser{
 		Name:  req.Username,

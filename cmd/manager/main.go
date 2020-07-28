@@ -1,3 +1,5 @@
+// The main entrypoint to the kVDI Manager for reconcile logic.
+// This entrypoint and its controllers were originally created through the `operator-sdk`.
 package main
 
 import (

@@ -14,7 +14,8 @@ import (
 
 const passwdKey = "passwd"
 
-func (l *LocalAuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
+// Reconcile prepares the resources required to use the local authentication driver.
+func (l *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
 	secretsEngine := secrets.GetSecretEngine(cluster)
 	if err := secretsEngine.Setup(c, cluster); err != nil {
 		return err

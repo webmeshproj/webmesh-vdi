@@ -1,3 +1,5 @@
+// Package vdicluster contains the controller implementation for VDICluster
+// related resources.
 package vdicluster
 
 import (

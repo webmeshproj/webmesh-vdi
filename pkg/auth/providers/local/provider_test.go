@@ -29,7 +29,7 @@ func getFakeClient(t *testing.T) client.Client {
 }
 
 func TestNew(t *testing.T) {
-	if reflect.TypeOf(New()) != reflect.TypeOf(&LocalAuthProvider{}) {
+	if reflect.TypeOf(New()) != reflect.TypeOf(&AuthProvider{}) {
 		t.Error("Someone messed with New")
 	}
 }

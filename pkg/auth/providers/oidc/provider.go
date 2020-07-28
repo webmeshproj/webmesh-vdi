@@ -1,3 +1,4 @@
+// Package oidc contains an AuthProvider implementation backed by OpenID/Oauth.
 package oidc
 
 import (

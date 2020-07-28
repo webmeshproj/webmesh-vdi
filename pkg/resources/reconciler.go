@@ -1,3 +1,4 @@
+// Package resources contains the interfaces for resource reconcilers to implement.
 package resources
 
 import (

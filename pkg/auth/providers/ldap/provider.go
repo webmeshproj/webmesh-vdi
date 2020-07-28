@@ -1,3 +1,5 @@
+// Package ldap contains an AuthProvider implementation that uses a remote
+// LDAP server for authentication.
 package ldap
 
 import (

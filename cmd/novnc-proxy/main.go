@@ -1,3 +1,4 @@
+// The main entrypoint for the novnc-proxy which provides an mTLS websocket server in front of display and audio streams.
 package main
 
 import (

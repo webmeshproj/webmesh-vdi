@@ -1,3 +1,4 @@
+// Package apis contains the Kubernetes and internal APIs used by kVDI.
 package apis
 
 import (

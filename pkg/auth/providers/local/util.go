@@ -1,7 +1,7 @@
 package local
 
 // listUsers builds a map of users to their "groups".
-func (a *LocalAuthProvider) listUsers() ([]*LocalUser, error) {
+func (a *AuthProvider) listUsers() ([]*User, error) {
 	file, err := a.getPasswdFile()
 	if err != nil {
 		return nil, err
@@ -12,7 +12,7 @@ func (a *LocalAuthProvider) listUsers() ([]*LocalUser, error) {
 
 // getUser retrieves a user, their groups, and their password hash
 // from the local file.
-func (a *LocalAuthProvider) getUser(username string) (*LocalUser, error) {
+func (a *AuthProvider) getUser(username string) (*User, error) {
 	file, err := a.getPasswdFile()
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (a *LocalAuthProvider) getUser(username string) (*LocalUser, error) {
 
 // createUser adds a new user to the passwd file. If it already exists an error
 // is returned.
-func (a *LocalAuthProvider) createUser(user *LocalUser) error {
+func (a *AuthProvider) createUser(user *User) error {
 	if err := a.secrets.Lock(); err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (a *LocalAuthProvider) createUser(user *LocalUser) error {
 	return a.updatePasswdFile(newFile)
 }
 
-func (a *LocalAuthProvider) updateUser(user *LocalUser) error {
+func (a *AuthProvider) updateUser(user *User) error {
 	if err := a.secrets.Lock(); err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (a *LocalAuthProvider) updateUser(user *LocalUser) error {
 	return a.updatePasswdFile(newFile)
 }
 
-func (a *LocalAuthProvider) deleteUser(username string) error {
+func (a *AuthProvider) deleteUser(username string) error {
 	if err := a.secrets.Lock(); err != nil {
 		return err
 	}

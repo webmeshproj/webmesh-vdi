@@ -1,3 +1,5 @@
+// Package controller provides the methods through which a manager can setup
+// all the available controllers.
 package controller
 
 import (
