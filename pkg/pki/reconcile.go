@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Reconcile reconciles cmmeta.TLSCAKeythe base PKI infrastructure for the VDICluster.
+// Reconcile reconciles the base PKI infrastructure for the VDICluster.
 func (m *Manager) Reconcile(reqLogger logr.Logger) error {
 	caCert, caKey, err := m.reconcileCA(reqLogger)
 	if err != nil {

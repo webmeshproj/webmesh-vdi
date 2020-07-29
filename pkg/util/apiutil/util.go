@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -78,12 +78,13 @@ func WriteOK(w http.ResponseWriter) {
 
 // GenerateJWT will create a new JWT with the given user object's fields
 // embedded in the claims.
-func GenerateJWT(secret []byte, user *v1.VDIUser, authorized bool) (v1.JWTClaims, string, error) {
+func GenerateJWT(secret []byte, authResult *v1.AuthResult, authorized bool, sessionLength time.Duration) (v1.JWTClaims, string, error) {
 	claims := v1.JWTClaims{
-		User:       user,
+		User:       authResult.User,
 		Authorized: authorized,
+		Renewable:  !authResult.RefreshNotSupported,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(v1.DefaultSessionLength).Unix(),
+			ExpiresAt: time.Now().Add(sessionLength).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 	}

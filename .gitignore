@@ -79,4 +79,6 @@ tags
 _bin
 vendor/
 deploy/charts/kvdi/Chart.yaml
+deploy/charts/kvdi/Chart.lock
+deploy/charts/kvdi/charts
 profile.cov

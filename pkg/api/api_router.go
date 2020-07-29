@@ -19,13 +19,14 @@ func (d *desktopAPI) buildRouter() error {
 	// be renamed.  To be honest, the entire OIDC flow is a bit hacky and should be reworked.
 	r.PathPrefix("/api/login").HandlerFunc(d.PostLogin).Methods("POST", "GET")
 
+	r.PathPrefix("/api/refresh_token").HandlerFunc(d.GetRefreshToken).Methods("GET") // Refresh a user's access token
+
 	// Main HTTP routes
 
 	protected := r.PathPrefix("/api").Subrouter()
 
 	// SUBROUTER ASSUMES /api PREFIX ON ALL ROUTES
 
-	// Authorizing tokens for when MFA is required
 	protected.HandleFunc("/authorize", d.PostAuthorize).Methods("POST") // Verify a user's MFA token
 
 	// Misc routes

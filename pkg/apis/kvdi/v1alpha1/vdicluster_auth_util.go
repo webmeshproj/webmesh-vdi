@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
@@ -70,6 +71,19 @@ func (c *VDICluster) GetAuthK8sSecret() string {
 		}
 	}
 	return c.GetAppSecretsName()
+}
+
+// GetTokenDuration returns the duration for a new token to live. If the duration cannot be
+// parsed, the default is returned
+func (c *VDICluster) GetTokenDuration() time.Duration {
+	if c.Spec.Auth != nil {
+		if c.Spec.Auth.TokenDuration != "" {
+			if duration, err := time.ParseDuration(c.Spec.Auth.TokenDuration); err == nil {
+				return duration
+			}
+		}
+	}
+	return v1.DefaultSessionLength
 }
 
 // GetAdminRole returns an admin role for this VDICluster.

@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"golang.org/x/oauth2"
 )
 
 // Authenticate is called for API authentication requests. It should generate
@@ -31,14 +32,16 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		// user and steal their token.
 		// The client should be generating new state tokens each time, and as long
 		// as the full auth flow is encrypted I _think_ the risk is pretty low.
-		stateKey := getStateSecretKey(req.State)
+		stateKey := getStateSecretKey(req.GetState())
 		existingClaim, err := a.secrets.ReadSecret(stateKey, true)
 		if err != nil {
 			// If the secret is not found it means we have not generated claims yet
 			// for this user. Return the oauth redirect.
 			if errors.IsSecretNotFoundError(err) {
 				return &v1.AuthResult{
-					RedirectURL: a.oauthCfg.AuthCodeURL(req.State),
+					// Use offline access to get a refresh token that we can use to generate new
+					// internal access tokens for the user.
+					RedirectURL: a.oauthCfg.AuthCodeURL(req.GetState(), oauth2.AccessTypeOffline),
 				}, nil
 			}
 			return nil, err
@@ -101,7 +104,10 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		// allows the user in anyway.
 		if a.cluster.AllowNonGroupedReadOnly() {
 			user.Roles = []*v1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
-			return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{User: user})
+			return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{
+				User:                user,
+				RefreshNotSupported: true,
+			})
 		}
 		return nil, errors.New("No groups provided in claims and allow non-grouped users is set to false")
 	}
@@ -138,7 +144,10 @@ RoleLoop:
 
 	// save the claims to the secret backend, they will be retrieved on the next POST
 	// for this state.
-	return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{User: user})
+	return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{
+		User:                user,
+		RefreshNotSupported: true,
+	})
 }
 
 func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1.AuthResult) error {

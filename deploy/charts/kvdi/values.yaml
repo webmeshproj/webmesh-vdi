@@ -77,6 +77,10 @@ vdi:
       allowAnonymous: false
       # vdi.spec.auth.adminSecret -- The secret to store the generated admin password in.
       adminSecret: kvdi-admin-secret
+      # vdi.spec.auth.tokenDuration -- The time-to-live for access tokens issued to users. 
+      # If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing
+      # tokens is currently not supported.
+      tokenDuration: "15m"
       # vdi.spec.auth.localAuth -- Use local-auth for the authentication backend.
       # This is currently the only supported auth provider, however more may come in the future.
       localAuth: {}

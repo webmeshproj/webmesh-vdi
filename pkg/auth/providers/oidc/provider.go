@@ -34,8 +34,14 @@ type AuthProvider struct {
 	oauthCfg oauth2.Config
 	// verifier for verifying id tokens
 	verifier *gooidc.IDTokenVerifier
+	// the url that can be used for exchanging refresh tokens
+	tokenURL string
 	// the context containing our http client
 	ctx context.Context
+	// the client id
+	clientID string
+	// the client secret
+	clientSecret string
 }
 
 // Blank assignment to make sure AuthProvider satisfies the interface.
@@ -65,6 +71,9 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 		return err
 	}
 
+	a.clientID = oidcSecrets[clientIDKey]
+	a.clientSecret = oidcSecrets[clientSecretKey]
+
 	httpClient := &http.Client{}
 	if strings.HasPrefix(a.cluster.GetOIDCIssuerURL(), "https") {
 		caCert, err := a.cluster.GetOIDCCA()
@@ -89,6 +98,8 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 	if err != nil {
 		return err
 	}
+
+	a.tokenURL = provider.Endpoint().TokenURL
 
 	a.oauthCfg = oauth2.Config{
 		ClientID:     oidcSecrets[clientIDKey],

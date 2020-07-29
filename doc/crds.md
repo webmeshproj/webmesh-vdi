@@ -95,14 +95,18 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 <td><p>A secret where a generated admin password will be stored</p></td>
 </tr>
 <tr class="odd">
+<td><code>tokenDuration</code> <em>string</em></td>
+<td><p>How long issued access tokens should be valid for. When using OIDC auth you may want to set this to a higher value (e.g. 8-10h) since the refresh token flow will not be able to lookup a user’s grants from the provider. Defaults to <code>15m</code>.</p></td>
+</tr>
+<tr class="even">
 <td><code>localAuth</code> <em><a href="#LocalAuthConfig">LocalAuthConfig</a></em></td>
 <td><p>Use local auth (secret-backed) authentication</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>ldapAuth</code> <em><a href="#LDAPConfig">LDAPConfig</a></em></td>
 <td><p>Use LDAP for authentication.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>oidcAuth</code> <em><a href="#OIDCConfig">OIDCConfig</a></em></td>
 <td><p>Use OIDC for authentication</p></td>
 </tr>
@@ -687,4 +691,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `e5aef08`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1b15bbd`.*

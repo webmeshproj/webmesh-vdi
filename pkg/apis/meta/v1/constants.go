@@ -1,5 +1,7 @@
 package v1
 
+import "time"
+
 const (
 	// RoleClusterRefLabel marks for which cluster a role belongs
 	RoleClusterRefLabel = "kvdi.io/cluster-ref"
@@ -31,10 +33,12 @@ const (
 	ClientCertificateMountPath = "/etc/kvdi/tls/client"
 	// SecretAssetsMountPath is a mount path for assets backed by secrets
 	SecretAssetsMountPath = "/etc/kvdi/secrets"
-	// JWTSecretKey is where our JWT secret is stored in a secrets backend.
+	// JWTSecretKey is where our JWT secret is stored in the secrets backend.
 	JWTSecretKey = "jwtSecret"
-	// OTPUsersSecretKey is where a mapping of users to their OTP secrets is held in a secrets backend.
+	// OTPUsersSecretKey is where a mapping of users to their OTP secrets is held in the secrets backend.
 	OTPUsersSecretKey = "otpUsers"
+	// RefreshTokensSecretKey is where a mapping of refresh tokens to users is kept in the secrets backend.
+	RefreshTokensSecretKey = "refreshTokens"
 	// WebPort is the port that web services will listen on internally
 	WebPort = 8443
 	// PublicWebPort is the port for the app service
@@ -45,6 +49,9 @@ const (
 	DefaultDisplaySocketAddr = "unix:///var/run/kvdi/display.sock"
 	// DefaultNamespace is the default namespace to provision resources in
 	DefaultNamespace = "default"
+	// DefaultSessionLength is the session length used for setting expiry
+	// times on new user sessions.
+	DefaultSessionLength = time.Duration(15) * time.Minute
 )
 
 // NamespaceAll represents all namespaces
@@ -60,12 +67,12 @@ const (
 	ResourceUsers Resource = "users"
 	// ResourceRoles represents the auth roles in kVDI. This would allow a user
 	// to manipulate policies via the app API.
-	ResourceRoles = "roles"
+	ResourceRoles Resource = "roles"
 	// ResourceTeemplates represents desktop templates in kVDI. Mainly the ability
 	// to launch seessions from them and connect to them.
-	ResourceTemplates = "templates"
+	ResourceTemplates Resource = "templates"
 	// ResourceAll matches all resources
-	ResourceAll = "*"
+	ResourceAll Resource = "*"
 )
 
 // Verb represents an API action
@@ -76,17 +83,17 @@ const (
 	// Create operations
 	VerbCreate Verb = "create"
 	// Read operations
-	VerbRead = "read"
+	VerbRead Verb = "read"
 	// Update operations
-	VerbUpdate = "update"
+	VerbUpdate Verb = "update"
 	// Delete operations
-	VerbDelete = "delete"
+	VerbDelete Verb = "delete"
 	// Use operations
-	VerbUse = "use"
+	VerbUse Verb = "use"
 	// Launch operations
-	VerbLaunch = "launch"
+	VerbLaunch Verb = "launch"
 	// VerbAll matches all actions
-	VerbAll = "*"
+	VerbAll Verb = "*"
 )
 
 // Other defaults that we need to the address of

@@ -1,3 +1,7 @@
+REPO ?= quay.io/tinyzimmer
+NAME ?= kvdi
+VERSION ?= v0.0.9
+
 # includes
 -include hack/Makevars.mk
 -include hack/Manifests.mk
@@ -58,6 +62,7 @@ chart-yaml:
 
 ## make package-chart  # Packages the helm chart.
 package-chart: ${HELM} chart-yaml
+	cd deploy/charts && helm dep up --skip-refresh kvdi
 	cd deploy/charts && helm package kvdi
 
 ## make package-index  # Create the helm repo package index.
@@ -203,12 +208,14 @@ deploy-with-vault:
 ## make deploy-with-ldap       # Deploys kVDI into the kind cluster with an LDAP configuration for the product of `test-ldap`.
 deploy-with-ldap:
 	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-ldap-helm-values.yaml"
+	${KUBECTL_KIND} apply -f hack/glauth-role.yaml
 
 ## make deploy-with-oidc       # Deploys kVDI into the kind cluster with an OIDC configuration for the product of `test-oidc`.
 ##                             # Requires you set kvdi.local to the load balancer IP of the app service while testing in /etc/hosts.
 ##                             # (Default: 172.17.255.1)
 deploy-with-oidc:
 	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-oidc-helm-values.yaml"
+	${KUBECTL_KIND} apply -f hack/oidc-role.yaml
 
 ##
 ## make example-vdi-templates  # Deploys the example VDITemplates into the kind cluster.

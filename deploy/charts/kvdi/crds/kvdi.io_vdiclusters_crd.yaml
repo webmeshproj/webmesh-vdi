@@ -186,6 +186,12 @@ spec:
                         provider.
                       type: boolean
                   type: object
+                tokenDuration:
+                  description: How long issued access tokens should be valid for.
+                    When using OIDC auth you may want to set this to a higher value
+                    (e.g. 8-10h) since the refresh token flow will not be able to
+                    lookup a user's grants from the provider. Defaults to `15m`.
+                  type: string
               type: object
             imagePullSecrets:
               description: Pull secrets to use when pulling container images

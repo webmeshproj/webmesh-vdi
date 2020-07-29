@@ -25,13 +25,13 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		// Create a login request to pass to the auth backend containing just the
 		// raw request object. The backend provider should know how to use it to
 		// return valid claims.
-		loginRequest := &v1.LoginRequest{}
-		loginRequest.SetRequest(r)
+		req := &v1.LoginRequest{}
+		req.SetRequest(r)
 
 		// pass the request object to the auth backend, it should know how to handle a
 		// GET separately. The backend needs to generate claims that it can then
 		// provide on a subsequent POST with the initial state token.
-		_, err := d.auth.Authenticate(loginRequest)
+		_, err := d.auth.Authenticate(req)
 		if err != nil {
 			apiLogger.Error(err, "Failure handling auth callback")
 			apiutil.ReturnAPIError(err, w)
@@ -60,12 +60,14 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		apiLogger.Error(err, "Authentication failed, checking if anonymous is allowed")
 		// Allow anonymous if set in the configuration
-		if req.Username == userAnonymous && d.vdiCluster.AnonymousAllowed() {
-			user := &v1.VDIUser{
-				Name:  userAnonymous,
-				Roles: []*v1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
+		if req.GetUsername() == userAnonymous && d.vdiCluster.AnonymousAllowed() {
+			result := &v1.AuthResult{
+				User: &v1.VDIUser{
+					Name:  userAnonymous,
+					Roles: []*v1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
+				},
 			}
-			d.returnNewJWT(w, user, true)
+			d.returnNewJWT(w, result, true, req.GetState())
 			return
 		}
 		// If it's not an actual credential error, it will still be logged server side,
@@ -79,27 +81,29 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Redirect", result.RedirectURL)
 		apiutil.WriteJSON(map[string]string{
 			"message": "Authentication requires sign-in to an external resource",
+			"state":   req.GetState(),
 		}, w)
 		return
 	}
 
-	d.checkMFAAndReturnJWT(w, result)
+	d.checkMFAAndReturnJWT(w, result, req.GetState())
 }
 
-func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1.AuthResult) {
+func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1.AuthResult, state string) {
 	// check if MFA is configured for the user and that they have verified their secret
 	if _, verified, err := d.mfa.GetUserMFAStatus(result.User.Name); err != nil || !verified {
+		// Return any error that isn't a not found error
 		if err != nil && !errors.IsUserNotFoundError(err) {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}
 		// The user does not require MFA
-		d.returnNewJWT(w, result.User, true)
+		d.returnNewJWT(w, result, true, state)
 		return
 	}
 
 	// the user requires MFA
-	d.returnNewJWT(w, result.User, false)
+	d.returnNewJWT(w, result, false, state)
 }
 
 // Login request

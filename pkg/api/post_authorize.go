@@ -19,6 +19,13 @@ import (
 func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	userSession := apiutil.GetRequestUserSession(r)
 
+	// retrieve the OTP from the request
+	req := apiutil.GetRequestObject(r).(*v1.AuthorizeRequest)
+	if req == nil {
+		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
+		return
+	}
+
 	secret, verified, err := d.mfa.GetUserMFAStatus(userSession.User.Name)
 	if err != nil {
 		if !errors.IsUserNotFoundError(err) {
@@ -27,7 +34,10 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 		}
 		// The user does not require MFA - this shouldn't happen but go ahead
 		// and send back an authorized token
-		d.returnNewJWT(w, userSession.User, true)
+		d.returnNewJWT(w, &v1.AuthResult{
+			User:                userSession.User,
+			RefreshNotSupported: !userSession.Renewable,
+		}, true, req.GetState())
 		return
 	}
 
@@ -38,21 +48,17 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// retrieve the OTP from the request
-	req := apiutil.GetRequestObject(r).(*v1.AuthorizeRequest)
-	if req == nil {
-		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
-		return
-	}
-
 	totp := gotp.NewDefaultTOTP(secret)
 
-	if totp.Now() != req.OTP {
+	if totp.Now() != req.GetOTP() {
 		apiutil.ReturnAPIForbidden(nil, "Invalid MFA Code", w)
 		return
 	}
 
-	d.returnNewJWT(w, userSession.User, true)
+	d.returnNewJWT(w, &v1.AuthResult{
+		User:                userSession.User,
+		RefreshNotSupported: !userSession.Renewable,
+	}, true, req.GetState())
 }
 
 // Request containing a one-time password.

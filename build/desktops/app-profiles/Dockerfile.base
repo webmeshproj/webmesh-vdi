@@ -40,7 +40,7 @@ COPY rootfs /
 # Another alternative is working out a way for the novnc-proxy to execute commands inside 
 # the destop container. I picture a small agent inside a desktop container listening on a 
 # unix socket shared with the sidecar. The same way the VNC works in the desktop images.
-# In this scenario really the extending image would only need to do a for example a,
+# In this scenario really the extending image would only need to do, for example,
 # `RUN apt-get install -y <package>`.
 RUN chmod +x /usr/local/sbin/init && chmod +x /usr/local/sbin/fakegetty \
   && systemctl enable user-init \

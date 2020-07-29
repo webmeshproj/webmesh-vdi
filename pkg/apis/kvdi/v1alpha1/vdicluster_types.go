@@ -47,6 +47,10 @@ type AuthConfig struct {
 	AllowAnonymous bool `json:"allowAnonymous,omitempty"`
 	// A secret where a generated admin password will be stored
 	AdminSecret string `json:"adminSecret,omitempty"`
+	// How long issued access tokens should be valid for. When using OIDC auth
+	// you may want to set this to a higher value (e.g. 8-10h) since the refresh token
+	// flow will not be able to lookup a user's grants from the provider. Defaults to `15m`.
+	TokenDuration string `json:"tokenDuration,omitempty"`
 	// Use local auth (secret-backed) authentication
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 	// Use LDAP for authentication.

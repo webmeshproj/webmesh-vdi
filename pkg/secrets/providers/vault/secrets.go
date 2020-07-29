@@ -62,7 +62,7 @@ func (p *Provider) ReadSecretMap(name string) (map[string][]byte, error) {
 // to the secrets backend. The secret can be read back in the same fashion.
 // This will be the preferred function going forward.
 func (p *Provider) WriteSecretMap(name string, content map[string][]byte) error {
-	if content == nil {
+	if len(content) == 0 {
 		_, err := p.client.Logical().Delete(p.getSecretPath(name))
 		return err
 	}

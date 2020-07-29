@@ -9,14 +9,21 @@ function uuidv4 () {
   })
 }
 
+function getMsUntilExpire (expiresAt) {
+  const now = Math.round((new Date()).getTime() / 1000)
+  return (expiresAt - now) * 1000
+}
+
 export const UserStore = new Vuex.Store({
 
   state: {
     status: '',
     token: localStorage.getItem('token') || '',
+    renewable: localStorage.getItem('renewable') === 'true' || false,
     requiresMFA: false,
     user: {},
-    stateToken: ''
+    stateToken: '',
+    timeout: null
   },
 
   mutations: {
@@ -36,12 +43,14 @@ export const UserStore = new Vuex.Store({
       state.user = user
     },
 
-    auth_success (state, token) {
+    auth_success (state, token, renewable) {
       state.status = 'success'
       state.token = token
       state.stateToken = ''
       state.requiresMFA = false
+      state.renewable = renewable
       localStorage.setItem('token', token)
+      localStorage.setItem('renewable', String(renewable))
       localStorage.removeItem('state')
     },
 
@@ -51,8 +60,13 @@ export const UserStore = new Vuex.Store({
 
     auth_error (state) {
       state.status = 'error'
+      state.user = {}
+      state.token = ''
+      state.stateToken = ''
+      state.renewable = false
       localStorage.removeItem('token')
       localStorage.removeItem('state')
+      localStorage.removeItem('renewable')
     },
 
     logout (state) {
@@ -60,8 +74,14 @@ export const UserStore = new Vuex.Store({
       state.user = {}
       state.token = ''
       state.stateToken = ''
+      state.renewable = false
+      if (state.timeout !== null) {
+        clearTimeout(state.timeout)
+        state.timeout = null
+      }
       localStorage.removeItem('token')
       localStorage.removeItem('state')
+      localStorage.removeItem('renewable')
     }
 
   },
@@ -80,6 +100,9 @@ export const UserStore = new Vuex.Store({
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = this.state.token
         try {
           console.log('Retrieving user information')
+          if (this.getters.renewable) {
+            await this.dispatch('refreshToken')
+          }
           const res = await Vue.prototype.$axios.get('/api/whoami')
           commit('auth_got_user', res.data)
           console.log(`Resuming session as ${res.data.name}`)
@@ -97,17 +120,32 @@ export const UserStore = new Vuex.Store({
         await commit('auth_request')
         credentials.state = state.stateToken
         const res = await axios({ url: '/api/login', data: credentials, method: 'POST' })
+
+        const resState = res.data.state
+        if (state.stateToken !== resState) {
+          console.log('State token was malformed during request flow!')
+          commit('auth_error')
+          throw new Error('State token was malformed during request flow!')
+        }
+
         if (res.headers['x-redirect']) {
           window.location = res.headers['x-redirect']
           return
         }
+
         const token = res.data.token
         const user = res.data.user
         const authorized = res.data.authorized
+        const expiresAt = res.data.expiresAt
+        const renewable = res.data.renewable
+
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
         commit('auth_got_user', user)
         if (authorized) {
-          commit('auth_success', token)
+          commit('auth_success', token, renewable)
+          if (renewable) {
+            state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
+          }
           return
         }
         commit('auth_need_mfa')
@@ -117,13 +155,55 @@ export const UserStore = new Vuex.Store({
       }
     },
 
-    async authorize ({ commit }, otp) {
-      const res = await axios({ url: '/api/authorize', data: { otp: otp }, method: 'POST' })
+    async refreshToken ({ commit, state }) {
+      console.log('Refreshing access token')
+      try {
+        const res = await axios({ url: '/api/refresh_token', method: 'GET' })
+
+        const token = res.data.token
+        const expiresAt = res.data.expiresAt
+        const renewable = res.data.renewable
+
+        Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
+        if (renewable) {
+          state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
+        }
+        commit('auth_success', token, renewable)
+      } catch (err) {
+        commit('auth_error')
+        let error
+        if (err.response !== undefined && err.response.data !== undefined) {
+          error = err.response.data.error
+        } else {
+          error = err.message
+        }
+        Vue.prototype.$q.notify({
+          color: 'red-4',
+          textColor: 'black',
+          icon: 'error',
+          message: error
+        })
+      }
+    },
+
+    async authorize ({ commit, state }, otp) {
+      const res = await axios({ url: '/api/authorize', data: { otp: otp, state: state.stateToken }, method: 'POST' })
+      const resState = res.data.state
+      if (state.stateToken !== resState) {
+        console.log('State token was malformed during request flow!')
+        commit('auth_error')
+        throw new Error('State token was malformed during request flow!')
+      }
       const token = res.data.token
       const authorized = res.data.authorized
+      const expiresAt = res.data.expiresAt
+      const renewable = res.data.renewable
       Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
       if (authorized) {
-        commit('auth_success', token)
+        commit('auth_success', token, renewable)
+        if (renewable) {
+          state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
+        }
       }
     },
 
@@ -146,7 +226,9 @@ export const UserStore = new Vuex.Store({
     requiresMFA: state => state.requiresMFA,
     authStatus: state => state.status,
     user: state => state.user,
-    token: state => state.token
+    token: state => state.token,
+    stateToken: state => state.stateToken,
+    renewable: state => state.renewable
   }
 
 })

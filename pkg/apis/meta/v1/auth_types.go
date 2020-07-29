@@ -3,7 +3,6 @@ package v1
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -46,6 +45,11 @@ type AuthResult struct {
 	// The provider can populate this field to signify a redirect is required,
 	// e.g. for OIDC.
 	RedirectURL string
+	// In the case of OIDC, the refresh tokens cannot be used. Because when the user
+	// tries to use them, there is no way to query the provider for the user's information
+	// without initializing a new auth flow. For now, the provider can set this to false to
+	// signal to the server that a refresh is not possible.
+	RefreshNotSupported bool
 }
 
 // JWTClaims represents the claims used when issuing JWT tokens.
@@ -54,15 +58,11 @@ type JWTClaims struct {
 	User *VDIUser `json:"user"`
 	// Whether the user is fully authorized
 	Authorized bool `json:"authorized"`
+	// Whether a refresh token was issued with the claims
+	Renewable bool `json:"renewable"`
 	// The standard JWT claims
 	jwt.StandardClaims
 }
-
-const (
-	// DefaultSessionLength is the session length used for setting expiry
-	// times on new user sessions.
-	DefaultSessionLength = time.Duration(8) * time.Hour
-)
 
 // VDIUser represents a user in kVDI. It is the auth providers responsibility
 // to take an authentication request and generate a JWT with claims defining

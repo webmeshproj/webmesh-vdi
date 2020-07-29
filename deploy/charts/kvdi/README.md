@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.8`
+Current chart version is `v0.0.9`
 
 
 
@@ -67,6 +67,7 @@ There is an example for LDAP authentication in the same folder.
 | vdi.spec.auth.adminSecret | string | `"kvdi-admin-secret"` | The secret to store the generated admin password in. |
 | vdi.spec.auth.allowAnonymous | bool | `false` | Allow anonymous users to launch and use desktops. |
 | vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is currently the only supported auth provider, however more may come in the future. |
+| vdi.spec.auth.tokenDuration | string | `"15m"` | The time-to-live for access tokens issued to users.  If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing tokens is currently not supported. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
 | vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. This is the default if no other configuration is provided. For now, see the API reference for what to use in place of these values if using a different backend. |
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
