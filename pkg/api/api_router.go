@@ -13,6 +13,10 @@ func (d *desktopAPI) buildRouter() error {
 	// Setup the decoder
 	r.Use(DecodeRequest)
 
+	// Readiness/liveness probes
+	r.PathPrefix("/api/healthz").HandlerFunc(d.Healthz).Methods("GET")
+	r.PathPrefix("/api/readyz").HandlerFunc(d.Readyz).Methods("GET")
+
 	// Login route is not protected since it generates the tokens for which a user
 	// can use the protected routes.
 	// TODO: Route accepts GET also to support the oidc flow. Method should probably
@@ -30,11 +34,10 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/authorize", d.PostAuthorize).Methods("POST") // Verify a user's MFA token
 
 	// Misc routes
-	protected.HandleFunc("/logout", d.PostLogout).Methods("POST")              // Cleans up user's desktops
-	protected.HandleFunc("/whoami", d.GetWhoAmI).Methods("GET")                // Convenience route for decoding JWTs
-	protected.HandleFunc("/config", d.GetConfig).Methods("GET")                // Retrieve server configuration
-	protected.HandleFunc("/config/reload", d.PostReloadConfig).Methods("POST") // Reload the server configuration, this should become a watcher
-	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")        // Retrieve a list of available namespaces for the requesting user
+	protected.HandleFunc("/logout", d.PostLogout).Methods("POST")       // Cleans up user's desktops
+	protected.HandleFunc("/whoami", d.GetWhoAmI).Methods("GET")         // Convenience route for decoding JWTs
+	protected.HandleFunc("/config", d.GetConfig).Methods("GET")         // Retrieve server configuration
+	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET") // Retrieve a list of available namespaces for the requesting user
 
 	// User operations
 	protected.HandleFunc("/users", d.GetUsers).Methods("GET")                           // Retrieve a list of all users

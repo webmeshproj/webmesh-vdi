@@ -64,7 +64,6 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	}, w)
 }
 
-// newDesktopForRequest builds a new Desktop object from the request parameters.
 func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{

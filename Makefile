@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= v0.0.9
+VERSION ?= v0.0.10
 
 # includes
 -include hack/Makevars.mk
@@ -62,7 +62,6 @@ chart-yaml:
 
 ## make package-chart  # Packages the helm chart.
 package-chart: ${HELM} chart-yaml
-	cd deploy/charts && helm dep up --skip-refresh kvdi
 	cd deploy/charts && helm package kvdi
 
 ## make package-index  # Create the helm repo package index.

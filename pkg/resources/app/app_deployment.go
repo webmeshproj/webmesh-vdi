@@ -9,6 +9,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
@@ -84,6 +85,15 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 								{
 									Name:          "web",
 									ContainerPort: v1.WebPort,
+								},
+							},
+							ReadinessProbe: &corev1.Probe{
+								Handler: corev1.Handler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path:   "/api/readyz",
+										Port:   intstr.FromInt(v1.WebPort),
+										Scheme: "HTTPS",
+									},
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{

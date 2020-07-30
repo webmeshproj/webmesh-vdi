@@ -23,6 +23,21 @@ func (d *desktopAPI) PostLogout(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
+	refreshToken, err := r.Cookie(RefreshTokenCookie)
+	if err == nil {
+		// Revoke the token and remove the cookie
+		// Lookup will fetch and clear the token from the db.
+		if _, err := d.lookupRefreshToken(refreshToken.Value); err != nil {
+			apiLogger.Error(err, "Error while revoking refresh token, garbage may be left in the db")
+		}
+		// Set the cookie to an empty value
+		http.SetCookie(w, &http.Cookie{
+			Name:     RefreshTokenCookie,
+			Value:    "",
+			HttpOnly: true,
+			Secure:   true,
+		})
+	}
 	apiutil.WriteOK(w)
 }
 

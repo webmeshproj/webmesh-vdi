@@ -11,7 +11,7 @@ GOLANGCI_LINT ?= _bin/golangci-lint
 GOLANGCI_DOWNLOAD_URL ?= https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
 
 # Operator SDK options
-SDK_VERSION ?= v0.16.0
+SDK_VERSION ?= v0.19.2
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)

@@ -23,6 +23,24 @@ func WriteOrLogError(out []byte, w http.ResponseWriter) {
 	}
 }
 
+// ReturnAPIErrors returns a BadRequest status code with a json encoded list
+// of errors.
+func ReturnAPIErrors(errs []error, w http.ResponseWriter) {
+	w.WriteHeader(http.StatusBadRequest)
+	out := make([]string, 0)
+	for _, err := range errs {
+		out = append(out, err.Error())
+	}
+	jout, err := json.Marshal(map[string][]string{
+		"errors": out,
+	})
+	if err != nil {
+		fmt.Println("Failed to marshal errors to json:", err)
+		jout = []byte(`{"error": "Multiple errors happened while processing the request"}`)
+	}
+	WriteOrLogError(jout, w)
+}
+
 // ReturnAPIError returns a BadRequest status code with a json encoded error
 // message.
 func ReturnAPIError(err error, w http.ResponseWriter) {
