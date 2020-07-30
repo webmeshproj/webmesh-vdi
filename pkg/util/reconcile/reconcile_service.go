@@ -12,8 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcileService will reconcile a provided service spec with the cluster.
-func ReconcileService(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
+// Service will reconcile a provided service spec with the cluster.
+func Service(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&svc.ObjectMeta, svc); err != nil {
 		return err
 	}

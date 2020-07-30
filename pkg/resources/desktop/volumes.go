@@ -31,7 +31,7 @@ func (f *Reconciler) reconcileVolumes(reqLogger logr.Logger, cluster *v1alpha1.V
 		}
 	}
 	pvc := newPVCForUser(cluster, instance, existingVol)
-	return reconcile.ReconcilePersistentVolumeClaim(reqLogger, f.client, pvc)
+	return reconcile.PersistentVolumeClaim(reqLogger, f.client, pvc)
 }
 
 func (f *Reconciler) reconcileUserdataMapping(reqLogger logr.Logger, cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) error {

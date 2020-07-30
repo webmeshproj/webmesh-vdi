@@ -12,11 +12,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcilePod will reconcile a given pod definition with the cluster. If a pod
+// Pod will reconcile a given pod definition with the cluster. If a pod
 // with the same name exists but has a different configuration, the pod will be
 // deleted and requeued. If the found pod has a deletion timestamp (e.g. it is still terminating)
 // then the request will also be requued.
-func ReconcilePod(reqLogger logr.Logger, c client.Client, pod *corev1.Pod) (bool, error) {
+func Pod(reqLogger logr.Logger, c client.Client, pod *corev1.Pod) (bool, error) {
 	if err := k8sutil.SetCreationSpecAnnotation(&pod.ObjectMeta, pod); err != nil {
 		return false, err
 	}

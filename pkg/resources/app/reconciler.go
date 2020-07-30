@@ -63,11 +63,11 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// Reconcile the built-in roles.
-	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
+	if err := reconcile.VDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
 		return err
 	}
 
-	if err := reconcile.ReconcileVDIRole(reqLogger, f.client, instance.GetLaunchTemplatesRole()); err != nil {
+	if err := reconcile.VDIRole(reqLogger, f.client, instance.GetLaunchTemplatesRole()); err != nil {
 		return err
 	}
 
@@ -81,13 +81,13 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// Service account and cluster role/binding
-	if err := reconcile.ReconcileServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
+	if err := reconcile.ServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
 		return err
 	}
-	if err := reconcile.ReconcileClusterRole(reqLogger, f.client, newAppClusterRoleForCR(instance)); err != nil {
+	if err := reconcile.ClusterRole(reqLogger, f.client, newAppClusterRoleForCR(instance)); err != nil {
 		return err
 	}
-	if err := reconcile.ReconcileClusterRoleBinding(reqLogger, f.client, newRoleBindingsForCR(instance)); err != nil {
+	if err := reconcile.ClusterRoleBinding(reqLogger, f.client, newRoleBindingsForCR(instance)); err != nil {
 		return err
 	}
 
@@ -98,10 +98,10 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// App deployment and service
-	if err := reconcile.ReconcileDeployment(reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
+	if err := reconcile.Deployment(reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
 		return err
 	}
-	if err := reconcile.ReconcileService(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
+	if err := reconcile.Service(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
 		return err
 	}
 

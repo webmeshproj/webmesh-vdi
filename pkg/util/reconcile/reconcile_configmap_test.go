@@ -20,17 +20,17 @@ func newFakeConfigMap() *corev1.ConfigMap {
 func TestReconcileConfigMap(t *testing.T) {
 	c := getFakeClient(t)
 	cm := newFakeConfigMap()
-	if err := ReconcileConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 	// should be idempotent
 	cm = newFakeConfigMap()
-	if err := ReconcileConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 
 	// another would trigger update (object metadata has changed)
-	if err := ReconcileConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 

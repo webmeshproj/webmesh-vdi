@@ -19,10 +19,10 @@ func newFakeSvcAccount() *corev1.ServiceAccount {
 
 func TestReconcileSvcAccount(t *testing.T) {
 	c := getFakeClient(t)
-	if err := ReconcileServiceAccount(testLogger, c, newFakeSvcAccount()); err != nil {
+	if err := ServiceAccount(testLogger, c, newFakeSvcAccount()); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := ReconcileServiceAccount(testLogger, c, newFakeSvcAccount()); err != nil {
+	if err := ServiceAccount(testLogger, c, newFakeSvcAccount()); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 }
@@ -39,10 +39,10 @@ func newFakeClusterRole() *rbacv1.ClusterRole {
 func TestReconcileClusterRole(t *testing.T) {
 	c := getFakeClient(t)
 	role := newFakeClusterRole()
-	if err := ReconcileClusterRole(testLogger, c, role); err != nil {
+	if err := ClusterRole(testLogger, c, role); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := ReconcileClusterRole(testLogger, c, role); err != nil {
+	if err := ClusterRole(testLogger, c, role); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 }
@@ -59,10 +59,10 @@ func newFakeClusterRoleBinding() *rbacv1.ClusterRoleBinding {
 func TestReconcileClusterRoleBinding(t *testing.T) {
 	c := getFakeClient(t)
 	role := newFakeClusterRoleBinding()
-	if err := ReconcileClusterRoleBinding(testLogger, c, role); err != nil {
+	if err := ClusterRoleBinding(testLogger, c, role); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := ReconcileClusterRoleBinding(testLogger, c, role); err != nil {
+	if err := ClusterRoleBinding(testLogger, c, role); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 }

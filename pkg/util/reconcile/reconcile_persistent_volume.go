@@ -11,9 +11,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcilePersistentVolumeClaim will reconcile a persistent volume with the kubernetes
+// PersistentVolumeClaim will reconcile a persistent volume with the kubernetes
 // cluster. If it exists, we do nothing for now.
-func ReconcilePersistentVolumeClaim(reqLogger logr.Logger, c client.Client, pvc *corev1.PersistentVolumeClaim) error {
+func PersistentVolumeClaim(reqLogger logr.Logger, c client.Client, pvc *corev1.PersistentVolumeClaim) error {
 	// Set the creation spec anyway so it's there if we need it in the future
 	if err := k8sutil.SetCreationSpecAnnotation(&pvc.ObjectMeta, pvc); err != nil {
 		return err

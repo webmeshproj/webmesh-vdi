@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcileServiceAccount will ensure a service account in the cluster
-func ReconcileServiceAccount(reqLogger logr.Logger, c client.Client, acct *corev1.ServiceAccount) error {
+// ServiceAccount will ensure a service account in the cluster
+func ServiceAccount(reqLogger logr.Logger, c client.Client, acct *corev1.ServiceAccount) error {
 	found := &corev1.ServiceAccount{}
 	if err := c.Get(context.TODO(), types.NamespacedName{Name: acct.Name, Namespace: acct.Namespace}, found); err != nil {
 		// Return API error
@@ -31,8 +31,8 @@ func ReconcileServiceAccount(reqLogger logr.Logger, c client.Client, acct *corev
 	return nil
 }
 
-// ReconcileClusterRole will ensure a ClusterRole with the cluster.
-func ReconcileClusterRole(reqLogger logr.Logger, c client.Client, role *rbacv1.ClusterRole) error {
+// ClusterRole will ensure a ClusterRole with the cluster.
+func ClusterRole(reqLogger logr.Logger, c client.Client, role *rbacv1.ClusterRole) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&role.ObjectMeta, role); err != nil {
 		return err
 	}
@@ -65,8 +65,8 @@ func ReconcileClusterRole(reqLogger logr.Logger, c client.Client, role *rbacv1.C
 	return nil
 }
 
-// ReconcileClusterRoleBinding will ensure a cluster role binding.
-func ReconcileClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBinding *rbacv1.ClusterRoleBinding) error {
+// ClusterRoleBinding will ensure a cluster role binding.
+func ClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBinding *rbacv1.ClusterRoleBinding) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&roleBinding.ObjectMeta, roleBinding); err != nil {
 		return err
 	}
@@ -100,7 +100,8 @@ func ReconcileClusterRoleBinding(reqLogger logr.Logger, c client.Client, roleBin
 	return nil
 }
 
-func ReconcileVDIRole(reqLogger logr.Logger, c client.Client, role *v1alpha1.VDIRole) error {
+// VDIRole reconciles a VDIRole with the cluster.
+func VDIRole(reqLogger logr.Logger, c client.Client, role *v1alpha1.VDIRole) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&role.ObjectMeta, role); err != nil {
 		return err
 	}

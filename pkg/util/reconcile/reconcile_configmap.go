@@ -11,8 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcileConfigMap will reconcile a provided configmap with the cluster.
-func ReconcileConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
+// ConfigMap reconciles a provided configmap with the cluster.
+func ConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&cm.ObjectMeta, cm); err != nil {
 		return err
 	}

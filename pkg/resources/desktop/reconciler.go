@@ -60,7 +60,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	}
 
 	// create a service in front of the desktop (so we can pre-allocate an IP that resolves to the pod)
-	if err := reconcile.ReconcileService(reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
+	if err := reconcile.Service(reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	}
 
 	// ensure the pod
-	if _, err := reconcile.ReconcilePod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance)); err != nil {
+	if _, err := reconcile.Pod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance)); err != nil {
 		return err
 	}
 

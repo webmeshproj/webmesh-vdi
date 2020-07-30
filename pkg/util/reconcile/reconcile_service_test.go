@@ -22,13 +22,13 @@ func newFakeService() *corev1.Service {
 func TestReconcileService(t *testing.T) {
 	c := getFakeClient(t)
 	svc := newFakeService()
-	if err := ReconcileService(testLogger, c, svc); err != nil {
+	if err := Service(testLogger, c, svc); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := ReconcileService(testLogger, c, newFakeService()); err != nil {
+	if err := Service(testLogger, c, newFakeService()); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := ReconcileService(testLogger, c, svc); err == nil {
+	if err := Service(testLogger, c, svc); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)

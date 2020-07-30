@@ -22,11 +22,11 @@ func newFakePVC() *corev1.PersistentVolumeClaim {
 func TestReconcilePersistentVolumeClaim(t *testing.T) {
 	c := getFakeClient(t)
 	pvc := newFakePVC()
-	if err := ReconcilePersistentVolumeClaim(testLogger, c, pvc); err != nil {
+	if err := PersistentVolumeClaim(testLogger, c, pvc); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 	// Should be idempotent
-	if err := ReconcilePersistentVolumeClaim(testLogger, c, pvc); err != nil {
+	if err := PersistentVolumeClaim(testLogger, c, pvc); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 	if err := c.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, pvc); err != nil {

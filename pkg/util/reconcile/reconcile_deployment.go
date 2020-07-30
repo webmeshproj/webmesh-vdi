@@ -13,9 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReconcileDeployment reconciles a deployment with the cluster and opionally
+// Deployment reconciles a deployment with the cluster and opionally
 // returns a requeue error if it isn't fully running yet.
-func ReconcileDeployment(reqLogger logr.Logger, c client.Client, deployment *appsv1.Deployment, wait bool) error {
+func Deployment(reqLogger logr.Logger, c client.Client, deployment *appsv1.Deployment, wait bool) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&deployment.ObjectMeta, deployment); err != nil {
 		return err
 	}

@@ -24,13 +24,13 @@ func TestReconcilePod(t *testing.T) {
 	c := getFakeClient(t)
 	pod := newFakePod()
 
-	if created, err := ReconcilePod(testLogger, c, pod); err != nil {
+	if created, err := Pod(testLogger, c, pod); err != nil {
 		t.Error("Expected no error, got:", err)
 	} else if !created {
 		t.Error("Expected created to be true")
 	}
 
-	if created, err := ReconcilePod(testLogger, c, newFakePod()); err != nil {
+	if created, err := Pod(testLogger, c, newFakePod()); err != nil {
 		t.Error("Expected no error, got:", err)
 	} else if created {
 		t.Error("Expected created to be false")
@@ -40,7 +40,7 @@ func TestReconcilePod(t *testing.T) {
 	pod.SetDeletionTimestamp(&now)
 	c.Update(context.TODO(), pod)
 
-	if _, err := ReconcilePod(testLogger, c, newFakePod()); err == nil {
+	if _, err := Pod(testLogger, c, newFakePod()); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
@@ -50,7 +50,7 @@ func TestReconcilePod(t *testing.T) {
 	c.Update(context.TODO(), pod)
 
 	// expect delete and requeue for changed pod
-	if _, err := ReconcilePod(testLogger, c, pod); err == nil {
+	if _, err := Pod(testLogger, c, pod); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
