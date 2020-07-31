@@ -41,7 +41,7 @@ func NewServerTLSConfig() (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
-// NewServerTLSConfig returns a new client TLS configuration for use with
+// NewClientTLSConfig returns a new client TLS configuration for use with
 // connecting to a server requiring mTLS.
 func NewClientTLSConfig() (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(ClientKeypair())
@@ -67,7 +67,7 @@ func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls
 	if err := c.Get(context.TODO(), nn, secret); err != nil {
 		return nil, err
 	}
-	for _, key := range []string{"ca.crt", corev1.TLSCertKey, corev1.TLSPrivateKeyKey} {
+	for _, key := range []string{v1.CACertKey, corev1.TLSCertKey, corev1.TLSPrivateKeyKey} {
 		if _, ok := secret.Data[key]; !ok {
 			return nil, fmt.Errorf("%s missing from TLS secret", key)
 		}
@@ -77,7 +77,7 @@ func NewClientTLSConfigFromSecret(c client.Client, name, namespace string) (*tls
 		return nil, err
 	}
 	caCertPool := x509.NewCertPool()
-	if ok := caCertPool.AppendCertsFromPEM(secret.Data["ca.crt"]); !ok {
+	if ok := caCertPool.AppendCertsFromPEM(secret.Data[v1.CACertKey]); !ok {
 		return nil, errors.New("Failed to create CA certificate pool")
 	}
 	return &tls.Config{
@@ -102,7 +102,7 @@ func ClientKeypair() (string, string) {
 // getCACertPool creates a CA Certificate pool from the CA found at the given
 // mount point.
 func getCACertPool(mountPath string) (*x509.CertPool, error) {
-	caCertFile := filepath.Join(mountPath, "ca.crt")
+	caCertFile := filepath.Join(mountPath, v1.CACertKey)
 	caCert, err := ioutil.ReadFile(caCertFile)
 	if err != nil {
 		return nil, err

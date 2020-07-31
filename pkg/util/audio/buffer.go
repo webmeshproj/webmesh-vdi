@@ -40,6 +40,7 @@ const (
 // Buffer provides a Reader interface for proxying audio data to a websocket
 // connection
 type Buffer struct {
+	exec       func(string, ...string) *exec.Cmd
 	cmd        *exec.Cmd
 	buffer     io.ReadCloser
 	stderr     bytes.Buffer
@@ -54,6 +55,7 @@ var _ io.ReadCloser = &Buffer{}
 // NewBuffer returns a new Buffer.
 func NewBuffer(logger logr.Logger, userID string, bufferType BufferType) *Buffer {
 	return &Buffer{
+		exec:       exec.Command,
 		userID:     userID,
 		logger:     logger,
 		bufferType: bufferType,
@@ -95,19 +97,24 @@ func (a *Buffer) buildPaRecPipeline(codec Codec) string {
 	return pipeline
 }
 
-// Start starts the gstreamer process
-func (a *Buffer) Start(codec Codec) error {
-
+func (a *Buffer) buildPipeline(codec Codec) string {
 	var pipeline string
 	if a.bufferType == BufferTypeGST {
 		pipeline = a.buildGSTPipeline(codec)
 	} else if a.bufferType == BufferTypePARec {
 		pipeline = a.buildPaRecPipeline(codec)
 	}
+	return pipeline
+}
+
+// Start starts the gstreamer process
+func (a *Buffer) Start(codec Codec) error {
+
+	pipeline := a.buildPipeline(codec)
 
 	a.logger.Info(fmt.Sprintf("Running command: %s", pipeline))
 
-	a.cmd = exec.Command("/bin/sh", "-c", pipeline)
+	a.cmd = a.exec("/bin/sh", "-c", pipeline)
 
 	var err error
 
@@ -141,6 +148,9 @@ func (a *Buffer) Wait() error {
 
 // Error returns any errors that ocurred during the streaming process.
 func (a *Buffer) Error() error {
+	if a.cmd.ProcessState == nil {
+		return nil
+	}
 	if a.cmd.ProcessState.Exited() {
 		if a.cmd.ProcessState.ExitCode() != 0 {
 			return errors.New(a.stderr.String())
@@ -149,8 +159,10 @@ func (a *Buffer) Error() error {
 	return nil
 }
 
-// Stderr returns any output from stderr on the gstreamer process.
-func (a *Buffer) Stderr() string { return a.stderr.String() }
+// Stderr returns any output from stderr on the streaming process.
+func (a *Buffer) Stderr() string {
+	return a.stderr.String()
+}
 
 // Read implements ReadCloser and returns data from the audio buffer.
 func (a *Buffer) Read(p []byte) (int, error) {
@@ -158,7 +170,9 @@ func (a *Buffer) Read(p []byte) (int, error) {
 }
 
 // IsClosed returns true if the buffer is closed.
-func (a *Buffer) IsClosed() bool { return a.closed }
+func (a *Buffer) IsClosed() bool {
+	return a.closed || a.cmd.ProcessState.Exited()
+}
 
 // Close kills the gstreamer process.
 func (a *Buffer) Close() error {

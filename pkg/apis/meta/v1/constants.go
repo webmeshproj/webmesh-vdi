@@ -52,6 +52,8 @@ const (
 	// DefaultSessionLength is the session length used for setting expiry
 	// times on new user sessions.
 	DefaultSessionLength = time.Duration(15) * time.Minute
+	// CACertKey is the key where the CA certificate is placed in TLS secrets.
+	CACertKey = "ca.crt"
 )
 
 // NamespaceAll represents all namespaces

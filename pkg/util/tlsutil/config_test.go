@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,7 +29,7 @@ func writeTLSCerts(t *testing.T) (string, func(), error) {
 		clean()
 		return "", nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, "ca.crt"), testCA, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(dir, v1.CACertKey), testCA, 0644); err != nil {
 		clean()
 		return "", nil, err
 	}
@@ -84,7 +85,7 @@ func TestNewClientTLSConfig(t *testing.T) {
 	}
 
 	// cause the CA error
-	os.Remove(filepath.Join(clientCertMountPath, "ca.crt"))
+	os.Remove(filepath.Join(clientCertMountPath, v1.CACertKey))
 	if _, err := NewClientTLSConfig(); err == nil {
 		t.Error("Expected error for missing ca certs")
 	}
@@ -102,7 +103,7 @@ func TestNewClientTLSConfigFromSecret(t *testing.T) {
 	secret.Name = "test-secret"
 	secret.Namespace = "test-namespace"
 	secret.Data = map[string][]byte{
-		"ca.crt":                testCA,
+		v1.CACertKey:            testCA,
 		corev1.TLSCertKey:       testCert,
 		corev1.TLSPrivateKeyKey: testKey,
 	}
@@ -122,7 +123,7 @@ func TestNewClientTLSConfigFromSecret(t *testing.T) {
 		t.Error("Expected error for invalid cert, got nil")
 	}
 
-	delete(secret.Data, "ca.crt")
+	delete(secret.Data, v1.CACertKey)
 	c.Update(context.TODO(), secret)
 	if _, err := NewClientTLSConfigFromSecret(c, "test-secret", "test-namespace"); err == nil {
 		t.Error("Expected error for missing secret key, got nil")

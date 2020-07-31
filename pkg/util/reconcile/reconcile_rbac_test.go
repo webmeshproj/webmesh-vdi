@@ -3,6 +3,7 @@ package reconcile
 import (
 	"testing"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,6 +64,25 @@ func TestReconcileClusterRoleBinding(t *testing.T) {
 		t.Error("Expected no error, got:", err)
 	}
 	if err := ClusterRoleBinding(testLogger, c, role); err != nil {
+		t.Error("Expected no error, got:", err)
+	}
+}
+
+func newFakeVDIRole() *v1alpha1.VDIRole {
+	return &v1alpha1.VDIRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "fake-cluster-role-binding",
+		},
+	}
+}
+
+func TestReconcileVDIRole(t *testing.T) {
+	c := getFakeClient(t)
+	role := newFakeVDIRole()
+	if err := VDIRole(testLogger, c, role); err != nil {
+		t.Error("Expected no error, got:", err)
+	}
+	if err := VDIRole(testLogger, c, role); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 }

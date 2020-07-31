@@ -98,9 +98,12 @@ lint: ${GOLANGCI_LINT}
 	${GOLANGCI_LINT} run -v --timeout 300s
 
 ## make test   # Run unit tests
-TEST_FLAGS ?= -v -cover -race -coverpkg=./... -coverprofile=profile.cov
+GO_PACKAGES ?= $(shell go list ./... | grep -v 'pkg/apis' | xargs | sed -e 's/ /,/g')
+TEST_FLAGS ?= -v -cover -coverpkg="$(GO_PACKAGES)" -coverprofile=profile.cov 
 test:
-	go test ${TEST_FLAGS} ./...
+	@go test ${TEST_FLAGS} ./... \
+		 | sed ''/PASS/s//$$(printf "\033[32mPASS\033[0m")/'' \
+		 | sed ''/FAIL/s//$$(printf "\033[31mFAIL\033[0m")/''
 	go tool cover -func profile.cov
 	rm profile.cov
 

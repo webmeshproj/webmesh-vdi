@@ -3,17 +3,18 @@ package pki
 import (
 	"crypto/x509"
 
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // default keySize of 4096
 const keySize = 4096
 
-// Secrets key values
+// Secrets key values redeclared locally.
 const (
 	privateKeySecretKey  = corev1.TLSPrivateKeyKey
 	certificateSecretKey = corev1.TLSCertKey
-	caCertSecretKey      = "ca.crt"
+	caCertSecretKey      = v1.CACertKey
 )
 
 // allTLSKeys used to check presence of all keys in a secret

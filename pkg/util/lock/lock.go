@@ -48,6 +48,15 @@ func New(c client.Client, name string, timeout time.Duration) *Lock {
 	}
 }
 
+// GetName returns the name of this lock.
+func (l *Lock) GetName() string { return l.name }
+
+// GetNamespace returns the namespace of this lock.
+func (l *Lock) GetNamespace() string { return l.namespace }
+
+// GetTimeout returns the timeout for this lock.
+func (l *Lock) GetTimeout() time.Duration { return l.timeout }
+
 // Acquire will attempt to acquire the lock, retrying until the lock is either
 // acquired or the timeout is reached.
 func (l *Lock) Acquire() error {
@@ -85,17 +94,22 @@ func (l *Lock) Acquire() error {
 				lockLogger.Error(err, "Error looking up existing lock, could not acquire lock")
 				return err
 			}
-			if expiresAt, ok := existingLock.Data[expireKey]; !ok {
+
+			expiresAt, ok := existingLock.Data[expireKey]
+			if !ok {
 				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
 					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
 					return err
 				}
-			} else if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err != nil {
+				continue
+			}
+			if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
 				if time.Now().After(time.Unix(expireTime, 0)) {
 					if err := l.releaseStaleLock(ctx, existingLock); err != nil {
 						lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
 						return err
 					}
+					continue
 				}
 			}
 

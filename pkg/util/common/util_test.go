@@ -5,7 +5,11 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var testLogger = logf.Log.WithName("test")
 
 func TestBoolPointer(t *testing.T) {
 	if !*BoolPointer(true) {
@@ -13,6 +17,12 @@ func TestBoolPointer(t *testing.T) {
 	}
 	if *BoolPointer(false) {
 		t.Error("Expected pointer to false")
+	}
+}
+
+func TestInt32Ptr(t *testing.T) {
+	if *Int32Ptr(10) != 10 {
+		t.Error("Expected pointer to 10")
 	}
 }
 
@@ -130,4 +140,8 @@ func TestPasswordFunctions(t *testing.T) {
 	if _, err = HashPassword(passw); err == nil {
 		t.Error("Expected error for using invalid cost")
 	}
+}
+
+func TestPrintVersion(t *testing.T) {
+	PrintVersion(testLogger)
 }

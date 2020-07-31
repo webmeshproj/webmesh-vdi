@@ -53,6 +53,7 @@ func Deployment(reqLogger logr.Logger, c client.Client, deployment *appsv1.Deplo
 		if err := c.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, runningDeploy); err != nil {
 			return err
 		}
+		fmt.Println(runningDeploy.Status.ReadyReplicas, *deployment.Spec.Replicas)
 		if runningDeploy.Status.ReadyReplicas != *deployment.Spec.Replicas {
 			return errors.NewRequeueError(fmt.Sprintf("Waiting for %s to be ready", deployment.Name), 3)
 		}

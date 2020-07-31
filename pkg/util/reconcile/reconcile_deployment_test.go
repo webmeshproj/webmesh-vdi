@@ -28,13 +28,15 @@ func newFakeDeployment() *appsv1.Deployment {
 func TestReconcileDeployment(t *testing.T) {
 	c := getFakeClient(t)
 	deployment := newFakeDeployment()
+	nn := types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}
+
 	if err := Deployment(testLogger, c, deployment, true); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
 	}
 
-	if err := c.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, deployment); err != nil {
+	if err := c.Get(context.TODO(), nn, deployment); err != nil {
 		t.Error("Expected deployment to exist, got:", err)
 	}
 
@@ -53,11 +55,14 @@ func TestReconcileDeployment(t *testing.T) {
 		t.Error("Expected requeue error, got:", err)
 	}
 
+	c.Get(context.TODO(), nn, deployment)
 	deployment.Status = appsv1.DeploymentStatus{
 		ReadyReplicas: 1,
 	}
-	// c.Status().Update(context.TODO(), deployment)
-	// if err := Deployment(testLogger, c, deployment, true); err != nil {
-	// 	t.Error("Expected no error, got", err)
-	// }
+	if err := c.Status().Update(context.TODO(), deployment); err != nil {
+		t.Fatal(err)
+	}
+	if err := Deployment(testLogger, c, deployment, true); err != nil {
+		t.Error("Expected no error, got", err)
+	}
 }
