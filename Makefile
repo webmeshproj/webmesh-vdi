@@ -9,7 +9,7 @@ VERSION ?= v0.0.10
 
 # specifically needed for tests in github actions
 # uses modified shell that doesn't support pipefail
-SHELL ?= /bin/bash
+SHELL := /bin/bash
 
 ## # Building Images
 ##
