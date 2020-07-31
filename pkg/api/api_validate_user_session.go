@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -27,8 +28,15 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 			return
 		}
 
+		// retrieve the jwt secret
+		jwtSecret, err := d.secrets.ReadSecret(v1.JWTSecretKey, true)
+		if err != nil {
+			apiutil.ReturnAPIError(err, w)
+			return
+		}
+
 		// verify the token and retrieve the claims
-		session, err := d.decodeAndVerifyToken(authToken)
+		session, err := apiutil.DecodeAndVerifyJWT(jwtSecret, authToken)
 		if err != nil {
 			apiutil.ReturnAPIForbidden(nil, err.Error(), w)
 			return

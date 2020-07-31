@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
-	"github.com/mitchellh/mapstructure"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
@@ -131,59 +129,6 @@ func (d *desktopAPI) getDesktopWebURL(r *http.Request) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("https://%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
-}
-
-// decodeAndVerifyToken verifies the signature on the provided token and returns the
-// embedded claims.
-func (d *desktopAPI) decodeAndVerifyToken(authToken string) (*v1.JWTClaims, error) {
-	// parse the token
-	parser := &jwt.Parser{UseJSONNumber: true}
-	token, err := parser.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("Incorrect signing algorithm on token")
-		}
-		// use cache for the JWT secret, since we use it for every request
-		return d.secrets.ReadSecret(v1.JWTSecretKey, true)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// check token validity
-	if !token.Valid {
-
-		// Just the error conditions we have specific messages for
-		if ve, ok := err.(*jwt.ValidationError); ok {
-			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-				return nil, errors.New("Malformed token provided in the request")
-			} else if ve.Errors&(jwt.ValidationErrorExpired) != 0 {
-				return nil, errors.New("Token has expired")
-			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return nil, errors.New("Token is not valid yet")
-			}
-		}
-
-		// Unhandled token error - generic message
-		return nil, errors.New("Token is invalid")
-	}
-
-	// Retrieve the token claims
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		// The claims in the token weren't as expected
-		return nil, errors.New("Could not coerce token claims to MapClaims")
-	}
-
-	// decode the claims into a session object
-	session := &v1.JWTClaims{}
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		TagName: "json",
-		Result:  session,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return session, decoder.Decode(claims)
 }
 
 // Session response

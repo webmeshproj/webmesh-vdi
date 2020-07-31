@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-
-	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // WriteOrLogError will write the provided content to the response writer, or
@@ -94,25 +91,8 @@ func WriteOK(w http.ResponseWriter) {
 	}, w)
 }
 
-// GenerateJWT will create a new JWT with the given user object's fields
-// embedded in the claims.
-func GenerateJWT(secret []byte, authResult *v1.AuthResult, authorized bool, sessionLength time.Duration) (v1.JWTClaims, string, error) {
-	claims := v1.JWTClaims{
-		User:       authResult.User,
-		Authorized: authorized,
-		Renewable:  !authResult.RefreshNotSupported,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(sessionLength).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(secret)
-	return claims, tokenString, err
-}
-
 // FilterUserRolesByNames returns a list of UserRoles matching the provided names
-// and cluster
+// and clusterw
 func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1.VDIUserRole {
 	userRoles := make([]*v1.VDIUserRole, 0)
 	for _, name := range names {

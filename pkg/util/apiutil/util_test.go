@@ -9,6 +9,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func readResponseBody(res *http.Response) ([]byte, error) {
@@ -57,6 +60,22 @@ func TestAPIErrors(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
+	errs := []error{
+		errors.New("test-error-1"),
+		errors.New("test-error-2"),
+	}
+	ReturnAPIErrors(errs, rr)
+	if res := rr.Result(); res.StatusCode != http.StatusBadRequest {
+		t.Error("Expected bad request response, got:", res.StatusCode)
+	}
+
+	rr = httptest.NewRecorder()
+	ReturnAPIForbidden(nil, "forbidden", rr)
+	if res := rr.Result(); res.StatusCode != http.StatusForbidden {
+		t.Error("Expected forbidden response, got:", res.StatusCode)
+	}
+
+	rr = httptest.NewRecorder()
 	ReturnAPIForbidden(nil, "forbidden", rr)
 	if res := rr.Result(); res.StatusCode != http.StatusForbidden {
 		t.Error("Expected forbidden response, got:", res.StatusCode)
@@ -136,5 +155,28 @@ func TestWriteOK(t *testing.T) {
 		t.Error("Expected 'ok' value in response")
 	} else if !val {
 		t.Error("Expected 'ok' value to be true")
+	}
+}
+
+func TestFilterUserRolesByName(t *testing.T) {
+	roles := []v1alpha1.VDIRole{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-role-one",
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test-role-two",
+			},
+		},
+	}
+
+	filtered := FilterUserRolesByNames(roles, []string{"test-role-one"})
+	if len(filtered) != 1 {
+		t.Fatal("Expected one role returned")
+	}
+	if filtered[0].GetName() != "test-role-one" {
+		t.Error("Expected name of returned role to be 'test-role-one', got:", filtered[0].GetName())
 	}
 }

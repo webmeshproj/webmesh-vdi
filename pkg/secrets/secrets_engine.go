@@ -1,6 +1,7 @@
 package secrets
 
 import (
+	"bytes"
 	"sync"
 	"time"
 
@@ -40,6 +41,8 @@ type SecretEngine struct {
 	mux sync.Mutex
 	// a pointer used for remote locks
 	lock *lock.Lock
+	// the ttl on cached items
+	cacheTTL time.Duration
 }
 
 // cacheItem is a cached item in the SecretEngine
@@ -48,8 +51,8 @@ type cacheItem struct {
 	contents []byte
 	// the contents of a map secret
 	contentsMap map[string][]byte
-	// when this cache item expires
-	expiresAt time.Time
+	// unix timestamp when this cache item expires
+	expiresAt int64
 }
 
 // GetSecretEngine returns a new secret engine for the given cluster.
@@ -62,20 +65,24 @@ func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
 		backend = k8secret.New()
 	}
 	engine := &SecretEngine{
-		backend: backend,
-		cluster: cluster,
-		cache:   make(map[string]*cacheItem),
+		backend:  backend,
+		cluster:  cluster,
+		cache:    make(map[string]*cacheItem),
+		cacheTTL: cacheTTL,
 	}
 	return engine
 }
 
+// setClient sets the k8s client for the secret engine.
+func (s *SecretEngine) setClient(c client.Client) { s.client = c }
+
 // Setup sets the local client inteface and calls Setup on the backend.
 func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
+	s.setClient(c)
 	if err := s.Lock(); err != nil {
 		return err
 	}
 	defer s.Release()
-	s.client = c
 	// rewrite cluster since this is a method that can be used to refresh
 	// configuration also.
 	s.cluster = cluster
@@ -86,7 +93,7 @@ func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 // Otherwise it returns nil.
 func (s *SecretEngine) readCache(name string) []byte {
 	if cached, ok := s.cache[name]; ok {
-		if cached.expiresAt.Before(time.Now()) {
+		if cached.expiresAt > time.Now().Unix() {
 			return cached.contents
 		}
 	}
@@ -97,7 +104,7 @@ func (s *SecretEngine) readCache(name string) []byte {
 // Otherwise it returns nil.
 func (s *SecretEngine) readCacheMap(name string) map[string][]byte {
 	if cached, ok := s.cache[name]; ok {
-		if cached.expiresAt.Before(time.Now()) {
+		if cached.expiresAt > time.Now().Unix() {
 			return cached.contentsMap
 		}
 	}
@@ -109,7 +116,7 @@ func (s *SecretEngine) readCacheMap(name string) map[string][]byte {
 func (s *SecretEngine) writeCache(name string, contents []byte) {
 	s.cache[name] = &cacheItem{
 		contents:  contents,
-		expiresAt: time.Now().Add(cacheTTL),
+		expiresAt: time.Now().Add(s.cacheTTL).Unix(),
 	}
 }
 
@@ -118,13 +125,13 @@ func (s *SecretEngine) writeCache(name string, contents []byte) {
 func (s *SecretEngine) writeCacheMap(name string, contents map[string][]byte) {
 	s.cache[name] = &cacheItem{
 		contentsMap: contents,
-		expiresAt:   time.Now().Add(cacheTTL),
+		expiresAt:   time.Now().Add(s.cacheTTL).Unix(),
 	}
 }
 
 // ReadSecret will fetch the requested secret from the backend. If cache is true,
-// the cache will be checked first, and if not found, then the result of a backend
-// query will be written to the cache.
+// the cache will be checked first, and if not found then the backend will be queried.
+// The secret is unconditionally written to the cache after retrieval.
 func (s *SecretEngine) ReadSecret(name string, cache bool) ([]byte, error) {
 	if cache {
 		if val := s.readCache(name); val != nil {
@@ -135,15 +142,13 @@ func (s *SecretEngine) ReadSecret(name string, cache bool) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cache {
-		s.writeCache(name, secret)
-	}
+	s.writeCache(name, secret)
 	return secret, nil
 }
 
 // ReadSecretMap will fetch the requested secret from the backend. If cache is true,
-// the cache will be checked first, and if not found, then the result of a backend
-// query will be written to the cache.
+// the cache will be checked first, and if not found the backend will be queried. The result
+// is then unconditionally written to the cache.
 func (s *SecretEngine) ReadSecretMap(name string, cache bool) (map[string][]byte, error) {
 	if cache {
 		if val := s.readCacheMap(name); val != nil {
@@ -154,35 +159,27 @@ func (s *SecretEngine) ReadSecretMap(name string, cache bool) (map[string][]byte
 	if err != nil {
 		return nil, err
 	}
-	if cache {
-		s.writeCacheMap(name, secret)
-	}
+	s.writeCacheMap(name, secret)
 	return secret, nil
 }
 
-// WriteSecret writes the given secret to the backend. If it is also found in
-// the cache, then the contents of the value in the cache are replaced with the
-// new value.
+// WriteSecret writes the given secret to the backend. It also unconditionally writes
+// it to the local cache.
 func (s *SecretEngine) WriteSecret(name string, contents []byte) error {
 	if err := s.backend.WriteSecret(name, contents); err != nil {
 		return err
 	}
-	if val := s.readCache(name); val != nil {
-		s.writeCache(name, contents)
-	}
+	s.writeCache(name, contents)
 	return nil
 }
 
-// WriteSecretMap writes the given secret map to the backend. If it is also found
-// in the cache, then the contents of the value in the cache are replaced with the
-// new values.
+// WriteSecretMap writes the given secret map to the backend. It also unconditionally writes
+// it to the local cache.
 func (s *SecretEngine) WriteSecretMap(name string, contents map[string][]byte) error {
 	if err := s.backend.WriteSecretMap(name, contents); err != nil {
 		return err
 	}
-	if val := s.readCache(name); val != nil {
-		s.writeCacheMap(name, contents)
-	}
+	s.writeCacheMap(name, contents)
 	return nil
 }
 
@@ -197,8 +194,10 @@ func (s *SecretEngine) AppendSecret(name string, line []byte) error {
 		}
 		currentVal = make([]byte, 0)
 	}
-	newLine := append([]byte("\n"), line...)
-	newVal := append(currentVal, newLine...)
+	if len(currentVal) != 0 && !bytes.HasSuffix(currentVal, []byte("\n")) {
+		line = append([]byte("\n"), line...)
+	}
+	newVal := append(currentVal, line...)
 	return s.WriteSecret(name, newVal)
 }
 
