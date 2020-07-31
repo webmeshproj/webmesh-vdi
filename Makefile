@@ -7,6 +7,10 @@ VERSION ?= v0.0.10
 -include hack/Manifests.mk
 -include hack/MakeDesktops.mk
 
+# specifically needed for tests in github actions
+# uses modified shell that doesn't support pipefail
+SHELL ?= /bin/bash
+
 ## # Building Images
 ##
 
@@ -101,7 +105,7 @@ lint: ${GOLANGCI_LINT}
 GO_PACKAGES ?= $(shell go list ./... | grep -v 'pkg/apis' | xargs | sed -e 's/ /,/g')
 TEST_FLAGS ?= -v -cover -coverpkg="$(GO_PACKAGES)" -coverprofile=profile.cov 
 test:
-	@set -o pipefail ; go test ${TEST_FLAGS} ./... \
+	@set -o pipefail && go test ${TEST_FLAGS} ./... \
 		 | sed ''/PASS/s//$$(printf "\033[32mPASS\033[0m")/'' \
 		 | sed ''/FAIL/s//$$(printf "\033[31mFAIL\033[0m")/''
 	go tool cover -func profile.cov
