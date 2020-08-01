@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
@@ -42,7 +40,7 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 							Name: "tls-server",
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: fmt.Sprintf("%s-server", instance.GetAppName()),
+									SecretName: instance.GetAppServerTLSSecretName(),
 								},
 							},
 						},
@@ -50,7 +48,7 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 							Name: "tls-client",
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
-									SecretName: fmt.Sprintf("%s-client", instance.GetAppName()),
+									SecretName: instance.GetAppClientTLSSecretName(),
 								},
 							},
 						},

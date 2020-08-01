@@ -32,11 +32,9 @@ func (c *VDICluster) AnonymousAllowed() bool {
 // if no other options are defined.
 func (c *VDICluster) IsUsingLocalAuth() bool {
 	if c.Spec.Auth != nil {
-		if c.Spec.Auth.LocalAuth != nil {
-			return true
-		}
+		return c.Spec.Auth.LocalAuth != nil && !c.IsUsingLDAPAuth() && !c.IsUsingOIDCAuth()
 	}
-	return false
+	return true
 }
 
 // AuthIsUsingSecretEngine returns true if the secrets for the configured auth

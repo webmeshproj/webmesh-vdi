@@ -36,8 +36,17 @@ type AppConfig struct {
 	AuditLog bool `json:"auditLog,omitempty"`
 	// The number of app replicas to run
 	Replicas int32 `json:"replicas,omitempty"`
+	// TLS configurations for the app instance
+	TLS *TLSConfig `json:"tls,omitempty"`
 	// Resource requirements to place on the app pods
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+}
+
+// TLSConfig contains TLS configurations for kVDI.
+type TLSConfig struct {
+	// A pre-existing TLS secret to use for the HTTPS listener. If not defined,
+	// a certificate is generated.
+	ServerSecret string `json:"serverSecret,omitempty"`
 }
 
 // AuthConfig will be for authentication driver configurations. The goal
@@ -102,6 +111,12 @@ type LDAPConfig struct {
 	UserSearchBase string `json:"userSearchBase,omitempty"`
 }
 
+// IsUndefined returns true if the given LDAPConfig object is not actually configured.
+// It checks that required values are present.
+func (l *LDAPConfig) IsUndefined() bool {
+	return l.URL == ""
+}
+
 // OIDCConfig represents configurations for using an OIDC/OAuth provider for
 // authentication.
 type OIDCConfig struct {
@@ -142,6 +157,12 @@ type OIDCConfig struct {
 	AllowNonGroupedReadOnly bool `json:"allowNonGroupedReadOnly,omitempty"`
 }
 
+// IsUndefined returns true if the given OIDCConfig object is not actually configured.
+// It checks that required values are present.
+func (o *OIDCConfig) IsUndefined() bool {
+	return o.IssuerURL == "" || o.RedirectURL == ""
+}
+
 // K8SSecretConfig uses a Kubernetes secret to store and retrieve sensitive values.
 type K8SSecretConfig struct {
 	// The name of the secret backing the values. Default is `<cluster-name>-app-secrets`.
@@ -151,7 +172,7 @@ type K8SSecretConfig struct {
 // VaultConfig represents the configurations for connecting to a vault server.
 type VaultConfig struct {
 	// The full URL to the vault server. Same as the `VAULT_ADDR` variable.
-	Address string `json:"address"`
+	Address string `json:"address,omitempty"`
 	// The base64 encoded CA certificate for verifying the vault server certificate.
 	CACertBase64 string `json:"caCertBase64,omitempty"`
 	// Set to true to disable TLS verification.
@@ -165,6 +186,12 @@ type VaultConfig struct {
 	// will change in the future to support keys inside the secret itself, instead of assuming
 	// `data`.
 	SecretsPath string `json:"secretsPath,omitempty"`
+}
+
+// IsUndefined returns true if the given VaultConfig object is not actually configured.
+// It checks that required values are present.
+func (v *VaultConfig) IsUndefined() bool {
+	return v.Address == ""
 }
 
 // VDIClusterStatus defines the observed state of VDICluster

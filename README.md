@@ -54,14 +54,13 @@ For building and running locally you will need:
 
 ## Installing
 
-For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md).
+For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md) for available configuration options.
 
 The [API Reference](doc/crds.md) can also be used for details on `kVDI` app-level configurations.
 
 ```bash
-# Add the kvdi repo
-helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
-helm repo update  # sync your repositories
+helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts  # Add the kvdi repo
+helm repo update                                                          # Sync your repositories
 
 # Install kVDI
 helm install kvdi tinyzimmer/kvdi
@@ -69,7 +68,6 @@ helm install kvdi tinyzimmer/kvdi
 
 It will take a minute or two for all the parts to start running after the install command.
 Once the app is launched, you can retrieve the admin password from `kvdi-admin-secret` in your cluster (if you are using `ldap` auth, log in with a user in one of the `adminGroups`).
-
 
 To access the app interface either do a `port-forward` (`make forward-app` is another helper for that when developing locally with `kind`), or go to the "LoadBalancer" IP of the service.
 

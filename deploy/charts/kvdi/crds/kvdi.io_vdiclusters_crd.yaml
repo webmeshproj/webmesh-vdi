@@ -75,6 +75,14 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                         type: object
                     type: object
+                  tls:
+                    description: TLS configurations for the app instance
+                    properties:
+                      serverSecret:
+                        description: A pre-existing TLS secret to use for the HTTPS
+                          listener. If not defined, a certificate is generated.
+                        type: string
+                    type: object
                 type: object
               appNamespace:
                 description: The namespace to provision application resurces in. Defaults
@@ -257,8 +265,6 @@ spec:
                         description: Optionally set the SNI when connecting using
                           HTTPS.
                         type: string
-                    required:
-                    - address
                     type: object
                 type: object
               userdataSpec:

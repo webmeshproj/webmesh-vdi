@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= v0.0.10
+VERSION ?= v0.0.11
 
 # includes
 -include hack/Makevars.mk
@@ -281,18 +281,14 @@ ${REFDOCS}: ${REFDOCS_CLONE}
 	cd "${REFDOCS_CLONE}" && go build .
 	mv "${REFDOCS_CLONE}/gen-crd-api-reference-docs" "${REFDOCS}"
 
-${HELM_DOCS}:
-	$(call get_helm_docs)
-
 ## make api-docs            # Generate the CRD API documentation.
 api-docs: ${REFDOCS}
 	go mod vendor
 	bash hack/update-api-docs.sh
 
 ## make helm-docs           # Generates the helm chart documentation.
-HELM_DOCS_VERSION ?= 0.13.0
 helm-docs: ${HELM_DOCS} chart-yaml
-	${HELM_DOCS}
+	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 
 
 ##

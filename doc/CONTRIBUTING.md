@@ -26,15 +26,20 @@ Here are just some of the things I know still need to be done before this could 
 - More elaborate docs. The APIs, backend methods, and app configurations are well documented for the most part, and I want to stick to doc generation where I can.
   It's things like more snapshots and user docs that I need to make.
 
-- The TLS options need more customization. Specifically user-control over the server certificate used on the app/api instance. This can also be accomplished easily with a reverse proxy in front of the app in the short term. The internal ones are probably safe to be kept generated on the fly, but I can see situations where a user might want to use a pre-existing setup for those in the future.
-
 - The authentication/authorization methods could very likely have holes in them still. I'd definitely love more eyes on some of the mechanics in those.
   - In that respect, I also need mechanics in place to handle expiration of internal certificates used for mTLS. Currently the expiration is set to 10 years for generated certs.
 
-- (**Not really required to be stable**) I'm currently in the middle of looking into "app profiles". Meaning, the ability to have a `DesktopTemplate` which just launches a single app on the display server and fills the viewport in the UI with it. I see two potential ways to accomplish this so far that don't require any major reworks.
+- (**Not required to be stable**) I suck at graphic design so if someone wants to make a badass logo that would be awesome. Right now the UI just uses the quasar logo.
+
+- (**Not required to be stable**) I'm currently in the middle of looking into "app profiles". Meaning, the ability to have a `DesktopTemplate` which just launches a single app on the display server and fills the viewport in the UI with it. I see two potential ways to accomplish this so far that don't require any major reworks.
 
   - Using GTK3 `broadway` and proxying websocket connections to that. 
     - One issue is that it looks like a custom client connector is needed, the other is that I'm not sure if this is still supported.
 
   - Base desktop images already install `Xpra` for `XRANDR` support in `Xvnc` (dynamic screen resizing). `Xpra` can also launch a display server on any socket and there exist websocket client implementations in JS that can be experimented with on the frontend. At time of writing this is the one I am exploring further. 
-    - There is a semi-working implementation of this on `main` branch at the moment. It requires the `DesktopTemplate` set `spec.config.socketType: xpra`. There remain some issues with fuzziness and scaling.
+    - There is a semi-working implementation of this on `main` branch at the moment. It requires the `DesktopTemplate` set `spec.config.socketType: xpra`.
+    - Current issues:
+      - App sometimes launches to the far corner of the viewport or off it entirely. 
+      - Need logic in UI to handle auto DPI scaling
+      - Needs iframe to the official xpra html5 client, would rather have a built-in implementation
+      - Some text fuziness, may be due to scaling issues.

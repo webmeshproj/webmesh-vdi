@@ -10,7 +10,7 @@ import (
 // driver.
 func (c *VDICluster) IsUsingOIDCAuth() bool {
 	if c.Spec.Auth != nil {
-		if c.Spec.Auth.OIDCAuth != nil {
+		if c.Spec.Auth.OIDCAuth != nil && !c.Spec.Auth.OIDCAuth.IsUndefined() {
 			return true
 		}
 	}

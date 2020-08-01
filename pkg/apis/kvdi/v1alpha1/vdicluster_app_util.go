@@ -7,6 +7,7 @@ import (
 	"github.com/tinyzimmer/kvdi/version"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // GetAppName returns the name of the kVDI app deployment for this VDICluster.
@@ -76,4 +77,43 @@ func (c *VDICluster) GetAppSecretsName() string {
 		return c.Spec.Secrets.K8SSecret.SecretName
 	}
 	return fmt.Sprintf("%s-app-secrets", c.GetName())
+}
+
+// GetAppClientTLSSecretName returns the name of the client TLS secret for the app.
+func (c *VDICluster) GetAppClientTLSSecretName() string {
+	return fmt.Sprintf("%s-client", c.GetAppName())
+}
+
+// GetAppServerTLSSecretName returns the name of the server TLS secret for the app.
+func (c *VDICluster) GetAppServerTLSSecretName() string {
+	if c.Spec.App != nil && c.Spec.App.TLS != nil {
+		if c.Spec.App.TLS.ServerSecret != "" {
+			return c.Spec.App.TLS.ServerSecret
+		}
+	}
+	return fmt.Sprintf("%s-server", c.GetAppName())
+}
+
+// AppIsUsingExternalServerTLS returns true if the app server certificate is user-supplied.
+func (c *VDICluster) AppIsUsingExternalServerTLS() bool {
+	if c.Spec.App != nil && c.Spec.App.TLS != nil {
+		return c.Spec.App.TLS.ServerSecret != ""
+	}
+	return false
+}
+
+// GetAppClientTLSNamespacedName returns the namespaced name for the client TLS certificate.
+func (c *VDICluster) GetAppClientTLSNamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Name:      c.GetAppClientTLSSecretName(),
+		Namespace: c.GetCoreNamespace(),
+	}
+}
+
+// GetAppServerTLSNamespacedName returns the namespaced name for the server TLS certificate.
+func (c *VDICluster) GetAppServerTLSNamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Name:      c.GetAppServerTLSSecretName(),
+		Namespace: c.GetCoreNamespace(),
+	}
 }

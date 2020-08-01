@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.9`
+Current chart version is `v0.0.11`
 
 
 
@@ -62,14 +62,20 @@ There is an example for LDAP authentication in the same folder.
 | vdi.spec.app.image | string | `quay.io/tinyzimmer/kvdi:app-${VERSION}` | The image to use for app pods. |
 | vdi.spec.app.replicas | int | `1` | The number of app replicas to run. |
 | vdi.spec.app.resources | object | `{}` | Resource limits for the app pods. |
+| vdi.spec.app.tls | object | `{"serverSecret":""}` | TLS configurations for the app instance. |
+| vdi.spec.app.tls.serverSecret | string | `""` | A pre-existing TLS secret to use for the HTTPS listener on the app instance. If not provided, one is generated for you. |
 | vdi.spec.appNamespace | string | `"default"` | The namespace where the `kvdi` app will run. This is different than the chart namespace. The chart lays down the manager and a VDI configuration, and the manager takes care of the rest. |
 | vdi.spec.auth | object | The values described below are the same as the `VDICluster` CRD defaults. | Authentication configurations for `kVDI`. |
 | vdi.spec.auth.adminSecret | string | `"kvdi-admin-secret"` | The secret to store the generated admin password in. |
 | vdi.spec.auth.allowAnonymous | bool | `false` | Allow anonymous users to launch and use desktops. |
-| vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is currently the only supported auth provider, however more may come in the future. |
+| vdi.spec.auth.ldapAuth | object | `{}` | (object) Use an LDAP server for the authentication backend. See the [API reference](../../../doc/crds.md#LDAPConfig) for available configurations. |
+| vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is the default configuration. |
+| vdi.spec.auth.oidcAuth | object | `{}` | (object) Use an OpenID/Oauth provider for the authentication backend. See the [API reference](../../../doc/crds.md#OIDCConfig) for available configurations. |
 | vdi.spec.auth.tokenDuration | string | `"15m"` | The time-to-live for access tokens issued to users.  If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing tokens is currently not supported. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
+| vdi.spec.secrets | object | The values described below are the same as the `VDICluster` CRD defaults. | Secret storage configurations for `kVDI`. |
 | vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. This is the default if no other configuration is provided. For now, see the API reference for what to use in place of these values if using a different backend. |
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
+| vdi.spec.secrets.vault | object | `{}` | (object) Use vault for the secret storage backend. See the [API reference](../../../doc/crds.md#VaultConfig) for available configurations. |
 | vdi.spec.userdataSpec | object | `{}` | If configured, enables userdata persistence with the given PVC spec. Every user will receive their own PV with the provided configuration. |
 | vdi.templates | list | `[]` | Not implemented in the chart yet. This will be a place to preload desktop-templates into the cluster. |

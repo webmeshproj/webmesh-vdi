@@ -59,7 +59,9 @@ func TestGetSecretEngine(t *testing.T) {
 
 	cluster.Spec = v1alpha1.VDIClusterSpec{
 		Secrets: &v1alpha1.SecretsConfig{
-			Vault: &v1alpha1.VaultConfig{},
+			Vault: &v1alpha1.VaultConfig{
+				Address: "fake-vault",
+			},
 		},
 	}
 

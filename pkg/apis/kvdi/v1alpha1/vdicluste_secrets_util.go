@@ -12,7 +12,7 @@ const (
 // GetSecretsBackend returns the type of secrets backend this VDICluster is using.
 func (c *VDICluster) GetSecretsBackend() string {
 	if c.Spec.Secrets != nil {
-		if c.Spec.Secrets.Vault != nil {
+		if c.Spec.Secrets.Vault != nil && !c.Spec.Secrets.Vault.IsUndefined() {
 			return SecretsBackendVault
 		}
 	}

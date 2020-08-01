@@ -21,6 +21,7 @@ Types
 -   [OIDCConfig](#OIDCConfig)
 -   [SecretsConfig](#SecretsConfig)
 -   [SocketType](#SocketType)
+-   [TLSConfig](#TLSConfig)
 -   [VDICluster](#VDICluster)
 -   [VDIClusterSpec](#VDIClusterSpec)
 -   [VDIRole](#VDIRole)
@@ -65,6 +66,10 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>The number of app replicas to run</p></td>
 </tr>
 <tr class="odd">
+<td><code>tls</code> <em><a href="#TLSConfig">TLSConfig</a></em></td>
+<td><p>TLS configurations for the app instance</p></td>
+</tr>
+<tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -522,6 +527,27 @@ SocketType (`string` alias)
 SocketType represents the type of service listening on the display
 socket in the container image.
 
+### TLSConfig
+
+(*Appears on:* [AppConfig](#AppConfig))
+
+TLSConfig contains TLS configurations for kVDI.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>serverSecret</code> <em>string</em></td>
+<td><p>A pre-existing TLS secret to use for the HTTPS listener. If not defined, a certificate is generated.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### VDICluster
 
 VDICluster is the Schema for the vdiclusters API
@@ -691,4 +717,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `1b15bbd`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `952ea0d`.*

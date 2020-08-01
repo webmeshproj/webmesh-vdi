@@ -9,7 +9,7 @@ import (
 // driver.
 func (c *VDICluster) IsUsingLDAPAuth() bool {
 	if c.Spec.Auth != nil {
-		if c.Spec.Auth.LDAPAuth != nil {
+		if c.Spec.Auth.LDAPAuth != nil && !c.Spec.Auth.LDAPAuth.IsUndefined() {
 			return true
 		}
 	}

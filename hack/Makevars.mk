@@ -38,18 +38,15 @@ KIND_VERSION ?= v0.7.0
 KUBERNETES_VERSION ?= v1.18.4
 METALLB_VERSION ?= v0.9.3
 HELM_VERSION ?= v3.1.2
-HELM_DOCS_VERSION ?= 0.13.0
 
 CLUSTER_NAME ?= vdi
 KIND_DOWNLOAD_URL ?= https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(shell uname)-amd64
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
-HELM_DOCS_DOWNLOAD_URL ?= https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_$(shell uname)_x86_64.tar.gz
 KIND_KUBECONFIG ?= _bin/kubeconfig.yaml
 KIND ?= _bin/kind
 KUBECTL ?= _bin/kubectl
 HELM ?= _bin/helm
-HELM_DOCS ?= _bin/helm-docs
 
 # Gendocs
 REFDOCS ?= _bin/refdocs

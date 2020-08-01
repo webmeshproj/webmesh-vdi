@@ -68,6 +68,11 @@ vdi:
       auditLog: false
       # vdi.spec.app.replicas -- The number of app replicas to run.
       replicas: 1
+      # vdi.spec.app.tls -- TLS configurations for the app instance.
+      tls:
+        # vdi.spec.app.tls.serverSecret -- A pre-existing TLS secret to use for the HTTPS listener on the app instance.
+        # If not provided, one is generated for you.
+        serverSecret: ""
       # vdi.spec.app.resources -- Resource limits for the app pods.
       resources: {}
     # vdi.spec.auth -- Authentication configurations for `kVDI`.
@@ -81,39 +86,12 @@ vdi:
       # If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing
       # tokens is currently not supported.
       tokenDuration: "15m"
-      # vdi.spec.auth.localAuth -- Use local-auth for the authentication backend.
-      # This is currently the only supported auth provider, however more may come in the future.
+      # vdi.spec.auth.localAuth -- Use local-auth for the authentication backend. This is the default configuration.
       localAuth: {}
-      # # vdi.spec.auth.ldapAuth -- Use an LDAP server for the authentication backend.
-      # ldapAuth:
-      #   # vdi.spec.auth.ldapAuth.url -- The URL for connecting to ldap.
-      #   url: "ldap://glauth.default.svc:389"
-      #   # vdi.spec.auth.ldapAuth.tlsInsecureSkipVerify -- Set to true to skip ldap server certificate validation.
-      #   tlsInsecureSkipVerify: false
-      #   # vdi.spec.auth.ldapAuth.tlsCACert -- A base64 encoded CA certificate for LDAP if required for TLS verification.
-      #   tlsCACert: Cg==
-      #   # vdi.spec.auth.ldapAuth.bindUserDNSecretKey --
-      #   bindUserDNSecretKey: "ldap-userdn"
-      #   # vdi.spec.auth.ldapAuth.bindPasswordSecretKey --
-      #   bindPasswordSecretKey: "ldap-password"
-      #   # vdi.spec.auth.ldapAuth.bindCredentialsSecret --
-      #   bindCredentialsSecret: ""
-      #   # vdi.spec.auth.ldapAuth.adminGroups --
-      #   adminGroups: ["cn=kvdi-admins,ou=groups,dc=kvdi,dc=io"]
-      #   # vdi.spec.auth.ldapAuth.userSearchBase --
-      #   userSearchBase: "ou=users,dc=kvdi,dc=io"
-      # oidcAuth:
-      #   issuerURL: "https://example.com"
-      #   clientIDKey: "oidc-clientid"
-      #   clientSecretKey: "oidc-clientsecret"
-      #   clientCredentialsSecret: "",
-      #   redirectURL: "https://kvdi.local/api/login"
-      #   scopes: ["openid", "profile", "email", "groups"]
-      #   groupScope: "groups"
-      #   adminGroups: []
-      #   tlsInsecureSkipVerify: false
-      #   tlsCACert: Cg==
-      #   allowNonGroupedReadOnly: false
+      # vdi.spec.auth.ldapAuth -- (object) Use an LDAP server for the authentication backend. See the [API reference](../../../doc/crds.md#LDAPConfig) for available configurations.
+      ldapAuth: {}
+      # vdi.spec.auth.oidcAuth -- (object) Use an OpenID/Oauth provider for the authentication backend. See the [API reference](../../../doc/crds.md#OIDCConfig) for available configurations.
+      oidcAuth: {}
     # vdi.spec.secrets -- Secret storage configurations for `kVDI`.
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     secrets:
@@ -124,6 +102,8 @@ vdi:
         # vdi.spec.secrets.k8sSecret.secretName -- The name of the Kubernetes `Secret`.
         # backing the secret storage.
         secretName: kvdi-app-secrets
+      # vdi.spec.secrets.vault -- (object) Use vault for the secret storage backend. See the [API reference](../../../doc/crds.md#VaultConfig) for available configurations.
+      vault: {}
 
   # vdi.templates -- Not implemented in the chart yet. This will be a place
   # to preload desktop-templates into the cluster.

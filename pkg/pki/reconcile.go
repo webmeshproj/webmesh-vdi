@@ -166,22 +166,20 @@ func (m *Manager) reconcileAppCertificates(reqLogger logr.Logger, caCert *x509.C
 		createCertFunc func(*v1alpha1.VDICluster) *x509.Certificate
 	}{
 		{
-			namespacedName: types.NamespacedName{
-				Name:      fmt.Sprintf("%s-server", m.cluster.GetAppName()),
-				Namespace: m.cluster.GetCoreNamespace(),
-			},
+			namespacedName: m.cluster.GetAppServerTLSNamespacedName(),
 			createCertFunc: newAppServerCertificate,
 		},
 		{
-			namespacedName: types.NamespacedName{
-				Name:      fmt.Sprintf("%s-client", m.cluster.GetAppName()),
-				Namespace: m.cluster.GetCoreNamespace(),
-			},
+			namespacedName: m.cluster.GetAppClientTLSNamespacedName(),
 			createCertFunc: newAppClientCertificate,
 		},
 	}
 
 	for _, appCertificate := range appCertificates {
+		if m.cluster.AppIsUsingExternalServerTLS() && appCertificate.namespacedName.Name == m.cluster.GetAppServerTLSSecretName() {
+			// skip app server certificate if using a user-supplied certificate
+			continue
+		}
 		secret := &corev1.Secret{}
 		if err := m.client.Get(context.TODO(), appCertificate.namespacedName, secret); err != nil {
 			if client.IgnoreNotFound(err) != nil {
