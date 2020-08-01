@@ -43,6 +43,9 @@ manager:
   affinity: {}
 
 vdi:
+  # vdi.labels -- Extra labels to apply to kvdi related resources.
+  labels:
+    component: kvdi-cluster
   # vdi.spec -- The `VDICluster` spec.
   # @default -- The values described below are the same as the `VDICluster` CRD defaults.
   spec:

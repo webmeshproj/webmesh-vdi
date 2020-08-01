@@ -64,6 +64,7 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/templates/{template}", d.DeleteDesktopTemplate).Methods("DELETE") // Delete a DesktopTemplate
 
 	// Desktop session operations
+	protected.HandleFunc("/sessions", d.GetDesktopSessions).Methods("GET")                         // Retrieve status information for all desktop sessions
 	protected.HandleFunc("/sessions", d.StartDesktopSession).Methods("POST")                       // Start a new desktop session
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET") // Get the status of a desktop session
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE") // Stop a desktop session

@@ -114,7 +114,7 @@ func TestAcquireLock(t *testing.T) {
 }
 
 func TestLockTimeout(t *testing.T) {
-	// create a lock with a 5 second timeout
+	// create a lock with a 3 second timeout
 	l, c := setupLock(t, 3)
 
 	var wg sync.WaitGroup
@@ -140,4 +140,47 @@ func TestLockTimeout(t *testing.T) {
 
 	}()
 	wg.Wait()
+}
+
+func TestLockNoTimeout(t *testing.T) {
+	l, c := setupLock(t, -1)
+
+	if err := l.Acquire(); err != nil {
+		t.Fatal(err)
+	}
+	defer l.Release()
+
+	cm := &corev1.ConfigMap{}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
+	if err := c.Get(context.TODO(), nn, cm); err != nil {
+		t.Fatal(err)
+	}
+	if len(cm.Data) != 0 {
+		t.Error("Expected CM with no data for no-timeout lock, got:", cm.Data)
+	}
+}
+
+func TestLockWithLabels(t *testing.T) {
+	l, c := setupLock(t, -1)
+
+	l = l.WithLabels(map[string]string{"test-key": "test-value"})
+
+	if err := l.Acquire(); err != nil {
+		t.Fatal(err)
+	}
+	defer l.Release()
+
+	cm := &corev1.ConfigMap{}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
+	if err := c.Get(context.TODO(), nn, cm); err != nil {
+		t.Fatal(err)
+	}
+	if len(cm.GetLabels()) != 1 {
+		t.Fatal("Expected CM labels map with one k/v pair, got:", cm.GetLabels())
+	}
+	if val, ok := cm.GetLabels()["test-key"]; !ok {
+		t.Error("Expected 'test-key' in labels, got:", cm.GetLabels())
+	} else if val != "test-value" {
+		t.Error("Expected value of 'test-key' to be 'test-value', got:", val)
+	}
 }

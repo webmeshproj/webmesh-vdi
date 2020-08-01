@@ -3,8 +3,9 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -17,7 +18,7 @@ var auditLogger = logf.Log.WithName("api_audit")
 type AuditResult struct {
 	Allowed     bool
 	FromOwner   bool
-	Action      *v1.APIAction
+	Actions     []*v1.APIAction
 	Resource    string
 	UserSession *v1.JWTClaims
 	Request     *http.Request
@@ -36,8 +37,14 @@ func buildAuditMsg(result *AuditResult) string {
 		actions[result.Allowed],
 		result.UserSession.User.GetName(),
 	)
-	if actStr := result.Action.String(); actStr != "" {
-		msg = msg + fmt.Sprintf(" => %s", actStr)
+	actStrs := make([]string, 0)
+	for _, act := range result.Actions {
+		if actStr := act.String(); actStr != "" {
+			actStrs = append(actStrs, actStr)
+		}
+	}
+	if len(actStrs) > 0 {
+		msg = msg + fmt.Sprintf(" => %s", strings.Join(actStrs, ","))
 	}
 	msg = msg + fmt.Sprintf(" => %s", result.Request.URL.Path)
 	if result.FromOwner {
@@ -57,6 +64,6 @@ func (d *desktopAPI) auditLog(result *AuditResult) {
 		"Allowed", result.Allowed,
 		"User.Name", result.UserSession.User.Name,
 		"Request.Path", result.Request.URL.Path,
-		"API.Action", result.Action,
+		"API.Actions", result.Actions,
 	)
 }

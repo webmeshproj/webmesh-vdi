@@ -27,7 +27,7 @@ type ResourceValueFunc func(r *http.Request) (name string)
 // MethodPermissions represents a set of checks to run for an API method.
 type MethodPermissions struct {
 	OverrideFunc          OverrideFunc
-	Action                v1.APIAction
+	Actions               []v1.APIAction
 	ResourceNameFunc      ResourceValueFunc
 	ResourceNamespaceFunc ResourceValueFunc
 	ExtraCheckFunc        ExtraCheckFunc
@@ -68,58 +68,72 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/users": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 		},
 		"POST": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbCreate,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbCreate,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ExtraCheckFunc: denyUserElevatePerms,
 		},
 	},
 	"/api/users/{user}": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
 		"PUT": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUpdate,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUpdate,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 			ExtraCheckFunc:   denyUserElevatePerms,
 		},
 		"DELETE": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbDelete,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbDelete,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 		},
 	},
 	"/api/users/{user}/mfa": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
 		},
 		"PUT": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUpdate,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUpdate,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
@@ -127,9 +141,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/users/{user}/mfa/verify": {
 		"PUT": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUpdate,
-				ResourceType: v1.ResourceUsers,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUpdate,
+					ResourceType: v1.ResourceUsers,
+				},
 			},
 			ResourceNameFunc: apiutil.GetUserFromRequest,
 			OverrideFunc:     allowSameUser,
@@ -137,85 +153,119 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/roles": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceRoles,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceRoles,
+				},
 			},
 		},
 		"POST": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbCreate,
-				ResourceType: v1.ResourceRoles,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbCreate,
+					ResourceType: v1.ResourceRoles,
+				},
 			},
 			ExtraCheckFunc: denyUserElevatePerms,
 		},
 	},
 	"/api/roles/{role}": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceRoles,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceRoles,
+				},
 			},
 			ResourceNameFunc: apiutil.GetRoleFromRequest,
 		},
 		"PUT": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUpdate,
-				ResourceType: v1.ResourceRoles,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUpdate,
+					ResourceType: v1.ResourceRoles,
+				},
 			},
 			ResourceNameFunc: apiutil.GetRoleFromRequest,
 			ExtraCheckFunc:   denyUserElevatePerms,
 		},
 		"DELETE": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbDelete,
-				ResourceType: v1.ResourceRoles,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbDelete,
+					ResourceType: v1.ResourceRoles,
+				},
 			},
 			ResourceNameFunc: apiutil.GetRoleFromRequest,
 		},
 	},
 	"/api/templates": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 		},
 		"POST": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbCreate,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbCreate,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 		},
 	},
 	"/api/templates/{template}": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: apiutil.GetTemplateFromRequest,
 		},
 		"PUT": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUpdate,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUpdate,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: apiutil.GetTemplateFromRequest,
 		},
 		"DELETE": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbDelete,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbDelete,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: apiutil.GetTemplateFromRequest,
 		},
 	},
 	"/api/sessions": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceTemplates,
+				},
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceUsers,
+				},
+			},
+		},
 		"POST": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbLaunch,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbLaunch,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: func(r *http.Request) string {
 				req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
@@ -229,9 +279,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/sessions/{namespace}/{name}": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbRead,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: func(r *http.Request) string {
 				return mux.Vars(r)["name"]
@@ -242,9 +294,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc: allowSessionOwner,
 		},
 		"DELETE": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbDelete,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbDelete,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: func(r *http.Request) string {
 				return mux.Vars(r)["name"]
@@ -257,9 +311,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/desktops/{namespace}/{name}/websockify": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUse,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: func(r *http.Request) string {
 				return mux.Vars(r)["name"]
@@ -272,9 +328,11 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 	},
 	"/api/desktops/{namespace}/{name}/wsaudio": {
 		"GET": {
-			Action: v1.APIAction{
-				Verb:         v1.VerbUse,
-				ResourceType: v1.ResourceTemplates,
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
 			ResourceNameFunc: func(r *http.Request) string {
 				return mux.Vars(r)["name"]
@@ -313,9 +371,6 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 			return
 		}
 
-		apiAction := buildActionFromTemplate(methodGrant, r)
-		result.Action = apiAction
-
 		// Check if the route supports validating resource ownership
 		if methodGrant.OverrideFunc != nil {
 			if allowed, owner, err := methodGrant.OverrideFunc(d, userSession.User, r); err != nil {
@@ -333,12 +388,16 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 			// We were not allowed, but we may have a grant that lets us anyway
 		}
 
-		if !userSession.User.Evaluate(apiAction) {
-			msg := fmt.Sprintf("%s does not have the ability to %s", userSession.User.Name, apiAction.String())
-			apiutil.ReturnAPIForbidden(nil, msg, w)
-			result.Allowed = false
-			d.auditLog(result)
-			return
+		for _, action := range methodGrant.Actions {
+			apiAction := buildActionFromTemplate(methodGrant, action, r)
+			result.Actions = append(result.Actions, apiAction)
+			if !userSession.User.Evaluate(apiAction) {
+				msg := fmt.Sprintf("%s does not have the ability to %s", userSession.User.Name, apiAction.String())
+				apiutil.ReturnAPIForbidden(nil, msg, w)
+				result.Allowed = false
+				d.auditLog(result)
+				return
+			}
 		}
 
 		if methodGrant.ExtraCheckFunc != nil {
@@ -350,7 +409,7 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 				return
 			}
 			if !allowed {
-				msg := fmt.Sprintf("%s does not have the ability to %s: %s", userSession.User.Name, apiAction.String(), reason)
+				msg := fmt.Sprintf("%s denied access to %s: %s", userSession.User.Name, r.URL.Path, reason)
 				apiutil.ReturnAPIForbidden(nil, msg, w)
 				result.Allowed = false
 				d.auditLog(result)
@@ -366,22 +425,22 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 
 // buildActionFromTemplate will create an APIAction to evaluate based off the
 // parameters in the MethodPermissions.
-func buildActionFromTemplate(perms MethodPermissions, r *http.Request) *v1.APIAction {
+func buildActionFromTemplate(perms MethodPermissions, action v1.APIAction, r *http.Request) *v1.APIAction {
 	// build a new action object
-	action := &v1.APIAction{
-		Verb:         perms.Action.Verb,
-		ResourceType: perms.Action.ResourceType,
+	tmplAction := &v1.APIAction{
+		Verb:         action.Verb,
+		ResourceType: action.ResourceType,
 	}
 
 	// populate the name if possible
 	if perms.ResourceNameFunc != nil {
-		action.ResourceName = perms.ResourceNameFunc(r)
+		tmplAction.ResourceName = perms.ResourceNameFunc(r)
 	}
 
 	// populate the namespace if possible
 	if perms.ResourceNamespaceFunc != nil {
-		action.ResourceNamespace = perms.ResourceNamespaceFunc(r)
+		tmplAction.ResourceNamespace = perms.ResourceNamespaceFunc(r)
 	}
 
-	return action
+	return tmplAction
 }

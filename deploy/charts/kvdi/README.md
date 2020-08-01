@@ -55,6 +55,7 @@ There is an example for LDAP authentication in the same folder.
 | rbac.pspEnabled | bool | `false` | Specifies whether to create `PodSecurityPolicies` for the manager to use when booting desktops. |
 | rbac.serviceAccount.create | bool | `true` | Specifies whether a `ServiceAccount` should be created. |
 | rbac.serviceAccount.name | string | If not set and create is true, a name is generated using the fullname template. | The name of the `ServiceAccount` to use. |
+| vdi.labels | object | `{"component":"kvdi-cluster"}` | Extra labels to apply to kvdi related resources. |
 | vdi.spec | object | The values described below are the same as the `VDICluster` CRD defaults. | The `VDICluster` spec. |
 | vdi.spec.app | object | The values described below are the same as the `VDICluster` CRD defaults. | App level configurations for `kVDI`. |
 | vdi.spec.app.auditLog | bool | `false` | Enables a detailed audit log of API events. At the moment, these just get logged to stdout on the app instance. |

@@ -41,6 +41,14 @@ func (c *VDICluster) GetComponentLabels(component string) map[string]string {
 	return labels
 }
 
+// GetClusterDesktopsSelector gets the label selector for looking up all desktops
+// owned by this VDICluster.
+func (c *VDICluster) GetClusterDesktopsSelector() client.MatchingLabels {
+	return client.MatchingLabels{
+		v1.VDIClusterLabel: c.GetName(),
+	}
+}
+
 // GetUserDesktopsSelector gets the label selector to use for looking up a user's
 // desktop sessions.
 func (c *VDICluster) GetUserDesktopsSelector(username string) client.MatchingLabels {

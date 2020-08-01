@@ -27,6 +27,8 @@ const (
 	// DesktopNameLabel is a label referencing the name of the desktop instance. This is to add randomness
 	// for the headless service selector placed in front of each pod.
 	DesktopNameLabel = "desktopName"
+	// ClientAddrLabel is the a label referencing the client address on a display/audio lock.
+	ClientAddrLabel = "clientAddr"
 	// ServerCertificateMountPath is where server certificates get placed inside pods
 	ServerCertificateMountPath = "/etc/kvdi/tls/server"
 	// ClientCertificateMountPath is where client certificates get placed inside pods

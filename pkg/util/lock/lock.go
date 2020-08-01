@@ -37,15 +37,26 @@ type Lock struct {
 	name string
 	// the namespace for the lock
 	namespace string
+	// labels to apply to the configmap
+	labels map[string]string
 }
 
-// New returns a new lock
+// New returns a new lock. If timeout is a value less than zero, then no expiration
+// is placed on the lock. A safeguard for deadlocks is still in place due to the
+// OwnerReference to the pod that holds the lock on the configmap.
 func New(c client.Client, name string, timeout time.Duration) *Lock {
 	return &Lock{
 		client:  c,
 		name:    name,
 		timeout: timeout,
+		labels:  map[string]string{},
 	}
+}
+
+// WithLabels configures labels to add to the resources associated with this lock.
+func (l *Lock) WithLabels(labels map[string]string) *Lock {
+	l.labels = labels
+	return l
 }
 
 // GetName returns the name of this lock.
@@ -57,10 +68,18 @@ func (l *Lock) GetNamespace() string { return l.namespace }
 // GetTimeout returns the timeout for this lock.
 func (l *Lock) GetTimeout() time.Duration { return l.timeout }
 
+// GetCMData returns the data to apply to the configmap for this lock.
+func (l *Lock) GetCMData() map[string]string {
+	if l.GetTimeout() > 0 {
+		return map[string]string{expireKey: strconv.FormatInt(time.Now().Add(l.timeout).Unix(), 10)}
+	}
+	return map[string]string{}
+}
+
 // Acquire will attempt to acquire the lock, retrying until the lock is either
 // acquired or the timeout is reached.
 func (l *Lock) Acquire() error {
-	lockLogger.Info("Acquiring lock", "Lock.Name", l.name)
+	lockLogger.Info("Acquiring lock", "Lock.Name", l.GetName())
 	pod, err := k8sutil.GetThisPod(l.client)
 	if err != nil {
 		lockLogger.Error(err, "Error retrieving current pod, could not acquire lock")
@@ -69,8 +88,16 @@ func (l *Lock) Acquire() error {
 
 	l.namespace = pod.GetNamespace()
 
-	failTimeout := time.Now().Add(l.timeout)
-	ctx, cancel := context.WithTimeout(context.Background(), l.timeout)
+	failTimeout := time.Now().Add(l.GetTimeout())
+
+	var ctx context.Context
+	var cancel func()
+	if l.GetTimeout() > 0 {
+		ctx, cancel = context.WithTimeout(context.Background(), l.GetTimeout())
+	} else {
+		ctx, cancel = context.WithCancel(context.Background())
+	}
+
 	defer cancel()
 
 	for {
@@ -97,9 +124,11 @@ func (l *Lock) Acquire() error {
 
 			expiresAt, ok := existingLock.Data[expireKey]
 			if !ok {
-				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
-					return err
+				if l.GetTimeout() > 0 {
+					if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+						lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+						return err
+					}
 				}
 				continue
 			}
@@ -123,7 +152,7 @@ func (l *Lock) Acquire() error {
 			continue
 		}
 
-		lockLogger.Info("Lock acquired", "Lock.Name", l.name)
+		lockLogger.Info("Lock acquired", "Lock.Name", l.GetName())
 		break
 	}
 	return nil
@@ -156,6 +185,7 @@ func newConfigMapForLock(l *Lock, pod *corev1.Pod) *corev1.ConfigMap {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      l.name,
 			Namespace: pod.GetNamespace(),
+			Labels:    l.labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         "v1",
@@ -167,8 +197,6 @@ func newConfigMapForLock(l *Lock, pod *corev1.Pod) *corev1.ConfigMap {
 				},
 			},
 		},
-		Data: map[string]string{
-			expireKey: strconv.FormatInt(time.Now().Add(l.timeout).Unix(), 10),
-		},
+		Data: l.GetCMData(),
 	}
 }

@@ -3,7 +3,6 @@ kind: VDICluster
 metadata:
   name: kvdi
   labels:
-    {{- include "kvdi.labels" . | nindent 4 }}
-    component: kvdi-cluster
+    {{-  toYaml .Values.vdi.labels | nindent 4 }}
 spec:
   {{ toYaml .Values.vdi.spec | nindent 2 }}

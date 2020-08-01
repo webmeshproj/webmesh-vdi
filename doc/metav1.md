@@ -12,6 +12,8 @@ Types
 -   [CreateRoleRequest](#CreateRoleRequest)
 -   [CreateSessionRequest](#CreateSessionRequest)
 -   [CreateUserRequest](#CreateUserRequest)
+-   [DesktopSession](#DesktopSession)
+-   [DesktopSessionsResponse](#DesktopSessionsResponse)
 -   [JWTClaims](#JWTClaims)
 -   [LoginRequest](#LoginRequest)
 -   [MFAResponse](#MFAResponse)
@@ -165,6 +167,57 @@ return an error describing why.
 <tr class="odd">
 <td><code>roles</code> <em>[]string</em></td>
 <td><p>Roles to assign the new user. These are the names of VDIRoles in the cluster.</p></td>
+</tr>
+</tbody>
+</table>
+
+### DesktopSession
+
+DesktopSession describes the properties and status of a desktop session.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code> <em>string</em></td>
+<td><p>The name of the desktop session.</p></td>
+</tr>
+<tr class="even">
+<td><code>namespace</code> <em>string</em></td>
+<td><p>The namespace of the desktop session.</p></td>
+</tr>
+<tr class="odd">
+<td><code>user</code> <em>string</em></td>
+<td><p>The username of the user who owns this session.</p></td>
+</tr>
+<tr class="even">
+<td><code>status</code> <em><a href="#DesktopSessionStatus">DesktopSessionStatus</a></em></td>
+<td><p>Connection status for the session.</p></td>
+</tr>
+</tbody>
+</table>
+
+### DesktopSessionsResponse
+
+DesktopSessionsResponse contains a list of desktop sessions and
+information about their statuses.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sessions</code> <em><a href="#DesktopSession">[]*github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.DesktopSession</a></em></td>
+<td><p>A list of desktop sessions.</p></td>
 </tr>
 </tbody>
 </table>
@@ -500,4 +553,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `2120efe`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `a3dc523`.*

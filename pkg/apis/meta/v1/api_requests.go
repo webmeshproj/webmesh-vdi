@@ -257,3 +257,41 @@ func (r *CreateSessionRequest) GetNamespace() string {
 	}
 	return DefaultNamespace
 }
+
+// DesktopSessionsResponse contains a list of desktop sessions and information
+// about their statuses.
+type DesktopSessionsResponse struct {
+	// A list of desktop sessions.
+	Sessions []*DesktopSession `json:"sessions"`
+}
+
+// DesktopSession describes the properties and status of a desktop session.
+type DesktopSession struct {
+	// The name of the desktop session.
+	Name string `json:"name"`
+	// The namespace of the desktop session.
+	Namespace string `json:"namespace"`
+	// The username of the user who owns this session.
+	User string `json:"user"`
+	// Connection status for the session.
+	Status *DesktopSessionStatus `json:"status"`
+}
+
+// DesktopSessionStatus contains information about the connection status for a session's
+// display and audio.
+type DesktopSessionStatus struct {
+	// Connection status for the desktop's display.
+	Display *ConnectionStatus `json:"display"`
+	// Connection status for the desktop's audio.
+	Audio *ConnectionStatus `json:"audio"`
+}
+
+// ConnectionStatus describes the connection status of a desktop's display or audio.
+type ConnectionStatus struct {
+	// Whether or not a client is connected to the stream.
+	Connected bool `json:"connected"`
+	// The address of the client connected to the stream.
+	ClientAddr string `json:"clientAddr,omitempty"`
+	// The app instance handling the proxy for this stream.
+	ProxyPod string `json:"proxyPod,omitempty"`
+}
