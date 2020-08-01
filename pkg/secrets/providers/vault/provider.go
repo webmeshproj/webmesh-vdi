@@ -18,11 +18,11 @@ var vaultLogger = logf.Log.WithName("vault_secrets")
 type Provider struct {
 	common.SecretsProvider
 
-	initialized bool
 	crConfig    *v1alpha1.VaultConfig
 	vaultConfig *api.Config
 	client      *api.Client
 	stopCh      chan struct{}
+	getAuth     func(*v1alpha1.VaultConfig, *api.Config) (*api.Secret, error)
 }
 
 // Blank assignmnt to make sure Provider satisfies the SecretsProvider
@@ -31,7 +31,9 @@ var _ common.SecretsProvider = &Provider{}
 
 // New returns a new Provider.
 func New() *Provider {
-	return &Provider{}
+	return &Provider{
+		getAuth: getK8sAuth,
+	}
 }
 
 // Setup will set configurations then make sure we are able to read a k8s token
@@ -48,15 +50,14 @@ func (p *Provider) Setup(client client.Client, cluster *v1alpha1.VDICluster) err
 	if err != nil {
 		return err
 	}
-	auth, err := p.getClientToken()
+	auth, err := p.getAuth(p.crConfig, p.vaultConfig)
 	if err != nil {
 		return err
 	}
 	p.client.SetToken(auth.Auth.ClientToken)
-	if !p.initialized {
+	if p.stopCh == nil {
 		p.stopCh = make(chan struct{})
 		go p.runTokenRefreshLoop(auth)
-		p.initialized = true
 	}
 	return nil
 }

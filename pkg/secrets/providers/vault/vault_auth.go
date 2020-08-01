@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 )
 
 // DefaultTokenPath is where the k8s serviceaccount token is mounted inside the
@@ -25,13 +26,13 @@ type AuthRequest struct {
 
 // getClientToken will read the k8s serviceaccount token and use it to request
 // a vault login token.
-func (p *Provider) getClientToken() (*api.Secret, error) {
+func getK8sAuth(crConfig *v1alpha1.VaultConfig, vaultConfig *api.Config) (*api.Secret, error) {
 	tokenBytes, err := ioutil.ReadFile(DefaultTokenPath)
 	if err != nil {
 		return nil, err
 	}
-	authURLStr := fmt.Sprintf("%s/v1/auth/kubernetes/login", p.vaultConfig.Address)
-	body, err := json.Marshal(&AuthRequest{JWT: string(tokenBytes), Role: p.crConfig.GetAuthRole()})
+	authURLStr := fmt.Sprintf("%s/v1/auth/kubernetes/login", vaultConfig.Address)
+	body, err := json.Marshal(&AuthRequest{JWT: string(tokenBytes), Role: crConfig.GetAuthRole()})
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func (p *Provider) getClientToken() (*api.Secret, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.vaultConfig.HttpClient.Do(req)
+	res, err := vaultConfig.HttpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +79,7 @@ func (p *Provider) runTokenRefreshLoop(authInfo *api.Secret) {
 				// If there was an error we can try a full login
 			}
 			var err error
-			authInfo, err = p.getClientToken()
+			authInfo, err = p.getAuth(p.crConfig, p.vaultConfig)
 			if err != nil {
 				vaultLogger.Error(err, "Failed to acquire a new vault token, retrying in 10 seconds")
 				ticker = time.NewTicker(time.Duration(10) * time.Second)
