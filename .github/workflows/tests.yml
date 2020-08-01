@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
 
@@ -33,10 +33,10 @@ jobs:
       run: |
         go mod download
 
-    - name: Lint
+    - name: Lint all packages
       run: |
         make lint
 
-    - name: Tests
+    - name: Run all unit tests
       run: |
         make test

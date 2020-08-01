@@ -4,9 +4,9 @@ on:
   create:
     tags:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
 
@@ -23,7 +23,7 @@ jobs:
     - name: Get image version
       shell: bash
       run: |
-        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "master" ]] && echo latest || echo ${GITHUB_REF##*/})
+        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
       id: version
 
     - name: Build the manager docker image
@@ -37,17 +37,20 @@ jobs:
 
     - name: Push the manager docker image
       run: VERSION=${{ steps.version.outputs.tag }} make push-manager
+      if: ${{ github.event_name != 'pull_request' }}
 
     - name: Push the app docker image
       run: VERSION=${{ steps.version.outputs.tag }} make push-app
+      if: ${{ github.event_name != 'pull_request' }}
 
     - name: Push the novnc-proxy docker image
       run: VERSION=${{ steps.version.outputs.tag }} make push-novnc-proxy
+      if: ${{ github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh latest
       run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@latest
-      if: ${{ steps.version.outputs.tag == 'latest' }}
+      if: ${{ steps.version.outputs.tag == 'latest' && github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh version
       run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@v/${{ steps.version.outputs.tag }}.info
-      if: ${{ steps.version.outputs.tag != 'latest' }}
+      if: ${{ steps.version.outputs.tag != 'latest' && github.event_name != 'pull_request' }}

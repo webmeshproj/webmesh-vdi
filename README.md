@@ -40,7 +40,7 @@ I wrote up a [`CONTRIBUTING`](doc/CONTRIBUTING.md) doc just outlining some of th
 
 ### TODO
 
-  - "App Profiles" - I have a POC implementation on master but it is still pretty buggy
+  - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
   - Harden images more
   - UI needs serious makeover
   - More testing and docs

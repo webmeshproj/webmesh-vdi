@@ -7,6 +7,10 @@ Majority of types and K8s API definitions can be found in `pkg/apis`. These are 
 
 You can use the [`godoc`](https://pkg.go.dev/github.com/tinyzimmer/kvdi) for navigating the code base and I'll definitely be trying to get comments on every exported object at some point. I've made good dents so far.
 
+## Submitting a PR
+
+I might draw up some templates later, but for now if you'd like to submit a PR, fork this repository and then open a PR into the `main` branch of this repo.
+
 ## Current TODOs
 
 If you are wanting to contribute I am open to discussions in an issue, PRs, whatever. 
@@ -33,4 +37,4 @@ Here are just some of the things I know still need to be done before this could 
     - One issue is that it looks like a custom client connector is needed, the other is that I'm not sure if this is still supported.
 
   - Base desktop images already install `Xpra` for `XRANDR` support in `Xvnc` (dynamic screen resizing). `Xpra` can also launch a display server on any socket and there exist websocket client implementations in JS that can be experimented with on the frontend. At time of writing this is the one I am exploring further. 
-    - There is a semi-working implementation of this on `master` branch at the moment. It requires the `DesktopTemplate` set `spec.config.socketType: xpra`. There remain some issues with fuzziness and scaling.
+    - There is a semi-working implementation of this on `main` branch at the moment. It requires the `DesktopTemplate` set `spec.config.socketType: xpra`. There remain some issues with fuzziness and scaling.

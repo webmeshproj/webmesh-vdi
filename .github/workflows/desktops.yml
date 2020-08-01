@@ -1,10 +1,8 @@
 name: Desktops
 
 on:
-  create:
-    tags:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
 
@@ -21,7 +19,7 @@ jobs:
     - name: Get image version
       shell: bash
       run: |
-        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "master" ]] && echo latest || echo ${GITHUB_REF##*/})
+        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
       id: version
 
     - name: Build and push the ubuntu base image
