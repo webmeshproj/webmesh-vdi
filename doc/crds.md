@@ -406,7 +406,7 @@ authentication backend.
 </tr>
 <tr class="even">
 <td><code>bindUserDNSecretKey</code> <em>string</em></td>
-<td><p>If you want to use the built-in secrets backend (vault or k8s currently), set this to either the name of the secret in the vault path, or the key of the secret used in <code>k8sSecret.secretName. In default configurations this is</code> <code>kvdi-app-secrets</code>. Defaults to <code>ldap-userdn</code>.</p></td>
+<td><p>If you want to use the built-in secrets backend (vault or k8s currently), set this to either the name of the secret in the vault path (the key must be “data” for now), or the key of the secret used in <code>secrets.k8sSecret.secretName</code>. In default configurations this is <code>kvdi-app-secrets</code>. Defaults to <code>ldap-userdn</code>.</p></td>
 </tr>
 <tr class="odd">
 <td><code>bindPasswordSecretKey</code> <em>string</em></td>
@@ -454,7 +454,7 @@ for authentication.
 </tr>
 <tr class="even">
 <td><code>clientIDKey</code> <em>string</em></td>
-<td><p>When using the built-in secrets backend, the key to where the client-id is stored. When configuring <code>clientCredentialsSecret</code>, set this to the key in that secret. Defaults to <code>oidc-clientid</code>.</p></td>
+<td><p>When using the built-in secrets backend, the key to where the client-id is stored. Set this to either the name of the secret in the vault path (the key must be “data” for now), or the key of the secret used in <code>secrets.k8sSecret.secretName</code>. When configuring <code>clientCredentialsSecret</code>, set this to the key in that secret. Defaults to <code>oidc-clientid</code>.</p></td>
 </tr>
 <tr class="odd">
 <td><code>clientSecretKey</code> <em>string</em></td>
@@ -717,4 +717,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `952ea0d`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `2120efe`.*

@@ -92,8 +92,8 @@ type LDAPConfig struct {
 	// the LDAP server.
 	TLSCACert string `json:"tlsCACert,omitempty"`
 	// If you want to use the built-in secrets backend (vault or k8s currently),
-	// set this to either the name of the secret in the vault path, or the key of
-	// the secret used in `k8sSecret.secretName. In default configurations this is`
+	// set this to either the name of the secret in the vault path (the key must be "data" for now), or the key of
+	// the secret used in `secrets.k8sSecret.secretName`. In default configurations this is
 	// `kvdi-app-secrets`. Defaults to `ldap-userdn`.
 	BindUserDNSecretKey string `json:"bindUserDNSecretKey,omitempty"`
 	// Similar to the `bindUserDNSecretKey`, but for the location of the password
@@ -123,8 +123,9 @@ type OIDCConfig struct {
 	// The OIDC issuer URL used for discovery
 	IssuerURL string `json:"issuerURL,omitempty"`
 	// When using the built-in secrets backend, the key to where the client-id is
-	// stored. When configuring `clientCredentialsSecret`, set this to the key in
-	// that secret. Defaults to `oidc-clientid`.
+	// stored. Set this to either the name of the secret in the vault path (the key must be "data" for now),
+	// or the key of the secret used in `secrets.k8sSecret.secretName`. When configuring `clientCredentialsSecret`,
+	// set this to the key in that secret. Defaults to `oidc-clientid`.
 	ClientIDKey string `json:"clientIDKey,omitempty"`
 	// Similar to `clientIDKey`, but for the location of the client secret. Defaults
 	// to `oidc-clientsecret`.

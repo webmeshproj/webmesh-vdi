@@ -122,9 +122,10 @@ spec:
                       bindUserDNSecretKey:
                         description: If you want to use the built-in secrets backend
                           (vault or k8s currently), set this to either the name of
-                          the secret in the vault path, or the key of the secret used
-                          in `k8sSecret.secretName. In default configurations this
-                          is` `kvdi-app-secrets`. Defaults to `ldap-userdn`.
+                          the secret in the vault path (the key must be "data" for
+                          now), or the key of the secret used in `secrets.k8sSecret.secretName`.
+                          In default configurations this is `kvdi-app-secrets`. Defaults
+                          to `ldap-userdn`.
                         type: string
                       tlsCACert:
                         description: The base64 encoded CA certificate to use when
@@ -168,8 +169,11 @@ spec:
                         type: string
                       clientIDKey:
                         description: When using the built-in secrets backend, the
-                          key to where the client-id is stored. When configuring `clientCredentialsSecret`,
-                          set this to the key in that secret. Defaults to `oidc-clientid`.
+                          key to where the client-id is stored. Set this to either
+                          the name of the secret in the vault path (the key must be
+                          "data" for now), or the key of the secret used in `secrets.k8sSecret.secretName`.
+                          When configuring `clientCredentialsSecret`, set this to
+                          the key in that secret. Defaults to `oidc-clientid`.
                         type: string
                       clientSecretKey:
                         description: Similar to `clientIDKey`, but for the location
