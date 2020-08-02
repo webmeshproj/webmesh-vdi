@@ -29,7 +29,7 @@ func getFakeClient(t *testing.T) client.Client {
 }
 
 func TestNew(t *testing.T) {
-	if reflect.TypeOf(New()) != reflect.TypeOf(&AuthProvider{}) {
+	if reflect.TypeOf(New(nil)) != reflect.TypeOf(&AuthProvider{}) {
 		t.Error("Someone messed with New")
 	}
 }
@@ -38,7 +38,7 @@ func TestSetup(t *testing.T) {
 	cluster := &v1alpha1.VDICluster{}
 	cluster.Name = "test-cluster"
 	cluster.Namespace = "test-namespace"
-	provider := New()
+	provider := New(nil)
 	if err := provider.Setup(getFakeClient(t), cluster); err != nil {
 		t.Error("No error should happen when setting up the local auth provider")
 	}

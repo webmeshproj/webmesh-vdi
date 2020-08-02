@@ -26,8 +26,8 @@ type AuthProvider struct {
 }
 
 // New returns a new AuthProvider.
-func New() common.AuthProvider {
-	return &AuthProvider{}
+func New(s *secrets.SecretEngine) common.AuthProvider {
+	return &AuthProvider{secrets: s}
 }
 
 // Setup implements the AuthProvider interface and sets a local reference to the
@@ -35,8 +35,7 @@ func New() common.AuthProvider {
 func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	a.client = c
 	a.cluster = cluster
-	a.secrets = secrets.GetSecretEngine(cluster)
-	return a.secrets.Setup(c, cluster)
+	return nil
 }
 
 // Close returns nil automatically as no cleanup is required.

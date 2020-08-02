@@ -47,7 +47,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 			return nil, err
 		}
 		// clear the state secret for this auth session
-		if err := a.secrets.Lock(); err != nil {
+		if err := a.secrets.Lock(15); err != nil {
 			return nil, err
 		}
 		defer a.secrets.Release()
@@ -151,7 +151,7 @@ RoleLoop:
 }
 
 func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1.AuthResult) error {
-	if err := a.secrets.Lock(); err != nil {
+	if err := a.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer a.secrets.Release()

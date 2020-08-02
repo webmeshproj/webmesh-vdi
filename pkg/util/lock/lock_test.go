@@ -104,12 +104,15 @@ func TestAcquireLock(t *testing.T) {
 		t.Error("Expected to be able to release lock, got:", err.Error())
 	}
 
-	if err := lock.Release(); err != nil {
-		t.Error("Expected to be able to release lock, got:", err.Error())
-	}
 	// should be safe to call on an already deleted lock without error
 	if err := lock.Release(); err != nil {
 		t.Error("Expected to be able to release lock, got:", err.Error())
+	}
+
+	if err := c.Get(context.TODO(), cmName, &corev1.ConfigMap{}); err == nil {
+		t.Error("Expected configmap to not exist anymore, got nil")
+	} else if client.IgnoreNotFound(err) != nil {
+		t.Error("Expected not found error, got:", err)
 	}
 }
 

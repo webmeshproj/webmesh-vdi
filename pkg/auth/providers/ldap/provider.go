@@ -45,8 +45,8 @@ type AuthProvider struct {
 var _ common.AuthProvider = &AuthProvider{}
 
 // New returns a new LDAPAuthProvider.
-func New() common.AuthProvider {
-	return &AuthProvider{}
+func New(s *secrets.SecretEngine) common.AuthProvider {
+	return &AuthProvider{secrets: s}
 }
 
 // Setup implements the AuthProvider interface and sets a local reference to the
@@ -54,13 +54,8 @@ func New() common.AuthProvider {
 func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	a.client = c
 	a.cluster = cluster
-	a.secrets = secrets.GetSecretEngine(cluster)
 
 	var err error
-
-	if err = a.secrets.Setup(c, cluster); err != nil {
-		return err
-	}
 
 	if err = a.fetchAndSetBindCredentials(); err != nil {
 		return err

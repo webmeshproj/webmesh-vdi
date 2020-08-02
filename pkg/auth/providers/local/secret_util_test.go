@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"github.com/tinyzimmer/kvdi/pkg/secrets"
 )
 
 const testUsername = "admin"
@@ -32,7 +33,9 @@ func providerSetUp(t *testing.T) *AuthProvider {
 	provider := &AuthProvider{
 		client:  client,
 		cluster: cluster,
+		secrets: secrets.GetSecretEngine(cluster),
 	}
+	provider.secrets.Setup(client, cluster)
 	provider.Setup(client, cluster)
 	return provider
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -16,17 +15,7 @@ const passwdKey = "passwd"
 
 // Reconcile prepares the resources required to use the local authentication driver.
 func (l *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
-	secretsEngine := secrets.GetSecretEngine(cluster)
-	if err := secretsEngine.Setup(c, cluster); err != nil {
-		return err
-	}
-	defer func() {
-		if err := secretsEngine.Close(); err != nil {
-			reqLogger.Error(err, "Error cleaning up secrets engine")
-		}
-	}()
-
-	if _, err := secretsEngine.ReadSecret(passwdKey, false); err != nil {
+	if _, err := l.secrets.ReadSecret(passwdKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err
 		}
@@ -35,7 +24,7 @@ func (l *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster
 		if err != nil {
 			return err
 		}
-		if err := secretsEngine.WriteSecret(passwdKey, []byte(fmt.Sprintf("admin:%s:%s\n", adminRole.GetName(), hash))); err != nil {
+		if err := l.secrets.WriteSecret(passwdKey, []byte(fmt.Sprintf("admin:%s:%s\n", adminRole.GetName(), hash))); err != nil {
 			return err
 		}
 	}

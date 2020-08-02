@@ -104,63 +104,65 @@ func (l *Lock) Acquire() error {
 
 		lock := newConfigMapForLock(l, pod)
 
-		if err := l.client.Create(ctx, lock); err != nil {
+		err := l.client.Create(ctx, lock)
 
-			if !kerrors.IsAlreadyExists(err) {
-				lockLogger.Error(err, "Error trying to create configmap, could not acquire lock")
-				return err
+		// the lock was acquired
+		if err == nil {
+			lockLogger.Info("Lock acquired", "Lock.Name", l.GetName())
+			break
+		}
+
+		// we couldn't acquire the lock
+		if !kerrors.IsAlreadyExists(err) {
+			lockLogger.Error(err, "Error trying to create configmap, could not acquire lock")
+			return err
+		}
+
+		lockLogger.Info("Lock is currently held, checking status of existing lock")
+		existingLock := &corev1.ConfigMap{}
+		nn := types.NamespacedName{Name: lock.GetName(), Namespace: lock.GetNamespace()}
+		if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
+			if kerrors.IsNotFound(err) {
+				continue
 			}
+			lockLogger.Error(err, "Error looking up existing lock, could not acquire lock")
+			return err
+		}
 
-			lockLogger.Info("Lock is currently held, checking status of existing lock")
-			existingLock := &corev1.ConfigMap{}
-			nn := types.NamespacedName{Name: lock.GetName(), Namespace: lock.GetNamespace()}
-			if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
-				if kerrors.IsNotFound(err) {
-					continue
+		expiresAt, ok := existingLock.Data[expireKey]
+		if !ok {
+			if l.GetTimeout() > 0 {
+				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+					return err
 				}
-				lockLogger.Error(err, "Error looking up existing lock, could not acquire lock")
-				return err
 			}
-
-			expiresAt, ok := existingLock.Data[expireKey]
-			if !ok {
-				if l.GetTimeout() > 0 {
-					if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-						lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
-						return err
-					}
+			continue
+		}
+		if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
+			if time.Now().After(time.Unix(expireTime, 0)) {
+				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+					return err
 				}
 				continue
 			}
-			if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
-				if time.Now().After(time.Unix(expireTime, 0)) {
-					if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-						lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
-						return err
-					}
-					continue
-				}
-			}
-
-			if time.Now().After(failTimeout) {
-				lockLogger.Info("Timeout reached before we could acquire a lock")
-				return errors.New("Failed to acquire lock in the given time limit")
-			}
-
-			lockLogger.Info("Current lock is still active, trying again in 2 seconds...")
-			time.Sleep(time.Duration(2) * time.Second)
-			continue
 		}
 
-		lockLogger.Info("Lock acquired", "Lock.Name", l.GetName())
-		break
+		if time.Now().After(failTimeout) {
+			lockLogger.Info("Timeout reached before we could acquire a lock")
+			return errors.New("Failed to acquire lock in the given time limit")
+		}
+
+		lockLogger.Info("Current lock is still active, trying again in 1 second...")
+		time.Sleep(time.Duration(1) * time.Second)
 	}
 	return nil
 }
 
 // Release will delete the configmap, releasing the lock.
 func (l *Lock) Release() error {
-	nn := types.NamespacedName{Name: l.name, Namespace: l.namespace}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
 	found := &corev1.ConfigMap{}
 	if err := l.client.Get(context.TODO(), nn, found); err != nil {
 		if kerrors.IsNotFound(err) {
@@ -174,9 +176,9 @@ func (l *Lock) Release() error {
 }
 
 // releaseStaleLock removes a stale lock from kubernetes
-func (l *Lock) releaseStaleLock(ctx context.Context, lock *corev1.ConfigMap) error {
-	lockLogger.Info("Releasing stale lock", "PreviousOwner", lock.OwnerReferences[0])
-	return client.IgnoreNotFound(l.client.Delete(ctx, lock))
+func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error {
+	lockLogger.Info("Releasing stale lock", "PreviousOwner", cm.OwnerReferences[0])
+	return client.IgnoreNotFound(l.client.Delete(ctx, cm))
 }
 
 // newConfigMapForLock returns a new configmap for locking.

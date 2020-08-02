@@ -4,14 +4,21 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // buildRouter builds the API router
 func (d *desktopAPI) buildRouter() error {
 	r := mux.NewRouter()
 
+	// Run the metrics middleware first
+	r.Use(prometheusMiddleware)
+
 	// Setup the decoder
 	r.Use(DecodeRequest)
+
+	// metrics
+	r.PathPrefix("/api/metrics").Handler(promhttp.Handler())
 
 	// Readiness/liveness probes
 	r.PathPrefix("/api/healthz").HandlerFunc(d.Healthz).Methods("GET")

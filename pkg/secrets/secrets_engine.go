@@ -79,7 +79,7 @@ func (s *SecretEngine) setClient(c client.Client) { s.client = c }
 // Setup sets the local client inteface and calls Setup on the backend.
 func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	s.setClient(c)
-	if err := s.Lock(); err != nil {
+	if err := s.Lock(10); err != nil {
 		return err
 	}
 	defer s.Release()
@@ -204,17 +204,15 @@ func (s *SecretEngine) AppendSecret(name string, line []byte) error {
 // Lock locks the secret engine. This is useful for long running operations that
 // need to guarantee consistency. If there are multiple replicas of the app running,
 // a remote lock is also acquired to keep peer processes from interfering.
-func (s *SecretEngine) Lock() error {
+func (s *SecretEngine) Lock(timeoutSeconds int) error {
 	// mux lock to make sure the local process doesn't overwrite the lock
 	s.mux.Lock()
-
 	if *s.cluster.GetAppReplicas() > 1 {
 		// remote lock to be held against peers
-		s.lock = lock.New(s.client, s.cluster.GetAppSecretsName(), time.Duration(10)*time.Second)
-		if err := s.lock.Acquire(); err != nil {
-			return err
-		}
+		s.lock = lock.New(s.client, s.cluster.GetAppSecretsName(), time.Duration(timeoutSeconds)*time.Second)
+		return s.lock.Acquire()
 	}
+
 	return nil
 }
 

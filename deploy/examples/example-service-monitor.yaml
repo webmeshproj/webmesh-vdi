@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kvdi-metrics-service-monitor
+  labels:
+    app: kvdi
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      component: kvdi-cluster
+      vdiCluster: kvdi
+      vdiComponent: app
+  endpoints:
+  - port: web
+    path: /api/metrics
+    interval: 10s
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true

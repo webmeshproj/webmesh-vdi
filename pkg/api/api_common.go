@@ -78,7 +78,7 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *v1.AuthResult, 
 
 func (d *desktopAPI) generateRefreshToken(user *v1.VDIUser) (string, error) {
 	refreshToken := uuid.New().String()
-	if err := d.secrets.Lock(); err != nil {
+	if err := d.secrets.Lock(10); err != nil {
 		return "", err
 	}
 	defer d.secrets.Release()
@@ -94,7 +94,7 @@ func (d *desktopAPI) generateRefreshToken(user *v1.VDIUser) (string, error) {
 }
 
 func (d *desktopAPI) lookupRefreshToken(refreshToken string) (string, error) {
-	if err := d.secrets.Lock(); err != nil {
+	if err := d.secrets.Lock(10); err != nil {
 		return "", err
 	}
 	defer d.secrets.Release()

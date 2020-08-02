@@ -18,6 +18,7 @@ require (
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/operator-framework/operator-sdk v0.19.2
+	github.com/prometheus/client_golang v1.7.1
 	github.com/spf13/pflag v1.0.5
 	github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119
 	go.opencensus.io v0.22.4 // indirect

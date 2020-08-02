@@ -1,9 +1,7 @@
 package apiutil
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
@@ -66,19 +64,7 @@ func GetTemplateFromRequest(r *http.Request) string {
 
 // GetGorillaPath will retrieve the URL path as it was configured in mux.
 func GetGorillaPath(r *http.Request) string {
-	vars := mux.Vars(r)
-	path := strings.TrimSuffix(r.URL.Path, "/")
-	for k, v := range vars {
-		path = rev(strings.Replace(rev(path), rev(v), rev(fmt.Sprintf("{%s}", k)), 1))
-	}
+	rt := mux.CurrentRoute(r)
+	path, _ := rt.GetPathTemplate()
 	return path
-}
-
-// rev will reverse a string so we can call strings.Replace from the end
-func rev(s string) string {
-	runes := []rune(s)
-	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-		runes[i], runes[j] = runes[j], runes[i]
-	}
-	return string(runes)
 }

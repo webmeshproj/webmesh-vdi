@@ -55,7 +55,7 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 		strings.Replace(apiutil.GetNamespacedNameFromRequest(r).String(), "/", "-", -1),
 	)
 	labels := d.vdiCluster.GetComponentLabels("display-lock")
-	labels[v1.ClientAddrLabel] = getClientIP(r)
+	labels[v1.ClientAddrLabel] = strings.Split(r.RemoteAddr, ":")[0] // Populated by ProxyHeaders handler wrapping the router
 	sessionLock := lock.New(d.client, lockName, -1).WithLabels(labels)
 
 	if err := sessionLock.Acquire(); err != nil {
@@ -105,7 +105,7 @@ func (d *desktopAPI) GetWebsockifyAudio(w http.ResponseWriter, r *http.Request) 
 		strings.Replace(apiutil.GetNamespacedNameFromRequest(r).String(), "/", "-", -1),
 	)
 	labels := d.vdiCluster.GetComponentLabels("audio-lock")
-	labels[v1.ClientAddrLabel] = getClientIP(r)
+	labels[v1.ClientAddrLabel] = strings.Split(r.RemoteAddr, ":")[0] // Populated by ProxyHeaders handler wrapping the router
 	sessionLock := lock.New(d.client, lockName, -1).WithLabels(labels)
 
 	if err := sessionLock.Acquire(); err != nil {
@@ -147,16 +147,4 @@ func (d *desktopAPI) ServeWebsocketProxy(w http.ResponseWriter, r *http.Request)
 	}
 	proxy.Upgrader = &upgrader
 	proxy.ServeHTTP(w, r)
-}
-
-func getClientIP(r *http.Request) string {
-	ip := r.Header.Get("X-Real-Ip")
-	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
-	}
-	if ip == "" {
-		ip = r.RemoteAddr
-	}
-	// strip port if present
-	return strings.Split(ip, ":")[0]
 }

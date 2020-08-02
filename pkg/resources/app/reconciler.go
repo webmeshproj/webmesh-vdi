@@ -72,7 +72,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// reconcile any resources needed for the auth provider
-	authProvider := auth.GetAuthProvider(instance)
+	authProvider := auth.GetAuthProvider(instance, secretsEngine)
 	if err := authProvider.Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
 		return err
 	}

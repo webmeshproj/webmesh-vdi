@@ -71,16 +71,16 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) (reconcile.Resul
 			// this means mfa also still need to be setup
 			d.mfa = mfa.NewManager(d.secrets)
 		}
+		// call Setup on the secrets backend, should be idempotent
+		if err := d.secrets.Setup(d.client, d.vdiCluster); err != nil {
+			return reconcile.Result{}, err
+		}
 		if d.auth == nil {
 			// auth has not been setup yet
-			d.auth = auth.GetAuthProvider(d.vdiCluster)
+			d.auth = auth.GetAuthProvider(d.vdiCluster, d.secrets)
 		}
 		// call Setup on the auth provider, should be idempotent
 		if err := d.auth.Setup(d.client, d.vdiCluster); err != nil {
-			return reconcile.Result{}, err
-		}
-		// call Setup on the secrets backend, should be idempotent
-		if err := d.secrets.Setup(d.client, d.vdiCluster); err != nil {
 			return reconcile.Result{}, err
 		}
 

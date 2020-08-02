@@ -23,7 +23,7 @@ func (a *AuthProvider) getUser(username string) (*User, error) {
 // createUser adds a new user to the passwd file. If it already exists an error
 // is returned.
 func (a *AuthProvider) createUser(user *User) error {
-	if err := a.secrets.Lock(); err != nil {
+	if err := a.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer a.secrets.Release()
@@ -41,7 +41,7 @@ func (a *AuthProvider) createUser(user *User) error {
 }
 
 func (a *AuthProvider) updateUser(user *User) error {
-	if err := a.secrets.Lock(); err != nil {
+	if err := a.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer a.secrets.Release()
@@ -57,7 +57,7 @@ func (a *AuthProvider) updateUser(user *User) error {
 }
 
 func (a *AuthProvider) deleteUser(username string) error {
-	if err := a.secrets.Lock(); err != nil {
+	if err := a.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer a.secrets.Release()

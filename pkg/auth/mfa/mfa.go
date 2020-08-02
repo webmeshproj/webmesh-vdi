@@ -73,7 +73,7 @@ func (m *Manager) GetUserMFAStatus(name string) (string, bool, error) {
 // SetUserMFAStatus sets the value of the user's OTP secret and whether it
 // is verified.
 func (m *Manager) SetUserMFAStatus(name, secret string, verified bool) error {
-	if err := m.secrets.Lock(); err != nil {
+	if err := m.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer m.secrets.Release()
@@ -92,7 +92,7 @@ func (m *Manager) SetUserMFAStatus(name, secret string, verified bool) error {
 
 // DeleteUserSecret will remove OTP data for the given username.
 func (m *Manager) DeleteUserSecret(name string) error {
-	if err := m.secrets.Lock(); err != nil {
+	if err := m.secrets.Lock(15); err != nil {
 		return err
 	}
 	defer m.secrets.Release()
