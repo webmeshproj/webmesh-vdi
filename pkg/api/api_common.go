@@ -82,7 +82,7 @@ func (d *desktopAPI) generateRefreshToken(user *v1.VDIUser) (string, error) {
 		return "", err
 	}
 	defer d.secrets.Release()
-	tokens, err := d.secrets.ReadSecretMap(v1.RefreshTokensSecretKey, true)
+	tokens, err := d.secrets.ReadSecretMap(v1.RefreshTokensSecretKey, false)
 	if err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return "", err
@@ -98,7 +98,7 @@ func (d *desktopAPI) lookupRefreshToken(refreshToken string) (string, error) {
 		return "", err
 	}
 	defer d.secrets.Release()
-	tokens, err := d.secrets.ReadSecretMap(v1.RefreshTokensSecretKey, true)
+	tokens, err := d.secrets.ReadSecretMap(v1.RefreshTokensSecretKey, false)
 	if err != nil {
 		if errors.IsSecretNotFoundError(err) {
 			return "", errors.New("The refresh token does not exist in the secret storage")
