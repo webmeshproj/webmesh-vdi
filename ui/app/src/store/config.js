@@ -43,10 +43,10 @@ export const ConfigStore = new Vuex.Store({
     serverConfig: state => state.serverConfig,
     authMethod: state => {
       if (state.serverConfig.auth !== undefined) {
-        if (state.serverConfig.auth.ldapAuth !== undefined) {
+        if (state.serverConfig.auth.ldapAuth !== undefined && state.serverConfig.auth.ldapAuth.URL) {
           return 'ldap'
         }
-        if (state.serverConfig.auth.oidcAuth !== undefined) {
+        if (state.serverConfig.auth.oidcAuth !== undefined && state.serverConfig.auth.oidcAuth.IssuerURL) {
           return 'oidc'
         }
       }
