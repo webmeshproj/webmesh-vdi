@@ -43,7 +43,7 @@ export const UserStore = new Vuex.Store({
       state.user = user
     },
 
-    auth_success (state, token, renewable) {
+    auth_success (state, { token, renewable }) {
       state.status = 'success'
       state.token = token
       state.stateToken = ''
@@ -142,7 +142,7 @@ export const UserStore = new Vuex.Store({
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
         commit('auth_got_user', user)
         if (authorized) {
-          commit('auth_success', token, renewable)
+          commit('auth_success', { token, renewable })
           if (renewable) {
             state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
           }
@@ -168,7 +168,7 @@ export const UserStore = new Vuex.Store({
         if (renewable) {
           state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
         }
-        commit('auth_success', token, renewable)
+        commit('auth_success', { token, renewable })
       } catch (err) {
         commit('auth_error')
         let error
@@ -200,7 +200,7 @@ export const UserStore = new Vuex.Store({
       const renewable = res.data.renewable
       Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
       if (authorized) {
-        commit('auth_success', token, renewable)
+        commit('auth_success', { token, renewable })
         if (renewable) {
           state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
         }
