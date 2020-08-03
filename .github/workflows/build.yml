@@ -47,8 +47,8 @@ jobs:
       run: VERSION=${{ steps.version.outputs.tag }} make push-novnc-proxy
       if: ${{ github.event_name != 'pull_request' }}
 
-    - name: Force pkg.go.dev to refresh latest
-      run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@latest
+    - name: Force pkg.go.dev to refresh main
+      run: curl "https://proxy.golang.org/github.com/tinyzimmer/kvdi/@v/${GITHUB_REF##*/}.info"
       if: ${{ steps.version.outputs.tag == 'latest' && github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh version
