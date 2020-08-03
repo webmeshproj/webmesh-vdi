@@ -5,7 +5,7 @@ metadata:
   name: kvdi-metrics-service-monitor
   labels:
     app: kvdi
-    release: prometheus
+    release: prometheus  # If using prometheus-operator, the name of your release
 spec:
   namespaceSelector:
     matchNames:

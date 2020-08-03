@@ -39,6 +39,8 @@ type Lock struct {
 	namespace string
 	// labels to apply to the configmap
 	labels map[string]string
+	// the cm object backing this lock
+	cm *corev1.ConfigMap
 }
 
 // New returns a new lock. If timeout is a value less than zero, then no expiration
@@ -50,6 +52,7 @@ func New(c client.Client, name string, timeout time.Duration) *Lock {
 		name:    name,
 		timeout: timeout,
 		labels:  map[string]string{},
+		cm:      &corev1.ConfigMap{},
 	}
 }
 
@@ -100,11 +103,12 @@ func (l *Lock) Acquire() error {
 
 	defer cancel()
 
+	cm := newConfigMapForLock(l, pod)
+	nn := types.NamespacedName{Name: cm.GetName(), Namespace: cm.GetNamespace()}
+
 	for {
 
-		lock := newConfigMapForLock(l, pod)
-
-		err := l.client.Create(ctx, lock)
+		err := l.client.Create(ctx, cm)
 
 		// the lock was acquired
 		if err == nil {
@@ -120,7 +124,6 @@ func (l *Lock) Acquire() error {
 
 		lockLogger.Info("Lock is currently held, checking status of existing lock")
 		existingLock := &corev1.ConfigMap{}
-		nn := types.NamespacedName{Name: lock.GetName(), Namespace: lock.GetNamespace()}
 		if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
 			if kerrors.IsNotFound(err) {
 				continue
@@ -157,22 +160,15 @@ func (l *Lock) Acquire() error {
 		lockLogger.Info("Current lock is still active, trying again in 1 second...")
 		time.Sleep(time.Duration(1) * time.Second)
 	}
-	return nil
+
+	// read the cm object into memory for quicker release
+	return l.client.Get(context.TODO(), nn, l.cm)
 }
 
 // Release will delete the configmap, releasing the lock.
 func (l *Lock) Release() error {
-	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
-	found := &corev1.ConfigMap{}
-	if err := l.client.Get(context.TODO(), nn, found); err != nil {
-		if kerrors.IsNotFound(err) {
-			lockLogger.Info("Someone already cleaned up this lock", "Lock.Name", l.name)
-			return nil
-		}
-		return err
-	}
 	lockLogger.Info("Releasing lock", "Lock.Name", l.name)
-	return l.client.Delete(context.TODO(), found)
+	return client.IgnoreNotFound(l.client.Delete(context.TODO(), l.cm))
 }
 
 // releaseStaleLock removes a stale lock from kubernetes
@@ -185,7 +181,7 @@ func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error
 func newConfigMapForLock(l *Lock, pod *corev1.Pod) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      l.name,
+			Name:      l.GetName(),
 			Namespace: pod.GetNamespace(),
 			Labels:    l.labels,
 			OwnerReferences: []metav1.OwnerReference{
