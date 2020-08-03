@@ -78,6 +78,17 @@ vdi:
         serverSecret: ""
       # vdi.spec.app.resources -- Resource limits for the app pods.
       resources: {}
+    # vdi.spec.metrics -- Metrics configurations for `kVDI`.
+    metrics:
+      # vdi.spec.metrics.serviceMonitor -- Configurations for creating a ServiceMonitor object to 
+      # scrape `kVDI` metrics.
+      serviceMonitor:
+        # vdi.spec.metrics.serviceMonitor.create -- Set to true to have `kVDI` create a ServiceMonitor.
+        # There is an example dashboard in the [examples](../../examples/example-grafana-dashboard.json) directory.
+        create: false
+        # vdi.spec.metrics.serviceMonitor.labels -- Extra labels to apply to the ServiceMonitor object.
+        labels:
+          release: prometheus
     # vdi.spec.auth -- Authentication configurations for `kVDI`.
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     auth:

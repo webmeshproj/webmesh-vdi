@@ -1,6 +1,8 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
@@ -103,6 +105,17 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 	if err := reconcile.Service(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
 		return err
+	}
+
+	// ServiceMonitor for metrics scraping
+	if instance.CreateAppServiceMonitor() {
+		if err := reconcile.ServiceMonitor(reqLogger, f.client, newAppServiceMonitorForCR(instance)); err != nil {
+			if strings.Contains(err.Error(), "no matches for kind") {
+				reqLogger.Info("Could not create ServiceMonitor object, is prometheus-operator installed?")
+			} else {
+				return err
+			}
+		}
 	}
 
 	return nil

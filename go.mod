@@ -5,6 +5,7 @@ go 1.14
 require (
 	cloud.google.com/go v0.60.0 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-ldap/ldap/v3 v3.2.2
 	github.com/go-logr/logr v0.1.0

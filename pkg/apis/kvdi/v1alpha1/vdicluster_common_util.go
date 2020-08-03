@@ -20,6 +20,14 @@ func (c *VDICluster) GetCoreNamespace() string {
 	return v1.DefaultNamespace
 }
 
+// GetAppServiceType returns the type of service to create in front of the app pods.
+func (c *VDICluster) GetAppServiceType() corev1.ServiceType {
+	if c.Spec.App != nil && c.Spec.App.ServiceType != "" {
+		return c.Spec.App.ServiceType
+	}
+	return corev1.ServiceTypeLoadBalancer
+}
+
 // NamespacedName returns the NamespacedName of this VDICluster.
 func (c *VDICluster) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{Name: c.GetName(), Namespace: metav1.NamespaceAll}

@@ -60,6 +60,9 @@ rules:
   verbs:
   - get
   - create
+  - update
+  - list
+  - watch
 
 - apiGroups:
   - kvdi.io

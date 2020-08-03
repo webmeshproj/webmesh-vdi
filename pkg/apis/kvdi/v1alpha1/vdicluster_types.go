@@ -12,7 +12,7 @@ type VDIClusterSpec struct {
 	AppNamespace string `json:"appNamespace,omitempty"`
 	// Pull secrets to use when pulling container images
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	// The configuration for user volumes. *NOTE:* Even though the controller
+	// The configuration for user volumes. **NOTE:** Even though the controller
 	// will try to force the reclaim policy on created volumes to `Retain`, you
 	// may want to set it explicitly on your storage-class controller as an extra
 	// safeguard.
@@ -23,6 +23,8 @@ type VDIClusterSpec struct {
 	Auth *AuthConfig `json:"auth,omitempty"`
 	// Secrets backend configurations
 	Secrets *SecretsConfig `json:"secrets,omitempty"`
+	// Metrics configurations.
+	Metrics *MetricsConfig `json:"metrics,omitempty"`
 }
 
 // AppConfig represents app configurations for the VDI cluster
@@ -36,6 +38,9 @@ type AppConfig struct {
 	AuditLog bool `json:"auditLog,omitempty"`
 	// The number of app replicas to run
 	Replicas int32 `json:"replicas,omitempty"`
+	// The type of service to create in front of the app instance.
+	// Defaults to `LoadBalancer`.
+	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
 	// TLS configurations for the app instance
 	TLS *TLSConfig `json:"tls,omitempty"`
 	// Resource requirements to place on the app pods
@@ -47,6 +52,46 @@ type TLSConfig struct {
 	// A pre-existing TLS secret to use for the HTTPS listener. If not defined,
 	// a certificate is generated.
 	ServerSecret string `json:"serverSecret,omitempty"`
+}
+
+// MetricsConfig contains configuration options for gathering metrics.
+type MetricsConfig struct {
+	// Configurations for creating a ServiceMonitor CR for a pre-existing
+	// prometheus-operator installation.
+	ServiceMonitor *ServiceMonitorConfig `json:"serviceMonitor,omitempty"`
+	// Prometheus deployment configurations.
+	// **NOT IMPLEMENTED:** Toying with the idea of having the manager deploy
+	// a prometheus instance for scraping.
+	Prometheus *PrometheusConfig `json:"prometheus,omitempty"`
+	// Grafana sidecar configurations.
+	// **NOT IMPLEMENTED:** In the same spirit as the prometheus configurations,
+	// toying with the idea of running grafana sidecars for visualizing metrics in
+	// the UI.
+	Grafana *GrafanaConfig `json:"grafana,omitempty"`
+}
+
+// ServiceMonitorConfig contains configuration options for creating a ServiceMonitor.
+type ServiceMonitorConfig struct {
+	// Set to true to create a ServiceMonitor object for the kvdi metrics.
+	Create bool `json:"create,omitempty"`
+	// Extra labels to apply to the ServiceMonitor object. Set these to the selector
+	// in your prometheus-operator configuration (usually `{"release": "<helm_release_name>"}`).
+	// Defaults to `{"release": "prometheus"}`.
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// PrometheusConfig contains configuration options for a prometheus deployment.
+type PrometheusConfig struct {
+	// Set to true to deploy a prometheus metrics aggregator.
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+// GrafanaConfig contains configuration options for the grafana sidecar.
+type GrafanaConfig struct {
+	// Set to true to run a grafana sidecar with the app pods. This can be used for
+	// either visualzing metrics in the UI from a remote datasource, or to visualize
+	// data in the prometheus deployment.
+	Enabled bool `json:"enabled,omitempty"`
 }
 
 // AuthConfig will be for authentication driver configurations. The goal
@@ -220,8 +265,4 @@ type VDIClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VDICluster `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&VDICluster{}, &VDIClusterList{})
 }

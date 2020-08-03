@@ -2,6 +2,7 @@
 package apis
 
 import (
+	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -10,5 +11,8 @@ var AddToSchemes runtime.SchemeBuilder
 
 // AddToScheme adds all Resources to the Scheme
 func AddToScheme(s *runtime.Scheme) error {
+	if err := promv1.AddToScheme(s); err != nil {
+		return err
+	}
 	return AddToSchemes.AddToScheme(s)
 }

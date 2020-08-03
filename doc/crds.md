@@ -15,11 +15,15 @@ Types
 -   [DesktopSpec](#DesktopSpec)
 -   [DesktopTemplate](#DesktopTemplate)
 -   [DesktopTemplateSpec](#DesktopTemplateSpec)
+-   [GrafanaConfig](#GrafanaConfig)
 -   [K8SSecretConfig](#K8SSecretConfig)
 -   [LDAPConfig](#LDAPConfig)
 -   [LocalAuthConfig](#LocalAuthConfig)
+-   [MetricsConfig](#MetricsConfig)
 -   [OIDCConfig](#OIDCConfig)
+-   [PrometheusConfig](#PrometheusConfig)
 -   [SecretsConfig](#SecretsConfig)
+-   [ServiceMonitorConfig](#ServiceMonitorConfig)
 -   [SocketType](#SocketType)
 -   [TLSConfig](#TLSConfig)
 -   [VDICluster](#VDICluster)
@@ -66,10 +70,14 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>The number of app replicas to run</p></td>
 </tr>
 <tr class="odd">
+<td><code>serviceType</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#servicetype-v1-core">Kubernetes core/v1.ServiceType</a></em></td>
+<td><p>The type of service to create in front of the app instance. Defaults to <code>LoadBalancer</code>.</p></td>
+</tr>
+<tr class="even">
 <td><code>tls</code> <em><a href="#TLSConfig">TLSConfig</a></em></td>
 <td><p>TLS configurations for the app instance</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -355,6 +363,27 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 </tbody>
 </table>
 
+### GrafanaConfig
+
+(*Appears on:* [MetricsConfig](#MetricsConfig))
+
+GrafanaConfig contains configuration options for the grafana sidecar.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>enabled</code> <em>bool</em></td>
+<td><p>Set to true to run a grafana sidecar with the app pods. This can be used for either visualzing metrics in the UI from a remote datasource, or to visualize data in the prometheus deployment.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### K8SSecretConfig
 
 (*Appears on:* [SecretsConfig](#SecretsConfig))
@@ -433,6 +462,35 @@ authentication backend.
 
 LocalAuthConfig represents a local, ‘passwd’-like authentication driver.
 
+### MetricsConfig
+
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
+
+MetricsConfig contains configuration options for gathering metrics.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>serviceMonitor</code> <em><a href="#ServiceMonitorConfig">ServiceMonitorConfig</a></em></td>
+<td><p>Configurations for creating a ServiceMonitor CR for a pre-existing prometheus-operator installation.</p></td>
+</tr>
+<tr class="even">
+<td><code>prometheus</code> <em><a href="#PrometheusConfig">PrometheusConfig</a></em></td>
+<td><p>Prometheus deployment configurations. <strong>NOT IMPLEMENTED:</strong> Toying with the idea of having the manager deploy a prometheus instance for scraping.</p></td>
+</tr>
+<tr class="odd">
+<td><code>grafana</code> <em><a href="#GrafanaConfig">GrafanaConfig</a></em></td>
+<td><p>Grafana sidecar configurations. <strong>NOT IMPLEMENTED:</strong> In the same spirit as the prometheus configurations, toying with the idea of running grafana sidecars for visualizing metrics in the UI.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### OIDCConfig
 
 (*Appears on:* [AuthConfig](#AuthConfig))
@@ -495,6 +553,28 @@ for authentication.
 </tbody>
 </table>
 
+### PrometheusConfig
+
+(*Appears on:* [MetricsConfig](#MetricsConfig))
+
+PrometheusConfig contains configuration options for a prometheus
+deployment.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>enabled</code> <em>bool</em></td>
+<td><p>Set to true to deploy a prometheus metrics aggregator.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### SecretsConfig
 
 (*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
@@ -516,6 +596,32 @@ SecretsConfig configurese the backend for secrets management.
 <tr class="even">
 <td><code>vault</code> <em><a href="#VaultConfig">VaultConfig</a></em></td>
 <td><p>Use vault for storing sensitive values. Requires kubernetes service account authentication.</p></td>
+</tr>
+</tbody>
+</table>
+
+### ServiceMonitorConfig
+
+(*Appears on:* [MetricsConfig](#MetricsConfig))
+
+ServiceMonitorConfig contains configuration options for creating a
+ServiceMonitor.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>create</code> <em>bool</em></td>
+<td><p>Set to true to create a ServiceMonitor object for the kvdi metrics.</p></td>
+</tr>
+<tr class="even">
+<td><code>labels</code> <em>map[string]string</em></td>
+<td><p>Extra labels to apply to the ServiceMonitor object. Set these to the selector in your prometheus-operator configuration (usually <code>{"release": "&lt;helm_release_name&gt;"}</code>). Defaults to <code>{"release": "prometheus"}</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -585,7 +691,7 @@ VDICluster is the Schema for the vdiclusters API
 </tr>
 <tr class="odd">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
-<td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+<td><p>The configuration for user volumes. <strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="even">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
@@ -598,6 +704,10 @@ VDICluster is the Schema for the vdiclusters API
 <tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
+</tr>
+<tr class="odd">
+<td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
+<td><p>Metrics configurations.</p></td>
 </tr>
 </tbody>
 </table></td>
@@ -633,7 +743,7 @@ VDIClusterSpec defines the desired state of VDICluster
 </tr>
 <tr class="odd">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
-<td><p>The configuration for user volumes. <em>NOTE:</em> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+<td><p>The configuration for user volumes. <strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="even">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
@@ -646,6 +756,10 @@ VDIClusterSpec defines the desired state of VDICluster
 <tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
+</tr>
+<tr class="odd">
+<td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
+<td><p>Metrics configurations.</p></td>
 </tr>
 </tbody>
 </table>
@@ -717,4 +831,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `ff93026`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `9178276`.*

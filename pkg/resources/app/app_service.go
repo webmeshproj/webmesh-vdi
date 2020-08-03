@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +19,7 @@ func newAppServiceForCR(instance *v1alpha1.VDICluster) *corev1.Service {
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: corev1.ServiceSpec{
-			Type:     corev1.ServiceTypeLoadBalancer,
+			Type:     instance.GetAppServiceType(),
 			Selector: instance.GetComponentLabels("app"),
 			Ports: []corev1.ServicePort{
 				{

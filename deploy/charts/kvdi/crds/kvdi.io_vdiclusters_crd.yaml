@@ -75,6 +75,10 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                         type: object
                     type: object
+                  serviceType:
+                    description: The type of service to create in front of the app
+                      instance. Defaults to `LoadBalancer`.
+                    type: string
                   tls:
                     description: TLS configurations for the app instance
                     properties:
@@ -227,6 +231,49 @@ spec:
                       type: string
                   type: object
                 type: array
+              metrics:
+                description: Metrics configurations.
+                properties:
+                  grafana:
+                    description: Grafana sidecar configurations. **NOT IMPLEMENTED:**
+                      In the same spirit as the prometheus configurations, toying
+                      with the idea of running grafana sidecars for visualizing metrics
+                      in the UI.
+                    properties:
+                      enabled:
+                        description: Set to true to run a grafana sidecar with the
+                          app pods. This can be used for either visualzing metrics
+                          in the UI from a remote datasource, or to visualize data
+                          in the prometheus deployment.
+                        type: boolean
+                    type: object
+                  prometheus:
+                    description: Prometheus deployment configurations. **NOT IMPLEMENTED:**
+                      Toying with the idea of having the manager deploy a prometheus
+                      instance for scraping.
+                    properties:
+                      enabled:
+                        description: Set to true to deploy a prometheus metrics aggregator.
+                        type: boolean
+                    type: object
+                  serviceMonitor:
+                    description: Configurations for creating a ServiceMonitor CR for
+                      a pre-existing prometheus-operator installation.
+                    properties:
+                      create:
+                        description: Set to true to create a ServiceMonitor object
+                          for the kvdi metrics.
+                        type: boolean
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Extra labels to apply to the ServiceMonitor
+                          object. Set these to the selector in your prometheus-operator
+                          configuration (usually `{"release": "<helm_release_name>"}`).
+                          Defaults to `{"release": "prometheus"}`.'
+                        type: object
+                    type: object
+                type: object
               secrets:
                 description: Secrets backend configurations
                 properties:
@@ -272,7 +319,7 @@ spec:
                     type: object
                 type: object
               userdataSpec:
-                description: The configuration for user volumes. *NOTE:* Even though
+                description: The configuration for user volumes. **NOTE:** Even though
                   the controller will try to force the reclaim policy on created volumes
                   to `Retain`, you may want to set it explicitly on your storage-class
                   controller as an extra safeguard.

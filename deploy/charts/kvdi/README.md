@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.11`
+Current chart version is `v0.0.13`
 
 
 
@@ -74,6 +74,10 @@ There is an example for LDAP authentication in the same folder.
 | vdi.spec.auth.oidcAuth | object | `{}` | (object) Use an OpenID/Oauth provider for the authentication backend. See the [API reference](../../../doc/crds.md#OIDCConfig) for available configurations. |
 | vdi.spec.auth.tokenDuration | string | `"15m"` | The time-to-live for access tokens issued to users.  If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing tokens is currently not supported. |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
+| vdi.spec.metrics | object | `{"serviceMonitor":{"create":false,"labels":{"release":"prometheus"}}}` | Metrics configurations for `kVDI`. |
+| vdi.spec.metrics.serviceMonitor | object | `{"create":false,"labels":{"release":"prometheus"}}` | Configurations for creating a ServiceMonitor object to  scrape `kVDI` metrics. |
+| vdi.spec.metrics.serviceMonitor.create | bool | `false` | Set to true to have `kVDI` create a ServiceMonitor. There is an example dashboard in the [examples](../../examples/example-grafana-dashboard.json) directory. |
+| vdi.spec.metrics.serviceMonitor.labels | object | `{"release":"prometheus"}` | Extra labels to apply to the ServiceMonitor object. |
 | vdi.spec.secrets | object | The values described below are the same as the `VDICluster` CRD defaults. | Secret storage configurations for `kVDI`. |
 | vdi.spec.secrets.k8sSecret | object | `{"secretName":"kvdi-app-secrets"}` | Use the Kubernetes secret storage backend. This is the default if no other configuration is provided. For now, see the API reference for what to use in place of these values if using a different backend. |
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
