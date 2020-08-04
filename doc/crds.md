@@ -569,8 +569,12 @@ deployment.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>enabled</code> <em>bool</em></td>
-<td><p>Set to true to deploy a prometheus metrics aggregator.</p></td>
+<td><code>create</code> <em>bool</em></td>
+<td><p>Set to true to create a prometheus instance.</p></td>
+</tr>
+<tr class="even">
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><p>Resource requirements to place on the Prometheus deployment</p></td>
 </tr>
 </tbody>
 </table>
@@ -831,4 +835,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `50e6eaa`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `bf2df1f`.*

@@ -99,6 +99,13 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 		return err
 	}
 
+	if instance.RunAppGrafanaSidecar() {
+		// we need a configmap for grafana first
+		if err := reconcile.ConfigMap(reqLogger, f.client, newGrafanaConfigForCR(instance)); err != nil {
+			return err
+		}
+	}
+
 	// App deployment and service
 	if err := reconcile.Deployment(reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
 		return err
@@ -107,16 +114,36 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 		return err
 	}
 
-	// ServiceMonitor for metrics scraping
-	if instance.CreateAppServiceMonitor() {
-		if err := reconcile.ServiceMonitor(reqLogger, f.client, newAppServiceMonitorForCR(instance)); err != nil {
-			if strings.Contains(err.Error(), "no matches for kind") {
-				reqLogger.Info("Could not create ServiceMonitor object, is prometheus-operator installed?")
-			} else {
+	// Prometheus instance for aggregating metrics
+	if instance.CreatePrometheusCR() {
+		if err := reconcile.Prometheus(reqLogger, f.client, newPrometheusForCR(instance)); err != nil {
+			if ignoreNoPromOperator(reqLogger, err) != nil {
+				return err
+			}
+		}
+		if err := reconcile.Service(reqLogger, f.client, newPrometheusServiceForCR(instance)); err != nil {
+			if ignoreNoPromOperator(reqLogger, err) != nil {
 				return err
 			}
 		}
 	}
 
+	// ServiceMonitor for metrics scraping
+	if instance.CreateAppServiceMonitor() {
+		err = reconcile.ServiceMonitor(reqLogger, f.client, newAppServiceMonitorForCR(instance))
+		return ignoreNoPromOperator(reqLogger, err)
+	}
+
 	return nil
+}
+
+func ignoreNoPromOperator(reqLogger logr.Logger, err error) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(err.Error(), "no matches for kind") {
+		reqLogger.Info("Could not create prometheus-operator object, is prometheus-operator installed?")
+		return nil
+	}
+	return err
 }

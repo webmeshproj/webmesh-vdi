@@ -82,8 +82,10 @@ type ServiceMonitorConfig struct {
 
 // PrometheusConfig contains configuration options for a prometheus deployment.
 type PrometheusConfig struct {
-	// Set to true to deploy a prometheus metrics aggregator.
-	Enabled bool `json:"enabled,omitempty"`
+	// Set to true to create a prometheus instance.
+	Create bool `json:"create,omitempty"`
+	// Resource requirements to place on the Prometheus deployment
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // GrafanaConfig contains configuration options for the grafana sidecar.

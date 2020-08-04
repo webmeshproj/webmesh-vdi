@@ -29,7 +29,9 @@ COPY cmd/manager  /build/cmd/manager
 # Build the binary
 RUN go build \
   -o /tmp/vdi-manager \
-  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
+  -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' \
+            -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'\
+            -X 'github.com/tinyzimmer/kvdi/pkg/resources/app.GrafanaDashboard=`cat /build/pkg/resources/app/grafana-dashboard.json`'" \
   ./cmd/manager && upx /tmp/vdi-manager
 
 ##

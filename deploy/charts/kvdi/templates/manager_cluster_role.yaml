@@ -57,6 +57,7 @@ rules:
   - monitoring.coreos.com
   resources:
   - servicemonitors
+  - prometheuses
   verbs:
   - get
   - create

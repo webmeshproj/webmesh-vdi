@@ -41,6 +41,12 @@ export const ConfigStore = new Vuex.Store({
   getters: {
     localConfig: state => state.localConfig,
     serverConfig: state => state.serverConfig,
+    grafanaEnabled: state => {
+      if (state.serverConfig.metrics && state.serverConfig.metrics.grafana) {
+        return state.serverConfig.metrics.grafana.enabled || false
+      }
+      return false
+    },
     authMethod: state => {
       if (state.serverConfig.auth !== undefined) {
         if (state.serverConfig.auth.ldapAuth !== undefined && state.serverConfig.auth.ldapAuth.URL) {

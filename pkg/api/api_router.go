@@ -24,6 +24,11 @@ func (d *desktopAPI) buildRouter() error {
 	r.PathPrefix("/api/healthz").HandlerFunc(d.Healthz).Methods("GET")
 	r.PathPrefix("/api/readyz").HandlerFunc(d.Readyz).Methods("GET")
 
+	// Grafana proxy - This is unprotected for now, but should figure out what
+	// permission model would work well for it. It doesn't fit well into the existing
+	// paradigms.
+	r.PathPrefix("/api/grafana").HandlerFunc(d.ProxyGrafana)
+
 	// Login route is not protected since it generates the tokens for which a user
 	// can use the protected routes.
 	// TODO: Route accepts GET also to support the oidc flow. Method should probably

@@ -1,8 +1,11 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -11,9 +14,20 @@ import (
 )
 
 func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
-	args := []string{"--vdi-cluster", instance.GetName()}
-	if instance.EnableCORS() {
-		args = append(args, "--enable-cors")
+	containers := []corev1.Container{newAppContainerForCR(instance)}
+	volumes := newAppVolumesForCR(instance)
+	if instance.RunAppGrafanaSidecar() {
+		containers = append(containers, newGrafanaContainerForCR(instance))
+		volumes = append(volumes, corev1.Volume{
+			Name: "grafana-configs",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("%s-grafana", instance.GetAppName()),
+					},
+				},
+			},
+		})
 	}
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -35,80 +49,158 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 				Spec: corev1.PodSpec{
 					ServiceAccountName: instance.GetAppName(),
 					SecurityContext:    instance.GetAppSecurityContext(),
-					Volumes: []corev1.Volume{
-						{
-							Name: "tls-server",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: instance.GetAppServerTLSSecretName(),
-								},
-							},
-						},
-						{
-							Name: "tls-client",
-							VolumeSource: corev1.VolumeSource{
-								Secret: &corev1.SecretVolumeSource{
-									SecretName: instance.GetAppClientTLSSecretName(),
-								},
-							},
-						},
-					},
-					ImagePullSecrets: instance.GetPullSecrets(),
-					Containers: []corev1.Container{
-						{
-							Name:            "app",
-							Image:           instance.GetAppImage(),
-							ImagePullPolicy: instance.GetAppPullPolicy(),
-							Resources:       instance.GetAppResources(),
-							Args:            args,
-							Env: []corev1.EnvVar{
-								{
-									Name: "POD_NAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.name",
-										},
-									},
-								},
-								{
-									Name: "POD_NAMESPACE",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "web",
-									ContainerPort: v1.WebPort,
-								},
-							},
-							ReadinessProbe: &corev1.Probe{
-								Handler: corev1.Handler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path:   "/api/readyz",
-										Port:   intstr.FromInt(v1.WebPort),
-										Scheme: "HTTPS",
-									},
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "tls-server",
-									MountPath: v1.ServerCertificateMountPath,
-									ReadOnly:  true,
-								},
-								{
-									Name:      "tls-client",
-									MountPath: v1.ClientCertificateMountPath,
-									ReadOnly:  true,
-								},
-							},
-						},
+					Volumes:            volumes,
+					ImagePullSecrets:   instance.GetPullSecrets(),
+					Containers:         containers,
+				},
+			},
+		},
+	}
+}
+
+func newAppVolumesForCR(instance *v1alpha1.VDICluster) []corev1.Volume {
+	return []corev1.Volume{
+		{
+			Name: "tls-server",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.GetAppServerTLSSecretName(),
+				},
+			},
+		},
+		{
+			Name: "tls-client",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.GetAppClientTLSSecretName(),
+				},
+			},
+		},
+	}
+}
+
+func newAppContainerForCR(instance *v1alpha1.VDICluster) corev1.Container {
+	args := []string{"--vdi-cluster", instance.GetName()}
+	if instance.EnableCORS() {
+		args = append(args, "--enable-cors")
+	}
+	return corev1.Container{
+		Name:            "app",
+		Image:           instance.GetAppImage(),
+		ImagePullPolicy: instance.GetAppPullPolicy(),
+		Resources:       instance.GetAppResources(),
+		Args:            args,
+		Env: []corev1.EnvVar{
+			{
+				Name: "POD_NAME",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
 					},
 				},
+			},
+			{
+				Name: "POD_NAMESPACE",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.namespace",
+					},
+				},
+			},
+		},
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          "web",
+				ContainerPort: v1.WebPort,
+			},
+		},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path:   "/api/readyz",
+					Port:   intstr.FromInt(v1.WebPort),
+					Scheme: "HTTPS",
+				},
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "tls-server",
+				MountPath: v1.ServerCertificateMountPath,
+				ReadOnly:  true,
+			},
+			{
+				Name:      "tls-client",
+				MountPath: v1.ClientCertificateMountPath,
+				ReadOnly:  true,
+			},
+		},
+	}
+}
+
+func newGrafanaContainerForCR(instance *v1alpha1.VDICluster) corev1.Container {
+	return corev1.Container{
+		Name:            "grafana",
+		Image:           "grafana/grafana",
+		ImagePullPolicy: instance.GetAppPullPolicy(),
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: common.BoolPointer(true),
+			RunAsUser:    common.Int64Ptr(1000),
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "grafana-configs",
+				MountPath: "/etc/grafana/provisioning/datasources",
+			},
+		},
+		Env: []corev1.EnvVar{
+			{
+				Name:  "GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH",
+				Value: "/etc/grafana/provisioning/datasources/dashboard.json",
+			},
+			{
+				Name:  "GF_SERVER_ROOT_URL",
+				Value: "http://localhost:3000/api/grafana",
+			},
+			{
+				Name:  "GF_SERVER_SERVE_FROM_SUB_PATH",
+				Value: "true",
+			},
+			{
+				Name:  "GF_SERVER_ENABLE_GZIP",
+				Value: "true",
+			},
+			{
+				Name:  "GF_DEFAULT_INSTANCE_NAME",
+				Value: "kvdi-grafana",
+			},
+			{
+				Name:  "GF_AUTH_ORG_NAME",
+				Value: "kvdi",
+			},
+			{
+				Name:  "GF_AUTH_ORG_ROLE",
+				Value: "Viewer",
+			},
+			{
+				Name:  "GF_AUTH_DISABLE_LOGIN_FORM",
+				Value: "true",
+			},
+			{
+				Name:  "GF_AUTH_DISABLE_SIGNOUT_MENU",
+				Value: "true",
+			},
+			{
+				Name:  "GF_AUTH_ANONYMOUS_ENABLED",
+				Value: "true",
+			},
+			{
+				Name:  "GF_SECURITY_ALLOW_EMVEDDING",
+				Value: "true",
+			},
+			{
+				Name:  "GF_EXPLORE_ENABLED",
+				Value: "false",
 			},
 		},
 	}

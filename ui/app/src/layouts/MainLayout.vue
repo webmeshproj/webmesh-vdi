@@ -128,6 +128,20 @@
 
         </q-item>
 
+        <!-- Metrics  -->
+        <q-item v-if="grafanaEnabled" clickable tag="a" href="#/metrics" :active="metricsActive" @click="onClickMetrics">
+
+          <q-item-section avatar>
+            <q-icon name="calculate" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Metrics</q-item-label>
+            <q-item-label caption>Visualize kVDI Performance</q-item-label>
+          </q-item-section>
+
+        </q-item>
+
       </q-list>
 
       <q-separator />
@@ -294,7 +308,8 @@ export default {
     },
     audioEnabled () { return this.$desktopSessions.getters.audioEnabled },
     user () { return this.$userStore.getters.user },
-    isLoggedIn () { return this.$userStore.getters.isLoggedIn }
+    isLoggedIn () { return this.$userStore.getters.isLoggedIn },
+    grafanaEnabled () { return this.$configStore.getters.grafanaEnabled }
   },
 
   methods: {

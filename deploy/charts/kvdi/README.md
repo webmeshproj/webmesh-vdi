@@ -2,7 +2,7 @@ kvdi
 ====
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.13`
+Current chart version is `v0.0.14`
 
 
 
@@ -31,7 +31,29 @@ Then visit https://localhost:8443 to use `kVDI`.
 If you'd like to see an example of the `helm` values for using vault as the secrets backend,
 you can find documentation in the [examples](../../examples/example-vault-helm-values.yaml) folder.
 
-There is an example for LDAP authentication in the same folder.
+There are examples for LDAP and OIDC authentication in the same folder.
+
+### Enabling Metrics
+
+By default the `kvdi-app` pods will provide prometheus metrics at `/api/metrics`. In addition to this,
+you can configure the `kvdi-manager` to manage the `prometheus-operator` resources required to scrape those metrics.
+
+For the time being, the grafana implementation will only work if you let `kVDI` also create the `Prometheus` CR.
+Alternatively, you can let `kVDI` create the `ServiceMonitor` with labels selected by your existing prometheus instances, and use
+the [example dashboard](../../examples/example-grafana-dashboard.json) as a starting point in grafana.
+
+To enable the in-UI metrics you can do the following:
+
+```bash
+# The values in the hack/ directory will disable everything in the helm chart except the operator
+helm install prometheus-operator stable/prometheus-operator -f hack/prom-operator-values.yaml
+
+# Follow the instructions above to set up the kvdi repo and then pass the metrics arguments:
+helm install kvdi tinyzimmer/kvdi \
+    --set vdi.spec.metrics.serviceMonitor.create=true \
+    --set vdi.spec.metrics.prometheus.create=true \
+    --set vdi.spec.metrics.grafana.enabled=true
+```
 
 
 

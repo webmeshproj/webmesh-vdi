@@ -38,6 +38,8 @@ I wrote up a [`CONTRIBUTING`](doc/CONTRIBUTING.md) doc just outlining some of th
 
       - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml). There are corresponding examples for the `oidc` auth as well.
 
+  - App metrics to either scrape externally or view in the UI. More details in the `helm` doc.
+
 ### TODO
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy

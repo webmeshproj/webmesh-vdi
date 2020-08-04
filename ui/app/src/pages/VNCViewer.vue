@@ -20,10 +20,7 @@
 
 <script>
 import RFB from '@novnc/novnc/core/rfb'
-// import { createClient } from 'xpra-html5-client'
-
 import WSAudioPlayer from '../lib/wsaudio.js'
-// import { CreateApplication, addEventListeners } from '../lib/xpra.js'
 
 // The view div for displays
 var view
