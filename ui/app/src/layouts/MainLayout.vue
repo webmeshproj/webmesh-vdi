@@ -275,6 +275,7 @@ export default {
       apiExplorerActive: false,
       loginActive: false,
       profileActive: false,
+      metricsActive: false,
 
       controlSessions: []
     }
@@ -331,6 +332,7 @@ export default {
       this.apiExplorerActive = false
       this.loginActive = false
       this.profileActive = false
+      this.metricsActive = false
     },
 
     onClickControl () {
@@ -341,6 +343,7 @@ export default {
       this.apiExplorerActive = false
       this.loginActive = false
       this.profileActive = false
+      this.metricsActive = false
     },
 
     onClickSettings () {
@@ -351,6 +354,7 @@ export default {
       this.apiExplorerActive = false
       this.loginActive = false
       this.profileActive = false
+      this.metricsActive = false
     },
 
     onClickAPIExplorer () {
@@ -361,6 +365,7 @@ export default {
       this.settingsActive = false
       this.loginActive = false
       this.profileActive = false
+      this.metricsActive = false
     },
 
     onClickLogin () {
@@ -371,6 +376,7 @@ export default {
       this.desktopTemplatesActive = false
       this.controlActive = false
       this.settingsActive = false
+      this.metricsActive = false
     },
 
     onClickProfile () {
@@ -381,6 +387,18 @@ export default {
       this.desktopTemplatesActive = false
       this.controlActive = false
       this.settingsActive = false
+      this.metricsActive = false
+    },
+
+    onClickMetrics () {
+      this.metricsActive = true
+
+      this.loginActive = false
+      this.apiExplorerActive = false
+      this.desktopTemplatesActive = false
+      this.controlActive = false
+      this.settingsActive = false
+      this.profileActive = false
     },
 
     onClickAudio () {

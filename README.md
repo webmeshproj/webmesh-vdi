@@ -11,7 +11,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
  - [API Reference](doc/crds.md)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
- - [Screenshots](#screenshots)
+ - [Screenshots](doc/screenshots.md)
 
 If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
 I wrote up a [`CONTRIBUTING`](doc/CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
@@ -113,14 +113,3 @@ RBAC is provided by a `VDIRole` CRD that behaves similar to a Kubernetes `Cluste
 These roles can restrict users to namespaces, desktop templates, and user/role management.
 It should not be possible for a user to make an API request that grants them more privileges than they already have.
 
-## Screenshots
-
-The UI is super basic but here are some shots of what I have so far.
-
-There is actually more since I took these photos. Primarily user/role management.
-
-![img](doc/templates.png)
-
-![img](doc/term.png)
-
-![img](doc/libre.png)
