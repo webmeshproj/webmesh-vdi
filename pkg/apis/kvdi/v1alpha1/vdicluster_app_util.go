@@ -15,6 +15,20 @@ func (c *VDICluster) GetAppName() string {
 	return fmt.Sprintf("%s-app", c.GetName())
 }
 
+// GetServiceAnnotations returns the annotations to apply to the kvdi app service.
+func (c *VDICluster) GetServiceAnnotations() map[string]string {
+	annotations := c.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if c.Spec.App.ServiceAnnotations != nil {
+		for k, v := range c.Spec.App.ServiceAnnotations {
+			annotations[k] = v
+		}
+	}
+	return annotations
+}
+
 // GetAppReplicas returns the number of app replicas to run in this VDICluster.
 // TODO: auto-scaling?
 func (c *VDICluster) GetAppReplicas() *int32 {

@@ -74,10 +74,14 @@ AppConfig represents app configurations for the VDI cluster
 <td><p>The type of service to create in front of the app instance. Defaults to <code>LoadBalancer</code>.</p></td>
 </tr>
 <tr class="even">
+<td><code>serviceAnnotations</code> <em>map[string]string</em></td>
+<td><p>Extra annotations to apply to the app service.</p></td>
+</tr>
+<tr class="odd">
 <td><code>tls</code> <em><a href="#TLSConfig">TLSConfig</a></em></td>
 <td><p>TLS configurations for the app instance</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to place on the app pods</p></td>
 </tr>
@@ -835,4 +839,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `bf2df1f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `77d7832`.*

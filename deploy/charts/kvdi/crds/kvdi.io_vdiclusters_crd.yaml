@@ -75,6 +75,11 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                         type: object
                     type: object
+                  serviceAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: Extra annotations to apply to the app service.
+                    type: object
                   serviceType:
                     description: The type of service to create in front of the app
                       instance. Defaults to `LoadBalancer`.

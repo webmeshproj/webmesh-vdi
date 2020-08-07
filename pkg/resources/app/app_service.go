@@ -15,7 +15,7 @@ func newAppServiceForCR(instance *v1alpha1.VDICluster) *corev1.Service {
 			Name:            instance.GetAppName(),
 			Namespace:       instance.GetCoreNamespace(),
 			Labels:          instance.GetComponentLabels("app"),
-			Annotations:     instance.GetAnnotations(),
+			Annotations:     instance.GetServiceAnnotations(),
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: corev1.ServiceSpec{

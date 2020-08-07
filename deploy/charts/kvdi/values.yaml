@@ -71,6 +71,10 @@ vdi:
       auditLog: false
       # vdi.spec.app.replicas -- The number of app replicas to run.
       replicas: 1
+      # vdi.spec.app.serviceType -- The type of service to create in front of the app instance.
+      serviceType: LoadBalancer
+      # vdi.spec.app.serviceAnnotations -- Extra annotations to place on the kvdi app service.
+      serviceAnnotations: {}
       # vdi.spec.app.tls -- TLS configurations for the app instance.
       tls:
         # vdi.spec.app.tls.serverSecret -- A pre-existing TLS secret to use for the HTTPS listener on the app instance.

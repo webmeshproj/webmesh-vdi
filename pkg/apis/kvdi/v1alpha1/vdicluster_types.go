@@ -41,6 +41,8 @@ type AppConfig struct {
 	// The type of service to create in front of the app instance.
 	// Defaults to `LoadBalancer`.
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+	// Extra annotations to apply to the app service.
+	ServiceAnnotations map[string]string `json:"serviceAnnotations,omitempty"`
 	// TLS configurations for the app instance
 	TLS *TLSConfig `json:"tls,omitempty"`
 	// Resource requirements to place on the app pods
