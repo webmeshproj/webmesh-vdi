@@ -56,6 +56,21 @@ For building and running locally you will need:
 
 ## Installing
 
+### Install standalone
+
+If you don't have access to a Kubernetes cluster, or you just want to try `kVDI` out on a VM real quick, there is a script in this repository for setting up kVDI using `k3s`.
+
+_If you have an existing `k3s` installation, the ingress may not work since this script assumes `kVDI` will be the only LoadBalancer installed._
+
+```bash
+# Download the script from this repository.
+curl -JLO https://raw.githubusercontent.com/tinyzimmer/kvdi/main/hack/k3s-install.sh
+# Run the script. You will be prompted to make configuration changes.
+bash k3s-install.sh
+```
+
+### Install to a pre-existing cluster
+
 For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md) for available configuration options.
 
 The [API Reference](doc/crds.md) can also be used for details on `kVDI` app-level configurations.
