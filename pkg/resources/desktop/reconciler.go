@@ -31,7 +31,7 @@ var _ resources.DesktopReconciler = &Reconciler{}
 var userdataReclaimFinalizer = "kvdi.io/userdata-reclaim"
 
 // New returns a new Desktop reconciler
-func New(c client.Client, s *runtime.Scheme) resources.DesktopReconciler {
+func New(c client.Client, s *runtime.Scheme) *Reconciler {
 	return &Reconciler{client: c, scheme: s}
 }
 

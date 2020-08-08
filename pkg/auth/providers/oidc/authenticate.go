@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
@@ -124,19 +125,8 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	}
 
 	boundRoles := make([]string, 0)
-RoleLoop:
 	for _, role := range roles {
-		if annotations := role.GetAnnotations(); annotations != nil {
-			if oidcGroupStr, ok := annotations[v1.OIDCGroupRoleAnnotation]; ok {
-				oidcGroups := strings.Split(oidcGroupStr, v1.AuthGroupSeparator)
-				for _, group := range oidcGroups {
-					if common.StringSliceContains(userGroupSlc, group) {
-						boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
-						continue RoleLoop
-					}
-				}
-			}
-		}
+		boundRoles = appendRoleIfBound(boundRoles, userGroupSlc, role)
 	}
 
 	user.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
@@ -194,4 +184,21 @@ func getUsernameFromClaims(claims map[string]interface{}) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("Could not parse username from claims: %+v", claims)
+}
+
+func appendRoleIfBound(boundRoles, userGroups []string, role v1alpha1.VDIRole) []string {
+	if annotations := role.GetAnnotations(); annotations != nil {
+		if oidcGroupStr, ok := annotations[v1.OIDCGroupRoleAnnotation]; ok {
+			oidcGroups := strings.Split(oidcGroupStr, v1.AuthGroupSeparator)
+			for _, group := range oidcGroups {
+				if group == "" {
+					continue
+				}
+				if common.StringSliceContains(userGroups, group) {
+					boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
+				}
+			}
+		}
+	}
+	return boundRoles
 }

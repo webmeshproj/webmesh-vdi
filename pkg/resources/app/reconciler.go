@@ -30,7 +30,7 @@ type Reconciler struct {
 var _ resources.VDIReconciler = &Reconciler{}
 
 // New returns a new App reconciler
-func New(c client.Client, s *runtime.Scheme) resources.VDIReconciler {
+func New(c client.Client, s *runtime.Scheme) *Reconciler {
 	return &Reconciler{client: c, scheme: s}
 }
 

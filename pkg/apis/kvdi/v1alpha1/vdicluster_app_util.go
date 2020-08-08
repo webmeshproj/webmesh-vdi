@@ -21,7 +21,7 @@ func (c *VDICluster) GetServiceAnnotations() map[string]string {
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-	if c.Spec.App.ServiceAnnotations != nil {
+	if c.Spec.App != nil && c.Spec.App.ServiceAnnotations != nil {
 		for k, v := range c.Spec.App.ServiceAnnotations {
 			annotations[k] = v
 		}

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -67,27 +68,31 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	// we'll have to iterate our available roles and check if any have an annotation
 	// binding it to one of this user's ldap groups
 	boundRoles := make([]string, 0)
-RoleLoop:
+	userGroups := user.GetAttributeValues("memberOf")
+
 	for _, role := range roles {
-		if annotations := role.GetAnnotations(); annotations != nil {
-			if ldapGroups, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
-				boundGroups := strings.Split(ldapGroups, v1.AuthGroupSeparator)
-			GroupLoop:
-				for _, group := range boundGroups {
-					if group == "" {
-						continue GroupLoop
-					}
-					if common.StringSliceContains(user.GetAttributeValues("memberOf"), group) {
-						boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
-						continue RoleLoop
-					}
-				}
-			}
-		}
+		boundRoles = appendRoleIfBound(boundRoles, userGroups, role)
 	}
 
 	vdiUser.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
 
 	// user is a regular user, check their ldap groups against any bound VDIRoles.
 	return &v1.AuthResult{User: vdiUser}, nil
+}
+
+func appendRoleIfBound(boundRoles, userGroups []string, role v1alpha1.VDIRole) []string {
+	if annotations := role.GetAnnotations(); annotations != nil {
+		if ldapGroups, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
+			boundGroups := strings.Split(ldapGroups, v1.AuthGroupSeparator)
+			for _, group := range boundGroups {
+				if group == "" {
+					continue
+				}
+				if common.StringSliceContains(userGroups, group) {
+					boundRoles = common.AppendStringIfMissing(boundRoles, role.GetName())
+				}
+			}
+		}
+	}
+	return boundRoles
 }
