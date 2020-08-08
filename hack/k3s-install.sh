@@ -90,7 +90,7 @@ function main () {
 
     adminpassword=$(sudo k3s kubectl get secret kvdi-admin-secret -o yaml | grep password | head -n1 | awk '{print$2}' | base64 -d)
     echo
-    echo "kVDI in installed and listening on https://0.0.0.0:443. You can login with the following credentials:"
+    echo "kVDI is installed and listening on https://0.0.0.0:443. You can login with the following credentials:"
     echo
     echo "    username: admin"
     echo "    password: ${adminpassword}"
