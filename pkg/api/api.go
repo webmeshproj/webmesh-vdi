@@ -2,10 +2,15 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis"
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/auth/mfa"
@@ -16,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -88,10 +94,7 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) (reconcile.Resul
 	return reconcile.Result{}, err
 }
 
-// NewFromConfig builds a new API router from the given kubernetes client configuration
-// and vdi cluster name.
-func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
-	// build our scheme
+func buildScheme() (*runtime.Scheme, error) {
 	scheme := runtime.NewScheme()
 	if err := apis.AddToScheme(scheme); err != nil {
 		return nil, err
@@ -99,10 +102,27 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	if err := corev1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
+	return scheme, nil
+}
 
-	kclient, err := client.New(cfg, client.Options{
-		Scheme: scheme,
-	})
+func getClientFromConfigAndScheme(cfg *rest.Config, scheme *runtime.Scheme) (client.Client, error) {
+	return client.New(cfg, client.Options{Scheme: scheme})
+}
+
+// NewFromConfig builds a new API router from the given kubernetes client configuration
+// and vdi cluster name.
+func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
+	// create an api object
+	api := &desktopAPI{clusterName: vdiCluster}
+
+	// build our scheme
+	scheme, err := buildScheme()
+	if err != nil {
+		return nil, err
+	}
+
+	// build a client for routes to use
+	api.client, err = getClientFromConfigAndScheme(cfg, scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -114,12 +134,6 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	// create an api object
-	api := &desktopAPI{
-		clusterName: vdiCluster,
-		client:      kclient,
 	}
 
 	// watch the vdicluster for updates, this also handles initial setup
@@ -149,4 +163,116 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 
 	// return the api and build the router
 	return api, api.buildRouter()
+}
+
+// NewTestAPI returns a new API using a fake kubernetes client and in-memory storage.
+func NewTestAPI() (srvr *http.Server, addr, adminPass string, err error) {
+	adminPass = "testing"
+
+	// create an api object
+	api := &desktopAPI{clusterName: "test-cluster"}
+
+	// build our scheme
+	var scheme *runtime.Scheme
+	scheme, err = buildScheme()
+	if err != nil {
+		return
+	}
+
+	// build a client for routes to use
+	api.client = fake.NewFakeClientWithScheme(scheme)
+
+	// create a cluster object
+	api.vdiCluster = &v1alpha1.VDICluster{}
+	api.vdiCluster.Name = "test-cluster"
+	if err = api.client.Create(context.TODO(), api.vdiCluster); err != nil {
+		return
+	}
+
+	// create an admin role mapping
+	if err = api.client.Create(context.TODO(), api.vdiCluster.GetAdminRole()); err != nil {
+		return
+	}
+
+	// create a launch templates role
+	if err = api.client.Create(context.TODO(), api.vdiCluster.GetLaunchTemplatesRole()); err != nil {
+		return
+	}
+
+	// create a fake running pod/ns and set environment
+	os.Setenv("POD_NAME", "test-server")
+	os.Setenv("POD_NAMESPACE", "default")
+	pod := &corev1.Pod{}
+	pod.Name = "test-server"
+	pod.Namespace = "default"
+	if err = api.client.Create(context.TODO(), pod); err != nil {
+		return
+	}
+	ns := &corev1.Namespace{}
+	ns.Name = "default"
+	if err = api.client.Create(context.TODO(), ns); err != nil {
+		return
+	}
+
+	// build the api router
+	if err = api.buildRouter(); err != nil {
+		return
+	}
+
+	// set up auth and secrets
+	api.secrets = secrets.GetSecretEngine(api.vdiCluster)
+	api.mfa = mfa.NewManager(api.secrets)
+	api.auth = auth.GetAuthProvider(api.vdiCluster, api.secrets)
+	if err = api.secrets.Setup(api.client, api.vdiCluster); err != nil {
+		return
+	}
+	if err = api.auth.Setup(api.client, api.vdiCluster); err != nil {
+		return
+	}
+
+	// set a dummy jwt key
+	if err = api.secrets.WriteSecret(v1.JWTSecretKey, []byte("supersecret")); err != nil {
+		return
+	}
+
+	// reconcile initial credentials for auth
+	// will be admin:testing
+	if err = api.auth.Reconcile(apiLogger, api.client, api.vdiCluster, adminPass); err != nil {
+		return
+	}
+
+	// build the base router
+	r := mux.NewRouter()
+
+	// add the api routes
+	r.PathPrefix("/api").Handler(api)
+
+	srvr = &http.Server{
+		Handler:      r,
+		Addr:         fmt.Sprintf(":0"),
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	netaddr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		return
+	}
+
+	l, err := net.ListenTCP("tcp", netaddr)
+	if err != nil {
+		return
+	}
+
+	addr = fmt.Sprintf("http://127.0.0.1:%d", l.Addr().(*net.TCPAddr).Port)
+
+	go func() {
+		if err := srvr.Serve(l); err != nil {
+			if err != http.ErrServerClosed {
+				apiLogger.Error(err, "Error starting test server on local socket")
+			}
+		}
+	}()
+
+	return
 }

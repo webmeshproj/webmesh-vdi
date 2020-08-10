@@ -18,6 +18,7 @@ func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
+		return
 	}
 	apiutil.WriteJSON(roles, w)
 }
@@ -45,6 +46,7 @@ func (d *desktopAPI) GetRole(w http.ResponseWriter, r *http.Request) {
 	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
+		return
 	}
 	roleName := apiutil.GetRoleFromRequest(r)
 	for _, role := range roles {

@@ -45,6 +45,7 @@ func (d *desktopAPI) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := d.client.Delete(context.TODO(), vdiRole); err != nil {
 		apiutil.ReturnAPIError(err, w)
+		return
 	}
 	apiutil.WriteOK(w)
 }

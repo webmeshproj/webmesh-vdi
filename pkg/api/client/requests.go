@@ -125,7 +125,7 @@ func (c *Client) GetVDIUser(name string) (*v1.VDIUser, error) {
 	return user, c.do(http.MethodGet, fmt.Sprintf("users/%s", name), nil, user)
 }
 
-// UpdateVDIUser will update a VDIUse, if possibler. If a password is provided, the
+// UpdateVDIUser will update a VDIUser, if possible. If a password is provided, the
 // password is changed for the user. If a list of role names are provided, the user's
 // roles are updated to match those provided in the payload.
 func (c *Client) UpdateVDIUser(name string, req *v1.UpdateUserRequest) error {

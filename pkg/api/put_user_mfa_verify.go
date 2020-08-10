@@ -67,6 +67,7 @@ func (d *desktopAPI) PutUserMFAVerify(w http.ResponseWriter, r *http.Request) {
 		// We can mark the user as verified now
 		if err := d.mfa.SetUserMFAStatus(username, secret, true); err != nil {
 			apiutil.ReturnAPIError(err, w)
+			return
 		}
 	}
 

@@ -44,6 +44,7 @@ func (d *desktopAPI) DeleteDesktopTemplate(w http.ResponseWriter, r *http.Reques
 	}
 	if err := d.client.Delete(context.TODO(), tmpl); err != nil {
 		apiutil.ReturnAPIError(err, w)
+		return
 	}
 	apiutil.WriteOK(w)
 }
