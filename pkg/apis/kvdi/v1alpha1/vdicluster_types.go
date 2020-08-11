@@ -181,7 +181,7 @@ type OIDCConfig struct {
 	ClientSecretKey string `json:"clientSecretKey,omitempty"`
 	// When creating your own kubernets secret with the `clientIDKey` and `clientSecretKey`,
 	// set this to the name of the created secret. It must be in the same namespace
-	// as the manager and app instances.
+	// as the manager and app instances. Defaults to `oidc-clientsecret`.
 	ClientCredentialsSecret string `json:"clientCredentialsSecret,omitempty"`
 	// The redirect URL path configured in the OIDC provider. This should be the full
 	// path where kvdi is hosted followed by `/api/login`. For example, if `kvdi` is

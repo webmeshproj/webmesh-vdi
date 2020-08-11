@@ -59,15 +59,18 @@ For building and running locally you will need:
 ### Install standalone
 
 If you don't have access to a Kubernetes cluster, or you just want to try `kVDI` out on a VM real quick, there is a script in this repository for setting up kVDI using `k3s`.
+It requires the instance running the script to have `docker` and the `dialog` package installed.
 
 _If you have an existing `k3s` installation, the ingress may not work since this script assumes `kVDI` will be the only LoadBalancer installed._
 
 ```bash
 # Download the script from this repository.
-curl -JLO https://raw.githubusercontent.com/tinyzimmer/kvdi/main/hack/k3s-install.sh
-# Run the script. You will be prompted to make configuration changes.
-bash k3s-install.sh
+curl -JLO https://raw.githubusercontent.com/tinyzimmer/kvdi/main/deploy/architect/kvdi-architect.sh
+# Run the script. You will be prompted via dialogs to make configuration changes.
+bash kvdi-architect.sh   # Use --help to see all available options.
 ```
+
+_NOTE: This script is fairly new and still has some bugs_
 
 ### Install to a pre-existing cluster
 

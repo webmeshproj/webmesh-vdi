@@ -524,7 +524,7 @@ for authentication.
 </tr>
 <tr class="even">
 <td><code>clientCredentialsSecret</code> <em>string</em></td>
-<td><p>When creating your own kubernets secret with the <code>clientIDKey</code> and <code>clientSecretKey</code>, set this to the name of the created secret. It must be in the same namespace as the manager and app instances.</p></td>
+<td><p>When creating your own kubernets secret with the <code>clientIDKey</code> and <code>clientSecretKey</code>, set this to the name of the created secret. It must be in the same namespace as the manager and app instances. Defaults to <code>oidc-clientsecret</code>.</p></td>
 </tr>
 <tr class="odd">
 <td><code>redirectURL</code> <em>string</em></td>
@@ -839,4 +839,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `cd42fae`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1396855`.*
