@@ -16,12 +16,10 @@ function install-k3s() {
 # Starts K3s and waits for 5 seconds. The wait gives a little extra time for the 
 # API server to be able to serve requests.
 function start-k3s() {
-    dialog --nook --clear --backtitle "kVDI Architect" --cancel-label "Quit" \
-        --msgbox "[INFO]  Starting k3s service" 5 50 &
-    dpid=${!}
+    dialog --backtitle "kVDI Architect" --cancel-label "Quit" \
+        --infobox "Starting k3s service" 5 50
     sudo systemctl start k3s
     sleep 5
-    kill ${dpid}
 }
 
 # Installs the prometheus-operator manifest to the k3s directory. It will be auto-applied
@@ -389,16 +387,15 @@ function install-kvdi() {
 
     # Figure out latest chart version if not supplied by user
     if [[ "${version}" == "" ]] ; then
-        dialog --nook --clear --backtitle "kVDI Architect" --cancel-label "Quit" \
-            --msgbox "[INFO]  Fetching latest version of kVDI" 5 50 &
-        dpid=${!}
+        dialog --backtitle "kVDI Architect" \
+            --infobox "Fetching latest version of kVDI" 5 50
         version=$(curl https://tinyzimmer.github.io/kvdi/deploy/charts/index.yaml 2> /dev/null | head | grep appVersion | awk '{print$2}')
-        kill ${dpid}
+        sleep 1
     fi
 
     # Fetch the helm chart
-    dialog --nook --clear --backtitle "kVDI Architect" --cancel-label "Quit" \
-        --msgbox "[INFO]  Downloading kVDI Chart: ${version}" 5 50 &
+    dialog --backtitle "kVDI Architect" \
+        --infobox "Downloading kVDI Chart: ${version}" 5 50 &
     dpid=${!}
     chart_dir=$(fetch-helm-chart ${version})
     trap "rm -rf '${tmpdir}'" EXIT
@@ -468,7 +465,7 @@ EOF
 # Installs the core requirements for kVDI
 function install-base() {
     touch /tmp/install-base.log
-    dialog --clear --backtitle "kVDI Architect" --cancel-label "Quit"  \
+    dialog --clear --no-cancel --backtitle "kVDI Architect" \
         --tailbox /tmp/install-base.log 30 140 &
     dpid=${!}
     echo "[INFO]  K3s will be installed to your system, you may be asked for your password" &> /tmp/install-base.log
@@ -482,12 +479,10 @@ function install-base() {
 
 # Waits for kVDI app instance to be present and ready
 function wait-for-kvdi() {
-    dialog --nook --clear --backtitle "kVDI Architect" --cancel-label "Quit" \
-        --msgbox "[INFO]  Waiting for kVDI to start..." 5 50 &
-    dpid=${!}
+    dialog --backtitle "kVDI Architect" --cancel-label "Quit" \
+        --infobox "Waiting for kVDI to start..." 5 50
     while ! sudo k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do sleep 2 ; done
     sudo k3s kubectl wait pod --for condition=Ready -l vdiComponent=app --timeout=300s > /dev/null
-    kill ${dpid}
 }
 
 # Prints initial instructions to the user after a successful install
@@ -507,7 +502,7 @@ function print-instructions() {
     echo "    sudo k3s kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/main/deploy/examples/example-desktop-templates.yaml"
     echo
     echo "To uninstall kVDI you can run:"
-    echo "    sudo k3s-uninstall.sh"
+    echo "    ${0} --uninstall"
     echo
     echo "Thanks for installing kVDI :)"
 }

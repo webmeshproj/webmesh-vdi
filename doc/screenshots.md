@@ -17,3 +17,13 @@
 ## Grafana Metrics
 
 ![img](screenshots/grafana.png)
+
+## kVDI Architect
+
+![img](screenshots/architect/setup-k3s.png)
+
+![img](screenshots/architect/auth.png)
+
+![img](screenshots/architect/tls.png)
+
+![img](screenshots/architect/ready.png)
