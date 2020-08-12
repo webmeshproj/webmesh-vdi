@@ -10,15 +10,16 @@ export K3S_MANIFEST_DIR="/var/lib/rancher/k3s/server/manifests"
 # Installs K3s using the official installer. Configurations are passed
 # via the above variables.
 function install-k3s() {
+    echo "[INFO]  K3s will be installed to your system"
     curl -sfL https://get.k3s.io | sh -
 }
 
 # Starts K3s and waits for 5 seconds. The wait gives a little extra time for the 
 # API server to be able to serve requests.
 function start-k3s() {
-    dialog --backtitle "kVDI Architect" --cancel-label "Quit" \
+    dialog --backtitle "kVDI Architect" \
         --infobox "Starting k3s service" 5 50
-    sudo systemctl start k3s
+    systemctl start k3s
     sleep 5
 }
 
@@ -26,8 +27,9 @@ function start-k3s() {
 # by k3s at start.
 function install-prometheus() {
     # Lays down a prometheus-operator manifest to be loaded into k3s
-    # This can be optional
-    sudo curl -JL -q \
+    # This can be made optional
+    echo "[INFO]  Installing prometheus-operator manifests"
+    curl -JL -q \
         -o "${K3S_MANIFEST_DIR}/prometheus-operator.yaml" \
         https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/${PROMETHEUS_OPERATOR_VERSION}/bundle.yaml 2> /dev/null
 }
@@ -37,8 +39,7 @@ trap "rm -rf '${dialogTmp}'" EXIT
 
 # Runs a dialog with built-in and arbitrary arguments
 function do-dialog() {
-    rm -f /tmp/dialog.ans && touch /tmp/dialog.ans
-    dialog --clear \
+    dialog \
         --backtitle "kVDI Architect" \
         --cancel-label "Quit" \
         "${@}" 2> "${dialogTmp}/dialog.ans"
@@ -52,48 +53,54 @@ function get-dialog-answer() {
 # Fetches the given helm chart version and returns a temporary path where
 # it is extracted.
 function fetch-helm-chart() {
-  local version=${1}
+    local version=${1}
 
-  tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi')
+    tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi')
 
-  user=$(id -u)
-  sudo docker run --rm \
-    -u ${user} \
-    --net host \
-    -e HOME=/workspace \
-    -w /workspace \
-    -v "${tmpdir}":/workspace \
-      alpine/helm:3.2.4 fetch --untar https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-${version}.tgz 1> /dev/null
+    docker run --rm \
+        -u $(id -u) \
+        --net host \
+        -e HOME=/workspace \
+        -w /workspace \
+        -v "${tmpdir}":/workspace \
+            alpine/helm:3.2.4 \
+            fetch --untar https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-${version}.tgz 1> /dev/null
 
-  echo "${tmpdir}"
+    echo "${tmpdir}"
 }
 
 # Writes the given arguments to the kvdi values file.
 function write-to-values() {
-  local chart_dir=${1}
-  local key=${2}
-  local value=${3}
+    local chart_dir=${1}
+    local key=${2}
+    local value=${3}
 
-  sudo docker run --rm \
-    -v "${chart_dir}":/workdir \
-    mikefarah/yq \
-      yq write -i kvdi/values.yaml "${key}" "${value}"
+    dialog --sleep 1 --backtitle "kVDI Architect" \
+        --infobox "Setting ${key}=${value} to kVDI Configuration" 5 100
   
-  if [[ "${?}" != "0" ]] ; then
-      echo "Error writing to values: $*"
-      exit
-  fi
+    docker run --rm \
+        -v "${chart_dir}":/workdir \
+        mikefarah/yq \
+        yq write -i kvdi/values.yaml "${key}" "${value}"
+  
+    if [[ "${?}" != "0" ]] ; then
+        echo "Error writing to values: $*"
+        exit
+    fi
 }
 
 # Deletes the given object from the values
 function delete-from-values() {
-  local chart_dir=${1}
-  local key=${2}
+    local chart_dir=${1}
+    local key=${2}
 
-  sudo docker run --rm \
-    -v "${chart_dir}":/workdir \
-    mikefarah/yq \
-      yq delete -i kvdi/values.yaml "${key}"
+    dialog --sleep 1 --backtitle "kVDI Architect" \
+        --infobox "Setting ${key}=null to kVDI Configuration" 5 100
+
+    docker run --rm \
+        -v "${chart_dir}":/workdir \
+        mikefarah/yq \
+        yq delete -i kvdi/values.yaml "${key}"
 }
 
 # Prompts for configurations for LDAP auth and writes them to the values file
@@ -135,7 +142,7 @@ function set-ldap-config() {
     # CA is provided so write it to the values
     elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
         write-to-values "${chart_dir}" \
-          "vdi.spec.auth.ldapAuth.tlsCACert" "$(get-dialog-answer | base64 --wrap=0)"
+          "vdi.spec.auth.ldapAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
     fi
 
     # Determine the root DN for the ldap server from the URL
@@ -171,15 +178,15 @@ function set-ldap-config() {
     bindPassw=$(get-dialog-answer)
 
     # Write credentials to a K8s secret to be loaded into k3s
-    sudo tee "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" 1> /dev/null << EOF
+    tee "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" 1> /dev/null << EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: kvdi-app-secrets
   namespace: default
 data:
-  ldap-userdn: $(echo ${bindUser} | base64 --wrap=0)
-  ldap-password: $(echo ${bindPassw} | base64 --wrap=0)
+  ldap-userdn: $(echo "${bindUser}" | base64 --wrap=0)
+  ldap-password: $(echo "${bindPassw}" | base64 --wrap=0)
 
 EOF
 
@@ -233,7 +240,7 @@ function set-oidc-config() {
             write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.tlsInsecureSkipVerify" true
         fi
     elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
-        write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.tlsCACert" "$(get-dialog-answer | base64 --wrap=0)"
+        write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
     fi
 
     # Get the client id
@@ -250,15 +257,15 @@ function set-oidc-config() {
     clientSecret=$(get-dialog-answer)
 
     # Write credentials to a K8s secret to be loaded into k3s
-    sudo tee "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" 1> /dev/null << EOF
+    tee "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" 1> /dev/null << EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: kvdi-app-secrets
   namespace: default
 data:
-  oidc-clientid: $(echo ${clientID} | base64 --wrap=0)
-  oidc-clientsecret: $(echo ${clientSecret} | base64 --wrap=0)
+  oidc-clientid: $(echo "${clientID}" | base64 --wrap=0)
+  oidc-clientsecret: $(echo "${clientSecret}" | base64 --wrap=0)
 
 EOF
 
@@ -362,7 +369,7 @@ function set-tls-config() {
     serverKey=$(get-dialog-answer)
 
     # Write a TLS secret
-    sudo tee "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" 1> /dev/null << EOF
+    tee "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" 1> /dev/null << EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -424,7 +431,7 @@ function install-kvdi() {
 
     # Lay down the HelmChart for kVDI
     if [[ "${dry_run}" == "false" ]] ; then
-      sudo tee "${K3S_MANIFEST_DIR}/kvdi.yaml" 1> /dev/null << EOF
+      tee "${K3S_MANIFEST_DIR}/kvdi.yaml" 1> /dev/null << EOF
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -464,16 +471,19 @@ EOF
 
 # Installs the core requirements for kVDI
 function install-base() {
-    touch /tmp/install-base.log
+    touch "${dialogTmp}/install-base.log"
+
     dialog --clear --no-cancel --backtitle "kVDI Architect" \
-        --tailbox /tmp/install-base.log 30 140 &
+        --tailbox "${dialogTmp}/install-base.log" 30 140 &
     dpid=${!}
-    echo "[INFO]  K3s will be installed to your system, you may be asked for your password" &> /tmp/install-base.log
-    install-k3s &> /tmp/install-base.log
-    
-    echo "[INFO]  Installing prometheus-operator manifests" &> /tmp/install-base.log
-    install-prometheus &> /tmp/install-base.log
-    rm -f /tmp/install-base.log
+
+    sleep 1
+
+    install-k3s &> "${dialogTmp}/install-base.log"    
+    install-prometheus &> "${dialogTmp}/install-base.log"
+
+    sleep 1
+
     kill ${dpid}
 }
 
@@ -481,8 +491,8 @@ function install-base() {
 function wait-for-kvdi() {
     dialog --backtitle "kVDI Architect" --cancel-label "Quit" \
         --infobox "Waiting for kVDI to start..." 5 50
-    while ! sudo k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do sleep 2 ; done
-    sudo k3s kubectl wait pod --for condition=Ready -l vdiComponent=app --timeout=300s > /dev/null
+    while ! k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do sleep 2 ; done
+    k3s kubectl wait pod --for condition=Ready -l vdiComponent=app --timeout=300s > /dev/null
 }
 
 # Prints initial instructions to the user after a successful install
@@ -490,7 +500,7 @@ function print-instructions() {
     echo
     echo "kVDI is installed and listening on https://0.0.0.0:443"
     if [[ "${AUTH_METHOD}" == "Local" ]] ; then
-        adminpassword=$(sudo k3s kubectl get secret kvdi-admin-secret -o yaml | grep password | head -n1 | awk '{print$2}' | base64 -d)
+        adminpassword=$(k3s kubectl get secret kvdi-admin-secret -o yaml | grep password | head -n1 | awk '{print$2}' | base64 -d)
         echo
         echo "You can login with the following credentials:"
         echo
@@ -525,7 +535,7 @@ function run-install() {
     set -o pipefail
 
     # Initialize the manifest dir
-    sudo mkdir -p "${K3S_MANIFEST_DIR}"
+    mkdir -p "${K3S_MANIFEST_DIR}"
 
     if [[ "${dry_run}" == "false" ]] ; then install-base ; fi
 
@@ -541,6 +551,7 @@ function run-install() {
         print-instructions >> kvdi-out.log
         dialog --clear --backtitle "kVDI Architect" --cancel-label "Quit" \
             --textbox kvdi-out.log 0 0
+        clear
     fi
 }
 
@@ -560,7 +571,7 @@ function needs_arg() { if [ -z "$OPTARG" ]; then die "ERROR: --$OPT option requi
 
 function usage() {
   echo "Usage: ${0} [-h|--help] [-u|--uninstall] [-v|--version=<VERSION>] [--dry-run]"
-  echo 
+  echo
   echo "Command Line Arguments:"
   echo
   echo "    --dry-run                ) Print helm values and generated secrets from prompts and exit."
@@ -573,6 +584,12 @@ function usage() {
 
 # Main entrypoint
 { 
+    # Make sure we are root
+    if [[ "$(id -u)" != "0" ]] ; then
+        echo "Not running as root, elevating with sudo"
+        exec sudo /bin/bash ${0} $*
+        exit
+    fi
 
     dry_run="false"
     while getopts hucv:-: OPT; do
