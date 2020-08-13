@@ -53,8 +53,6 @@ function get-dialog-answer() {
 # Fetches the given helm chart version and returns a temporary path where
 # it is extracted.
 function fetch-helm-chart() {
-    local version=${1}
-
     tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi')
 
     docker run --rm \
@@ -64,22 +62,46 @@ function fetch-helm-chart() {
         -w /workspace \
         -v "${tmpdir}":/workspace \
             alpine/helm:3.2.4 \
-            fetch --untar https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-${version}.tgz 1> /dev/null
+            fetch --untar https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-${VERSION}.tgz 1> /dev/null
 
     echo "${tmpdir}"
 }
 
+function get-helm-chart() {
+    # Figure out latest chart version if not supplied by user
+    if [[ "${VERSION}" == "" ]] ; then
+        dialog --backtitle "kVDI Architect" \
+            --infobox "Fetching latest version of kVDI" 5 50
+        export VERSION=$(curl https://tinyzimmer.github.io/kvdi/deploy/charts/index.yaml 2> /dev/null | head | grep appVersion | awk '{print$2}')
+        sleep 1
+    fi
+
+    # Fetch the helm chart
+    dialog --backtitle "kVDI Architect" \
+        --infobox "Downloading kVDI Chart: ${VERSION}" 5 50 &
+    export CHART_DIR=$(fetch-helm-chart ${VERSION})
+}
+
+# Pretty prints the given yaml file
+function cat-yaml() {
+    local file="${1}"
+
+    docker run --rm \
+        -v "$(dirname "${file}")":/workdir \
+        mikefarah/yq \
+        yq -P -C read "$(basename "${file}")" 
+}
+
 # Writes the given arguments to the kvdi values file.
 function write-to-values() {
-    local chart_dir=${1}
-    local key=${2}
-    local value=${3}
+    local key=${1}
+    local value=${2}
 
     dialog --sleep 1 --backtitle "kVDI Architect" \
         --infobox "Setting ${key}=${value} to kVDI Configuration" 5 100
   
     docker run --rm \
-        -v "${chart_dir}":/workdir \
+        -v "${CHART_DIR}":/workdir \
         mikefarah/yq \
         yq write -i kvdi/values.yaml "${key}" "${value}"
   
@@ -89,39 +111,55 @@ function write-to-values() {
     fi
 }
 
+# Reads a key from the values
+function read-from-values() {
+    local key=${1}
+
+    docker run --rm \
+        -v "${CHART_DIR}":/workdir \
+        mikefarah/yq \
+        yq read kvdi/values.yaml "${key}"
+    
+    if [[ "${?}" != "0" ]] ; then
+        echo "Could not read ${key} from values"
+    fi
+}
+
 # Deletes the given object from the values
 function delete-from-values() {
-    local chart_dir=${1}
-    local key=${2}
+    local key=${1}
 
     dialog --sleep 1 --backtitle "kVDI Architect" \
         --infobox "Setting ${key}=null to kVDI Configuration" 5 100
 
     docker run --rm \
-        -v "${chart_dir}":/workdir \
+        -v "${CHART_DIR}":/workdir \
         mikefarah/yq \
         yq delete -i kvdi/values.yaml "${key}"
 }
 
 # Prompts for configurations for LDAP auth and writes them to the values file
 function set-ldap-config() {
-    local chart_dir=${1}
-
     # Get the URL
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --inputbox \
         "What is the URL of the LDAP server?" \
         10 50 "ldaps://ldap.example.com:636"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
-
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;;
+    esac
     url="$(get-dialog-answer)"
-    write-to-values "${chart_dir}" "vdi.spec.auth.ldapAuth.URL" "${url}"
 
     # If using TLS, ask if a CA is provided
     if [[ "${url}" =~ "ldaps" ]]  ; then
         while true ; do
+            touch "${dialogTmp}/edit"
             do-dialog --extra-button --extra-label Reset \
                 --title "Paste the CA certificate for the LDAP user (leave empty if not required or disabling verification)" \
-                --editbox /tmp/test 0 0
+                --editbox "${dialogTmp}/edit" 0 0
             case $? in
                 0 ) break ;;
                 1 ) echo "Aborting" && exit ;;
@@ -132,49 +170,60 @@ function set-ldap-config() {
 
     ca=$(get-dialog-answer)
 
-    # If using TLS and no CA is provided, ask if disabling TLS verification
-    if [[ "${url}" =~ "ldaps" ]] && [[ "${ca//[[:blank:]]/}" == "" ]] ; then
-        do-dialog --defaultno  --yesno "Disable TLS Verification?" 0 0
-        if [[ "${?}" == "0" ]] ; then
-            write-to-values "${chart_dir}" \
-              "vdi.spec.auth.ldapAuth.tlsInsecureSkipVerify" true
-        fi
-    # CA is provided so write it to the values
-    elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
-        write-to-values "${chart_dir}" \
-          "vdi.spec.auth.ldapAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
-    fi
-
     # Determine the root DN for the ldap server from the URL
     # Used to autopopulate fields
     ldapHost=$(echo "${url}" | sed 's=.*://==' | sed 's=:.*==')
     ldapBase=$(echo "${ldapHost}" | awk 'BEGIN{FS=OFS="."}{for(i=1; i<=NF; i++) {printf "dc=%s,", $i}}')
 
     # Get the UserSearchBase
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --inputbox \
         "What search base should be used for users?" \
         10 80 "ou=users,${ldapBase%,}"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
-    write-to-values "${chart_dir}" "vdi.spec.auth.ldapAuth.userSearchBase" "$(get-dialog-answer)"    
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;;
+    esac
+    userBase="$(get-dialog-answer)"
 
     # Get the initial admin group
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --inputbox \
         "What LDAP group should have initial admin access? (You can add more later)" \
         10 80 "ou=kvdi-admins,${ldapBase%,}"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
-    write-to-values "${chart_dir}" "vdi.spec.auth.ldapAuth.adminGroups[+]" "$(get-dialog-answer)"
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;;
+    esac
+    adminGroup=$(get-dialog-answer)
 
     # Get the bind user
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --inputbox \
         "What is the full DN of the LDAP user for kVDI?" \
         10 80 "cn=kvdi-user,ou=svcaccts,${ldapBase%,}"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;;
+    esac
     bindUser=$(get-dialog-answer)
 
     # Get the bind password
-    do-dialog --insecure --passwordbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --insecure --passwordbox \
         "What is the password for the LDAP bind user?" 10 50
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;;
+    esac
     bindPassw=$(get-dialog-answer)
 
     # Write credentials to a K8s secret to be loaded into k3s
@@ -190,70 +239,105 @@ data:
 
 EOF
 
+    # If using TLS and no CA is provided, ask if disabling TLS verification
+    if [[ "${url}" =~ "ldaps" ]] && [[ "${ca//[[:blank:]]/}" == "" ]] ; then
+        do-dialog --defaultno  --yesno "Disable TLS Verification?" 0 0
+        if [[ "${?}" == "0" ]] ; then
+            write-to-values \
+              "vdi.spec.auth.ldapAuth.tlsInsecureSkipVerify" true
+        fi
+    # CA is provided so write it to the values
+    elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
+        write-to-values \
+          "vdi.spec.auth.ldapAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
+    fi
+
+    write-to-values "vdi.spec.auth.ldapAuth.URL" "${url}"
+    write-to-values "vdi.spec.auth.ldapAuth.userSearchBase" "${userBase}"    
+    write-to-values "vdi.spec.auth.ldapAuth.adminGroups[+]" "${adminGroup}"
+
     # Ensure other auth providers are not configured
-    delete-from-values "${chart_dir}" "vdi.spec.auth.localAuth"
-    delete-from-values "${chart_dir}" "vdi.spec.auth.oidcAuth"
+    delete-from-values "vdi.spec.auth.localAuth"
+    delete-from-values "vdi.spec.auth.oidcAuth"
 }
 
 function set-oidc-config() {
-    local chart_dir=${1}
-
     # Get the IssuerURL
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" \
+        --inputbox \
         "What is the Issuer URL of the authentication provider?" \
         10 50 "https://auth.example.com/authorize"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
 
     url="$(get-dialog-answer)"
-    write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.issuerURL" "${url}"
 
     # Get the RedirectURL
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" --inputbox \
         "What is the Redirect URL for this oauth client? \n(This should be the URI of this server followed by /api/login)" \
         10 60 "https://kvdi.example.com/api/login"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
 
-    url="$(get-dialog-answer)"
-    write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.redirectURL" "${url}"   
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+
+    redirectURL="$(get-dialog-answer)"
 
     # If using HTTPS, get the CA if required
     if [[ "${url}" =~ "https" ]]  ; then
         while true ; do
+            touch "${dialogTmp}/edit"
             do-dialog --extra-button --extra-label Reset \
                 --title "Paste the CA certificate for the authentication provider (leave empty if not required or disabling verification)" \
-                --editbox /tmp/test 0 0
+                --editbox "${dialogTmp}/edit" 0 0
             case $? in
                 0 ) break ;;
-                1 ) echo "Aborting" && exit ;;
-                3 ) continue ;;
+                1 ) clear ;
+                    echo "Exiting" ;
+                    exit ;;
             esac
         done
     fi
 
     ca=$(get-dialog-answer)
 
-    # If using HTTPS and no CA is provided, ask if disabling TLS verification
-    # otherwise write the CA to the values.
-    if [[ "${url}" =~ "https" ]] && [[ "${ca//[[:blank:]]/}" == "" ]] ; then
-        do-dialog --defaultno  --yesno "Disable TLS Verification?" 0 0
-        if [[ "${?}" == "0" ]] ; then
-            write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.tlsInsecureSkipVerify" true
-        fi
-    elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
-        write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
-    fi
-
     # Get the client id
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" --inputbox \
         "What is the ClientID for the authentication provider?" \
         10 80 ""
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+    
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+    
     clientID=$(get-dialog-answer)
 
     # Get the client secret
-    do-dialog --insecure --passwordbox \
+    do-dialog --extra-button --extra-label "Back" --insecure --passwordbox \
         "What is the ClientSecret for the authentication provider?" 10 50
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+
     clientSecret=$(get-dialog-answer)
 
     # Write credentials to a K8s secret to be loaded into k3s
@@ -270,106 +354,161 @@ data:
 EOF
 
     # Get the scopes
-    do-dialog --checklist \
-      "                    Select the authentication scopes to request\n(If you need to provide custom values say 'yes' when prompted for additional changes)" \
+    do-dialog --extra-button --extra-label "Back" --checklist \
+      "Select the authentication scopes to request\n(If you need to provide custom values say 'yes' when prompted for additional changes)" \
       0 90 5 \
       "openid" "" "on" \
       "email" "" "on" \
       "profile" "" "on" \
       "groups" "" "on"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+
     scopes=$(get-dialog-answer)
-    for scope in "${scopes[@]}" ; do 
-        write-to-values "${chart_dir}" \
-            "vdi.spec.auth.oidcAuth.scopes[+]" "${scope}"
-    done
 
     # Get the group scope
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" --inputbox \
         "What is the 'groups' scope for the authentication provider?\n(Answer yes to 'Allow all authenticated' if you don't have one)" \
         10 80 "groups"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+
     groupScope=$(get-dialog-answer)
-    write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.groupScope" "${groupScope}"
 
     # Get the initial admin group
-    do-dialog --inputbox \
+    do-dialog --extra-button --extra-label "Back" --inputbox \
         "What openid group should have initial admin access? (You can add more later)" \
         10 80 "kvdi-admins"
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
-    write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.adminGroups[+]" "$(get-dialog-answer)"
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  set-auth-config ;
+            return 0 ;;
+    esac
+
+    adminGroup=$(get-dialog-answer)
 
     # Check if allowing all authenticated users
-    do-dialog --defaultno  --yesno "Allow all authenticated users?" 0 0
-    if [[ "${?}" == "0" ]] ; then
-        write-to-values "${chart_dir}" "vdi.spec.auth.oidcAuth.allowNonGroupedReadOnly" true
-    fi
+    do-dialog \
+        --defaultno  --yesno "Allow all authenticated users?" 0 0
+    
+    case ${?} in
+        0)  write-to-values "vdi.spec.auth.oidcAuth.allowNonGroupedReadOnly" true ;;
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+    esac
 
+    # Write the rest of the configurations
+
+    write-to-values "vdi.spec.auth.oidcAuth.issuerURL" "${url}"
+    write-to-values "vdi.spec.auth.oidcAuth.redirectURL" "${redirectURL}"   
+
+    # If using HTTPS and no CA is provided, ask if disabling TLS verification
+    # otherwise write the CA to the values.
+    if [[ "${url}" =~ "https" ]] && [[ "${ca//[[:blank:]]/}" == "" ]] ; then
+        do-dialog --defaultno  --yesno "Disable TLS Verification?" 0 0
+        if [[ "${?}" == "0" ]] ; then
+            write-to-values "vdi.spec.auth.oidcAuth.tlsInsecureSkipVerify" true
+        fi
+    elif [[ "${ca//[[:blank:]]/}" != "" ]] ; then
+        write-to-values "vdi.spec.auth.oidcAuth.tlsCACert" "$(echo "${ca}" | base64 --wrap=0)"
+    fi
+    for scope in "${scopes[@]}" ; do 
+        write-to-values "vdi.spec.auth.oidcAuth.scopes[+]" "${scope}"
+    done
+
+    write-to-values "vdi.spec.auth.oidcAuth.groupScope" "${groupScope}"
+    write-to-values "vdi.spec.auth.oidcAuth.adminGroups[+]" "${adminGroup}"
+
+    # Bump the access token duration to 12 hours since oauth refresh is not implemented
+    write-to-values "vdi.spec.auth.tokenDuration" "12h"
+    
     # Ensure other auth providers are not configured
-    delete-from-values "${chart_dir}" "vdi.spec.auth.localAuth"
-    delete-from-values "${chart_dir}" "vdi.spec.auth.ldapAuth"
+    delete-from-values "vdi.spec.auth.localAuth"
+    delete-from-values "vdi.spec.auth.ldapAuth"
 }
 
 # Configures authentication values for kVDI
 function set-auth-config() {
-    local chart_dir=${1}
-
     # Figure out which auth backend we are using
-    do-dialog --radiolist \
+    do-dialog --extra-button --extra-label "Back" \
+        --menu \
         "Select the authentication method" 15 60 10 \
-        "Local" "Use local built-in authentication" "on" \
-        "LDAP" "Use LDAP for authentication" "" \
-        "OIDC" "Use OpenID/OAuth for authentication" ""
-    if [[ "${?}" != "0" ]] ; then echo "Aborting" && exit ; fi
-    
+        "Local" "Use local built-in authentication" \
+        "LDAP" "Use LDAP for authentication" \
+        "OIDC" "Use OpenID/OAuth for authentication"
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  main-menu ;;
+    esac
+
     backend=$(get-dialog-answer)
 
     # If LDAP/OIDC prompt for configuration options
     case ${backend} in
-        "LDAP" )  set-ldap-config "${chart_dir}" ;;
-        "OIDC" )  set-oidc-config "${chart_dir}" ;;
-        "Local")  export AUTH_METHOD="Local" ; \
-                  delete-from-values "${chart_dir}" "vdi.spec.auth.ldapAuth" ; \
-                  delete-from-values "${chart_dir}" "vdi.spec.auth.oidcAuth" ;;
+        "LDAP" )  set-ldap-config "${CHART_DIR}" ;;
+        "OIDC" )  set-oidc-config "${CHART_DIR}" ;;
+        "Local")  delete-from-values "vdi.spec.auth.ldapAuth" ;
+                  delete-from-values "vdi.spec.auth.oidcAuth" ;
     esac
+    
+    export AUTH_METHOD="${backend}"
+
+    main-menu
 }
 
 # Sets custom server certificate options
 function set-tls-config() {
-    local chart_dir="${1}"
-
     # Check if using custom certificate
     do-dialog --defaultno --yesno "Use a pre-existing TLS server certificate?" 5 50
-    if [[ "${?}" != "0" ]] ; then return 0 ; fi
+    if [[ "${?}" == "0" ]] ; then
 
-    # Get the certificate
-    while true ; do
-        do-dialog --extra-button --extra-label Reset \
-            --title "Paste the PEM-encoded TLS Server Certificate" \
-            --editbox /tmp/test 0 0
-        case $? in
-            0 ) break ;;
-            1 ) echo "Aborting" && exit ;;
-            3 ) continue ;;
-        esac
-    done
-    serverCert=$(get-dialog-answer)
+        # Get the certificate
+        while true ; do
+            do-dialog --extra-button --extra-label Reset \
+                --title "Paste the PEM-encoded TLS Server Certificate" \
+                --editbox /tmp/test 0 0
+            case $? in
+                0 ) break ;;
+                1 ) echo "Aborting" && exit ;;
+                3 ) continue ;;
+            esac
+        done
+        serverCert=$(get-dialog-answer)
 
-    # Get the private key
-    while true ; do
-        do-dialog --extra-button --extra-label Reset \
-            --title "Paste the PEM-encoded, unencrypted TLS Server Private Key" \
-            --editbox /tmp/test 0 0
-        case $? in
-            0 ) break ;;
-            1 ) echo "Aborting" && exit ;;
-            3 ) continue ;;
-        esac
-    done
-    serverKey=$(get-dialog-answer)
+        # Get the private key
+        while true ; do
+            do-dialog --extra-button --extra-label Reset \
+                --title "Paste the PEM-encoded, unencrypted TLS Server Private Key" \
+                --editbox /tmp/test 0 0
+            case $? in
+                0 ) break ;;
+                1 ) echo "Aborting" && exit ;;
+                3 ) continue ;;
+            esac
+        done
+        serverKey=$(get-dialog-answer)
 
-    # Write a TLS secret
-    tee "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" 1> /dev/null << EOF
+        # Write a TLS secret
+        tee "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" 1> /dev/null << EOF
 apiVersion: v1
 kind: Secret
 metadata:
@@ -380,8 +519,11 @@ data:
   tls.key: $(echo ${serverKey} | base64 --wrap=0)
 EOF
 
-    # Point kVDI at the external TLS secret
-    write-to-values "${chart_dir}" "vdi.spec.app.tls.serverSecret" "kvdi-app-external-tls"
+        # Point kVDI at the external TLS secret
+        write-to-values "vdi.spec.app.tls.serverSecret" "kvdi-app-external-tls"
+    fi
+
+    main-menu
 }
 
 # Fetches the kvdi helm chart, reads in the values, and calls the appropriate
@@ -389,48 +531,13 @@ EOF
 # Once all configurations are gathered, a HelmChart manifest is written to the K3s
 # load directory.
 function install-kvdi() {
-    local version=${1}
-    local dry_run=${2}
-
-    # Figure out latest chart version if not supplied by user
-    if [[ "${version}" == "" ]] ; then
-        dialog --backtitle "kVDI Architect" \
-            --infobox "Fetching latest version of kVDI" 5 50
-        version=$(curl https://tinyzimmer.github.io/kvdi/deploy/charts/index.yaml 2> /dev/null | head | grep appVersion | awk '{print$2}')
-        sleep 1
-    fi
-
-    # Fetch the helm chart
-    dialog --backtitle "kVDI Architect" \
-        --infobox "Downloading kVDI Chart: ${version}" 5 50 &
-    dpid=${!}
-    chart_dir=$(fetch-helm-chart ${version})
-    trap "rm -rf '${tmpdir}'" EXIT
-
     # Enable metrics by default for now
-    write-to-values "${chart_dir}" "vdi.spec.metrics.serviceMonitor.create" true
-    write-to-values "${chart_dir}" "vdi.spec.metrics.prometheus.create" true
-    write-to-values "${chart_dir}" "vdi.spec.metrics.grafana.enabled" true
-
-    kill ${dpid}
-
-    # Check if user wants to supply custom TLS
-    set-tls-config "${chart_dir}"
-
-    # Set auth configurations
-    set-auth-config "${chart_dir}"
-
-    ## need to implement more vault auth methods to have it make sense
-    ## in a standalone setup
-    # set-secrets-backend "${install_mode}" "${chart_dir}"
-
-    do-dialog --defaultno --yesno "Do you want to open the kVDI values for additional changes?" 5 70
-    if [[ "${?}" == "0" ]] ; then
-        ${EDITOR:-vi} "${chart_dir}/kvdi/values.yaml"
-    fi
+    write-to-values "vdi.spec.metrics.serviceMonitor.create" true
+    write-to-values "vdi.spec.metrics.prometheus.create" true
+    write-to-values "vdi.spec.metrics.grafana.enabled" true
 
     # Lay down the HelmChart for kVDI
-    if [[ "${dry_run}" == "false" ]] ; then
+    if [[ "${DRY_RUN}" == "false" ]] ; then
       tee "${K3S_MANIFEST_DIR}/kvdi.yaml" 1> /dev/null << EOF
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
@@ -442,28 +549,29 @@ spec:
   repo: https://tinyzimmer.github.io/kvdi/deploy/charts
   targetNamespace: default
   valuesContent: |-
-$(cat "${chart_dir}/kvdi/values.yaml" | sed 's/^/    /g')
+$(cat "${CHART_DIR}/kvdi/values.yaml" | sed 's/^/    /g')
 
 EOF
 
     else
+        clear
         echo
         echo "# DRY RUN OUTPUT #"
         echo
         echo "# values.yaml"
         echo
-        cat "${chart_dir}/kvdi/values.yaml" 
+        cat-yaml "${CHART_DIR}/kvdi/values.yaml" 
         echo
         if [[ -f "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" ]] ; then
             echo
             echo "# kvdi-secrets.yaml"
-            cat "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml"
+            cat-yaml "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml"
             echo
         fi
         if [[ -f "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" ]] ; then
             echo
             echo "# kvdi-tls.yaml"
-            cat "${K3S_MANIFEST_DIR}/kvdi-tls.yaml"
+            cat-yaml "${K3S_MANIFEST_DIR}/kvdi-tls.yaml"
             echo
         fi
     fi
@@ -518,33 +626,16 @@ function print-instructions() {
 }
 
 function run-install() {
-    local version="${1}"
-    local dry_run="${2}"
-
-    if ! which docker &> /dev/null ; then
-        echo "You must install 'docker' first to use this script."
-        exit 1
-    fi
-
-    if ! which dialog &> /dev/null ; then
-        echo "You must install the 'dialog' package to use this script."
-        exit 1
-    fi
-
     set -e
     set -o pipefail
 
-    # Initialize the manifest dir
-    mkdir -p "${K3S_MANIFEST_DIR}"
+    if [[ "${DRY_RUN}" == "false" ]] ; then 
+        install-base
+    fi
 
-    if [[ "${dry_run}" == "false" ]] ; then install-base ; fi
+    install-kvdi
 
-    # Allow bad exit codes from dialogs
-    set +e
-    install-kvdi "${version}" "${dry_run}"
-    set -e
-
-    if [[ "${dry_run}" == "false" ]] ; then
+    if [[ "${DRY_RUN}" == "false" ]] ; then
         start-k3s
         wait-for-kvdi
         echo "# `pwd`/kvdi-out.log" > kvdi-out.log
@@ -553,6 +644,119 @@ function run-install() {
             --textbox kvdi-out.log 0 0
         clear
     fi
+
+    exit 0
+}
+
+function misc-menu() {
+    do-dialog --extra-button --extra-label "Back" \
+        --menu "Miscellaneous Options" 0 0 0 \
+        "Token TTL" "The access token duration for the UI" \
+        "Audit Log" "Configure the api access audit log" \
+        "Replicas" "Configure the number of app pods running" \
+        "Userdata" "Configure user desktop persistence" \
+        "Anonymous" "Allow anonymous users to use kVDI"
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  main-menu ;;
+    esac
+
+    case "$(get-dialog-answer)" in
+
+        "Token TTL" ) do-dialog --inputbox "How long should issued access tokens be valid?" 0 0 \
+                          "$(read-from-values "vdi.spec.auth.tokenDuration")" ;
+                      [[ ${?} == 0 ]] \
+                          && write-to-values "vdi.spec.auth.tokenDuration" "$(get-dialog-answer)" ;;
+
+        "Audit Log" ) do-dialog $([[ "$(read-from-values "vdi.spec.app.auditLog")" == "false" ]] && echo --defaultno) \
+                        --yesno "Enable the API audit log?" 0 0 ;
+                      [[ ${?} == 0 ]] \
+                          && write-to-values "vdi.spec.app.auditLog" true \
+                          || write-to-values "vdi.spec.app.auditLog" false ;;
+
+        "Replicas"  ) do-dialog --inputbox "How many app server pods should be running?" 0 0 \
+                          "$(read-from-values "vdi.spec.app.replicas")" ;
+                      [[ ${?} == 0 ]] \
+                          && write-to-values "vdi.spec.app.replicas" "$(get-dialog-answer)" ;;
+
+        # TODO allow more configuration options such as custom storage class.
+        # Right now, k3s will just use the local-path-provisioner.
+        "Userdata"  ) do-dialog --inputbox "How much storage should be allocated to each user?" 0 0 \
+                          "$(read-from-values "vdi.spec.userdataSpec.resources.requests.storage")" ;
+                      [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] \
+                          && write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)" \
+                          && write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce" \
+                          || delete-from-values "vdi.spec.userdataSpec" ;;
+
+        "Anonymous" ) do-dialog $([[ "$(read-from-values "vdi.spec.auth.allowAnonymous")" == "false" ]] && echo --defaultno) \
+                        --yesno "Allow unauthenticated users to use kVDI?" 0 0 ;
+                      [[ ${?} == 0 ]] \
+                          && write-to-values "vdi.spec.auth.allowAnonymous" true \
+                          || write-to-values "vdi.spec.auth.allowAnonymous" false ;;
+    esac
+
+    # Return to misc menu after setting something. Selecting Back at anytime
+    # will take you to the main menu.
+    misc-menu
+}
+
+function advanced-menu() {
+    do-dialog --extra-button --extra-label "Back" \
+        --menu "Advanced Options" 0 0 0 \
+        "Edit Values" "Edit the kVDI values.yaml directly" \
+    
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  main-menu ;;
+    esac
+
+    if [[ "$(get-dialog-answer)" == "Edit Values" ]] ; then
+        if which vim &> /dev/null ; then
+            editor_default="vim"
+        else
+            editor_default="vi"
+        fi
+        ${EDITOR:-${editor_default}} "${CHART_DIR}/kvdi/values.yaml"
+    fi
+
+    # Return to advanced menu after editing. Selecting Back at anytime
+    # will take you to the main menu.
+    advanced-menu
+}
+
+function main-menu() {
+    do-dialog --extra-button --extra-label "Install" \
+        --menu "Configuration Options" 0 0 0 \
+        "Auth" "Authentication configurations" \
+        "TLS"  "TLS configurations" \
+        "Misc" "Miscellaneous configurations" \
+        "Advanced" "Advanced configurations" \
+        "Reset" "Reset all configurations to their defaults"
+    
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  run-install ;;
+    esac
+
+    case $(get-dialog-answer) in
+        "Auth"     ) set-auth-config ;;
+        "TLS"      ) set-tls-config ;;
+        "Misc"     ) misc-menu ;;
+        "Advanced" ) advanced-menu ;;
+        "Reset"    ) rm -f "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" ;
+                     rm -f "${K3S_MANIFEST_DIR}/kvdi-tls.yaml" ;
+                     rm -rf "${CHART_DIR}" ;
+                     get-helm-chart ;
+                     trap "rm -rf '${CHART_DIR}'" EXIT ;
+                     main-menu ;;
+    esac
 }
 
 function run-uninstall() {
@@ -584,6 +788,17 @@ function usage() {
 
 # Main entrypoint
 { 
+    # Make sure dependencies are installed
+    if ! which docker &> /dev/null ; then
+        echo "You must install 'docker' first to use this scri  valuesContent: |-pt."
+        exit 1
+    fi
+
+    if ! which dialog &> /dev/null ; then
+        echo "You must install the 'dialog' package to use this script."
+        exit 1
+    fi
+
     # Make sure we are root
     if [[ "$(id -u)" != "0" ]] ; then
         echo "Not running as root, elevating with sudo"
@@ -591,7 +806,10 @@ function usage() {
         exit
     fi
 
-    dry_run="false"
+    export VERSION=""
+    export DRY_RUN="false"
+    export AUTH_METHOD="Local"
+
     while getopts hucv:-: OPT; do
         # support long options: https://stackoverflow.com/a/28466267/519360
         if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
@@ -602,8 +820,9 @@ function usage() {
         case "$OPT" in
             u | uninstall ) run-uninstall ;;
             h | help )      usage ;;
-            v | version )   needs_arg; version="$OPTARG" ;;
-            dry-run )       dry_run="true" ;;
+            v | version )   needs_arg;
+                            export VERSION="$OPTARG" ;;
+            dry-run )       export DRY_RUN="true" ;;
             ??* )           die "Illegal option --$OPT" ;;  # bad long option
             \? )            exit 2 ;;  # bad short option (error reported via getopts)
         esac
@@ -611,10 +830,18 @@ function usage() {
 
     shift $((OPTIND-1)) # remove parsed options and args from $@ list
 
-    if [[ "${dry_run}" == "true" ]] ; then
+    if [[ "${DRY_RUN}" == "true" ]] ; then
         export K3S_MANIFEST_DIR=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi-manifests')
         trap "rm -rf '${K3S_MANIFEST_DIR}'" EXIT
     fi
 
-    run-install "${version}" "${dry_run}"
+    # Initialize the manifest dir
+    mkdir -p "${K3S_MANIFEST_DIR}"
+
+    # Pull down the helm chart
+    get-helm-chart
+    trap "rm -rf '${CHART_DIR}'" EXIT
+
+    # Go to the main menu
+    main-menu 
 }
