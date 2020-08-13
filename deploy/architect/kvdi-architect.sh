@@ -686,10 +686,13 @@ function misc-menu() {
         # Right now, k3s will just use the local-path-provisioner.
         "Userdata"  ) do-dialog --inputbox "How much storage should be allocated to each user?" 0 0 \
                           "$(read-from-values "vdi.spec.userdataSpec.resources.requests.storage")" ;
-                      [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] \
-                          && write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)" \
-                          && write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce" \
-                          || delete-from-values "vdi.spec.userdataSpec" ;;
+                      if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
+                          write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)"
+                          [[ "$(read-from-values "vdi.spec.userdataSpec.accessModes")" == "" ]] \
+                              && write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce"
+                      else
+                          delete-from-values "vdi.spec.userdataSpec"
+                      fi;;
 
         "Anonymous" ) do-dialog $([[ "$(read-from-values "vdi.spec.auth.allowAnonymous")" == "false" ]] && echo --defaultno) \
                         --yesno "Allow unauthenticated users to use kVDI?" 0 0 ;
