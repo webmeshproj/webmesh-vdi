@@ -4,7 +4,7 @@ Wants=network.target
 
 [Service]
 Type=idle
-EnvironmentFile=/etc/default/display
+EnvironmentFile=/etc/default/xvnc
 ExecStart=/usr/local/sbin/fakegetty
 UtmpIdentifier=cons
 TTYVHangup=yes
