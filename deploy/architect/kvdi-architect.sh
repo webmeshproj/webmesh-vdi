@@ -597,10 +597,36 @@ function install-base() {
 
 # Waits for kVDI app instance to be present and ready
 function wait-for-kvdi() {
-    dialog --backtitle "kVDI Architect" --cancel-label "Quit" \
-        --infobox "Waiting for kVDI to start..." 5 50
-    while ! k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do sleep 2 ; done
-    k3s kubectl wait pod --for condition=Ready -l vdiComponent=app --timeout=300s > /dev/null
+    local dots="."
+    dialog --backtitle "kVDI Architect" \
+        --infobox "Waiting for kVDI to start${dots}" 5 50
+    while ! k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do
+        sleep 2 
+        if [[ $(echo ${dots} | wc -c) == 3 ]] ; then
+            dots="."
+        else
+            dots="${dots}."
+        fi
+        dialog --backtitle "kVDI Architect" \
+            --infobox "Waiting for kVDI to start${dots}" 5 50
+    done
+
+    if [[ $(read-from-values vdi.spec.metrics.grafana.enabled) == "true" ]] ; then
+        ready="2/2"
+    else
+        ready="1/1"
+    fi
+
+    while ! k3s kubectl get pod -l vdiComponent=app | grep ${ready} 1> /dev/null ; do
+        sleep 2 
+        if [[ $(echo ${dots} | wc -c) == 3 ]] ; then
+            dots="."
+        else
+            dots="${dots}."
+        fi
+        dialog --backtitle "kVDI Architect" \
+            --infobox "Waiting for kVDI to start${dots}" 5 50
+    done
 }
 
 # Prints initial instructions to the user after a successful install
