@@ -19,7 +19,7 @@ function install-k3s() {
 function start-k3s() {
     dialog --backtitle "kVDI Architect" \
         --infobox "Starting k3s service" 5 50
-    systemctl start k3s
+    systemctl restart k3s
     sleep 5
 }
 
@@ -684,7 +684,7 @@ function misc-menu() {
 
         # TODO allow more configuration options such as custom storage class.
         # Right now, k3s will just use the local-path-provisioner.
-        "Userdata"  ) do-dialog --inputbox "How much storage should be allocated to each user?" 0 0 \
+        "Userdata"  ) do-dialog --inputbox "How much storage should be allocated to each user?\n(Leave blank to disable userdata persistence)" 0 0 \
                           "$(read-from-values "vdi.spec.userdataSpec.resources.requests.storage")" ;
                       if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
                           write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)"
@@ -707,9 +707,19 @@ function misc-menu() {
 }
 
 function advanced-menu() {
+    # Figure out the default editor
+    if which vim &> /dev/null ; then
+        editor_default="vim"
+    else
+        editor_default="vi"
+    fi
+
     do-dialog --extra-button --extra-label "Back" \
         --menu "Advanced Options" 0 0 0 \
         "Edit Values" "Edit the kVDI values.yaml directly" \
+        "Start K3s" "Pre-start K3s to be able to configure additional resources via the shell" \
+        "Add File" "Add raw kubernetes manifests to the k3s installation" \
+        "Shell" "Drop to a shell to run arbitrary commands"
     
     case ${?} in
         1)  clear ;
@@ -718,16 +728,29 @@ function advanced-menu() {
         3)  main-menu ;;
     esac
 
-    if [[ "$(get-dialog-answer)" == "Edit Values" ]] ; then
-        if which vim &> /dev/null ; then
-            editor_default="vim"
-        else
-            editor_default="vi"
-        fi
-        ${EDITOR:-${editor_default}} "${CHART_DIR}/kvdi/values.yaml"
-    fi
+    case "$(get-dialog-answer)" in
 
-    # Return to advanced menu after editing. Selecting Back at anytime
+        "Edit Values" ) ${EDITOR:-${editor_default}} "${CHART_DIR}/kvdi/values.yaml" ;;
+
+        "Start K3s"   ) if [[ "${DRY_RUN}" == "false" ]] ; then 
+                            install-base
+                            start-k3s
+                        else
+                            dialog --sleep 3 --backtitle "kVDI Architect" --infobox "Cannot start K3s when --dry-run is enabled" 5 50
+                        fi ;;
+
+        "Add File"    ) do-dialog --fselect `pwd` 0 100 ;
+                        if [[ "${?}" == 0 ]] ; then
+                            cp "$(get-dialog-answer)" "${K3S_MANIFEST_DIR}/"
+                        fi ;;
+
+        "Shell"       ) clear ;
+                        echo "Launching a shell process. To interact with a running K3s environment:"
+                        echo "# k3s kubectl <args...>"
+                        ${SHELL:-/bin/sh} ;;
+    esac
+
+    # Return to advanced menu after changes. Selecting Back at anytime
     # will take you to the main menu.
     advanced-menu
 }
