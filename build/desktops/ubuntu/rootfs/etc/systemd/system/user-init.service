@@ -4,8 +4,8 @@ Wants=network.target
 
 [Service]
 Type=idle
+EnvironmentFile=/etc/default/display
 ExecStart=/usr/local/sbin/fakegetty
-Environment="USER=${USER}"
 UtmpIdentifier=cons
 TTYVHangup=yes
 KillMode=process
