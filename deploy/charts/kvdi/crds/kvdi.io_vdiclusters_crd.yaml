@@ -174,7 +174,7 @@ spec:
                         description: When creating your own kubernets secret with
                           the `clientIDKey` and `clientSecretKey`, set this to the
                           name of the created secret. It must be in the same namespace
-                          as the manager and app instances.
+                          as the manager and app instances. Defaults to `oidc-clientsecret`.
                         type: string
                       clientIDKey:
                         description: When using the built-in secrets backend, the
