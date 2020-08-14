@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"time"
 
@@ -221,7 +222,7 @@ func (s *SecretEngine) Release() {
 	defer s.mux.Unlock()
 	if s.lock != nil {
 		if err := s.lock.Release(); err != nil {
-			secretsLog.Error(err, "Failed to release lock")
+			secretsLog.Error(err, fmt.Sprintf("Failed to release lock: %s", err.Error()))
 		}
 	}
 	s.lock = nil

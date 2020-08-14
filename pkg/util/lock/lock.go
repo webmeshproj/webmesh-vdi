@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -18,6 +19,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // expireKey is the key in the configmap where we store the expiry data
 const expireKey = "expiresAt"
@@ -88,26 +93,16 @@ func (l *Lock) Acquire() error {
 
 	failTimeout := time.Now().Add(l.GetTimeout())
 
-	var ctx context.Context
-	var cancel func()
-	if l.GetTimeout() > 0 {
-		ctx, cancel = context.WithTimeout(context.Background(), l.GetTimeout())
-	} else {
-		ctx, cancel = context.WithCancel(context.Background())
-	}
-
-	defer cancel()
-
 	cm := newConfigMapForLock(l)
+	ctx := context.Background()
 
-	for {
-
+	return common.Retry(-1, time.Second, func() error {
 		err := l.client.Create(ctx, cm)
 
 		// the lock was acquired
 		if err == nil {
 			lockLogger.Info("Lock acquired", "Lock.Name", l.GetName())
-			break
+			return nil
 		}
 
 		// we couldn't acquire the lock
@@ -121,7 +116,7 @@ func (l *Lock) Acquire() error {
 		nn := types.NamespacedName{Name: cm.GetName(), Namespace: cm.GetNamespace()}
 		if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
 			if kerrors.IsNotFound(err) {
-				continue
+				return l.client.Create(ctx, cm)
 			}
 			lockLogger.Error(err, "Error looking up existing lock, could not acquire lock")
 			return err
@@ -131,16 +126,15 @@ func (l *Lock) Acquire() error {
 			return err
 		}
 
-		if time.Now().After(failTimeout) {
+		if l.GetTimeout() > 0 && time.Now().After(failTimeout) {
 			lockLogger.Info("Timeout reached before we could acquire a lock")
-			return errors.New("Failed to acquire lock in the given time limit")
+			return &common.StopRetry{Err: errors.New("Failed to acquire lock in the given time limit")}
 		}
 
-		lockLogger.Info("Current lock is still active, trying again in 1 second...")
-		time.Sleep(time.Duration(1) * time.Second)
-	}
+		// This should be unreachable, but try another create
+		return l.client.Create(ctx, cm)
+	})
 
-	return nil
 }
 
 func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1.ConfigMap) error {

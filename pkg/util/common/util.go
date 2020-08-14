@@ -20,6 +20,10 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 // BoolPointer returns a pointer to the given boolean
 func BoolPointer(b bool) *bool { return &b }
 
@@ -132,4 +136,30 @@ func HashPassword(passw string) (string, error) {
 // PasswordMatchesHash returns true if the given password matches the given salt.
 func PasswordMatchesHash(passw, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(passw)) == nil
+}
+
+// StopRetry is returned to tell the Retry function to stop retrying.
+type StopRetry struct{ Err error }
+
+// Error implements the error interface
+func (s *StopRetry) Error() string { return s.Err.Error() }
+
+// Retry will retry the given function until either the maximum attempts is reached or
+// a stop error is returned.
+func Retry(attempts int, sleep time.Duration, f func() error) error {
+	if err := f(); err != nil {
+		if stop, ok := err.(*StopRetry); ok {
+			return stop.Err
+		}
+		// user can pass -1 to retry indefinitely
+		if attempts--; attempts > 0 || attempts < 0 {
+			// Add some randomness to prevent creating a Thundering Herd
+
+			time.Sleep(sleep)
+			return Retry(attempts, 2*sleep, f)
+		}
+		return err
+	}
+
+	return nil
 }

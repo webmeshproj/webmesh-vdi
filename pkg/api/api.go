@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/auth/mfa"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
+	util "github.com/tinyzimmer/kvdi/pkg/util/common"
 
 	"github.com/gorilla/mux"
 	corev1 "k8s.io/api/core/v1"
@@ -30,10 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 var apiLogger = logf.Log.WithName("api")
 
@@ -65,6 +61,7 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) error {
 		// ignore vdiclusters not tied to this app instance
 		return nil
 	}
+
 	if d.vdiCluster == nil {
 		// we are setting up the api the first time
 		d.vdiCluster = &v1alpha1.VDICluster{}
@@ -75,28 +72,31 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) error {
 
 	var err error
 	// overwrite the api vdicluster object with the remote state
-	if err = d.client.Get(context.TODO(), req.NamespacedName, d.vdiCluster); err == nil {
-		if d.secrets == nil {
-			// we have not set up secrets yet
-			d.secrets = secrets.GetSecretEngine(d.vdiCluster)
-			// this means mfa also still need to be setup
-			d.mfa = mfa.NewManager(d.secrets)
-		}
-		// call Setup on the secrets backend, should be idempotent
-		if err := d.secrets.Setup(d.client, d.vdiCluster); err != nil {
-			return err
-		}
-		if d.auth == nil {
-			// auth has not been setup yet
-			d.auth = auth.GetAuthProvider(d.vdiCluster, d.secrets)
-		}
-		// call Setup on the auth provider, should be idempotent
-		if err := d.auth.Setup(d.client, d.vdiCluster); err != nil {
-			return err
-		}
-
+	if err = d.client.Get(context.TODO(), req.NamespacedName, d.vdiCluster); err != nil {
+		return err
 	}
-	return err
+
+	if d.secrets == nil {
+		// we have not set up secrets yet
+		d.secrets = secrets.GetSecretEngine(d.vdiCluster)
+		// this means mfa also still need to be setup
+		d.mfa = mfa.NewManager(d.secrets)
+	}
+	// call Setup on the secrets backend, should be idempotent
+	if err = d.secrets.Setup(d.client, d.vdiCluster); err != nil {
+		return err
+	}
+
+	if d.auth == nil {
+		// auth has not been setup yet
+		d.auth = auth.GetAuthProvider(d.vdiCluster, d.secrets)
+	}
+	// call Setup on the auth provider, should be idempotent
+	if err = d.auth.Setup(d.client, d.vdiCluster); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func buildScheme() (*runtime.Scheme, error) {
@@ -146,7 +146,7 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	var c controller.Controller
 	if c, err = controller.New("cluster-watcher", mgr, controller.Options{
 		Reconciler: reconcile.Func(func(req reconcile.Request) (reconcile.Result, error) {
-			return reconcile.Result{}, retry(10, time.Second, req, api.handleClusterUpdate)
+			return reconcile.Result{}, util.Retry(5, time.Second*2, func() error { return api.handleClusterUpdate(req) })
 		}),
 	}); err != nil {
 		return nil, err
@@ -282,29 +282,4 @@ func NewTestAPI() (srvr *http.Server, addr, adminPass string, err error) {
 	}()
 
 	return
-}
-
-func retry(attempts int, sleep time.Duration, req reconcile.Request, f func(reconcile.Request) error) error {
-	if err := f(req); err != nil {
-		if s, ok := err.(stop); ok {
-			// Return the original error for later checking
-			return s.error
-		}
-
-		if attempts--; attempts > 0 {
-			// Add some randomness to prevent creating a Thundering Herd
-			jitter := time.Duration(rand.Int63n(int64(sleep)))
-			sleep = sleep + jitter/2
-
-			time.Sleep(sleep)
-			return retry(attempts, 2*sleep, req, f)
-		}
-		return err
-	}
-
-	return nil
-}
-
-type stop struct {
-	error
 }
