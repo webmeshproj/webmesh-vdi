@@ -79,7 +79,7 @@ func (s *SecretEngine) setClient(c client.Client) { s.client = c }
 // Setup sets the local client inteface and calls Setup on the backend.
 func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	s.setClient(c)
-	if err := s.Lock(10); err != nil {
+	if err := s.Lock(15); err != nil {
 		return err
 	}
 	defer s.Release()

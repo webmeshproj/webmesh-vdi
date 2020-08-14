@@ -37,12 +37,14 @@ func New(c client.Client, s *runtime.Scheme) *Reconciler {
 // Reconcile reconciles all the core-components of a kVDI cluster.
 func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
 	// Generate the admin secret
+	reqLogger.Info("Reconciling admin password secret")
 	adminPass, err := f.reconcileAdminSecret(reqLogger, instance)
 	if err != nil {
 		return err
 	}
 
 	// Set up a temporary connection to the secrets engine
+	reqLogger.Info("Setting up a temporary connection to the cluster secrets backend")
 	secretsEngine := secrets.GetSecretEngine(instance)
 	if err := secretsEngine.Setup(f.client, instance); err != nil {
 		return err
@@ -54,6 +56,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}()
 
 	// Reconcile a secret for generating JWT tokens
+	reqLogger.Info("Reconciling JWT secrets")
 	if _, err := secretsEngine.ReadSecret(v1.JWTSecretKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err
@@ -64,6 +67,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 		}
 	}
 
+	reqLogger.Info("Reconciling built-in VDIRoles")
 	// Reconcile the built-in roles.
 	if err := reconcile.VDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
 		return err
@@ -74,6 +78,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// reconcile any resources needed for the auth provider
+	reqLogger.Info("Reconciling required resources for the configured authentication provider")
 	authProvider := auth.GetAuthProvider(instance, secretsEngine)
 	if err := authProvider.Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
 		return err
@@ -83,6 +88,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	}
 
 	// Service account and cluster role/binding
+	reqLogger.Info("Reconciling RBAC resources for the app servers")
 	if err := reconcile.ServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
 		return err
 	}
@@ -95,18 +101,21 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 
 	// Reconcile the PKI. This will ensure a CA as well as both server and client certificates
 	// for the app deployment.
+	reqLogger.Info("Reconciling PKI resources for mTLS")
 	if err := pki.New(f.client, instance, secretsEngine).Reconcile(reqLogger); err != nil {
 		return err
 	}
 
 	if instance.RunAppGrafanaSidecar() {
 		// we need a configmap for grafana first
+		reqLogger.Info("Reconciling grafana configuration")
 		if err := reconcile.ConfigMap(reqLogger, f.client, newGrafanaConfigForCR(instance)); err != nil {
 			return err
 		}
 	}
 
 	// App deployment and service
+	reqLogger.Info("Reconciling app deployment and services")
 	if err := reconcile.Deployment(reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
 		return err
 	}
@@ -116,6 +125,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 
 	// Prometheus instance for aggregating metrics
 	if instance.CreatePrometheusCR() {
+		reqLogger.Info("Reconciling Prometheus deployment")
 		if err := reconcile.Prometheus(reqLogger, f.client, newPrometheusForCR(instance)); err != nil {
 			if ignoreNoPromOperator(reqLogger, err) != nil {
 				return err
@@ -130,6 +140,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 
 	// ServiceMonitor for metrics scraping
 	if instance.CreateAppServiceMonitor() {
+		reqLogger.Info("Reconciling ServiceMonitor for app metrics")
 		err = reconcile.ServiceMonitor(reqLogger, f.client, newAppServiceMonitorForCR(instance))
 		return ignoreNoPromOperator(reqLogger, err)
 	}

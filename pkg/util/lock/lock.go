@@ -3,6 +3,7 @@ package lock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -163,7 +164,7 @@ func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1
 	if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
 		if time.Now().After(time.Unix(expireTime, 0)) {
 			if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-				lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+				lockLogger.Error(err, fmt.Sprintf("Failed to release stale lock, could not acquire lock %s", err.Error()))
 				return err
 			}
 		}
@@ -174,8 +175,11 @@ func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1
 // Release will delete the configmap, releasing the lock.
 func (l *Lock) Release() error {
 	lockLogger.Info("Releasing lock", "Lock.Name", l.name)
-	if err := l.client.Delete(context.TODO(), l.cm); !kerrors.IsNotFound(err) {
-		return err
+	if err := l.client.Delete(context.TODO(), l.cm); err != nil {
+		if !kerrors.IsNotFound(err) {
+			lockLogger.Error(err, fmt.Sprintf("Error releasing lock: %s", err.Error()))
+			return err
+		}
 	}
 	return nil
 }
@@ -183,8 +187,11 @@ func (l *Lock) Release() error {
 // releaseStaleLock removes a stale lock from kubernetes
 func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error {
 	lockLogger.Info("Releasing stale lock", "PreviousOwner", cm.OwnerReferences[0])
-	if err := l.client.Delete(ctx, cm); !kerrors.IsNotFound(err) {
-		return err
+	if err := l.client.Delete(ctx, cm); err != nil {
+		if !kerrors.IsNotFound(err) {
+			lockLogger.Error(err, fmt.Sprintf("Error releasing lock: %s", err.Error()))
+			return err
+		}
 	}
 	return nil
 }
