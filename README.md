@@ -14,7 +14,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
  - [Screenshots](doc/screenshots.md)
 
 If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
-I wrote up a [`CONTRIBUTING`](doc/CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
+I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
 
 ## Features
 

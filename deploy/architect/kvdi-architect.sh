@@ -35,13 +35,13 @@ function install-prometheus() {
 }
 
 export dialogTmp=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi-dialog')
-trap "rm -rf '${dialogTmp}'" EXIT
+trap "rm -rf ${dialogTmp}" EXIT
 
 # Runs a dialog with built-in and arbitrary arguments
 function do-dialog() {
     dialog \
         --backtitle "kVDI Architect" \
-        --cancel-label "Quit" \
+        --cancel-label "${cancel_label:-Quit}" \
         "${@}" 2> "${dialogTmp}/dialog.ans"
 }
 
@@ -79,17 +79,53 @@ function get-helm-chart() {
     # Fetch the helm chart
     dialog --backtitle "kVDI Architect" \
         --infobox "Downloading kVDI Chart: ${VERSION}" 5 50 &
-    export CHART_DIR=$(fetch-helm-chart ${VERSION})
+
+    export CHART_DIR=$(fetch-helm-chart)
 }
 
 # Pretty prints the given yaml file
 function cat-yaml() {
     local file="${1}"
 
-    docker run --rm \
-        -v "$(dirname "${file}")":/workdir \
-        mikefarah/yq \
-        yq -P -C read "$(basename "${file}")" 
+    # docker run --rm \
+    #     -v "$(dirname "${file}")":/workdir \
+    #     mikefarah/yq \
+    
+    yq -P -C read "$(basename "${file}")" 
+}
+
+function get-yq() {
+    export PATH="${HOME}/.local/bin:${PATH}"
+
+    if which yq &> /dev/null ; then return ; fi
+
+    echo "[INFO] yq does not appear to be installed, installing now"
+    echo "[INFO]  Downloading checksums for yq v3.3.2..."
+
+    mkdir -p "${HOME}/.local/bin"
+    tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi-manifests')
+    trap "rm -rf ${tmpdir}" RETURN
+
+    os=$(uname | tr '[:upper:]' '[:lower:]')
+    arch=$(uname -m | tr '[:upper:]' '[:lower:]')
+    if [[ "${arch}" == "x86_64" ]] ; then arch="amd64" ; fi
+    bin_name="yq_${os}_${arch}"
+
+    curl -JL -o "${tmpdir}/checksums" "https://github.com/mikefarah/yq/releases/download/3.3.2/checksums" 2> /dev/null
+
+    echo "[INFO]  Downloading yq v3.3.2..."
+
+    curl -JL -o "${tmpdir}/yq" "https://github.com/mikefarah/yq/releases/download/3.3.2/${bin_name}" 2> /dev/null
+
+    echo "[INFO]  Verifying checksum"
+    binsum=$(sha256sum "${tmpdir}/yq" | awk '{print $1}')
+    if ! cat "${tmpdir}/checksums" | grep ${bin_name} | grep ${binsum} ; then
+        echo "Downloaded hash for yq did not match!"
+        exit 1
+    fi
+
+    mv "${tmpdir}/yq" "${HOME}/.local/bin/yq"
+    chmod +x "${HOME}/.local/bin/yq"
 }
 
 # Writes the given arguments to the kvdi values file.
@@ -100,10 +136,11 @@ function write-to-values() {
     dialog --sleep 1 --backtitle "kVDI Architect" \
         --infobox "Setting ${key}=${value} to kVDI Configuration" 5 100
   
-    docker run --rm \
-        -v "${CHART_DIR}":/workdir \
-        mikefarah/yq \
-        yq write -i kvdi/values.yaml "${key}" "${value}"
+    # docker run --rm \
+    #     -v "${CHART_DIR}":/workdir \
+    #     mikefarah/yq \
+
+    yq write -i "${CHART_DIR}/kvdi/values.yaml" "${key}" "${value}"
   
     if [[ "${?}" != "0" ]] ; then
         echo "Error writing to values: $*"
@@ -115,13 +152,14 @@ function write-to-values() {
 function read-from-values() {
     local key=${1}
 
-    docker run --rm \
-        -v "${CHART_DIR}":/workdir \
-        mikefarah/yq \
-        yq read kvdi/values.yaml "${key}"
+    # docker run --rm \
+    #     -v "${CHART_DIR}":/workdir \
+    #     mikefarah/yq \
+    
+    yq read "${CHART_DIR}/kvdi/values.yaml" "${key}"
     
     if [[ "${?}" != "0" ]] ; then
-        echo "Could not read ${key} from values"
+        echo -n
     fi
 }
 
@@ -132,10 +170,11 @@ function delete-from-values() {
     dialog --sleep 1 --backtitle "kVDI Architect" \
         --infobox "Setting ${key}=null to kVDI Configuration" 5 100
 
-    docker run --rm \
-        -v "${CHART_DIR}":/workdir \
-        mikefarah/yq \
-        yq delete -i kvdi/values.yaml "${key}"
+    # docker run --rm \
+    #     -v "${CHART_DIR}":/workdir \
+    #     mikefarah/yq \
+
+    yq delete -i "${CHART_DIR}/kvdi/values.yaml" "${key}"
 }
 
 # Prompts for configurations for LDAP auth and writes them to the values file
@@ -272,8 +311,7 @@ function set-oidc-config() {
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     url="$(get-dialog-answer)"
@@ -287,8 +325,7 @@ function set-oidc-config() {
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     redirectURL="$(get-dialog-answer)"
@@ -320,8 +357,7 @@ function set-oidc-config() {
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
     
     clientID=$(get-dialog-answer)
@@ -334,8 +370,7 @@ function set-oidc-config() {
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     clientSecret=$(get-dialog-answer)
@@ -366,8 +401,7 @@ EOF
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     scopes=$(get-dialog-answer)
@@ -381,8 +415,7 @@ EOF
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     groupScope=$(get-dialog-answer)
@@ -396,8 +429,7 @@ EOF
         1)  clear ;
             echo "Exiting" ;
             exit ;;
-        3)  set-auth-config ;
-            return 0 ;;
+        3)  set-auth-config ;;
     esac
 
     adminGroup=$(get-dialog-answer)
@@ -471,8 +503,6 @@ function set-auth-config() {
     esac
     
     export AUTH_METHOD="${backend}"
-
-    main-menu
 }
 
 # Sets custom server certificate options
@@ -522,8 +552,6 @@ EOF
         # Point kVDI at the external TLS secret
         write-to-values "vdi.spec.app.tls.serverSecret" "kvdi-app-external-tls"
     fi
-
-    main-menu
 }
 
 # Fetches the kvdi helm chart, reads in the values, and calls the appropriate
@@ -549,7 +577,7 @@ spec:
   repo: https://tinyzimmer.github.io/kvdi/deploy/charts
   targetNamespace: default
   valuesContent: |-
-$(cat "${CHART_DIR}/kvdi/values.yaml" | sed 's/^/    /g')
+$(sed 's/^/    /g' "${CHART_DIR}/kvdi/values.yaml")
 
 EOF
 
@@ -602,7 +630,7 @@ function wait-for-kvdi() {
         --infobox "Waiting for kVDI to start${dots}" 5 50
     while ! k3s kubectl get pod 2> /dev/null | grep kvdi-app 1> /dev/null ; do
         sleep 2 
-        if [[ $(echo ${dots} | wc -c) == 3 ]] ; then
+        if [[ $(echo ${dots} | wc -c) == 4 ]] ; then
             dots="."
         else
             dots="${dots}."
@@ -619,7 +647,7 @@ function wait-for-kvdi() {
 
     while ! k3s kubectl get pod -l vdiComponent=app | grep ${ready} 1> /dev/null ; do
         sleep 2 
-        if [[ $(echo ${dots} | wc -c) == 3 ]] ; then
+        if [[ $(echo ${dots} | wc -c) == 4 ]] ; then
             dots="."
         else
             dots="${dots}."
@@ -674,13 +702,77 @@ function run-install() {
     exit 0
 }
 
+function userdata-menu() {
+    local userdata_enabled="false"
+
+    current_config="$(read-from-values "vdi.spec.userdataSpec")"
+    if [[ "${current_config}" != "{}" ]] && [[ "${current_config}" != "" ]] ; then
+        userdata_enabled="true"
+    fi
+
+    if [[ "${userdata_enabled}" == "false" ]] ; then
+        do-dialog --extra-button --extra-label "Back" \
+            --menu "Userdata Persistence Options" 0 0 0 \
+            "Enable Persistence" "Enable userdata persistence"
+        case ${?} in
+            1)  clear ;
+                echo "Exiting" ;
+                exit ;;
+            3)  main-menu ;;
+        esac
+
+        write-to-values "vdi.spec.userdataSpec.storageClassName" "local-path-provisioner"
+        write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce"
+        write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "1Gi"
+    fi
+
+    do-dialog --extra-button --extra-label "Back" \
+        --menu "Userdata Persistence Options" 0 0 0 \
+        "Disable Persistence" "Disable userdata persistence" \
+        "Disk Quota" "Configure the amount of storage allotted to each user" \
+        "Storage Class" "Configure the storage class for user volumes" \
+        "AccessMode" "Set the access mode for volumes. (EXPERIMENTAL: ReadWriteMany volumes are not thoroughly tested)" \
+
+    case ${?} in
+        1)  clear ;
+            echo "Exiting" ;
+            exit ;;
+        3)  main-menu ;;
+    esac
+
+
+    case $(get-dialog-answer) in 
+
+        "Disable Persistence" ) delete-from-values "vdi.spec.userdataSpec" ;;
+
+        "Disk Quota"          ) cancel_label="Cancel" do-dialog --inputbox "How much storage should be allocated to each user?" 0 0 \
+                                    "$(read-from-values "vdi.spec.userdataSpec.resources.requests.storage")" ;
+                                if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
+                                    write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)"
+                                fi ;;
+        "Storage Class"       ) cancel_label="Cancel" do-dialog --inputbox "Which StorageClass should be used to provision volumes?" 0 0 \
+                                    "$(read-from-values "vdi.spec.userdataSpec.storageClassName")" ;
+                                if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
+                                    write-to-values "vdi.spec.userdataSpec.storageClassName" "$(get-dialog-answer)"
+                                fi ;;
+
+        "AccessMode"          ) cancel_label="Cancel" do-dialog --inputbox "Set the AccessMode for volume claims" 0 0 \
+                                    "$(read-from-values "vdi.spec.userdataSpec.accessModes" | sed 's/\[//' | sed 's/\]//')"
+                                if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
+                                    delete-from-values "vdi.spec.userdataSpec.accessModes"
+                                    write-to-values "vdi.spec.userdataSpec.accessModes[+]" "$(get-dialog-answer)"
+                                fi ;;
+    esac
+
+    userdata-menu
+}
+
 function misc-menu() {
     do-dialog --extra-button --extra-label "Back" \
         --menu "Miscellaneous Options" 0 0 0 \
         "Token TTL" "The access token duration for the UI" \
         "Audit Log" "Configure the api access audit log" \
         "Replicas" "Configure the number of app pods running" \
-        "Userdata" "Configure user desktop persistence" \
         "Anonymous" "Allow anonymous users to use kVDI"
 
     case ${?} in
@@ -692,35 +784,23 @@ function misc-menu() {
 
     case "$(get-dialog-answer)" in
 
-        "Token TTL" ) do-dialog --inputbox "How long should issued access tokens be valid?" 0 0 \
+        "Token TTL" ) cancel_label="Cancel" do-dialog --inputbox "How long should issued access tokens be valid?" 0 0 \
                           "$(read-from-values "vdi.spec.auth.tokenDuration")" ;
                       [[ ${?} == 0 ]] \
                           && write-to-values "vdi.spec.auth.tokenDuration" "$(get-dialog-answer)" ;;
 
-        "Audit Log" ) do-dialog $([[ "$(read-from-values "vdi.spec.app.auditLog")" == "false" ]] && echo --defaultno) \
+        "Audit Log" ) cancel_label="Cancel" do-dialog $([[ "$(read-from-values "vdi.spec.app.auditLog")" == "false" ]] && echo --defaultno) \
                         --yesno "Enable the API audit log?" 0 0 ;
                       [[ ${?} == 0 ]] \
                           && write-to-values "vdi.spec.app.auditLog" true \
                           || write-to-values "vdi.spec.app.auditLog" false ;;
 
-        "Replicas"  ) do-dialog --inputbox "How many app server pods should be running?" 0 0 \
+        "Replicas"  ) cancel_label="Cancel" do-dialog --inputbox "How many app server pods should be running?" 0 0 \
                           "$(read-from-values "vdi.spec.app.replicas")" ;
                       [[ ${?} == 0 ]] \
                           && write-to-values "vdi.spec.app.replicas" "$(get-dialog-answer)" ;;
 
-        # TODO allow more configuration options such as custom storage class.
-        # Right now, k3s will just use the local-path-provisioner.
-        "Userdata"  ) do-dialog --inputbox "How much storage should be allocated to each user?\n(Leave blank to disable userdata persistence)" 0 0 \
-                          "$(read-from-values "vdi.spec.userdataSpec.resources.requests.storage")" ;
-                      if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
-                          write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)"
-                          [[ "$(read-from-values "vdi.spec.userdataSpec.accessModes")" == "" ]] \
-                              && write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce"
-                      else
-                          delete-from-values "vdi.spec.userdataSpec"
-                      fi;;
-
-        "Anonymous" ) do-dialog $([[ "$(read-from-values "vdi.spec.auth.allowAnonymous")" == "false" ]] && echo --defaultno) \
+        "Anonymous" ) cancel_label="Cancel" do-dialog $([[ "$(read-from-values "vdi.spec.auth.allowAnonymous")" == "false" ]] && echo --defaultno) \
                         --yesno "Allow unauthenticated users to use kVDI?" 0 0 ;
                       [[ ${?} == 0 ]] \
                           && write-to-values "vdi.spec.auth.allowAnonymous" true \
@@ -771,8 +851,16 @@ function advanced-menu() {
                         fi ;;
 
         "Shell"       ) clear ;
-                        echo "Launching a shell process. To interact with a running K3s environment:"
-                        echo "# k3s kubectl <args...>"
+                        echo "# Launching a shell process" ;
+                        echo ;
+                        echo "# To interact with a running K3s environment:" ;
+                        echo "#     k3s kubectl <args...>" ;
+                        echo ;
+                        echo "# Useful environment variables:" ;
+                        echo "#     VERSION=${VERSION}"
+                        echo "#     CHART_DIR=${CHART_DIR}" ;
+                        echo "#     K3S_MANIFEST_DIR=${K3S_MANIFEST_DIR}" ;
+                        echo
                         ${SHELL:-/bin/sh} ;;
     esac
 
@@ -786,6 +874,7 @@ function main-menu() {
         --menu "Configuration Options" 0 0 0 \
         "Auth" "Authentication configurations" \
         "TLS"  "TLS configurations" \
+        "Userdata" "Configure user desktop persistence" \
         "Misc" "Miscellaneous configurations" \
         "Advanced" "Advanced configurations" \
         "Reset" "Reset all configurations to their defaults"
@@ -800,6 +889,7 @@ function main-menu() {
     case $(get-dialog-answer) in
         "Auth"     ) set-auth-config ;;
         "TLS"      ) set-tls-config ;;
+        "Userdata" ) userdata-menu ;;
         "Misc"     ) misc-menu ;;
         "Advanced" ) advanced-menu ;;
         "Reset"    ) rm -f "${K3S_MANIFEST_DIR}/kvdi-secrets.yaml" ;
@@ -809,6 +899,8 @@ function main-menu() {
                      trap "rm -rf '${CHART_DIR}'" EXIT ;
                      main-menu ;;
     esac
+
+    main-menu
 }
 
 function run-uninstall() {
@@ -839,7 +931,10 @@ function usage() {
 }
 
 # Main entrypoint
-{ 
+{   
+    # return immediately if being sourced
+    [[ "${BASH_SOURCE[0]}" != "${0}" ]] && return
+
     # Make sure dependencies are installed
     if ! which docker &> /dev/null ; then
         echo "You must install 'docker' first to use this scri  valuesContent: |-pt."
@@ -881,6 +976,8 @@ function usage() {
     done
 
     shift $((OPTIND-1)) # remove parsed options and args from $@ list
+
+    get-yq
 
     if [[ "${DRY_RUN}" == "true" ]] ; then
         export K3S_MANIFEST_DIR=$(mktemp -d 2>/dev/null || mktemp -d -t 'kvdi-manifests')

@@ -12,7 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -132,24 +132,8 @@ func (l *Lock) Acquire() error {
 			return err
 		}
 
-		expiresAt, ok := existingLock.Data[expireKey]
-		if !ok {
-			if l.GetTimeout() > 0 {
-				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
-					return err
-				}
-			}
-			continue
-		}
-		if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
-			if time.Now().After(time.Unix(expireTime, 0)) {
-				if err := l.releaseStaleLock(ctx, existingLock); err != nil {
-					lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
-					return err
-				}
-				continue
-			}
+		if err := l.checkExistingLockExpiry(ctx, existingLock); err != nil {
+			return err
 		}
 
 		if time.Now().After(failTimeout) {
@@ -165,16 +149,44 @@ func (l *Lock) Acquire() error {
 	return l.client.Get(context.TODO(), nn, l.cm)
 }
 
+func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1.ConfigMap) error {
+	expiresAt, ok := existingLock.Data[expireKey]
+	if !ok {
+		if l.GetTimeout() > 0 {
+			if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+				lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+				return err
+			}
+		}
+		return nil
+	}
+	if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
+		if time.Now().After(time.Unix(expireTime, 0)) {
+			if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+				lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // Release will delete the configmap, releasing the lock.
 func (l *Lock) Release() error {
 	lockLogger.Info("Releasing lock", "Lock.Name", l.name)
-	return client.IgnoreNotFound(l.client.Delete(context.TODO(), l.cm))
+	if err := l.client.Delete(context.TODO(), l.cm); !kerrors.IsNotFound(err) {
+		return err
+	}
+	return nil
 }
 
 // releaseStaleLock removes a stale lock from kubernetes
 func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error {
 	lockLogger.Info("Releasing stale lock", "PreviousOwner", cm.OwnerReferences[0])
-	return client.IgnoreNotFound(l.client.Delete(ctx, cm))
+	if err := l.client.Delete(ctx, cm); !kerrors.IsNotFound(err) {
+		return err
+	}
+	return nil
 }
 
 // newConfigMapForLock returns a new configmap for locking.
