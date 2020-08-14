@@ -36,12 +36,10 @@ type Lock struct {
 	timeout time.Duration
 	// the name of the lock
 	name string
-	// the namespace for the lock
-	namespace string
 	// labels to apply to the configmap
 	labels map[string]string
-	// the cm object backing this lock
-	cm *corev1.ConfigMap
+	// the pod that owns this lock
+	pod *corev1.Pod
 }
 
 // New returns a new lock. If timeout is a value less than zero, then no expiration
@@ -53,7 +51,6 @@ func New(c client.Client, name string, timeout time.Duration) *Lock {
 		name:    name,
 		timeout: timeout,
 		labels:  map[string]string{},
-		cm:      &corev1.ConfigMap{},
 	}
 }
 
@@ -65,9 +62,6 @@ func (l *Lock) WithLabels(labels map[string]string) *Lock {
 
 // GetName returns the name of this lock.
 func (l *Lock) GetName() string { return l.name }
-
-// GetNamespace returns the namespace of this lock.
-func (l *Lock) GetNamespace() string { return l.namespace }
 
 // GetTimeout returns the timeout for this lock.
 func (l *Lock) GetTimeout() time.Duration { return l.timeout }
@@ -84,13 +78,13 @@ func (l *Lock) GetCMData() map[string]string {
 // acquired or the timeout is reached.
 func (l *Lock) Acquire() error {
 	lockLogger.Info("Acquiring lock", "Lock.Name", l.GetName())
-	pod, err := k8sutil.GetThisPod(l.client)
+	var err error
+
+	l.pod, err = k8sutil.GetThisPod(l.client)
 	if err != nil {
 		lockLogger.Error(err, "Error retrieving current pod, could not acquire lock")
 		return err
 	}
-
-	l.namespace = pod.GetNamespace()
 
 	failTimeout := time.Now().Add(l.GetTimeout())
 
@@ -104,8 +98,7 @@ func (l *Lock) Acquire() error {
 
 	defer cancel()
 
-	cm := newConfigMapForLock(l, pod)
-	nn := types.NamespacedName{Name: cm.GetName(), Namespace: cm.GetNamespace()}
+	cm := newConfigMapForLock(l)
 
 	for {
 
@@ -125,6 +118,7 @@ func (l *Lock) Acquire() error {
 
 		lockLogger.Info("Lock is currently held, checking status of existing lock")
 		existingLock := &corev1.ConfigMap{}
+		nn := types.NamespacedName{Name: cm.GetName(), Namespace: cm.GetNamespace()}
 		if err := l.client.Get(context.TODO(), nn, existingLock); err != nil {
 			if kerrors.IsNotFound(err) {
 				continue
@@ -146,15 +140,14 @@ func (l *Lock) Acquire() error {
 		time.Sleep(time.Duration(1) * time.Second)
 	}
 
-	// read the cm object into memory for quicker release
-	return l.client.Get(context.TODO(), nn, l.cm)
+	return nil
 }
 
 func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1.ConfigMap) error {
 	expiresAt, ok := existingLock.Data[expireKey]
 	if !ok {
 		if l.GetTimeout() > 0 {
-			if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+			if err := l.releaseLock(ctx, existingLock); err != nil {
 				lockLogger.Error(err, "Failed to release stale lock, could not acquire lock")
 				return err
 			}
@@ -163,7 +156,7 @@ func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1
 	}
 	if expireTime, err := strconv.ParseInt(expiresAt, 10, 64); err == nil {
 		if time.Now().After(time.Unix(expireTime, 0)) {
-			if err := l.releaseStaleLock(ctx, existingLock); err != nil {
+			if err := l.releaseLock(ctx, existingLock); err != nil {
 				lockLogger.Error(err, fmt.Sprintf("Failed to release stale lock, could not acquire lock %s", err.Error()))
 				return err
 			}
@@ -172,21 +165,33 @@ func (l *Lock) checkExistingLockExpiry(ctx context.Context, existingLock *corev1
 	return nil
 }
 
-// Release will delete the configmap, releasing the lock.
+// Release will delete the configmap, releasing the lock. If the found lock does not
+// belong to the running pod, an error is returned.
 func (l *Lock) Release() error {
 	lockLogger.Info("Releasing lock", "Lock.Name", l.name)
-	if err := l.client.Delete(context.TODO(), l.cm); err != nil {
+	cm := &corev1.ConfigMap{}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.pod.GetNamespace()}
+	if err := l.client.Get(context.TODO(), nn, cm); err != nil {
 		if !kerrors.IsNotFound(err) {
-			lockLogger.Error(err, fmt.Sprintf("Error releasing lock: %s", err.Error()))
+			lockLogger.Error(err, "Error looking up existing lock, could not release lock")
 			return err
 		}
+		lockLogger.Info("Lock has already been released")
+		return nil
 	}
-	return nil
+	ref := cm.GetOwnerReferences()
+	if len(ref) != 1 {
+		return fmt.Errorf("Owner references on found lock is malformed: %+v", ref)
+	}
+	if ref[0].UID != l.pod.GetUID() {
+		return fmt.Errorf("Present lock is not owned by this pod, owned by: %s", ref[0].Name)
+	}
+	return l.releaseLock(context.Background(), cm)
 }
 
-// releaseStaleLock removes a stale lock from kubernetes
-func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error {
-	lockLogger.Info("Releasing stale lock", "PreviousOwner", cm.OwnerReferences[0])
+// releaseLock removes a lock from kubernetes
+func (l *Lock) releaseLock(ctx context.Context, cm *corev1.ConfigMap) error {
+	lockLogger.Info("Releasing lock", "Owner", cm.OwnerReferences[0])
 	if err := l.client.Delete(ctx, cm); err != nil {
 		if !kerrors.IsNotFound(err) {
 			lockLogger.Error(err, fmt.Sprintf("Error releasing lock: %s", err.Error()))
@@ -197,18 +202,18 @@ func (l *Lock) releaseStaleLock(ctx context.Context, cm *corev1.ConfigMap) error
 }
 
 // newConfigMapForLock returns a new configmap for locking.
-func newConfigMapForLock(l *Lock, pod *corev1.Pod) *corev1.ConfigMap {
+func newConfigMapForLock(l *Lock) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      l.GetName(),
-			Namespace: pod.GetNamespace(),
+			Namespace: l.pod.GetNamespace(),
 			Labels:    l.labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         "v1",
 					Kind:               "Pod",
-					Name:               pod.GetName(),
-					UID:                pod.GetUID(),
+					Name:               l.pod.GetName(),
+					UID:                l.pod.GetUID(),
 					Controller:         common.BoolPointer(true),
 					BlockOwnerDeletion: common.BoolPointer(false),
 				},

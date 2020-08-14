@@ -49,9 +49,6 @@ func TestNew(t *testing.T) {
 	if l.GetName() != "test-lock" {
 		t.Error("Expected name of new lock to be 'test-lock', got:", l.GetName())
 	}
-	if l.GetNamespace() != "" {
-		t.Error("Expected new lock to have unknown namespace still, got:", l.GetNamespace())
-	}
 	if l.GetTimeout() != time.Duration(30)*time.Second {
 		t.Error("Expected new lock to have a 30 second timeout, got:", l.GetTimeout())
 	}
@@ -154,7 +151,7 @@ func TestLockNoTimeout(t *testing.T) {
 	defer l.Release()
 
 	cm := &corev1.ConfigMap{}
-	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.pod.GetNamespace()}
 	if err := c.Get(context.TODO(), nn, cm); err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +171,7 @@ func TestLockWithLabels(t *testing.T) {
 	defer l.Release()
 
 	cm := &corev1.ConfigMap{}
-	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.GetNamespace()}
+	nn := types.NamespacedName{Name: l.GetName(), Namespace: l.pod.GetNamespace()}
 	if err := c.Get(context.TODO(), nn, cm); err != nil {
 		t.Fatal(err)
 	}
