@@ -383,7 +383,7 @@ GrafanaConfig contains configuration options for the grafana sidecar.
 <tbody>
 <tr class="odd">
 <td><code>enabled</code> <em>bool</em></td>
-<td><p>Set to true to run a grafana sidecar with the app pods. This can be used for either visualzing metrics in the UI from a remote datasource, or to visualize data in the prometheus deployment.</p></td>
+<td><p>Set to true to run a grafana sidecar with the app pods. This can be used to visualize data in the prometheus deployment.</p></td>
 </tr>
 </tbody>
 </table>
@@ -839,4 +839,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `f48661c`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `90747af`.*

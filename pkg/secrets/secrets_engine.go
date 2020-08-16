@@ -80,10 +80,13 @@ func (s *SecretEngine) setClient(c client.Client) { s.client = c }
 // Setup sets the local client inteface and calls Setup on the backend.
 func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
 	s.setClient(c)
-	if err := s.Lock(15); err != nil {
-		return err
-	}
-	defer s.Release()
+	// This lock causes serious thundering herd problems. At the moment both backend providers
+	// Setup operations are read-only for the most part. So leaving this commented out until
+	// the time comes that a Lock here is more warranted.
+	// if err := s.Lock(15); err != nil {
+	// 	return err
+	// }
+	// defer s.Release()
 	// rewrite cluster since this is a method that can be used to refresh
 	// configuration also.
 	s.cluster = cluster

@@ -92,8 +92,7 @@ type PrometheusConfig struct {
 
 // GrafanaConfig contains configuration options for the grafana sidecar.
 type GrafanaConfig struct {
-	// Set to true to run a grafana sidecar with the app pods. This can be used for
-	// either visualzing metrics in the UI from a remote datasource, or to visualize
+	// Set to true to run a grafana sidecar with the app pods. This can be used to visualize
 	// data in the prometheus deployment.
 	Enabled bool `json:"enabled,omitempty"`
 }
