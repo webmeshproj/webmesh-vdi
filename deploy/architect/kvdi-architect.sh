@@ -721,7 +721,6 @@ function userdata-menu() {
             3)  main-menu ;;
         esac
 
-        write-to-values "vdi.spec.userdataSpec.storageClassName" "local-path-provisioner"
         write-to-values "vdi.spec.userdataSpec.accessModes[+]" "ReadWriteOnce"
         write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "1Gi"
     fi
@@ -750,7 +749,7 @@ function userdata-menu() {
                                 if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
                                     write-to-values "vdi.spec.userdataSpec.resources.requests.storage" "$(get-dialog-answer)"
                                 fi ;;
-        "Storage Class"       ) cancel_label="Cancel" do-dialog --inputbox "Which StorageClass should be used to provision volumes?" 0 0 \
+        "Storage Class"       ) cancel_label="Cancel" do-dialog --inputbox "Which StorageClass should be used to provision volumes?\n(Leave empty to use local directories)" 0 0 \
                                     "$(read-from-values "vdi.spec.userdataSpec.storageClassName")" ;
                                 if [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] ; then
                                     write-to-values "vdi.spec.userdataSpec.storageClassName" "$(get-dialog-answer)"

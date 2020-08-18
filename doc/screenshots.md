@@ -2,28 +2,28 @@
 
 ## Main UI
 
-![img](screenshots/templates.png)
+![img](screenshots/templates.png?raw=true)
 
-![img](screenshots/users.png)
+![img](screenshots/users.png?raw=true)
 
-![img](screenshots/roles.png)
+![img](screenshots/roles.png?raw=true)
 
 ## Desktop Sessions
 
-![img](screenshots/term.png)
+![img](screenshots/term.png?raw=true)
 
-![img](screenshots/desktop.png)
+![img](screenshots/desktop.png?raw=true)
 
 ## Grafana Metrics
 
-![img](screenshots/grafana.png)
+![img](screenshots/grafana.png?raw=true)
 
 ## kVDI Architect
 
-![img](screenshots/architect/setup-k3s.png)
+![img](screenshots/architect/setup-k3s.png?raw=true)
 
-![img](screenshots/architect/auth.png)
+![img](screenshots/architect/auth.png?raw=true)
 
-![img](screenshots/architect/tls.png)
+![img](screenshots/architect/tls.png?raw=true)
 
-![img](screenshots/architect/ready.png)
+![img](screenshots/architect/ready.png?raw=true)
