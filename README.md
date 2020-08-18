@@ -11,7 +11,7 @@ A Kubernetes-native Virtual Desktop Infrastructure.
  - [API Reference](doc/crds.md)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
- - [Screenshots](doc/screenshots.md)
+ - [Screenshots/Video](doc/screenshots.md)
 
 If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
 I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 

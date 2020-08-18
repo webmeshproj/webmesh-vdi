@@ -1,5 +1,9 @@
 # Screenshots
 
+## Full Demo
+
+![gif](screenshots/demo.gif?raw=true)
+
 ## Main UI
 
 ![img](screenshots/templates.png?raw=true)
