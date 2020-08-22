@@ -280,8 +280,11 @@ export default {
 
       this.status = 'connected'
       this.className = 'no-margin display-container'
-      var inside = iframeRef(document.getElementById('xpra'))
-      console.log(inside)
+
+      if (this.currentSession.socketType === 'xpra') {
+        var inside = iframeRef(document.getElementById('xpra'))
+        console.log(inside)
+      }
     },
 
     async createRFBConnection (url) {
@@ -307,6 +310,12 @@ export default {
     disconnectedFromServer (e) {
       this.resetStatus()
       if (e.detail.clean) {
+        // The server disconnecting cleanly would mean expired session,
+        // but this should probably be handled better.
+        if (this.currentSession !== null) {
+          this.$desktopSessions.dispatch('deleteSession', this.currentSession)
+          this.currentSession = null
+        }
         console.log('Disconnected')
       } else {
         console.log('Something went wrong, connection is closed')
@@ -317,6 +326,12 @@ export default {
         this.player = null
         this.$desktopSessions.dispatch('toggleAudio', false)
       }
+      this.$q.notify({
+        color: 'orange-4',
+        textColor: 'white',
+        icon: 'stop_screen_share',
+        message: 'The desktop session has ended'
+      })
     },
 
     resetStatus () {

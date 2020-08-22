@@ -80,7 +80,11 @@ export const DesktopSessions = new Vuex.Store({
       commit('set_active_session', data)
     },
     async deleteSession ({ commit }, data) {
-      await Vue.prototype.$axios.delete(`/api/sessions/${data.namespace}/${data.name}`)
+      try {
+        await Vue.prototype.$axios.delete(`/api/sessions/${data.namespace}/${data.name}`)
+      } catch (err) {
+        console.log(`Error sending delete to API: ${err}`)
+      }
       commit('delete_session', data)
     },
     async clearSessions ({ commit }) {
