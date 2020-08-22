@@ -12,9 +12,9 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 
  - [API Reference](doc/crds.md)
  - [Installing](#Installing)
-   - [Standalone](#Install%20standalone)
-   - [Kubernetes](#Install%20to%20a%20pre-existing%20cluster)
-   - [Standalone on EC2 with Terraform](#Install%20to%20an%20AWS%20EC2%20Instance)
+   - [Standalone](#Install-standalone)
+   - [Kubernetes](#Install-to-a-pre-existing-cluster)
+   - [Standalone on EC2 with Terraform](#Install-to-an-AWS-EC2-Instance)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
  - [Screenshots/Video](doc/screenshots.md)
