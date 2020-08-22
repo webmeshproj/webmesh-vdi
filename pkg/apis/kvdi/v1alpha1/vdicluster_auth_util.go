@@ -130,7 +130,7 @@ func (c *VDICluster) GetLaunchTemplatesRole() *VDIRole {
 				Verbs:            []v1.Verb{v1.VerbRead, v1.VerbUse, v1.VerbLaunch},
 				Resources:        []v1.Resource{v1.ResourceTemplates},
 				ResourcePatterns: []string{".*"},
-				Namespaces:       []string{v1.NamespaceAll},
+				Namespaces:       []string{c.GetCoreNamespace()},
 			},
 		},
 	}
