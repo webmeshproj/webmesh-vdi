@@ -35,7 +35,7 @@ spec:
     vdi:
       spec:
         desktops:
-          maxSessionLength: 10m
+          maxSessionLength: 5m
         auth:
           allowAnonymous: true
         metrics:
@@ -45,6 +45,19 @@ spec:
             create: true
           grafana:
             enabled: true
+      templates:
+        - metadata:
+            name: ubuntu-xfce4
+          spec:
+            image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
+            imagePullPolicy: IfNotPresent
+            config:
+              allowRoot: false
+              init: systemd
+            tags:
+              os: ubuntu
+              desktop: xfce4
+              applications: minimal
 EOF
 
 systemctl start k3s
