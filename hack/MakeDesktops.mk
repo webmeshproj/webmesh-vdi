@@ -61,3 +61,17 @@ load-arch-%: ${KIND} build-arch-%
 
 load-app-%: ${KIND} build-app-%
 	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})
+
+##
+# For building demo environment
+
+demo-init:
+	cd deploy/terraform && terraform init
+
+get_ext_ip = $(shell curl https://ifconfig.me 2> /dev/null)
+
+demo-%:
+	cd deploy/terraform && \
+		terraform $* \
+			-var ext_ip=$(call get_ext_ip) \
+			`[[ "$*" != "plan" ]] && echo -auto-approve`

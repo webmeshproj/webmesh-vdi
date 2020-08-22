@@ -40,6 +40,7 @@ spec:
         desktops:
           maxSessionLength: 5m
         auth:
+          tokenDuration: 4h
           allowAnonymous: true
         metrics:
           serviceMonitor:
@@ -52,7 +53,7 @@ spec:
         - metadata:
             name: ubuntu-xfce4
           spec:
-            image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
+            image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-demo
             imagePullPolicy: IfNotPresent
             resources:
               requests:

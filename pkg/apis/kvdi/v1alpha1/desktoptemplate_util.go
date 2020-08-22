@@ -124,7 +124,7 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 	capabilities := make([]corev1.Capability, 0)
 	if t.GetInitSystem() == InitSystemd {
 		// The method of using systemd-logind to trigger a systemd --user process
-		// requires CAP_SYS_ADMIN. Specifically, SECCOMP spawing. There might
+		// requires CAP_SYS_ADMIN. Specifically, SECCOMP spawning. There might
 		// be other ways around this by just using system unit files for everything.
 		capabilities = append(capabilities, "SYS_ADMIN")
 	}
