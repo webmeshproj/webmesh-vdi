@@ -2,6 +2,8 @@
 
 A Kubernetes-native Virtual Desktop Infrastructure.
 
+_Except as I've continued to work on this, I've noticed this is really just a free and open-source VDI solution based on docker containers. Kubernetes just makes it easier to implement :smile:._
+
 ![](https://github.com/tinyzimmer/kvdi/workflows/Tests/badge.svg)
 ![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/tinyzimmer/kvdi)
