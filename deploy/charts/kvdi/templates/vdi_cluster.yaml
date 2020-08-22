@@ -6,3 +6,13 @@ metadata:
     {{-  toYaml .Values.vdi.labels | nindent 4 }}
 spec:
   {{ toYaml .Values.vdi.spec | nindent 2 }}
+
+{{ range $idx, $tmpl := .Values.vdi.templates }}
+---
+apiVersion: kvdi.io/v1alpha1
+kind: DesktopTemplate
+metadata:
+  {{ toYaml $tmpl.metadata | nindent 2 }}
+spec:
+  {{ toYaml $tmpl.spec | nindent 2 }}
+{{ end }}

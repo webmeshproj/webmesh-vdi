@@ -128,6 +128,6 @@ vdi:
       # for the specified period of time. Values are in duration formats (e.g. `3m`, `2h`, `1d`).
       maxSessionLength: ""
 
-  # vdi.templates -- Not implemented in the chart yet. This will be a place
-  # to preload desktop-templates into the cluster.
+  # vdi.templates -- Preload DesktopTemplates into the VDI Cluster. You only need to define
+  # the `metadata` and `spec`. Namespaces can be ignored sinced DesktopTemplates are cluster-scoped.
   templates: []
