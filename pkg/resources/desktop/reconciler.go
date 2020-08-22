@@ -2,6 +2,8 @@ package desktop
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/pki"
@@ -29,6 +31,10 @@ type Reconciler struct {
 var _ resources.DesktopReconciler = &Reconciler{}
 
 var userdataReclaimFinalizer = "kvdi.io/userdata-reclaim"
+
+// Global map of ticker routines. The UID of the desktop is placed as a key to
+// avoid duplicate goroutines spawning.
+var tickerRoutines = make(map[types.UID]struct{})
 
 // New returns a new Desktop reconciler
 func New(c client.Client, s *runtime.Scheme) *Reconciler {
@@ -126,6 +132,54 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 		if err := f.client.Status().Update(context.TODO(), instance); err != nil {
 			return err
 		}
+	}
+
+	// start a timer to kill the desktop if max session length is set
+	if dur := cluster.GetMaxSessionLength(); dur != 0 {
+		if _, ok := tickerRoutines[instance.GetUID()]; ok {
+			// we already have a goroutine running, we are done here
+			return nil
+		}
+		tickerRoutines[instance.GetUID()] = struct{}{}
+		go func() {
+			reqLogger.Info("Starting session timer for desktop instance.")
+
+			// make sure to clean the global map on return
+			defer func() { delete(tickerRoutines, instance.GetUID()) }()
+
+			// define the namespaced name and setup tickers
+			nn := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
+			sessTicker := time.NewTicker(dur)
+			pollTicker := time.NewTicker(time.Duration(10) * time.Second)
+
+			// listen on the ticker channels
+			for {
+				select {
+
+				case <-sessTicker.C:
+					// the desktop session has expired
+					reqLogger.Info("Desktop session has expired, destroying instance")
+					if err := f.client.Delete(context.TODO(), instance); err != nil {
+						if client.IgnoreNotFound(err) != nil {
+							reqLogger.Error(err, fmt.Sprintf("Error destroying desktop instance: %s", err.Error()))
+						}
+					}
+					return
+
+				case <-pollTicker.C:
+					// return if desktop has been deleted
+					if err := f.client.Get(context.TODO(), nn, &v1alpha1.Desktop{}); err != nil {
+						if client.IgnoreNotFound(err) == nil {
+							reqLogger.Info("Desktop instance has been deleted, stopping session poll")
+							return
+						}
+						reqLogger.Error(err, fmt.Sprintf("Error polling desktop instance: %s", err.Error()))
+						// retry on next loop
+					}
+
+				}
+			}
+		}()
 	}
 
 	return nil
