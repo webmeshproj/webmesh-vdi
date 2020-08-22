@@ -21,10 +21,20 @@ type VDIClusterSpec struct {
 	App *AppConfig `json:"app,omitempty"`
 	// Authentication configurations
 	Auth *AuthConfig `json:"auth,omitempty"`
+	// Global desktop configurations
+	Desktops *DesktopsConfig `json:"desktops,omitempty"`
 	// Secrets backend configurations
 	Secrets *SecretsConfig `json:"secrets,omitempty"`
 	// Metrics configurations.
 	Metrics *MetricsConfig `json:"metrics,omitempty"`
+}
+
+// DesktopsConfig represents global configurations for desktop
+// sessions.
+type DesktopsConfig struct {
+	// When configured, desktop sessions will be forcefully terminated when
+	// the time limit is reached.
+	MaxSessionLength string `json:"maxSessionLength,omitempty"`
 }
 
 // AppConfig represents app configurations for the VDI cluster

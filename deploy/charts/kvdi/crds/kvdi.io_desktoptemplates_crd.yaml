@@ -48,11 +48,6 @@ spec:
                       description: Capability represent POSIX capabilities type
                       type: string
                     type: array
-                  enableSound:
-                    description: Whether the sound device should be mounted inside
-                      the container. Note that this also requires the image do proper
-                      setup if /dev/snd is present.
-                    type: boolean
                   init:
                     description: The type of init system inside the image, currently
                       only supervisord and systemd are supported. Defaults to `supervisord`

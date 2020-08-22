@@ -42,10 +42,6 @@
               <strong>{{ props.row.spec.image }}</strong>
             </q-td>
 
-            <q-td key="sound" :props="props">
-              <q-avatar v-if="props.row.spec.config.enableSound" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
-            </q-td>
-
             <q-td key="root" :props="props">
               <q-avatar v-if="props.row.spec.config.allowRoot" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
@@ -104,11 +100,6 @@ const templateColums = [
     name: 'image',
     align: 'left',
     label: 'Image'
-  },
-  {
-    name: 'sound',
-    align: 'center',
-    label: 'Sound'
   },
   {
     name: 'root',

@@ -1095,30 +1095,30 @@
     babel-plugin-dynamic-import-node "^2.3.0"
     babel-plugin-module-resolver "^4.0.0"
 
-"@quasar/extras@^1.9.3":
-  version "1.9.3"
-  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-1.9.3.tgz#dba0c398dd64709a1c0941d0e8dff4655abc8728"
-  integrity sha512-9PXvmdxdO1Sa33X3FJ27T4ZBw9DEDnZcyqeGneOMSl/hzNCeEQ8BKk6ycUV9sdib0uH1sPXWEJ9m8v2QFylyqA==
+"@quasar/extras@^1.9.4":
+  version "1.9.4"
+  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-1.9.4.tgz#2978e45dc8cb2802172c6cddafe383b55cd46037"
+  integrity sha512-g0a39r4ejpTBsrygSfvc1gcZEhnGMl0Rj/xSH6kvmn42NtAwkKiORqFckhhHJ3ZsubE1c5F2jAFcpWAaaC/t8A==
 
 "@quasar/fastclick@1.1.4":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@quasar/fastclick/-/fastclick-1.1.4.tgz#21ed3e9a4387dcb43022a08af4ef08a5f1abf159"
   integrity sha512-i9wbyV4iT+v4KhtHJynUFhH5LiEPvAEgSnwMqPN4hf/8uRe82nDl5qP5agrp2el1h0HzyBpbvHaW7NB0BPrtvA==
 
-"@quasar/quasar-app-extension-qmarkdown@^1.0.29":
-  version "1.0.29"
-  resolved "https://registry.yarnpkg.com/@quasar/quasar-app-extension-qmarkdown/-/quasar-app-extension-qmarkdown-1.0.29.tgz#9b36b8e229a0cc947ae5786ae0bb7ad54cefdcc5"
-  integrity sha512-TsVRGCmMfypnymH+kn64hp0lxnOx/4v01Xvhy80cueNcODPu87lL1XWuGP4pDcYb42ocHpk2CtJ4Y2vdZpZrYQ==
+"@quasar/quasar-app-extension-qmarkdown@^1.0.31":
+  version "1.0.31"
+  resolved "https://registry.yarnpkg.com/@quasar/quasar-app-extension-qmarkdown/-/quasar-app-extension-qmarkdown-1.0.31.tgz#bcec7ed19564d39d8c1311fa4b86680486836ec1"
+  integrity sha512-zYGCrrj1uLoAhUn5l4SpfmQK5zLNYQLgmrkzL2adBsfZuFmxS5Z0pcly+y4L52bjlL4QVsAbQBEcDxs0euPQxg==
   dependencies:
-    "@quasar/quasar-ui-qmarkdown" "^1.0.29"
+    "@quasar/quasar-ui-qmarkdown" "^1.0.31"
     front-matter "^4.0.2"
     raw-loader "^4.0.1"
     ware-loader "^0.2.4"
 
-"@quasar/quasar-ui-qmarkdown@^1.0.29":
-  version "1.0.29"
-  resolved "https://registry.yarnpkg.com/@quasar/quasar-ui-qmarkdown/-/quasar-ui-qmarkdown-1.0.29.tgz#f19d2e57110bd90ca66c46df6eb2de8594c6013d"
-  integrity sha512-yHOkemzNwcrsdPJKItVRUhFFhu7/g/RSQCy4Cq+JARopfJTNc3lQM421z1ljggnJri2TEcImgekij61FKXKuFw==
+"@quasar/quasar-ui-qmarkdown@^1.0.31":
+  version "1.0.31"
+  resolved "https://registry.yarnpkg.com/@quasar/quasar-ui-qmarkdown/-/quasar-ui-qmarkdown-1.0.31.tgz#bc542e2c5ade39633547678862b6589901e87a65"
+  integrity sha512-T7cFYimHBuR3Ha0Kblh/TQrO28dZXrzWrIsGoDb4VWNCs4gJlSShbRJcXl6+HxPfSS5h9OdeHQHgdGq1VwE80g==
   dependencies:
     markdown-it "^11.0.0"
     markdown-it-abbr "^1.0.4"
@@ -1134,7 +1134,7 @@
     markdown-it-sup "^1.0.0"
     markdown-it-task-lists "^2.1.1"
     markdown-it-toc-and-anchor "^4.2.0"
-    prismjs "^1.20.0"
+    prismjs "^1.21.0"
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
@@ -7942,7 +7942,7 @@ pretty-error@^2.0.2:
     renderkid "^2.0.1"
     utila "~0.4"
 
-prismjs@^1.20.0:
+prismjs@^1.21.0:
   version "1.21.0"
   resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.21.0.tgz#36c086ec36b45319ec4218ee164c110f9fc015a3"
   integrity sha512-uGdSIu1nk3kej2iZsLyDoJ7e9bnPzIgY0naW/HdknGj61zScaprVEVGHrPoXqI+M9sP0NDnTK2jpkvmldpuqDw==

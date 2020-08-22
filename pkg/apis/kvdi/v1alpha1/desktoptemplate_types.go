@@ -53,9 +53,6 @@ type DesktopConfig struct {
 	ServiceAccount string `json:"serviceAccount,omitempty"`
 	// Extra system capabilities to add to desktops booted from this template.
 	Capabilities []corev1.Capability `json:"capabilities,omitempty"`
-	// Whether the sound device should be mounted inside the container. Note that
-	// this also requires the image do proper setup if /dev/snd is present.
-	EnableSound bool `json:"enableSound,omitempty"`
 	// AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles
 	// in this repository, this will add the user to the sudo group and ability to
 	// sudo with no password.

@@ -19,14 +19,6 @@ func (t *DesktopTemplate) GetInitSystem() DesktopInit {
 	return InitSupervisord
 }
 
-// SoundEnabled returns true if the template supports virtual sound devices.
-func (t *DesktopTemplate) SoundEnabled() bool {
-	if t.Spec.Config != nil {
-		return t.Spec.Config.EnableSound
-	}
-	return false
-}
-
 // RootEnabled returns true if desktops booted from the template should allow
 // users to use sudo.
 func (t *DesktopTemplate) RootEnabled() bool {

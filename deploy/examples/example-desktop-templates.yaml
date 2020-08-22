@@ -6,7 +6,6 @@ spec:
   image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
   imagePullPolicy: IfNotPresent
   config:
-    enableSound: true
     allowRoot: true
     init: systemd
   tags:
@@ -23,7 +22,6 @@ spec:
   image: quay.io/tinyzimmer/kvdi:arch-xfce-latest
   imagePullPolicy: IfNotPresent
   config:
-    enableSound: true
     allowRoot: true
     init: systemd
   tags:
@@ -40,7 +38,6 @@ spec:
   image: quay.io/tinyzimmer/kvdi:app-lens-latest
   imagePullPolicy: IfNotPresent
   config:
-    enableSound: true
     allowRoot: true
     init: systemd
     socketType: xpra
@@ -55,7 +52,6 @@ spec:
   image: quay.io/tinyzimmer/kvdi:app-postman-latest
   imagePullPolicy: IfNotPresent
   config:
-    enableSound: true
     allowRoot: true
     init: systemd
     socketType: xpra

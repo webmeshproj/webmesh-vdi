@@ -224,6 +224,14 @@ spec:
                       lookup a user's grants from the provider. Defaults to `15m`.
                     type: string
                 type: object
+              desktops:
+                description: Global desktop configurations
+                properties:
+                  maxSessionLength:
+                    description: When configured, desktop sessions will be forcefully
+                      terminated when the time limit is reached.
+                    type: string
+                type: object
               imagePullSecrets:
                 description: Pull secrets to use when pulling container images
                 items:
@@ -247,9 +255,8 @@ spec:
                     properties:
                       enabled:
                         description: Set to true to run a grafana sidecar with the
-                          app pods. This can be used for either visualzing metrics
-                          in the UI from a remote datasource, or to visualize data
-                          in the prometheus deployment.
+                          app pods. This can be used to visualize data in the prometheus
+                          deployment.
                         type: boolean
                     type: object
                   prometheus:
