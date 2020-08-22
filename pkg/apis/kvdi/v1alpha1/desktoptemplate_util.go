@@ -9,6 +9,7 @@ import (
 	"github.com/tinyzimmer/kvdi/version"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // GetInitSystem returns the init system used by the docker image in this template.
@@ -291,6 +292,16 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			{
 				Name:      "vnc-sock",
 				MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
+			},
+		},
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("50m"),
+				corev1.ResourceMemory: resource.MustParse("64Mi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("200m"),
+				corev1.ResourceMemory: resource.MustParse("256Mi"),
 			},
 		},
 	}

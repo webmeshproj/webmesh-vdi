@@ -35,6 +35,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 					SecurityContext: tmpl.GetDesktopContainerSecurityContext(),
 					Env:             tmpl.GetDesktopEnvVars(instance),
 					Lifecycle:       tmpl.GetLifecycle(),
+					Resources:       tmpl.GetDesktopResources(),
 				},
 			},
 		},

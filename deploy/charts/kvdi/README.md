@@ -2,7 +2,7 @@
 
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.20`
+Current chart version is `v0.0.21`
 
 ## Installation
 
@@ -105,4 +105,4 @@ helm install kvdi tinyzimmer/kvdi \
 | vdi.spec.secrets.k8sSecret.secretName | string | `"kvdi-app-secrets"` | The name of the Kubernetes `Secret`. backing the secret storage. |
 | vdi.spec.secrets.vault | object | `{}` | (object) Use vault for the secret storage backend. See the [API reference](../../../doc/crds.md#VaultConfig) for available configurations. |
 | vdi.spec.userdataSpec | object | `{}` | If configured, enables userdata persistence with the given PVC spec. Every user will receive their own PV with the provided configuration. |
-| vdi.templates | list | `[]` | Not implemented in the chart yet. This will be a place to preload desktop-templates into the cluster. |
+| vdi.templates | list | `[]` | Preload DesktopTemplates into the VDI Cluster. You only need to define the `metadata` and `spec`. Namespaces can be ignored sinced DesktopTemplates are cluster-scoped. |

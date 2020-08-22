@@ -34,6 +34,9 @@ spec:
   valuesContent: |-
     vdi:
       spec:
+        app:
+          auditLog: true
+          replicas: 3
         desktops:
           maxSessionLength: 5m
         auth:
@@ -51,6 +54,13 @@ spec:
           spec:
             image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
             imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: 500m
+                memory: 512Mi
+              limits:
+                cpu: 1000m
+                memory: 1024Mi
             config:
               allowRoot: false
               init: systemd
