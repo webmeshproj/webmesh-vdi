@@ -11,6 +11,10 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 **This is a fast-changing work in progress and not recommended for production usage**
 
  - [API Reference](doc/crds.md)
+ - [Installing](#Installing)
+   - [Standalone](#Install%20standalone)
+   - [Kubernetes](#Install%20to%20a%20pre-existing%20cluster)
+   - [Standalone on EC2 with Terraform](#Install%20to%20an%20AWS%20EC2%20Instance)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
  - [Screenshots/Video](doc/screenshots.md)
@@ -94,6 +98,12 @@ Once the app is launched, you can retrieve the admin password from `kvdi-admin-s
 To access the app interface either do a `port-forward` (`make forward-app` is another helper for that when developing locally with `kind`), or go to the "LoadBalancer" IP of the service.
 
 By default there are no desktop templates configured. If you'd like, you can apply the ones in `deploy/examples/example-desktop-templates.yaml` to get started quickly.
+
+### Install to an AWS EC2 Instance
+
+I am toying with the idea of launching a demo site, and I've included the terraform code for it in this repository. It is located in [`deploy/terraform`](deploy/terraform).
+
+There is a single required variable of `ext_ip`. Set this to your public IP to be able to access SSH and the web port. See `deploy/terraform/variables.tf` for other configuration options.
 
 ## Building and Running Locally
 
