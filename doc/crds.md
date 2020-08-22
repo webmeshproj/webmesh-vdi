@@ -15,6 +15,7 @@ Types
 -   [DesktopSpec](#DesktopSpec)
 -   [DesktopTemplate](#DesktopTemplate)
 -   [DesktopTemplateSpec](#DesktopTemplateSpec)
+-   [DesktopsConfig](#DesktopsConfig)
 -   [GrafanaConfig](#GrafanaConfig)
 -   [K8SSecretConfig](#K8SSecretConfig)
 -   [LDAPConfig](#LDAPConfig)
@@ -204,26 +205,22 @@ booted from it.
 <td><p>Extra system capabilities to add to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
-<td><code>enableSound</code> <em>bool</em></td>
-<td><p>Whether the sound device should be mounted inside the container. Note that this also requires the image do proper setup if /dev/snd is present.</p></td>
-</tr>
-<tr class="even">
 <td><code>allowRoot</code> <em>bool</em></td>
 <td><p>AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles in this repository, this will add the user to the sudo group and ability to sudo with no password.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>socketAddr</code> <em>string</em></td>
 <td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The novnc-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>socketType</code> <em><a href="#SocketType">SocketType</a></em></td>
 <td><p>The type of service listening on the configured socket. Can either be <code>xpra</code> or <code>xvnc</code>. Currently <code>xpra</code> is used to serve “app profiles” and <code>xvnc</code> to serve full desktops. Defaults to <code>xvnc</code>.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>proxyImage</code> <em>string</em></td>
 <td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
 <td><p>The type of init system inside the image, currently only supervisord and systemd are supported. Defaults to <code>supervisord</code> (but depending on how much I like systemd in this use case, that could change).</p></td>
 </tr>
@@ -363,6 +360,27 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 <tr class="even">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
+</tr>
+</tbody>
+</table>
+
+### DesktopsConfig
+
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
+
+DesktopsConfig represents global configurations for desktop sessions.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>maxSessionLength</code> <em>string</em></td>
+<td><p>When configured, desktop sessions will be forcefully terminated when the time limit is reached.</p></td>
 </tr>
 </tbody>
 </table>
@@ -710,10 +728,14 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>Authentication configurations</p></td>
 </tr>
 <tr class="even">
+<td><code>desktops</code> <em><a href="#DesktopsConfig">DesktopsConfig</a></em></td>
+<td><p>Global desktop configurations</p></td>
+</tr>
+<tr class="odd">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
 <td><p>Metrics configurations.</p></td>
 </tr>
@@ -762,10 +784,14 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>Authentication configurations</p></td>
 </tr>
 <tr class="even">
+<td><code>desktops</code> <em><a href="#DesktopsConfig">DesktopsConfig</a></em></td>
+<td><p>Global desktop configurations</p></td>
+</tr>
+<tr class="odd">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
 <td><p>Metrics configurations.</p></td>
 </tr>
@@ -839,4 +865,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `0e9bf0f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `26f93cb`.*

@@ -34,6 +34,8 @@ spec:
   valuesContent: |-
     vdi:
       spec:
+        desktops:
+          maxSessionLength: 10m
         auth:
           allowAnonymous: true
         metrics:

@@ -307,31 +307,42 @@ export default {
       }
     },
 
-    disconnectedFromServer (e) {
+    async disconnectedFromServer (e) {
       this.resetStatus()
       if (e.detail.clean) {
         // The server disconnecting cleanly would mean expired session,
         // but this should probably be handled better.
         if (this.currentSession !== null) {
-          this.$desktopSessions.dispatch('deleteSession', this.currentSession)
-          this.currentSession = null
+          const data = this.currentSession
+          try {
+            // check if the desktop still exists, if we get an error back
+            // it was deleted.
+            await this.$axios.get(`/api/sessions/${data.namespace}/${data.name}`)
+          } catch {
+            this.$desktopSessions.dispatch('deleteSession', this.currentSession)
+            this.currentSession = null
+            this.$q.notify({
+              color: 'orange-4',
+              textColor: 'white',
+              icon: 'stop_screen_share',
+              message: 'The desktop session has ended'
+            })
+          }
         }
         console.log('Disconnected')
       } else {
         console.log('Something went wrong, connection is closed')
-        this.checkStatusAndConnect()
+        await this.checkStatusAndConnect()
       }
+
+      // no matter what, make user recreate audio connection
+      // TODO: know that the user was using audio and recreate
+      // stream automatically if session is still active.
       if (this.player !== null) {
         this.player.stop()
         this.player = null
         this.$desktopSessions.dispatch('toggleAudio', false)
       }
-      this.$q.notify({
-        color: 'orange-4',
-        textColor: 'white',
-        icon: 'stop_screen_share',
-        message: 'The desktop session has ended'
-      })
     },
 
     resetStatus () {

@@ -2,7 +2,7 @@
 
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.19`
+Current chart version is `v0.0.20`
 
 ## Installation
 
@@ -93,6 +93,8 @@ helm install kvdi tinyzimmer/kvdi \
 | vdi.spec.auth.localAuth | object | `{}` | Use local-auth for the authentication backend. This is the default configuration. |
 | vdi.spec.auth.oidcAuth | object | `{}` | (object) Use an OpenID/Oauth provider for the authentication backend. See the [API reference](../../../doc/crds.md#OIDCConfig) for available configurations. |
 | vdi.spec.auth.tokenDuration | string | `"15m"` | The time-to-live for access tokens issued to users.  If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing tokens is currently not supported. |
+| vdi.spec.desktops | object | `{"maxSessionLength":""}` | Global configurations for desktop sessions. |
+| vdi.spec.desktops.maxSessionLength | string | `""` | When configured, desktop sessions will be terminated after running for the specified period of time. Values are in duration formats (e.g. `3m`, `2h`, `1d`). |
 | vdi.spec.imagePullSecrets | list | `[]` | Image pull secrets to use for app containers. |
 | vdi.spec.metrics | object | `{"serviceMonitor":{"create":false,"labels":{"release":"prometheus"}}}` | Metrics configurations for `kVDI`. |
 | vdi.spec.metrics.serviceMonitor | object | `{"create":false,"labels":{"release":"prometheus"}}` | Configurations for creating a ServiceMonitor object to  scrape `kVDI` metrics. |

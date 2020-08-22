@@ -122,6 +122,11 @@ vdi:
         secretName: kvdi-app-secrets
       # vdi.spec.secrets.vault -- (object) Use vault for the secret storage backend. See the [API reference](../../../doc/crds.md#VaultConfig) for available configurations.
       vault: {}
+    # vdi.spec.desktops -- Global configurations for desktop sessions.
+    desktops:
+      # vdi.spec.desktops.maxSessionLength -- When configured, desktop sessions will be terminated after running
+      # for the specified period of time. Values are in duration formats (e.g. `3m`, `2h`, `1d`).
+      maxSessionLength: ""
 
   # vdi.templates -- Not implemented in the chart yet. This will be a place
   # to preload desktop-templates into the cluster.

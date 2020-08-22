@@ -772,6 +772,7 @@ function misc-menu() {
         "Token TTL" "The access token duration for the UI" \
         "Audit Log" "Configure the api access audit log" \
         "Replicas" "Configure the number of app pods running" \
+        "Session Length" "Configure the maximum desktop session length" \
         "Anonymous" "Allow anonymous users to use kVDI"
 
     case ${?} in
@@ -798,6 +799,11 @@ function misc-menu() {
                           "$(read-from-values "vdi.spec.app.replicas")" ;
                       [[ ${?} == 0 ]] \
                           && write-to-values "vdi.spec.app.replicas" "$(get-dialog-answer)" ;;
+
+        "Session Length" )  cancel_label="Cancel" do-dialog --inputbox "How long should desktop sessions live for (e.g. 2h)?" 0 0 \
+                                "$(read-from-values "vdi.spec.desktops.maxSessionLength")" ;
+                            [[ ${?} == 0 ]] && [[ "$(get-dialog-answer)" != "" ]] \
+                                && write-to-values "vdi.spec.desktops.maxSessionLength" "$(get-dialog-answer)" ;;
 
         "Anonymous" ) cancel_label="Cancel" do-dialog $([[ "$(read-from-values "vdi.spec.auth.allowAnonymous")" == "false" ]] && echo --defaultno) \
                         --yesno "Allow unauthenticated users to use kVDI?" 0 0 ;
