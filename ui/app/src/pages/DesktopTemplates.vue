@@ -55,7 +55,7 @@
             </q-td>
 
             <q-td key="namespace" :props="props">
-              <NamespaceSelector :ref="`ns-${props.row.idx}`" :multiSelect="false" :showAllOption="false" label="Launch Namespace (default)" />
+              <NamespaceSelector :ref="`ns-${props.row.idx}`" :multiSelect="false" :showAllOption="false" :label="`Launch Namespace (${defaultNamespace})`" />
             </q-td>
 
             <q-td key="useTemplate" :props="props">
@@ -135,6 +135,10 @@ export default {
     }
   },
 
+  computed: {
+    defaultNamespace () { return this.$configStore.getters.serverConfig.appNamespace || 'default' }
+  },
+
   methods: {
     async onNewTemplate () {
       this.$q.dialog({
@@ -155,6 +159,10 @@ export default {
       // no selection
       if (typeof ns !== 'object') {
         payload.namespace = ns
+      } else {
+        // default to the app namespace for now.
+        // this is so read-only users select the correct namespace by default.
+        payload.namespace = this.$configStore.getters.serverConfig.appNamespace
       }
       this.doLaunchTemplate(payload)
     },
