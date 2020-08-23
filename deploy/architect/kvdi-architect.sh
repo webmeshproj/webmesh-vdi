@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # K3s/Prometheus constants
-export INSTALL_K3S_VERSION="v1.18.6+k3s1"
 export INSTALL_K3S_SKIP_START="true"
 export INSTALL_K3S_EXEC="server --no-deploy traefik"
 export PROMETHEUS_OPERATOR_VERSION="v0.41.0"
