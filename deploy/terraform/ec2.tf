@@ -21,6 +21,16 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
+data "template_file" "userdata" {
+  template = file("${path.module}/userdata.sh")
+
+  vars = {
+    kvdi_hostname    = "${var.kvdi_host}.${var.dns_domain}"
+    acme_email       = var.acme_email
+    use_lets_encrypt = var.use_lets_encrypt
+  }
+}
+
 resource "aws_key_pair" "this" {
   key_name   = "${var.name}-key"
   public_key = local.public_key
@@ -46,7 +56,7 @@ module "ec2" {
   vpc_security_group_ids      = [module.sg.this_security_group_id]
   associate_public_ip_address = true
 
-  user_data_base64 = base64encode(file("${path.module}/userdata.sh"))
+  user_data_base64 = base64encode(data.template_file.userdata.rendered)
 
   root_block_device = [
     {

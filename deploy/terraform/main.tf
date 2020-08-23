@@ -3,6 +3,10 @@ provider "aws" {
   version = "~> 3.3.0"
 }
 
+provider "template" {
+  version = "~> 2.1.0"
+}
+
 locals {
   region   = var.region
   azs      = ["${var.region}a"]
