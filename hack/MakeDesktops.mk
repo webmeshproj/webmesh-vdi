@@ -72,10 +72,21 @@ demo-fmt:
 	terraform fmt deploy/terraform
 
 get_ext_ip = $(shell curl https://ifconfig.me 2> /dev/null)
+auto_approve = $(shell [[ "$(1)" != "plan" ]] && echo -auto-approve)
 TF_ARGS ?=
 demo-%:
 	cd deploy/terraform && \
 		terraform $* \
 			-var ext_ip=$(call get_ext_ip) \
-			`[[ "$*" != "plan" ]] && echo -auto-approve` \
-			$(TF_ARGS)
+			$(TF_ARGS) $(call auto_approve,$*)
+
+demo-state:
+	@cd deploy/terraform && terraform state pull
+
+get_demo_host = $(shell cd deploy/terraform && terraform output public_ip)
+ssh_demo = 	ssh -o "UserKnownHostsFile /dev/null" -o "StrictHostKeyChecking=no" ec2-user@$(call get_demo_host)
+demo-shell:
+	$(call ssh_demo)
+
+demo-password:
+	$(call ssh_demo) sudo k3s kubectl get secret kvdi-admin-secret -o json | jq .data.password -r | base64 -d && echo

@@ -2,7 +2,7 @@
 
 # K3s/Prometheus constants
 export INSTALL_K3S_SKIP_START="true"
-export INSTALL_K3S_EXEC="server --no-deploy traefik"
+export INSTALL_K3S_EXEC="server --disable traefik"
 export PROMETHEUS_OPERATOR_VERSION="v0.41.0"
 export K3S_MANIFEST_DIR="/var/lib/rancher/k3s/server/manifests"
 
