@@ -23,10 +23,6 @@ if [[ "${ENABLE_ROOT}" == "true" ]] ; then
     echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 fi
 
-if [[ "${ENABLE_FILE_TRANSFER}" == "true" ]] ; then
-    echo 'VNC_ARGS="-httpd /home/%USER% -httpPort 5800"' >> /etc/default/kvdi
-fi
-
 # Set the VNC socket dir
 if [[ -z "${VNC_SOCK_ADDR}" ]] ; then
     export VNC_SOCK_ADDR="/tmp/vnc.sock"

@@ -4,7 +4,7 @@ Description=Xvnc Display
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/sbin/Xvnc ${DISPLAY} -rfbunixpath ${VNC_SOCK_ADDR} -SecurityTypes None ${VNC_ARGS}
+ExecStart=/usr/sbin/Xvnc ${DISPLAY} -rfbunixpath ${VNC_SOCK_ADDR} -SecurityTypes None
 EnvironmentFile=/etc/default/kvdi
 
 [Install]
