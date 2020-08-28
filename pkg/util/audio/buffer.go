@@ -13,18 +13,6 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// BufferType represents a type of audio buffer to spawn
-type BufferType string
-
-const (
-	// BufferTypeGST is a buffer that uses a gstreamer pipeline to encode
-	// PCM data from pulseaudio to the selected codec.
-	BufferTypeGST BufferType = "gst"
-	// BufferTypePARec is a buffer that uses parec to output raw PCM data
-	// from pulseaudio and pipes to the selected encoder.
-	BufferTypePARec BufferType = "parec"
-)
-
 // Codec represents the encoder to use to process the raw PCM data.
 type Codec string
 
@@ -35,6 +23,8 @@ const (
 	CodecVorbis Codec = "vorbis"
 	// CodecMP3 encodes the audio with lame and returns it in MP3 format.
 	CodecMP3 Codec = "mp3"
+	// CodecRaw uses raw PCM data with the configured sample rate
+	CodecRaw Codec = "raw"
 )
 
 // Buffer provides a Reader interface for proxying audio data to a websocket
@@ -47,25 +37,29 @@ type Buffer struct {
 	closed     bool
 	logger     logr.Logger
 	userID     string
-	bufferType BufferType
+	channels   int
+	sampleRate int
 }
 
 var _ io.ReadCloser = &Buffer{}
 
 // NewBuffer returns a new Buffer.
-func NewBuffer(logger logr.Logger, userID string, bufferType BufferType) *Buffer {
+func NewBuffer(logger logr.Logger, userID string) *Buffer {
 	return &Buffer{
 		exec:       exec.Command,
 		userID:     userID,
 		logger:     logger,
-		bufferType: bufferType,
+		channels:   2,
+		sampleRate: 24000,
 	}
 }
 
-func (a *Buffer) buildGSTPipeline(codec Codec) string {
+func (a *Buffer) buildPipeline(codec Codec) string {
 	pipeline := fmt.Sprintf(
-		"sudo -u audioproxy gst-launch-1.0 -q pulsesrc server=/run/user/%s/pulse/native ! audio/x-raw, channels=2, rate=24000",
+		"sudo -u audioproxy gst-launch-1.0 -q pulsesrc server=/run/user/%s/pulse/native ! audio/x-raw, channels=%d, rate=%d",
 		a.userID,
+		a.channels,
+		a.sampleRate,
 	)
 	switch codec {
 	case CodecVorbis:
@@ -82,30 +76,13 @@ func (a *Buffer) buildGSTPipeline(codec Codec) string {
 	return fmt.Sprintf("%s ! fdsink fd=1", pipeline)
 }
 
-func (a *Buffer) buildPaRecPipeline(codec Codec) string {
-	pipeline := fmt.Sprintf("sudo -u audioproxy parec -s /run/user/%s/pulse/native", a.userID)
+// SetChannels sets the number of channels to record from gstreamer. When this method is not called
+// the value defaults to 2 (stereo).
+func (a *Buffer) SetChannels(c int) { a.channels = c }
 
-	switch codec {
-	case CodecVorbis:
-		pipeline = fmt.Sprintf("%s | oggenc -b 192 -o - --raw -", pipeline)
-	case CodecMP3:
-		pipeline = fmt.Sprintf("%s | lame -r -V0 -", pipeline)
-	default:
-		a.logger.Info(fmt.Sprintf("Invalid codec for parec pipeline %s, defaulting to ogg/vorbis", codec))
-		pipeline = fmt.Sprintf("%s | oggenc -b 192 -o - --raw -", pipeline)
-	}
-	return pipeline
-}
-
-func (a *Buffer) buildPipeline(codec Codec) string {
-	var pipeline string
-	if a.bufferType == BufferTypeGST {
-		pipeline = a.buildGSTPipeline(codec)
-	} else if a.bufferType == BufferTypePARec {
-		pipeline = a.buildPaRecPipeline(codec)
-	}
-	return pipeline
-}
+// SetSampleRate sets the sample rate to use when recording from gstreamer. When this method is not called
+// the value defaults to 24000.
+func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
 
 // Start starts the gstreamer process
 func (a *Buffer) Start(codec Codec) error {

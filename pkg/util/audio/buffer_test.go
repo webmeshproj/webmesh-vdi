@@ -12,17 +12,14 @@ import (
 var testLogger = logf.Log.WithName("test")
 
 func TestNewBuffer(t *testing.T) {
-	buffer := NewBuffer(testLogger, "9000", BufferTypeGST)
+	buffer := NewBuffer(testLogger, "9000")
 	if buffer.userID != "9000" {
 		t.Error("Expected buffer user id to be 9000, got:", buffer.userID)
-	}
-	if buffer.bufferType != BufferTypeGST {
-		t.Error("Expected buffer type GST, got:", buffer.bufferType)
 	}
 }
 
 func TestBuildGSTPipeline(t *testing.T) {
-	buffer := NewBuffer(testLogger, "9000", BufferTypeGST)
+	buffer := NewBuffer(testLogger, "9000")
 
 	prefix := fmt.Sprintf("sudo -u audioproxy gst-launch-1.0 -q pulsesrc server=/run/user/%s/pulse/native ! audio/x-raw, channels=2, rate=24000", "9000")
 	suffix := "fdsink fd=1"
@@ -57,39 +54,8 @@ func TestBuildGSTPipeline(t *testing.T) {
 	}
 }
 
-func TestBuildPaRecPipeline(t *testing.T) {
-	buffer := NewBuffer(testLogger, "9000", BufferTypePARec)
-
-	prefix := fmt.Sprintf("sudo -u audioproxy parec -s /run/user/%s/pulse/native", "9000")
-
-	testCases := []struct {
-		codec    Codec
-		expected string
-	}{
-		{
-			codec:    CodecVorbis,
-			expected: fmt.Sprintf("%s | oggenc -b 192 -o - --raw -", prefix),
-		},
-		{
-			codec:    CodecMP3,
-			expected: fmt.Sprintf("%s | lame -r -V0 -", prefix),
-		},
-		{
-			// default to vorbis
-			codec:    Codec("Unknown"),
-			expected: fmt.Sprintf("%s | oggenc -b 192 -o - --raw -", prefix),
-		},
-	}
-
-	for _, tc := range testCases {
-		if pipeline := buffer.buildPipeline(tc.codec); pipeline != tc.expected {
-			t.Errorf("Expected %s for %s, got: %s", tc.expected, tc.codec, pipeline)
-		}
-	}
-}
-
 func TestUseBuffer(t *testing.T) {
-	buffer := NewBuffer(testLogger, "9000", BufferTypeGST)
+	buffer := NewBuffer(testLogger, "9000")
 
 	// override exec method to run controlled commands, depends on tests
 	// executed in an environment with a shell.

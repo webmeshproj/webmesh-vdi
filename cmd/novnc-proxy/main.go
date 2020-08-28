@@ -74,22 +74,15 @@ func main() {
 
 // newServer builds the novnc proxy server
 func newServer() (*http.Server, error) {
-	tlsConfig, err := tlsutil.NewServerTLSConfig()
-	if err != nil {
-		return nil, err
-	}
-
 	r := mux.NewRouter()
 
 	// The websockify route is in charge of proxying noVNC conncetions to the local
 	// VNC socket. This route is pretty bulletproof.
 	r.Path("/api/desktops/{namespace}/{name}/websockify").Handler(&websocket.Server{
-		Handshake: func(c *websocket.Config, r *http.Request) error {
-			return nil
-		},
+		Handshake: func(c *websocket.Config, r *http.Request) error { return nil },
 		Handler: func(wsconn *websocket.Conn) {
 			log.Info(fmt.Sprintf("Received display proxy request, connecting to %s", vncAddr))
-			conn, err := net.Dial(vncConnectProto, vncConnectAddr)
+			vncConn, err := net.Dial(vncConnectProto, vncConnectAddr)
 
 			if err != nil {
 				log.Error(err, "Failed to connect to display server")
@@ -101,13 +94,16 @@ func newServer() (*http.Server, error) {
 
 			wsconn.PayloadType = websocket.BinaryFrame
 
+			// Copy client connection to the server
 			go func() {
-				if _, err := io.Copy(conn, wsconn); err != nil {
+				if _, err := io.Copy(vncConn, wsconn); err != nil {
 					log.Error(err, "Error while copying stream from websocket connection to display socket")
 				}
 			}()
+
+			// Copy server connection to the client
 			go func() {
-				if _, err := io.Copy(wsconn, conn); err != nil {
+				if _, err := io.Copy(wsconn, vncConn); err != nil {
 					log.Error(err, "Error while copying stream from display socket to websocket connection")
 				}
 			}()
@@ -119,15 +115,13 @@ func newServer() (*http.Server, error) {
 	// This route creates a recorder on the local pulseaudio sink and ships
 	// the data back to the client over a websocket.
 	r.Path("/api/desktops/{namespace}/{name}/wsaudio").Handler(&websocket.Server{
-		Handshake: func(c *websocket.Config, r *http.Request) error {
-			return nil
-		},
+		Handshake: func(c *websocket.Config, r *http.Request) error { return nil },
 		Handler: func(wsconn *websocket.Conn) {
 			log.Info(fmt.Sprintf("Received validated proxy request, connecting to audio stream"))
 
 			wsconn.PayloadType = websocket.BinaryFrame
 
-			audioBuffer := audio.NewBuffer(log, userID, audio.BufferTypeGST)
+			audioBuffer := audio.NewBuffer(log, userID)
 
 			if err := audioBuffer.Start(audio.CodecOpus); err != nil {
 				log.Error(err, "Error setting up audio buffer")
@@ -165,6 +159,11 @@ func newServer() (*http.Server, error) {
 	})
 
 	wrapped := handlers.CustomLoggingHandler(os.Stdout, r, formatLog)
+
+	tlsConfig, err := tlsutil.NewServerTLSConfig()
+	if err != nil {
+		return nil, err
+	}
 
 	return &http.Server{
 		Handler:      wrapped,
