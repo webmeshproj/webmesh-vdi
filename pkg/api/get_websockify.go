@@ -74,7 +74,7 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 
 // swagger:operation GET /api/desktops/{namespace}/{name}/wsaudio Desktops doAudio
 // ---
-// summary: Retrive the audio stream from the given desktop session.
+// summary: Retrieve the audio stream from the given desktop session.
 // parameters:
 // - name: namespace
 //   in: path

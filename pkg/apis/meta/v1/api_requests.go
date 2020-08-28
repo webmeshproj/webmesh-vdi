@@ -295,3 +295,22 @@ type ConnectionStatus struct {
 	// The app instance handling the proxy for this stream.
 	ProxyPod string `json:"proxyPod,omitempty"`
 }
+
+// StatDesktopFileResponse contains the info for a queried file inside a desktop
+// dession.
+type StatDesktopFileResponse struct {
+	Stat *FileStat `json:"stat"`
+}
+
+// FileStat contains information about a queried file. Contents will only contain
+// nested FileStat objects when this object represents the root of the query.
+type FileStat struct {
+	// The name of the file or directory
+	Name string `json:"name"`
+	// True if the file is a directory
+	IsDirectory bool `json:"isDirectory"`
+	// The size of the file when IsDirectory is false
+	Size int64 `json:"size"`
+	// When IsDirectory is true, the contents of the directory
+	Contents []*FileStat `json:"contents,omitempty"`
+}

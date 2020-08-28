@@ -13,7 +13,6 @@ import (
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/audio"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
@@ -79,84 +78,24 @@ func newServer() (*http.Server, error) {
 	// The websockify route is in charge of proxying noVNC conncetions to the local
 	// VNC socket. This route is pretty bulletproof.
 	r.Path("/api/desktops/{namespace}/{name}/websockify").Handler(&websocket.Server{
-		Handshake: func(c *websocket.Config, r *http.Request) error { return nil },
-		Handler: func(wsconn *websocket.Conn) {
-			log.Info(fmt.Sprintf("Received display proxy request, connecting to %s", vncAddr))
-			vncConn, err := net.Dial(vncConnectProto, vncConnectAddr)
-
-			if err != nil {
-				log.Error(err, "Failed to connect to display server")
-				wsconn.Close()
-				return
-			}
-
-			log.Info("Connection established, proxying display")
-
-			wsconn.PayloadType = websocket.BinaryFrame
-
-			// Copy client connection to the server
-			go func() {
-				if _, err := io.Copy(vncConn, wsconn); err != nil {
-					log.Error(err, "Error while copying stream from websocket connection to display socket")
-				}
-			}()
-
-			// Copy server connection to the client
-			go func() {
-				if _, err := io.Copy(wsconn, vncConn); err != nil {
-					log.Error(err, "Error while copying stream from display socket to websocket connection")
-				}
-			}()
-
-			select {}
-		},
+		Handshake: wsHandshake,
+		Handler:   websockifyHandler,
 	})
 
 	// This route creates a recorder on the local pulseaudio sink and ships
 	// the data back to the client over a websocket.
 	r.Path("/api/desktops/{namespace}/{name}/wsaudio").Handler(&websocket.Server{
-		Handshake: func(c *websocket.Config, r *http.Request) error { return nil },
-		Handler: func(wsconn *websocket.Conn) {
-			log.Info(fmt.Sprintf("Received validated proxy request, connecting to audio stream"))
-
-			wsconn.PayloadType = websocket.BinaryFrame
-
-			audioBuffer := audio.NewBuffer(log, userID)
-
-			if err := audioBuffer.Start(audio.CodecOpus); err != nil {
-				log.Error(err, "Error setting up audio buffer")
-				return
-			}
-
-			defer func() {
-				if err := audioBuffer.Close(); err != nil {
-					log.Error(err, "Error closing audio buffer")
-				}
-			}()
-
-			go func() {
-
-				if _, err := io.Copy(wsconn, audioBuffer); err != nil {
-					log.Error(err, "Error while copying from audio stream to websocket connection")
-				}
-			}()
-
-			if err := audioBuffer.Wait(); err != nil {
-				if err := audioBuffer.Error(); err != nil {
-					log.Error(err, "Error while streaming audio")
-					if _, err := wsconn.Write(append([]byte(err.Error()), []byte("\n")...)); err != nil {
-						log.Error(err, "Failed to write error to websocket client")
-					}
-				}
-			}
-
-			if err := wsconn.Close(); err != nil {
-				log.Error(err, "Error closing websocket connection")
-			}
-
-			log.Info("Finishing proxying audio stream")
-		},
+		Handshake: wsHandshake,
+		Handler:   wsAudioHandler,
 	})
+
+	// This route is for doing a stat of files in the user's home directory when
+	// enabled in the DesktopTemplate.
+	r.PathPrefix("/api/desktops/{namespace}/{name}/fs/stat/").HandlerFunc(statFileHandler)
+
+	// This route is for downloading a file from the user's home directory when
+	// enabled in the DesktopTemplate.
+	r.PathPrefix("/api/desktops/{namespace}/{name}/fs/get/").HandlerFunc(downloadFileHandler)
 
 	wrapped := handlers.CustomLoggingHandler(os.Stdout, r, formatLog)
 

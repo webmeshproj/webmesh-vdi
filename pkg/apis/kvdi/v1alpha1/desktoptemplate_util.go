@@ -29,6 +29,15 @@ func (t *DesktopTemplate) RootEnabled() bool {
 	return false
 }
 
+// FileTransferEnabled returns true if desktops booted from the template should
+// allow file transfer.
+func (t *DesktopTemplate) FileTransferEnabled() bool {
+	if t.Spec.Config != nil {
+		return t.Spec.Config.AllowFileTransfer
+	}
+	return false
+}
+
 // GetNoVNCProxyImage returns the novnc-proxy image for the desktop instance.
 func (t *DesktopTemplate) GetNoVNCProxyImage() string {
 	if t.Spec.Config != nil && t.Spec.Config.ProxyImage != "" {
@@ -93,17 +102,17 @@ func (t *DesktopTemplate) GetDisplaySocketType() SocketType {
 func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
-			Name:  "USER",
+			Name:  v1.UserEnvVar,
 			Value: desktop.GetUser(),
 		},
 		{
-			Name:  "VNC_SOCK_ADDR",
+			Name:  v1.VNCSockEnvVar,
 			Value: strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://"),
 		},
 	}
 	if t.RootEnabled() {
 		envVars = append(envVars, corev1.EnvVar{
-			Name:  "ENABLE_ROOT",
+			Name:  v1.EnableRootEnvVar,
 			Value: "true",
 		})
 	}
@@ -139,44 +148,55 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 	}
 }
 
+var (
+	tmpVolume     = "tmp"
+	runVolume     = "run"
+	shmVolume     = "shm"
+	tlsVolume     = "tls"
+	homeVolume    = "home"
+	cgroupsVolume = "cgroups"
+	runLockVolume = "run-lock"
+	vncSockVolume = "vnc-sock"
+)
+
 // GetDesktopVolumes returns the volumes to mount to desktop pods.
 func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Desktop) []corev1.Volume {
 	// Common volumes all containers will need.
 	volumes := []corev1.Volume{
 		corev1.Volume{
-			Name: "tmp",
+			Name: tmpVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 		corev1.Volume{
-			Name: "run",
+			Name: runVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 		corev1.Volume{
-			Name: "run-lock",
+			Name: runLockVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 		{
-			Name: "vnc-sock",
+			Name: vncSockVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 		{
-			Name: "shm",
+			Name: shmVolume,
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/dev/shm",
+					Path: v1.HostShmPath,
 				},
 			},
 		},
 		{
-			Name: "tls",
+			Name: tlsVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: desktop.GetName(),
@@ -188,7 +208,7 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 	// A PVC claim for the user if specified, otherwise use an EmptyDir.
 	if cluster.GetUserdataVolumeSpec() != nil {
 		volumes = append(volumes, corev1.Volume{
-			Name: "home",
+			Name: homeVolume,
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 					ClaimName: cluster.GetUserdataVolumeName(desktop.GetUser()),
@@ -197,7 +217,7 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 		})
 	} else {
 		volumes = append(volumes, corev1.Volume{
-			Name: "home",
+			Name: homeVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -209,10 +229,10 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 	if t.GetInitSystem() == InitSystemd {
 		volumes = append(volumes, []corev1.Volume{
 			{
-				Name: "cgroup",
+				Name: cgroupsVolume,
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{
-						Path: "/sys/fs/cgroup",
+						Path: v1.HostCgroupPath,
 					},
 				},
 			},
@@ -227,35 +247,35 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 
 	mounts := []corev1.VolumeMount{
 		{
-			Name:      "tmp",
-			MountPath: "/tmp",
+			Name:      tmpVolume,
+			MountPath: v1.DesktopTmpPath,
 		},
 		{
-			Name:      "run",
-			MountPath: "/run",
+			Name:      runVolume,
+			MountPath: v1.DesktopRunPath,
 		},
 		{
-			Name:      "run-lock",
-			MountPath: "/run/lock",
+			Name:      runLockVolume,
+			MountPath: v1.DesktopRunLockPath,
 		},
 		{
-			Name:      "vnc-sock",
+			Name:      vncSockVolume,
 			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
 		},
 		{
-			Name:      "shm",
-			MountPath: "/dev/shm",
+			Name:      shmVolume,
+			MountPath: v1.DesktopShmPath,
 		},
 		{
-			Name:      "home",
-			MountPath: fmt.Sprintf("/home/%s", desktop.GetUser()),
+			Name:      homeVolume,
+			MountPath: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
 	}
 	if t.GetInitSystem() == InitSystemd {
 		mounts = append(mounts, []corev1.VolumeMount{
 			{
-				Name:      "cgroup",
-				MountPath: "/sys/fs/cgroup",
+				Name:      cgroupsVolume,
+				MountPath: v1.DesktopCgroupPath,
 			},
 		}...)
 	}
@@ -264,6 +284,31 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 
 // GetDesktopProxyContainer returns the configuration for the novnc-proxy sidecar.
 func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
+	proxyVolMounts := []corev1.VolumeMount{
+		{
+			Name:      runVolume,
+			MountPath: v1.DesktopRunPath,
+		},
+		{
+			Name:      runLockVolume,
+			MountPath: v1.DesktopRunLockPath,
+		},
+		{
+			Name:      tlsVolume,
+			MountPath: v1.ServerCertificateMountPath,
+			ReadOnly:  true,
+		},
+		{
+			Name:      vncSockVolume,
+			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
+		},
+	}
+	if t.FileTransferEnabled() {
+		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
+			Name:      homeVolume,
+			MountPath: v1.DesktopHomeMntPath,
+		})
+	}
 	return corev1.Container{
 		Name:            "novnc-proxy",
 		Image:           t.GetNoVNCProxyImage(),
@@ -275,25 +320,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 				ContainerPort: v1.WebPort,
 			},
 		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "run",
-				MountPath: "/run",
-			},
-			{
-				Name:      "run-lock",
-				MountPath: "/run/lock",
-			},
-			{
-				Name:      "tls",
-				MountPath: v1.ServerCertificateMountPath,
-				ReadOnly:  true,
-			},
-			{
-				Name:      "vnc-sock",
-				MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
-			},
-		},
+		VolumeMounts: proxyVolMounts,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    resource.MustParse("50m"),

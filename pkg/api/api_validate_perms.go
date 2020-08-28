@@ -285,13 +285,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc: func(r *http.Request) string {
-				return mux.Vars(r)["name"]
-			},
-			ResourceNamespaceFunc: func(r *http.Request) string {
-				return mux.Vars(r)["namespace"]
-			},
-			OverrideFunc: allowSessionOwner,
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
 		},
 		"DELETE": {
 			Actions: []v1.APIAction{
@@ -300,13 +296,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc: func(r *http.Request) string {
-				return mux.Vars(r)["name"]
-			},
-			ResourceNamespaceFunc: func(r *http.Request) string {
-				return mux.Vars(r)["namespace"]
-			},
-			OverrideFunc: allowSessionOwner,
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
 		},
 	},
 	"/api/desktops/{namespace}/{name}/websockify": {
@@ -317,13 +309,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc: func(r *http.Request) string {
-				return mux.Vars(r)["name"]
-			},
-			ResourceNamespaceFunc: func(r *http.Request) string {
-				return mux.Vars(r)["namespace"]
-			},
-			OverrideFunc: allowSessionOwner,
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
 		},
 	},
 	"/api/desktops/{namespace}/{name}/wsaudio": {
@@ -334,13 +322,35 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc: func(r *http.Request) string {
-				return mux.Vars(r)["name"]
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
+	"/api/desktops/{namespace}/{name}/fs/stat/": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
-			ResourceNamespaceFunc: func(r *http.Request) string {
-				return mux.Vars(r)["namespace"]
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
+	"/api/desktops/{namespace}/{name}/fs/get/": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
 			},
-			OverrideFunc: allowSessionOwner,
+			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
+			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			OverrideFunc:          allowSessionOwner,
 		},
 	},
 }

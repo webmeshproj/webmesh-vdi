@@ -114,21 +114,20 @@ func (d *desktopAPI) lookupRefreshToken(refreshToken string) (string, error) {
 }
 
 func (d *desktopAPI) getDesktopWebsocketURL(r *http.Request) (*url.URL, error) {
-	nn := apiutil.GetNamespacedNameFromRequest(r)
-	found := &corev1.Service{}
-	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+	host, err := d.getDesktopWebHost(r)
+	if err != nil {
 		return nil, err
 	}
-	return url.Parse(fmt.Sprintf("wss://%s:%d", found.Spec.ClusterIP, v1.WebPort))
+	return url.Parse(fmt.Sprintf("wss://%s", host))
 }
 
-func (d *desktopAPI) getDesktopWebURL(r *http.Request) (string, error) {
+func (d *desktopAPI) getDesktopWebHost(r *http.Request) (string, error) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
 	found := &corev1.Service{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("https://%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
+	return fmt.Sprintf("%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
 }
 
 // Session response

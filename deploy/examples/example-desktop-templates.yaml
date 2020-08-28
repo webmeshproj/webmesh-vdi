@@ -6,6 +6,7 @@ spec:
   image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
   imagePullPolicy: IfNotPresent
   config:
+    allowFileTransfer: true
     allowRoot: true
     init: systemd
   tags:
@@ -29,31 +30,31 @@ spec:
     desktop: xfce4
     applications: minimal
 
----
-apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
-metadata:
-  name: lens-ide
-spec:
-  image: quay.io/tinyzimmer/kvdi:app-lens-latest
-  imagePullPolicy: IfNotPresent
-  config:
-    allowRoot: true
-    init: systemd
-    socketType: xpra
-  tags:
-    app-profile: Lens
----
-apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
-metadata:
-  name: postman
-spec:
-  image: quay.io/tinyzimmer/kvdi:app-postman-latest
-  imagePullPolicy: IfNotPresent
-  config:
-    allowRoot: true
-    init: systemd
-    socketType: xpra
-  tags:
-    app-profile: Postman
+# ---
+# apiVersion: kvdi.io/v1alpha1
+# kind: DesktopTemplate
+# metadata:
+#   name: lens-ide
+# spec:
+#   image: quay.io/tinyzimmer/kvdi:app-lens-latest
+#   imagePullPolicy: IfNotPresent
+#   config:
+#     allowRoot: true
+#     init: systemd
+#     socketType: xpra
+#   tags:
+#     app-profile: Lens
+# ---
+# apiVersion: kvdi.io/v1alpha1
+# kind: DesktopTemplate
+# metadata:
+#   name: postman
+# spec:
+#   image: quay.io/tinyzimmer/kvdi:app-postman-latest
+#   imagePullPolicy: IfNotPresent
+#   config:
+#     allowRoot: true
+#     init: systemd
+#     socketType: xpra
+#   tags:
+#     app-profile: Postman

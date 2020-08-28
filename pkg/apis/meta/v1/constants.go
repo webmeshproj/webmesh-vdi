@@ -56,6 +56,15 @@ const (
 	DefaultSessionLength = time.Duration(15) * time.Minute
 	// CACertKey is the key where the CA certificate is placed in TLS secrets.
 	CACertKey = "ca.crt"
+	// UserEnvVar is the environment variable used to set the username during a desktop's init
+	// process
+	UserEnvVar = "USER"
+	// EnableRootEnvVar is the environment variable used to signal to the init process that
+	// sudo access should be granted.
+	EnableRootEnvVar = "ENABLE_ROOT"
+	// VNCSockEnvVar is the environment variable used to set the VNC socket during the init
+	// process.
+	VNCSockEnvVar = "VNC_SOCK_ADDR"
 )
 
 // NamespaceAll represents all namespaces
@@ -98,6 +107,20 @@ const (
 	VerbLaunch Verb = "launch"
 	// VerbAll matches all actions
 	VerbAll Verb = "*"
+)
+
+// Desktop runtime mount paths
+const (
+	HostShmPath    = "/dev/shm"
+	HostCgroupPath = "/sys/fs/cgroup"
+
+	DesktopTmpPath     = "/tmp"
+	DesktopRunPath     = "/run"
+	DesktopRunLockPath = "/run/lock"
+	DesktopShmPath     = "/dev/shm"
+	DesktopCgroupPath  = "/sys/fs/cgroup"
+	DesktopHomeFmt     = "/home/%s"
+	DesktopHomeMntPath = "/mnt/home"
 )
 
 // Other defaults that we need to the address of
