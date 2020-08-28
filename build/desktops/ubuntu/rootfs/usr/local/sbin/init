@@ -5,8 +5,8 @@ export USER_ID="9000"
 
 # simple function for ensuring a basedir then writing a file from stdin
 write () {
-  mkdir -p "$(dirname ${1})"
-  cp /dev/stdin "${1}"
+    mkdir -p "$(dirname ${1})"
+    cp /dev/stdin "${1}"
 }
 
 echo "** Setting up user account: ${USER}"
@@ -19,13 +19,17 @@ mkdir -p /run/user/${USER_ID} && chmod 0700 /run/user/${USER_ID} && chown ${USER
 
 # This could be more cleverly done inside the image itself as opposed to at boot.
 if [[ "${ENABLE_ROOT}" == "true" ]] ; then
-  echo "** Allowing ${USER} to use root!"
-  echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    echo "** Allowing ${USER} to use root!"
+    echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+fi
+
+if [[ "${ENABLE_FILE_TRANSFER}" == "true" ]] ; then
+    echo 'VNC_ARGS="-httpd /home/%USER% -httpPort 5800"' >> /etc/default/kvdi
 fi
 
 # Set the VNC socket dir
 if [[ -z "${VNC_SOCK_ADDR}" ]] ; then
-  export VNC_SOCK_ADDR="/tmp/vnc.sock"
+    export VNC_SOCK_ADDR="/tmp/vnc.sock"
 fi
 
 # Pre-create the vnc socket directory and give it to the user

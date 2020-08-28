@@ -5,6 +5,5 @@ RUN pacman -Sy --noconfirm plasma konsole \
   && yes | pacman -Scc --noconfirm
 
 COPY systemd/plasma.service /etc/systemd/user/desktop.service
-COPY systemd/default/desktop /etc/default/desktop
 
 RUN systemctl --user --global enable desktop.service

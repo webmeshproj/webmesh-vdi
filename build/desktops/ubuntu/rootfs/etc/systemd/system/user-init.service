@@ -4,7 +4,7 @@ Wants=network.target
 
 [Service]
 Type=idle
-EnvironmentFile=/etc/default/xvnc
+EnvironmentFile=/etc/default/kvdi
 ExecStart=/usr/local/sbin/fakegetty
 UtmpIdentifier=cons
 TTYVHangup=yes

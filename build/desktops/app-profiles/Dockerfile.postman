@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y fuse libnss3 libxss1 \
     && ln -s /usr/local/Postman/Postman /usr/local/bin/Postman \
     && rm -rf /tmp/postman.tar.gz
 
-COPY systemd/default/desktop /etc/default/desktop
 COPY systemd/Postman.service /etc/systemd/user/Postman.service
 
 RUN systemctl --user --global enable Postman.service

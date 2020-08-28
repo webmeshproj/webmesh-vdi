@@ -5,7 +5,7 @@ Wants=network.target
 [Service]
 Type=idle
 ExecStart=/usr/local/sbin/fakegetty
-EnvironmentFile=/etc/default/display
+EnvironmentFile=/etc/default/kvdi
 UtmpIdentifier=cons
 TTYVHangup=yes
 KillMode=process

@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y fuse libnss3 \
         https://github.com/lensapp/lens/releases/download/v3.5.1/Lens-3.5.1.AppImage \
     && chmod +x /usr/local/bin/Lens
 
-COPY systemd/default/desktop /etc/default/desktop
 COPY systemd/Lens.service /etc/systemd/user/Lens.service
 
 RUN systemctl --user --global enable Lens.service

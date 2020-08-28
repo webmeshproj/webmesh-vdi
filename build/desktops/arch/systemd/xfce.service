@@ -7,7 +7,7 @@ Requires=display.service
 Type=simple
 Restart=always
 ExecStart=/usr/sbin/startxfce4
-EnvironmentFile=/etc/default/desktop
+EnvironmentFile=/etc/default/kvdi
 
 [Install]
 WantedBy=default.target

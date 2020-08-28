@@ -5,7 +5,7 @@ Description=Xpra Display
 Type=simple
 Restart=always
 ExecStart=/usr/bin/xpra --no-daemon --bind=${VNC_SOCK_ADDR} start ${DISPLAY}
-EnvironmentFile=/etc/default/display
+EnvironmentFile=/etc/default/kvdi
 
 [Install]
 WantedBy=default.target

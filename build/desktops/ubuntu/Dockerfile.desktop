@@ -12,7 +12,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY systemd/default/desktop /etc/default/desktop
 COPY systemd/${DESKTOP_PACKAGE}.service /etc/systemd/user/desktop.service
 
 RUN systemctl --user --global enable desktop.service \
