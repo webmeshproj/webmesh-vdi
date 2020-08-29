@@ -46,6 +46,10 @@
               <q-avatar v-if="props.row.spec.config.allowRoot" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
 
+            <q-td key="fileXfer" :props="props">
+              <q-avatar v-if="props.row.spec.config.allowFileTransfer" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
+            </q-td>
+
             <q-td key="tags" :props="props">
               <div class="tags-wrapper">
                 <li class="inline-tags" v-for="tag in tagsToArray(props.row.spec.tags)" :key="tag" dense>
@@ -105,6 +109,11 @@ const templateColums = [
     name: 'root',
     align: 'center',
     label: 'Root'
+  },
+  {
+    name: 'fileXfer',
+    align: 'center',
+    label: 'File Transfer'
   },
   {
     name: 'tags',

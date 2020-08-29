@@ -103,7 +103,7 @@
               </q-item-section>
 
               <q-item-section>
-                <q-item-label caption>Transfer files from desktop</q-item-label>
+                <q-item-label caption>Transfer files to/from desktop</q-item-label>
               </q-item-section>
 
             </q-item>

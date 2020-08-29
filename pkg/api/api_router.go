@@ -86,6 +86,7 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/desktops/wsaudio/{namespace}/{name}", d.GetWebsockifyAudio)                                // Connect to the audio stream of a desktop over websockets
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
+	protected.HandleFunc("/desktops/fs/{namespace}/{name}/put", d.PutDesktopFile).Methods("PUT")                      // Uploads a file to a desktop
 
 	// Validate the user session on all requests
 	protected.Use(d.ValidateUserSession)

@@ -57,7 +57,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
-	audioBuffer := audio.NewBuffer(log, userID)
+	audioBuffer := audio.NewBuffer(log, strconv.Itoa(userID))
 
 	if err := audioBuffer.Start(audio.CodecOpus); err != nil {
 		log.Error(err, "Error setting up audio buffer")
@@ -185,6 +185,46 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err := io.Copy(w, f); err != nil {
 		log.Error(err, "Failed to copy file contents to response buffer")
 	}
+}
+
+func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
+	uploadDir := filepath.Join(v1.DesktopHomeMntPath, "Uploads")
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	if err := os.Chown(uploadDir, userID, userID); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	defer file.Close()
+	// fileName := r.FormValue("file_name")
+	dstFile := filepath.Join(uploadDir, handler.Filename)
+
+	f, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(f, file); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	if err := os.Chown(dstFile, userID, userID); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	apiutil.WriteOK(w)
 }
 
 func getLocalPathFromRequest(r *http.Request) (path string, err error) {

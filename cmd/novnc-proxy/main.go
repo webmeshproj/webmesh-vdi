@@ -32,7 +32,7 @@ var log = logf.Log.WithName("novnc_proxy")
 
 // vnc configurations
 var vncAddr string
-var userID string
+var userID int
 var vncConnectProto, vncConnectAddr string
 
 // main application entry point
@@ -40,7 +40,7 @@ func main() {
 
 	// parse flags and setup logging
 	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "unix:///var/run/kvdi/display.sock", "The tcp or unix-socket address of the vnc server")
-	pflag.CommandLine.StringVar(&userID, "user-id", "9000", "The user ID directory in /run/usr where sockets are located")
+	pflag.CommandLine.IntVar(&userID, "user-id", 9000, "The ID of the main user in the desktop container")
 	common.ParseFlagsAndSetupLogging()
 	common.PrintVersion(log)
 
@@ -96,6 +96,10 @@ func newServer() (*http.Server, error) {
 	// This route is for downloading a file from the user's home directory when
 	// enabled in the DesktopTemplate.
 	r.PathPrefix("/api/desktops/fs/{namespace}/{name}/get/").HandlerFunc(downloadFileHandler)
+
+	// This route is for uploading a file to the user's home directory when enabled in the
+	// DesktopTemplate.
+	r.Path("/api/desktops/fs/{namespace}/{name}/put").HandlerFunc(uploadFileHandler)
 
 	wrapped := handlers.CustomLoggingHandler(os.Stdout, r, formatLog)
 

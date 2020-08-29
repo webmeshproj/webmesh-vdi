@@ -10,8 +10,9 @@
                 node-key="fullPath"
                 selected-color="primary"
                 :selected.sync="selected"
+                :expanded.sync="expanded"
+                accordion
                 @lazy-load="onLazyLoad"
-                default-expand-all
               />
             </div>
           </template>
@@ -41,7 +42,21 @@
         </q-splitter>
       </q-card-section>
 
-      <q-card-section>
+      <q-card-section style="display: inline-block; width: 50vw;">
+        <q-file dense filled bottom-slots v-model="fileToUpload" label="Upload a file" counter>
+          <template v-slot:prepend>
+            <q-icon name="cloud_upload" @click.stop />
+          </template>
+          <template v-slot:append>
+            <q-icon name="close" @click.stop="fileToUpload = null" class="cursor-pointer" />
+          </template>
+          <template v-slot:hint>
+            Select a file to upload to {{homeDir}}/Uploads
+          </template>
+          <template v-slot:after>
+            <q-btn round dense flat icon="send" :loading="uploading" @click="onUpload" />
+          </template>
+        </q-file>
         <q-btn flat label="Close" v-close-popup @click="onCancelClick" />
       </q-card-section>
     </q-card>
@@ -67,8 +82,11 @@ export default {
       nodeInfo: [],
       splitterModel: 50,
       selected: '',
+      expanded: [],
       downloading: false,
-      previewing: false
+      previewing: false,
+      uploading: false,
+      fileToUpload: null
     }
   },
 
@@ -113,6 +131,36 @@ export default {
       }
       const e = Math.floor(Math.log(bytes) / Math.log(1024))
       return (bytes / Math.pow(1024, e)).toFixed(2) + ' ' + ' KMGTP'.charAt(e) + 'B'
+    },
+
+    async onUpload () {
+      if (!this.fileToUpload) { return }
+      await new Promise((resolve, reject) => setTimeout(resolve, 250))
+      this.uploading = true
+      const formData = new FormData()
+      formData.append('file', this.fileToUpload)
+      try {
+        await this.$axios.put(`${this.urlBase}/put`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+      } catch (err) {
+        this.handleError(err)
+      }
+      this.$q.notify({
+        color: 'green-4',
+        textColor: 'white',
+        icon: 'cloud_done',
+        message: `${this.fileToUpload.name} uploaded to ${this.homeDir}/Uploads/${this.fileToUpload.name}`
+      })
+      // await this.syncRootNode()
+      // if (this.expanded.indexOf(`${this.homeDir}/Uploads`) === -1) {
+      //   this.expanded.push(`${this.homeDir}/Uploads`)
+      // }
+      // this.fileToUpload = null
+      // this.uploading = false
+      this.hide()
     },
 
     async onLazyLoad ({ node, key, done, fail }) {
@@ -230,19 +278,24 @@ export default {
         this.handleError(err)
         return null
       }
+    },
+
+    async syncRootNode () {
+      this.expanded = []
+      const root = await this.statPath('.')
+      if (!root) {
+        this.hide()
+      }
+      const rootNode = await this.evaluateDirNode(root, this.homeDir, true)
+      this.selected = this.homeDir
+      this.expanded = [this.homeDir]
+      this.nodes = [rootNode]
     }
 
   },
 
-  async mounted () {
-    await this.$nextTick()
-    const root = await this.statPath('.')
-    if (!root) {
-      this.hide()
-    }
-    const rootNode = await this.evaluateDirNode(root, this.homeDir, true)
-    this.selected = this.homeDir
-    this.nodes = [rootNode]
+  mounted () {
+    this.$nextTick().then(() => { this.syncRootNode() })
   }
 
 }

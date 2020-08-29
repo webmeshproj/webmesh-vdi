@@ -217,10 +217,14 @@ booted from it.
 <td><p>The type of service listening on the configured socket. Can either be <code>xpra</code> or <code>xvnc</code>. Currently <code>xpra</code> is used to serve “app profiles” and <code>xvnc</code> to serve full desktops. Defaults to <code>xvnc</code>.</p></td>
 </tr>
 <tr class="even">
+<td><code>allowFileTransfer</code> <em>bool</em></td>
+<td><p>AllowFileTransfer will pass the ENABLE_FILE_TRANSFER envvar to the container’s init process. In the Dockerfiles in this repository this will instruct Xvnc to launch an httpd daemon on port 5800 for accessing files in the home directory inside the container.</p></td>
+</tr>
+<tr class="odd">
 <td><code>proxyImage</code> <em>string</em></td>
 <td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
 <td><p>The type of init system inside the image, currently only supervisord and systemd are supported. Defaults to <code>supervisord</code> (but depending on how much I like systemd in this use case, that could change).</p></td>
 </tr>
@@ -865,4 +869,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `04d63cf`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1c491ee`.*

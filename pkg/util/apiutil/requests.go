@@ -37,11 +37,26 @@ func GetRequestObject(r *http.Request) interface{} {
 	return context.Get(r, ContextRequestObjectKey)
 }
 
+// GetNameFromRequest returns the name of the Desktop instance for the given request.
+func GetNameFromRequest(r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars["name"]
+}
+
+// GetNamespaceFromRequest returns the namespace of the Desktop instance for the given
+// request.
+func GetNamespaceFromRequest(r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars["namespace"]
+}
+
 // GetNamespacedNameFromRequest returns the namespaced name of the Desktop instance
 // for the given request.
 func GetNamespacedNameFromRequest(r *http.Request) types.NamespacedName {
-	vars := mux.Vars(r)
-	return types.NamespacedName{Name: vars["name"], Namespace: vars["namespace"]}
+	return types.NamespacedName{
+		Name:      GetNameFromRequest(r),
+		Namespace: GetNamespaceFromRequest(r),
+	}
 }
 
 // GetUserFromRequest will retrieve the user variable from a request path.

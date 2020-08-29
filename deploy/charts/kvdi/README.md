@@ -2,7 +2,7 @@
 
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.21`
+Current chart version is `latest`
 
 ## Installation
 

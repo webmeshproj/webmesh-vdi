@@ -14,6 +14,7 @@ Types
 -   [CreateUserRequest](#CreateUserRequest)
 -   [DesktopSession](#DesktopSession)
 -   [DesktopSessionsResponse](#DesktopSessionsResponse)
+-   [FileStat](#FileStat)
 -   [JWTClaims](#JWTClaims)
 -   [LoginRequest](#LoginRequest)
 -   [MFAResponse](#MFAResponse)
@@ -22,6 +23,7 @@ Types
 -   [RolesGetter](#RolesGetter)
 -   [Rule](#Rule)
 -   [SessionResponse](#SessionResponse)
+-   [StatDesktopFileResponse](#StatDesktopFileResponse)
 -   [TemplatesGetter](#TemplatesGetter)
 -   [UpdateMFARequest](#UpdateMFARequest)
 -   [UpdateRoleRequest](#UpdateRoleRequest)
@@ -222,6 +224,42 @@ information about their statuses.
 </tbody>
 </table>
 
+### FileStat
+
+(*Appears on:*
+[StatDesktopFileResponse](#StatDesktopFileResponse))
+
+FileStat contains information about a queried file. Contents will only
+contain nested FileStat objects when this object represents the root of
+the query.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code> <em>string</em></td>
+<td><p>The name of the file or directory</p></td>
+</tr>
+<tr class="even">
+<td><code>isDirectory</code> <em>bool</em></td>
+<td><p>True if the file is a directory</p></td>
+</tr>
+<tr class="odd">
+<td><code>size</code> <em>int64</em></td>
+<td><p>The size of the file when IsDirectory is false</p></td>
+</tr>
+<tr class="even">
+<td><code>contents</code> <em><a href="#FileStat">[]*github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.FileStat</a></em></td>
+<td><p>When IsDirectory is true, the contents of the directory</p></td>
+</tr>
+</tbody>
+</table>
+
 ### JWTClaims
 
 JWTClaims represents the claims used when issuing JWT tokens.
@@ -408,6 +446,26 @@ SessionResponse represents a response with a new session token
 </tbody>
 </table>
 
+### StatDesktopFileResponse
+
+StatDesktopFileResponse contains the info for a queried file inside a
+desktop dession.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>stat</code> <em><a href="#FileStat">FileStat</a></em></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
 ### TemplatesGetter
 
 TemplatesGetter is an interface that can be used to retrieve available
@@ -553,4 +611,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `04d63cf`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `1c491ee`.*

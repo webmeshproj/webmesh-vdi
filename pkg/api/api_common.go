@@ -1,16 +1,21 @@
 package api
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/google/uuid"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -128,6 +133,66 @@ func (d *desktopAPI) getDesktopWebHost(r *http.Request) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
+}
+
+func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
+	desktopHost, err := d.getDesktopWebHost(r)
+	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	// Overwrite the request object host to point to the desktop container
+	u := r.URL
+	u.Scheme = "https"
+	u.Host = desktopHost
+
+	// Buld a request from the source
+	req, err := http.NewRequest(r.Method, u.String(), bufio.NewReader(r.Body))
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	// Copy the headers over to the new request
+	for hdr, val := range r.Header {
+		req.Header.Add(hdr, strings.Join(val, ";"))
+	}
+
+	// Build an HTTP client
+	clientTLSConfig, err := tlsutil.NewClientTLSConfig()
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: clientTLSConfig,
+		},
+	}
+
+	// Do the request
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	// copy the response from the proxy to the requestor
+	w.WriteHeader(resp.StatusCode)
+	for hdr, val := range resp.Header {
+		w.Header().Add(hdr, strings.Join(val, ";"))
+	}
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		apiLogger.Error(err, "Error copying response body from desktop proxy")
+	}
+
 }
 
 // Session response

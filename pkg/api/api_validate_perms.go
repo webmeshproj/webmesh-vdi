@@ -7,8 +7,6 @@ import (
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-
-	"github.com/gorilla/mux"
 )
 
 // OverrideFunc is a function that takes precedence over any other action evaluations.
@@ -285,8 +283,8 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 		"DELETE": {
@@ -296,8 +294,8 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
@@ -309,8 +307,8 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
@@ -322,8 +320,8 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
@@ -335,8 +333,8 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
@@ -348,8 +346,21 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 					ResourceType: v1.ResourceTemplates,
 				},
 			},
-			ResourceNameFunc:      func(r *http.Request) string { return mux.Vars(r)["name"] },
-			ResourceNamespaceFunc: func(r *http.Request) string { return mux.Vars(r)["namespace"] },
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
+	"/api/desktops/fs/{namespace}/{name}/put": {
+		"PUT": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
+			},
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
