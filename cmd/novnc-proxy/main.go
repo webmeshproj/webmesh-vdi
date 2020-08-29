@@ -77,25 +77,25 @@ func newServer() (*http.Server, error) {
 
 	// The websockify route is in charge of proxying noVNC conncetions to the local
 	// VNC socket. This route is pretty bulletproof.
-	r.Path("/api/desktops/{namespace}/{name}/websockify").Handler(&websocket.Server{
+	r.Path("/api/desktops/websockify/{namespace}/{name}").Handler(&websocket.Server{
 		Handshake: wsHandshake,
 		Handler:   websockifyHandler,
 	})
 
 	// This route creates a recorder on the local pulseaudio sink and ships
 	// the data back to the client over a websocket.
-	r.Path("/api/desktops/{namespace}/{name}/wsaudio").Handler(&websocket.Server{
+	r.Path("/api/desktops/wsaudio/{namespace}/{name}").Handler(&websocket.Server{
 		Handshake: wsHandshake,
 		Handler:   wsAudioHandler,
 	})
 
 	// This route is for doing a stat of files in the user's home directory when
 	// enabled in the DesktopTemplate.
-	r.PathPrefix("/api/desktops/{namespace}/{name}/fs/stat/").HandlerFunc(statFileHandler)
+	r.PathPrefix("/api/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(statFileHandler)
 
 	// This route is for downloading a file from the user's home directory when
 	// enabled in the DesktopTemplate.
-	r.PathPrefix("/api/desktops/{namespace}/{name}/fs/get/").HandlerFunc(downloadFileHandler)
+	r.PathPrefix("/api/desktops/fs/{namespace}/{name}/get/").HandlerFunc(downloadFileHandler)
 
 	wrapped := handlers.CustomLoggingHandler(os.Stdout, r, formatLog)
 

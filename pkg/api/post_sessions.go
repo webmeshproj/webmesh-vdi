@@ -37,7 +37,7 @@ type swaggerCreateSessionResponse struct {
 	Body CreateSessionResponse
 }
 
-// swagger:route POST /api/sessions Desktops postSessionRequest
+// swagger:route POST /api/sessions Sessions postSessionRequest
 // Creates a new desktop session with the given parameters.
 // responses:
 //   200: postSessionResponse

@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// swagger:route GET /api/sessions Desktops getDesktopSessions
+// swagger:route GET /api/sessions Sessions getDesktopSessions
 // Retrieves a list of currently active desktop sessions and their status.
 // responses:
 //   200: desktopSessionsResponse

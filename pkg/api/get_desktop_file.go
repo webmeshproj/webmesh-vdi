@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// swagger:operation GET /api/desktops/{namespace}/{name}/fs/stat/{fpath} Desktops statDesktopFile
+// swagger:operation GET /api/desktops/fs/{namespace}/{name}/stat/{fpath} Desktops statDesktopFile
 // ---
 // summary: Retrieve filesystem info for the given path inside a desktop session.
 // parameters:
@@ -51,7 +51,7 @@ type swaggerStatDesktopFileResponse struct {
 	Body v1.StatDesktopFileResponse
 }
 
-// swagger:operation GET /api/desktops/{namespace}/{name}/fs/get/{fpath} Desktops downloadDesktopFile
+// swagger:operation GET /api/desktops/fs/{namespace}/{name}/get/{fpath} Desktops downloadDesktopFile
 // ---
 // summary: Download the given file from a desktop session.
 // parameters:

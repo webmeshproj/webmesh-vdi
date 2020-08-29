@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// swagger:operation GET /api/sessions/{namespace}/{name} Desktops getSession
+// swagger:operation GET /api/sessions/{namespace}/{name} Sessions getSession
 // ---
 // summary: Retrieve the status of the requested desktop session.
 // description: Details include the podPhase and CRD status.

@@ -204,8 +204,8 @@ test-oidc:
 ## make deploy                 # Deploys kVDI into the local kind cluster.
 .PHONY: deploy
 HELM_ARGS ?=
-deploy: ${HELM} package-chart
-	${HELM_KIND} upgrade --install ${NAME} deploy/charts/${NAME}-${VERSION}.tgz --wait ${HELM_ARGS}
+deploy: ${HELM} chart-yaml
+	${HELM_KIND} upgrade --install ${NAME} deploy/charts/kvdi --wait ${HELM_ARGS}
 
 ## make deploy-with-vault      # Deploys kVDI into the kind cluster with a vault configuration for the product of `test-vault`.
 deploy-with-vault:

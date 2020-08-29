@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// swagger:operation DELETE /api/sessions/{namespace}/{name} Desktops deleteSession
+// swagger:operation DELETE /api/sessions/{namespace}/{name} Sessions deleteSession
 // ---
 // summary: Destroys the provided desktop session.
 // parameters:

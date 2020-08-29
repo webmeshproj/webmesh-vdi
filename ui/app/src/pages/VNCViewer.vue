@@ -26,12 +26,12 @@ import WSAudioPlayer from '../lib/wsaudio.js'
 var view
 
 function getWebsockifyAddr (namespace, name, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/websockify?token=${token}`
+  return `${window.location.origin.replace('http', 'ws')}/api/desktops/websockify/${namespace}/${name}?token=${token}`
 }
 
 function getXpraServerArgs (namespace, name, token) {
   const host = window.location.hostname
-  const path = `/api/desktops/${namespace}/${name}/websockify?token=${token}`
+  const path = `/api/desktops/websockify/${namespace}/${name}?token=${token}`
 
   let port = window.location.port
   let secure = false
@@ -51,7 +51,7 @@ function getXpraServerArgs (namespace, name, token) {
 }
 
 function getWebsockifyAudioAddr (namespace, name, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/desktops/${namespace}/${name}/wsaudio?token=${token}`
+  return `${window.location.origin.replace('http', 'ws')}/api/desktops/wsaudio/${namespace}/${name}?token=${token}`
 }
 
 function iframeRef (frameRef) {

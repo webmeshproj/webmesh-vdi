@@ -96,6 +96,18 @@
 
             </q-item>
 
+            <q-item dense clickable @click="onFileTransfer">
+
+              <q-item-section avatar>
+                <q-icon name="cloud_download" />
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label caption>Transfer files from desktop</q-item-label>
+              </q-item-section>
+
+            </q-item>
+
           </q-list>
 
         </q-expansion-item>
@@ -213,8 +225,9 @@
 </template>
 
 <script>
-import SessionTab from 'components/SessionTab'
-import MFADialog from 'components/dialogs/MFADialog'
+import SessionTab from 'components/SessionTab.vue'
+import MFADialog from 'components/dialogs/MFADialog.vue'
+import FileTransferDialog from 'components/dialogs/FileTransfer.vue'
 
 var menuTimeout = null
 
@@ -322,6 +335,22 @@ export default {
       } catch (err) {
         console.log('This browser does not appear to support retrieving clipboard text')
       }
+    },
+
+    async onFileTransfer () {
+      const activeSession = this.$desktopSessions.getters.activeSession
+      if (activeSession === undefined) {
+        return
+      }
+      await this.$q.dialog({
+        component: FileTransferDialog,
+        parent: this,
+        desktopNamespace: activeSession.namespace,
+        desktopName: activeSession.name
+      }).onOk(() => {
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
 
     onClickDesktopTemplates () {
@@ -442,8 +471,10 @@ export default {
       let error
       if (err.response !== undefined && err.response.data !== undefined) {
         error = err.response.data.error
-      } else {
+      } else if (err.message) {
         error = err.message
+      } else {
+        error = err
       }
       this.$q.notify({
         color: 'red-4',

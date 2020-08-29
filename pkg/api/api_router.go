@@ -81,12 +81,11 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET") // Get the status of a desktop session
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE") // Stop a desktop session
 
-	// Methods passed to the novnc-proxy
-	protected.HandleFunc("/desktops/{namespace}/{name}/websockify", d.GetWebsockify)   // Connect to the VNC socket on a desktop over websockets
-	protected.HandleFunc("/desktops/{namespace}/{name}/wsaudio", d.GetWebsockifyAudio) // Connect to the audio stream of a desktop over websockets
-
-	protected.PathPrefix("/desktops/{namespace}/{name}/fs/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
-	protected.PathPrefix("/desktops/{namespace}/{name}/fs/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
+	// Methods passed to the novnc-proxy websocket
+	protected.HandleFunc("/desktops/websockify/{namespace}/{name}", d.GetWebsockify)                                  // Connect to the VNC socket on a desktop over websockets
+	protected.HandleFunc("/desktops/wsaudio/{namespace}/{name}", d.GetWebsockifyAudio)                                // Connect to the audio stream of a desktop over websockets
+	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
+	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
 
 	// Validate the user session on all requests
 	protected.Use(d.ValidateUserSession)
