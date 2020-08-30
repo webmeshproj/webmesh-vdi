@@ -37,11 +37,10 @@ spec:
                   in this repository.
                 properties:
                   allowFileTransfer:
-                    description: AllowFileTransfer will pass the ENABLE_FILE_TRANSFER
-                      envvar to the container's init process. In the Dockerfiles in
-                      this repository this will instruct Xvnc to launch an httpd daemon
-                      on port 5800 for accessing files in the home directory inside
-                      the container.
+                    description: AllowFileTransfer will mount the user's home directory
+                      inside the novnc-proxy image. This enables the API endpoint
+                      for exploring, downloading, and uploading files to desktop sessions
+                      booted from this template.
                     type: boolean
                   allowRoot:
                     description: AllowRoot will pass the ENABLE_ROOT envvar to the

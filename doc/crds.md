@@ -218,7 +218,7 @@ booted from it.
 </tr>
 <tr class="even">
 <td><code>allowFileTransfer</code> <em>bool</em></td>
-<td><p>AllowFileTransfer will pass the ENABLE_FILE_TRANSFER envvar to the container’s init process. In the Dockerfiles in this repository this will instruct Xvnc to launch an httpd daemon on port 5800 for accessing files in the home directory inside the container.</p></td>
+<td><p>AllowFileTransfer will mount the user’s home directory inside the novnc-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
 </tr>
 <tr class="odd">
 <td><code>proxyImage</code> <em>string</em></td>
@@ -869,4 +869,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `1c491ee`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `22ab87f`.*
