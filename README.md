@@ -28,13 +28,13 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
     - All traffic between the end user and the "desktop" is encrypted.
 
-
   - Support for persistent user-data
+
+  - Support for file transfer to/from "desktop" sessions
 
   - Customizable RBAC system for managing user access
 
     - For example, desktops can be launched in specific namespaces, and users can be limited to specific templates and namespaces.
-
 
   - MFA Support
 
@@ -51,7 +51,6 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
   - Harden images more
   - UI needs serious makeover
-  - More testing and docs
 
 ## Requirements
 
