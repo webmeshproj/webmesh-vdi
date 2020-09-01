@@ -30,9 +30,16 @@
                   <p><strong>Full Path: </strong>{{info.fullPath}}</p>
                   <p v-if="info.expandable && !info.lazy"><strong>Items: </strong>{{info.children.length}}</p>
                   <p v-if="!info.expandable"><strong>Size: </strong>{{fileSize(info.size)}}</p>
-                  <div v-if="!info.expandable">
-                    <q-btn flat :loading="previewing" label="Preview" @click="() => { fetchNodePreview(info) }" />
-                    <q-btn flat :loading="downloading" label="Download" @click="() => { fetchNode(info) }" />
+                  <div>
+                    <q-btn v-if="!info.expandable" flat :loading="previewing" label="Preview" @click="() => { fetchNodePreview(info) }" />
+                    <q-btn flat label="Download" @click="() => { fetchNode(info) }" />
+                  </div>
+                  <div>
+                    <q-linear-progress v-if="downloading || downloaded" :indeterminate="downloadIndeterminate" :value="downloadProgress" rounded color="secondary" size="25px">
+                      <div class="absolute-full flex flex-center">
+                        <q-badge color="white" text-color="secondary" :label="downloadLabel" />
+                      </div>
+                    </q-linear-progress>
                   </div>
                 </div>
               </q-tab-panel>
@@ -65,8 +72,8 @@
 
 <script>
 import FilePreviewDialog from './FilePreview.vue'
-
-var path = require('path')
+import { getErrorMessage } from '../../util/common.js'
+import path from 'path'
 
 export default {
   name: 'FileTransferDialog',
@@ -83,10 +90,13 @@ export default {
       splitterModel: 50,
       selected: '',
       expanded: [],
-      downloading: false,
       previewing: false,
       uploading: false,
-      fileToUpload: null
+      fileToUpload: null,
+      downloading: false,
+      downloaded: false,
+      downloadProgress: 0,
+      downloadIndeterminate: true
     }
   },
 
@@ -95,6 +105,14 @@ export default {
     homeDir () {
       const user = this.$userStore.getters.user
       return `/home/${user.name}`
+    },
+    downloadLabel () {
+      if (this.downloadIndeterminate) {
+        return 'Preparing download'
+      } else if (this.downloadProgress !== 1) {
+        return (this.downloadProgress * 100).toFixed(2) + '%'
+      }
+      return 'Saving to downloads'
     }
   },
 
@@ -160,7 +178,7 @@ export default {
       // }
       // this.fileToUpload = null
       // this.uploading = false
-      this.hide()
+      // this.hide()
     },
 
     async onLazyLoad ({ node, key, done, fail }) {
@@ -188,7 +206,9 @@ export default {
         icon: icon,
         children: [],
         expandable: true,
-        lazy: false
+        lazy: false,
+        // reset progress bar if we switch tabs
+        handler: () => { this.downloaded = false }
       }
       this.nodeInfo.push(node)
 
@@ -201,7 +221,9 @@ export default {
           fullPath: `${node.fullPath}/${child.name}`,
           label: child.name,
           size: child.size,
-          expandable: child.isDirectory
+          expandable: child.isDirectory,
+          // reset progress bar if we switch tabs
+          handler: () => { this.downloaded = false }
         }
         if (child.isDirectory) {
           childNode.icon = 'folder'
@@ -241,32 +263,83 @@ export default {
         }).onDismiss(() => {
         })
       } catch (err) {
-        this.handleError(new Error(`Failed to download ${path.basename(fpath)}`))
+        const errMsg = await getErrorMessage(err)
+        this.handleError(new Error(`Failed to preview ${path.basename(fpath)}: ${errMsg}`))
       }
+    },
+
+    onDownloadProgress (ev) {
+      this.downloadIndeterminate = false
+      const current = ev.loaded
+      let total
+      if (ev.lengthComputable) {
+        total = ev.total
+      } else {
+        const contentLength = ev.target.getResponseHeader('x-decompressed-content-length')
+        total = parseInt(contentLength, 10)
+      }
+      this.downloadProgress = (current / total).toFixed(4)
     },
 
     async fetchNode (node) {
       const fpath = node.fullPath.replace(this.homeDir, '.')
-      if (!node.size) {
+      // Check if its an empty file. The home dir will be considered as 0 also so
+      // make sure it isn't a directory.
+      if (!node.size && !node.expandable) {
         this.handleError(new Error(`${path.basename(fpath)} is an empty file`))
         return
       }
+      this.downloadIndeterminate = true
+      this.downloadProgress = 0
       this.downloading = true
+      this.downloaded = false
       try {
-        const res = await this.$axios.get(`${this.urlBase}/get/${fpath}`, { responseType: 'blob' })
-
+        // Use a longer timeout to give the server time to archive in case it's a directory
+        const res = await this.$axios.get(`${this.urlBase}/get/${fpath}`, {
+          timeout: 300 * 1000,
+          responseType: 'blob',
+          onDownloadProgress: this.onDownloadProgress
+        })
+        // convert the downloaded body to a link object and download it
+        const localname = this.getFilenameForDownload(fpath, res.headers)
         const fileURL = window.URL.createObjectURL(new Blob([res.data]))
         const fileLink = document.createElement('a')
-
         fileLink.href = fileURL
-        fileLink.setAttribute('download', path.basename(fpath))
+        fileLink.setAttribute('download', localname)
         document.body.appendChild(fileLink)
-
         fileLink.click()
       } catch (err) {
-        this.handleError(new Error(`Failed to download ${path.basename(fpath)}`))
+        const errMsg = await getErrorMessage(err)
+        this.handleError(new Error(`Failed to download ${path.basename(fpath)}: ${errMsg}`))
+
+        this.downloaded = false
+        this.downloading = false
+        return
       }
+
+      this.downloadProgress = 1
       this.downloading = false
+      this.downloaded = true
+    },
+
+    getFilenameForDownload (fpath, headers) {
+      const disposition = headers['content-disposition']
+      const suggestedFname = headers['x-suggested-filename']
+      // try the disposition header first
+      if (disposition && disposition !== '') {
+        const fname = disposition.split('filename=')[1].split(';')[0]
+        console.log(`Using ${fname} from disposition header`)
+        return fname
+      }
+      // next try the suggested filename
+      if (suggestedFname && suggestedFname !== '') {
+        console.log(`Using ${suggestedFname} from suggested filename header`)
+        return suggestedFname
+      }
+      // finally use the name of the path in the url
+      const pathname = path.basename(fpath)
+      console.log(`Falling back to ${pathname} from URL path`)
+      return pathname
     },
 
     async statPath (fpath) {

@@ -321,13 +321,18 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			},
 		},
 		VolumeMounts: proxyVolMounts,
+		// TODO: Make these configurable
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
 				corev1.ResourceCPU:    resource.MustParse("50m"),
 				corev1.ResourceMemory: resource.MustParse("64Mi"),
 			},
+			// We need to be able to burst pretty high if the user wants to
+			// download a large directory. An admin should be the one to determine
+			// how many resources a user can use at any given time. This would also have
+			// the benefit of limiting network traffic.
 			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("200m"),
+				corev1.ResourceCPU:    resource.MustParse("500m"),
 				corev1.ResourceMemory: resource.MustParse("256Mi"),
 			},
 		},

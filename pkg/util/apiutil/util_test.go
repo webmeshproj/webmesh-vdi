@@ -23,7 +23,7 @@ func readResponseBody(res *http.Response) ([]byte, error) {
 func TestWriteOrLogError(t *testing.T) {
 	content := []byte("fake response")
 	w := httptest.NewRecorder()
-	WriteOrLogError(content, w)
+	WriteOrLogError(content, w, http.StatusOK)
 	res := w.Result()
 	if res.Header.Get("Content-Type") != "application/json" {
 		t.Error("Expected Content-Type application/json")

@@ -185,10 +185,10 @@ func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	// copy the response from the proxy to the requestor
-	w.WriteHeader(resp.StatusCode)
 	for hdr, val := range resp.Header {
-		w.Header().Add(hdr, strings.Join(val, ";"))
+		w.Header().Set(hdr, strings.Join(val, ";"))
 	}
+	w.WriteHeader(resp.StatusCode)
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		apiLogger.Error(err, "Error copying response body from desktop proxy")
 	}

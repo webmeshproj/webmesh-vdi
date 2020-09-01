@@ -228,6 +228,7 @@
 import SessionTab from 'components/SessionTab.vue'
 import MFADialog from 'components/dialogs/MFADialog.vue'
 import FileTransferDialog from 'components/dialogs/FileTransfer.vue'
+import { getErrorMessage } from '../util/common.js'
 
 var menuTimeout = null
 
@@ -467,20 +468,13 @@ export default {
       this.controlSessions = this.$desktopSessions.getters.sessions
     },
 
-    notifyError (err) {
-      let error
-      if (err.response !== undefined && err.response.data !== undefined) {
-        error = err.response.data.error
-      } else if (err.message) {
-        error = err.message
-      } else {
-        error = err
-      }
+    async notifyError (err) {
+      const errMsg = await getErrorMessage(err)
       this.$q.notify({
         color: 'red-4',
         textColor: 'black',
         icon: 'error',
-        message: error
+        message: errMsg
       })
     },
 

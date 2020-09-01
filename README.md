@@ -28,9 +28,11 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
     - All traffic between the end user and the "desktop" is encrypted.
 
-  - Support for persistent user-data
+  - Persistent user data
 
-  - Support for file transfer to/from "desktop" sessions
+  - Audio playback
+
+  - File transfer to/from "desktop" sessions. Directories get archived into a gzipped tarball prior to download.
 
   - Customizable RBAC system for managing user access
 
@@ -49,6 +51,7 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 ### TODO
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
+  - Microphone support - shouldn't be too hard actually
   - Harden images more
   - UI needs serious makeover
 

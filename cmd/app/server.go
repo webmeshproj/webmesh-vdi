@@ -71,9 +71,10 @@ func newServer(cfg *rest.Config, vdiCluster string, enableCORS bool) (*http.Serv
 	}
 
 	return &http.Server{
-		Handler:      wrappedRouter,
-		Addr:         fmt.Sprintf(":%d", v1.WebPort),
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		Handler: wrappedRouter,
+		Addr:    fmt.Sprintf(":%d", v1.WebPort),
+		// TODO: make these configurable (currently high for large dir transfers)
+		WriteTimeout: 300 * time.Second,
+		ReadTimeout:  300 * time.Second,
 	}, nil
 }

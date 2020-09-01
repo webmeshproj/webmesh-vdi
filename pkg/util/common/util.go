@@ -1,10 +1,15 @@
 package common
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -162,4 +167,82 @@ func Retry(attempts int, sleep time.Duration, f func() error) error {
 	}
 
 	return nil
+}
+
+// TarDirectoryToTempFile will create a gzipped tarball of the given directory,
+// write it to a tempfile, and return the path to the file.
+func TarDirectoryToTempFile(srcPath string) (string, error) {
+	targetDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return "", err
+	}
+	baseDir := filepath.Base(srcPath)
+	outFile := filepath.Join(targetDir, fmt.Sprintf("%s.tar.gz", baseDir))
+
+	var fwriter *os.File
+	fwriter, err = os.Create(outFile)
+	if err != nil {
+		return "", err
+	}
+	defer fwriter.Close()
+
+	gzw := gzip.NewWriter(fwriter)
+	defer gzw.Close()
+
+	tarball := tar.NewWriter(gzw)
+	defer tarball.Close()
+
+	fmt.Println("Archiving", srcPath, "to", outFile)
+
+	err = filepath.Walk(srcPath,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			header, err := tar.FileInfoHeader(info, info.Name())
+			if err != nil {
+				return err
+			}
+			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, srcPath))
+
+			if err := tarball.WriteHeader(header); err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				fmt.Println("Skipping dir:", path)
+				return nil
+			}
+
+			// skip symlinks for now
+			if !info.Mode().IsRegular() {
+				fmt.Println("Skipping symlink or irregular file:", path)
+				return nil
+			}
+
+			fmt.Println("Opening file:", path)
+			file, err := os.Open(path)
+
+			// in case a file gets deleted while we are in the middle of
+			// traversing
+			if err != nil && !os.IsNotExist(err) {
+				fmt.Println("File open error", err, "path:", path)
+				return err
+			}
+
+			defer file.Close()
+			fmt.Println("Copying file:", path)
+			_, err = io.Copy(tarball, file)
+			return err
+		})
+
+	if err != nil {
+		if cleanErr := os.RemoveAll(targetDir); cleanErr != nil {
+			fmt.Println("Failed to clean up failed tar directory:", cleanErr)
+		}
+		return "", err
+	}
+
+	fmt.Println("Finished archive:", outFile)
+	return outFile, nil
 }

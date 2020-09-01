@@ -109,11 +109,12 @@ func newServer() (*http.Server, error) {
 	}
 
 	return &http.Server{
-		Handler:      wrapped,
-		Addr:         fmt.Sprintf(":%d", v1.WebPort),
-		TLSConfig:    tlsConfig,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		Handler:   wrapped,
+		Addr:      fmt.Sprintf(":%d", v1.WebPort),
+		TLSConfig: tlsConfig,
+		// TODO: make these configurable (currently high for large dir transfers)
+		WriteTimeout: 300 * time.Second,
+		ReadTimeout:  300 * time.Second,
 	}, nil
 }
 

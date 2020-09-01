@@ -13,8 +13,9 @@ import (
 
 // WriteOrLogError will write the provided content to the response writer, or
 // log any error. It assumes the content is valid JSON.
-func WriteOrLogError(out []byte, w http.ResponseWriter) {
+func WriteOrLogError(out []byte, w http.ResponseWriter, statusCode int) {
 	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
 	if _, err := w.Write(append(out, []byte("\n")...)); err != nil {
 		fmt.Println("Failed to write API response:", string(out), "error", err)
 	}
@@ -23,7 +24,6 @@ func WriteOrLogError(out []byte, w http.ResponseWriter) {
 // ReturnAPIErrors returns a BadRequest status code with a json encoded list
 // of errors.
 func ReturnAPIErrors(errs []error, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusBadRequest)
 	out := make([]string, 0)
 	for _, err := range errs {
 		out = append(out, err.Error())
@@ -35,21 +35,19 @@ func ReturnAPIErrors(errs []error, w http.ResponseWriter) {
 		fmt.Println("Failed to marshal errors to json:", err)
 		jout = []byte(`{"error": "Multiple errors happened while processing the request"}`)
 	}
-	WriteOrLogError(jout, w)
+	WriteOrLogError(jout, w, http.StatusBadRequest)
 }
 
 // ReturnAPIError returns a BadRequest status code with a json encoded error
 // message.
 func ReturnAPIError(err error, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusBadRequest)
-	WriteOrLogError(errors.ToAPIError(err).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(err).JSON(), w, http.StatusBadRequest)
 }
 
 // ReturnAPINotFound returns a NotFound status code with a json encoded error
 // message.
 func ReturnAPINotFound(err error, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	WriteOrLogError(errors.ToAPIError(err).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(err).JSON(), w, http.StatusNotFound)
 }
 
 // ReturnAPIForbidden returns a Forbidden status code with a json encoded error
@@ -58,8 +56,7 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
-	w.WriteHeader(http.StatusForbidden)
-	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w, http.StatusForbidden)
 }
 
 // WriteJSON encodes the provided interface to JSON and writes it to the response
@@ -70,7 +67,7 @@ func WriteJSON(i interface{}, w http.ResponseWriter) {
 		ReturnAPIError(err, w)
 		return
 	}
-	WriteOrLogError(out, w)
+	WriteOrLogError(out, w, http.StatusOK)
 }
 
 // UnmarshalRequest will read the body of the given request and decode it into

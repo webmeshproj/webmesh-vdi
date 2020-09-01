@@ -16,6 +16,7 @@ import (
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/audio"
+	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"golang.org/x/net/websocket"
 )
 
@@ -132,25 +133,14 @@ func statFileHandler(w http.ResponseWriter, r *http.Request) {
 	apiutil.WriteJSON(resp, w)
 }
 
-func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
-	path, err := getLocalPathFromRequest(r)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
+func serveFile(w http.ResponseWriter, path string) {
 	// Stat the file
 	finfo, err := os.Stat(path)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	if finfo.IsDir() {
-		apiutil.ReturnAPIError(errors.New("Directory download is not yet supported"), w)
-		return
-	}
 
-	// Open the file
 	f, err := os.Open(path)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
@@ -166,15 +156,18 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get content type of file
-	ctType := http.DetectContentType(hdr)
+	contentType := http.DetectContentType(hdr)
 
 	// Get the file size
-	fSize := strconv.FormatInt(finfo.Size(), 10) // Get file size as a string
+	fileSizeStr := strconv.FormatInt(finfo.Size(), 10) // Get file size as a string
 
+	w.Header().Set("Content-Length", fileSizeStr)
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", "attachment; filename="+finfo.Name())
-	w.Header().Set("Content-Type", ctType)
-	w.Header().Set("Content-Length", fSize)
+	w.Header().Set("X-Suggested-Filename", finfo.Name())
+	w.Header().Set("X-Decompressed-Content-Length", fileSizeStr)
 
+	w.WriteHeader(http.StatusOK)
 	// Seek back to the start of the file (since we read the header already)
 	if _, err := f.Seek(0, 0); err != nil {
 		apiutil.ReturnAPIError(errors.New("Failed to seek to beginning of file"), w)
@@ -185,6 +178,39 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err := io.Copy(w, f); err != nil {
 		log.Error(err, "Failed to copy file contents to response buffer")
 	}
+}
+
+func downloadDir(w http.ResponseWriter, path string) {
+	tarball, err := common.TarDirectoryToTempFile(path)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	serveFile(w, tarball)
+}
+
+func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	path, err := getLocalPathFromRequest(r)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	// Stat the file
+	finfo, err := os.Stat(path)
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	if finfo.IsDir() {
+		downloadDir(w, path)
+		return
+	}
+
+	serveFile(w, path)
 }
 
 func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +230,6 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	// fileName := r.FormValue("file_name")
 	dstFile := filepath.Join(uploadDir, handler.Filename)
 
 	f, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0666)
