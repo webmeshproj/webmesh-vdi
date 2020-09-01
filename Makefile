@@ -1,6 +1,6 @@
 REPO ?= quay.io/tinyzimmer
 NAME ?= kvdi
-VERSION ?= v0.0.22
+VERSION ?= v0.0.23
 
 # includes
 -include hack/Makevars.mk
