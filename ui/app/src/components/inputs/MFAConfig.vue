@@ -7,12 +7,13 @@
       </div>
       <q-item-label caption>If enabled, you will require an additional OTP at login.</q-item-label>
     </q-card-section>
-    <div v-if="enabled && !newUser && !verified && provisioningURI !== ''" class="container">
+    <div v-if="enabled && !verified && provisioningURI !== ''" class="container">
       <q-card-section>
         <qrcode-vue :value="provisioningURI" :size="200" level="H" />
       </q-card-section>
       <br />
       <q-item-label caption>Scan this QR code to setup MFA</q-item-label>
+      <q-item-label caption>If you cannot scan the code above, use the following URI: {{ provisioningURI  }}</q-item-label>
 
       <q-separator />
 
@@ -33,9 +34,6 @@ export default {
   props: {
     username: {
       type: String
-    },
-    newUser: {
-      type: Boolean
     }
   },
   data () {
@@ -63,7 +61,6 @@ export default {
       }
     },
     enableMFA (val) {
-      if (this.newUser) { return }
       this.$axios.put(`/api/users/${this.username}/mfa`, { enabled: val })
         .then((res) => {
           this.setMFAData(res.data)
@@ -93,7 +90,6 @@ export default {
   },
   mounted () {
     this.$nextTick().then(() => {
-      if (this.newUser) { return }
       this.$axios.get(`/api/users/${this.username}/mfa`)
         .then((res) => {
           this.setMFAData(res.data)

@@ -36,8 +36,8 @@
       </q-select>
     </q-card-section>
 
-    <q-card-section class="q-pt-none">
-      <MFAConfig ref="mfaconfig" :username="userToEdit" :newUser="!isUpdating" />
+    <q-card-section class="q-pt-none" v-if="editorFunction != 'create'">
+      <MFAConfig ref="mfaconfig" :username="userToEdit" />
     </q-card-section>
 
     <q-card-actions align="right" class="text-primary">
