@@ -1,6 +1,6 @@
 REPO ?= docker.pkg.github.com/tinyzimmer
 NAME ?= kvdi
-VERSION ?= v0.0.23
+VERSION ?= v0.0.25
 
 # includes
 -include hack/Makevars.mk
