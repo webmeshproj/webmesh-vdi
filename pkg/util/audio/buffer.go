@@ -1,5 +1,5 @@
 // Package audio contains utilities for streaming audio from a desktop to
-// a websocket client. It is used by the novnc-proxy to provide an audio stream
+// a websocket client. It is used by the kvdi-proxy to provide an audio stream
 // to the web UI.
 package audio
 

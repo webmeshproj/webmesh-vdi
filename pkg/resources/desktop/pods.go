@@ -56,7 +56,7 @@ func newServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *
 			Selector: cluster.GetDesktopLabels(instance),
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "novnc-proxy",
+					Name:       "kvdi-proxy",
 					Port:       v1.WebPort,
 					TargetPort: intstr.FromInt(v1.WebPort),
 				},

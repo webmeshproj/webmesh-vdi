@@ -38,8 +38,8 @@ spec:
                 properties:
                   allowFileTransfer:
                     description: AllowFileTransfer will mount the user's home directory
-                      inside the novnc-proxy image. This enables the API endpoint
-                      for exploring, downloading, and uploading files to desktop sessions
+                      inside the kvdi-proxy image. This enables the API endpoint for
+                      exploring, downloading, and uploading files to desktop sessions
                       booted from this template.
                     type: boolean
                   allowRoot:
@@ -66,8 +66,8 @@ spec:
                   proxyImage:
                     description: The image to use for the sidecar that proxies mTLS
                       connections to the local VNC server inside the Desktop. Defaults
-                      to the public novnc-proxy image matching the version of the
-                      currrently running manager.
+                      to the public kvdi-proxy image matching the version of the currrently
+                      running manager.
                     type: string
                   serviceAccount:
                     description: 'A service account to tie to desktops booted from
@@ -77,7 +77,7 @@ spec:
                   socketAddr:
                     description: The address the VNC server listens on inside the
                       image. This defaults to the UNIX socket /var/run/kvdi/display.sock.
-                      The novnc-proxy sidecar will forward websockify requests validated
+                      The kvdi-proxy sidecar will forward websockify requests validated
                       by mTLS to this socket. Must be in the format of `tcp://{host}:{port}`
                       or `unix://{path}`.
                     type: string

@@ -115,7 +115,7 @@ _If you choose to pull the images from the registry instead of building and load
 The `Makefile` is usually pointed at the next version to be released and published images may not exist yet_.
 
 ```bash
-# Builds all the docker images (optional, they are also available in the quay repo)
+# Builds all the docker images (optional, they are also available in the github registry)
 $> make build-all
 # Spin up a kind cluster for local testing
 $> make test-cluster

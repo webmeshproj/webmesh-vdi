@@ -71,7 +71,7 @@ type DesktopConfig struct {
 	// sudo with no password.
 	AllowRoot bool `json:"allowRoot,omitempty"`
 	// The address the VNC server listens on inside the image. This defaults to the
-	// UNIX socket /var/run/kvdi/display.sock. The novnc-proxy sidecar will forward
+	// UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward
 	// websockify requests validated by mTLS to this socket.
 	// Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
 	SocketAddr string `json:"socketAddr,omitempty"`
@@ -79,12 +79,12 @@ type DesktopConfig struct {
 	// `xvnc`. Currently `xpra` is used to serve "app profiles" and `xvnc` to serve full
 	// desktops. Defaults to `xvnc`.
 	SocketType SocketType `json:"socketType,omitempty"`
-	// AllowFileTransfer will mount the user's home directory inside the novnc-proxy image.
+	// AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image.
 	// This enables the API endpoint for exploring, downloading, and uploading files to
 	// desktop sessions booted from this template.
 	AllowFileTransfer bool `json:"allowFileTransfer,omitempty"`
 	// The image to use for the sidecar that proxies mTLS connections to the local
-	// VNC server inside the Desktop. Defaults to the public novnc-proxy image
+	// VNC server inside the Desktop. Defaults to the public kvdi-proxy image
 	// matching the version of the currrently running manager.
 	ProxyImage string `json:"proxyImage,omitempty"`
 	// The type of init system inside the image, currently only supervisord and systemd

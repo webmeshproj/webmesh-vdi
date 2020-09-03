@@ -38,21 +38,18 @@ func (t *DesktopTemplate) FileTransferEnabled() bool {
 	return false
 }
 
-// GetNoVNCProxyImage returns the novnc-proxy image for the desktop instance.
-func (t *DesktopTemplate) GetNoVNCProxyImage() string {
+// GetKVDIVNCProxyImage returns the kvdi-proxy image for the desktop instance.
+func (t *DesktopTemplate) GetKVDIVNCProxyImage() string {
 	if t.Spec.Config != nil && t.Spec.Config.ProxyImage != "" {
 		return t.Spec.Config.ProxyImage
 	}
-	return fmt.Sprintf("quay.io/tinyzimmer/kvdi:novnc-proxy-%s", version.Version)
+	return fmt.Sprintf("docker.pkg.github.com/tinyzimmer/kvdi/kvdi-proxy:%s", version.Version)
 }
 
 // GetDesktopImage returns the docker image to use for instances booted from
 // this template.
 func (t *DesktopTemplate) GetDesktopImage() string {
-	if t.Spec.Image != "" {
-		return t.Spec.Image
-	}
-	return fmt.Sprintf("quay.io/tinyzimmer/kvdi:desktop-%s", version.Version)
+	return t.Spec.Image
 }
 
 // GetDesktopPullPolicy returns the image pull policy for this template.
@@ -282,7 +279,7 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 	return mounts
 }
 
-// GetDesktopProxyContainer returns the configuration for the novnc-proxy sidecar.
+// GetDesktopProxyContainer returns the configuration for the kvdi-proxy sidecar.
 func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 	proxyVolMounts := []corev1.VolumeMount{
 		{
@@ -310,8 +307,8 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		})
 	}
 	return corev1.Container{
-		Name:            "novnc-proxy",
-		Image:           t.GetNoVNCProxyImage(),
+		Name:            "kvdi-proxy",
+		Image:           t.GetKVDIVNCProxyImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
 		Args:            []string{"--vnc-addr", t.GetDisplaySocketAddr()},
 		Ports: []corev1.ContainerPort{

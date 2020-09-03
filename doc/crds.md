@@ -210,7 +210,7 @@ booted from it.
 </tr>
 <tr class="even">
 <td><code>socketAddr</code> <em>string</em></td>
-<td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The novnc-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
+<td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
 </tr>
 <tr class="odd">
 <td><code>socketType</code> <em><a href="#SocketType">SocketType</a></em></td>
@@ -218,11 +218,11 @@ booted from it.
 </tr>
 <tr class="even">
 <td><code>allowFileTransfer</code> <em>bool</em></td>
-<td><p>AllowFileTransfer will mount the user’s home directory inside the novnc-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
+<td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
 </tr>
 <tr class="odd">
 <td><code>proxyImage</code> <em>string</em></td>
-<td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public novnc-proxy image matching the version of the currrently running manager.</p></td>
+<td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
 <tr class="even">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
@@ -869,4 +869,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `22ab87f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `b113ca5`.*

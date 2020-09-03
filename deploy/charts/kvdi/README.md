@@ -2,7 +2,7 @@
 
 A Kubernetes-Native Virtual Desktop Infrastructure
 
-Current chart version is `v0.0.22`
+Current chart version is `v0.0.23`
 
 ## Installation
 
@@ -59,9 +59,10 @@ helm install kvdi tinyzimmer/kvdi \
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | A full name override for resources created by the chart. |
 | manager.affinity | object | `{}` | Node affinity for the manager pod. |
+| manager.image.name | string | `"manager"` | The name of the docker image to use for the manager. |
 | manager.image.pullPolicy | string | `"IfNotPresent"` | The `ImagePullPolicy` to use for the manager pod. |
-| manager.image.repository | string | `"quay.io/tinyzimmer/kvdi"` | The repository to pull the manager image from. The tag is assumed to be `manager-<chart_version>`, unless overwritten with `imageOverride`. |
-| manager.image.tagOverride | string | `""` | Override the tag for the kVDI manager. Defaults to the chart version in the public repo. |
+| manager.image.repository | string | `"docker.pkg.github.com/tinyzimmer/kvdi"` | The repository to pull the manager image from.. |
+| manager.image.tag | string | `""` | Override the tag for the kVDI manager. Defaults to the chart version. |
 | manager.imagePullSecrets | list | `[]` | Image pull secrets for the manager pod. |
 | manager.nodeSelector | object | `{}` | Node selectors for the manager pod. |
 | manager.podSecurityContext | object | `{}` | The `PodSecurityContext` for the manager pod. |
@@ -78,7 +79,7 @@ helm install kvdi tinyzimmer/kvdi \
 | vdi.spec.app | object | The values described below are the same as the `VDICluster` CRD defaults. | App level configurations for `kVDI`. |
 | vdi.spec.app.auditLog | bool | `false` | Enables a detailed audit log of API events. At the moment, these just get logged to stdout on the app instance. |
 | vdi.spec.app.corsEnabled | bool | `false` | Enables CORS headers in API responses. |
-| vdi.spec.app.image | string | `quay.io/tinyzimmer/kvdi:app-${VERSION}` | The image to use for app pods. |
+| vdi.spec.app.image | string | `docker.pkg.github.com/tinyzimmer/kvdi/app:${VERSION}` | The image to use for app pods. |
 | vdi.spec.app.replicas | int | `1` | The number of app replicas to run. |
 | vdi.spec.app.resources | object | `{}` | Resource limits for the app pods. |
 | vdi.spec.app.serviceAnnotations | object | `{}` | Extra annotations to place on the kvdi app service. |

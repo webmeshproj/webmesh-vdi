@@ -20,11 +20,12 @@ manager:
   # If more than one is set, they will run in active/standby mode.
   replicaCount: 1
   image:
-    # manager.image.repository -- The repository to pull the manager image from.
-    # The tag is assumed to be `manager-<chart_version>`, unless overwritten with `imageOverride`.
-    repository: quay.io/tinyzimmer/kvdi
-    # manager.image.tagOverride -- Override the tag for the kVDI manager. Defaults to the chart version in the public repo.
-    tagOverride: ""
+    # manager.image.repository -- The repository to pull the manager image from..
+    repository: docker.pkg.github.com/tinyzimmer/kvdi
+    # manager.image.name -- The name of the docker image to use for the manager.
+    name: manager
+    # manager.image.tag -- Override the tag for the kVDI manager. Defaults to the chart version.
+    tag: ""
     # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.
     pullPolicy: IfNotPresent
   # manager.imagePullSecrets -- Image pull secrets for the manager pod.
@@ -62,7 +63,7 @@ vdi:
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     app:
       # vdi.spec.app.image -- The image to use for app pods.
-      # @default -- `quay.io/tinyzimmer/kvdi:app-${VERSION}`
+      # @default -- `docker.pkg.github.com/tinyzimmer/kvdi/app:${VERSION}`
       image: ""
       # vdi.spec.app.corsEnabled -- Enables CORS headers in API responses.
       corsEnabled: false

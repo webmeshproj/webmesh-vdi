@@ -81,7 +81,7 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET") // Get the status of a desktop session
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE") // Stop a desktop session
 
-	// Methods passed to the novnc-proxy websocket
+	// Methods passed to the kvdi-proxy websocket
 	protected.HandleFunc("/desktops/websockify/{namespace}/{name}", d.GetWebsockify)                                  // Connect to the VNC socket on a desktop over websockets
 	protected.HandleFunc("/desktops/wsaudio/{namespace}/{name}", d.GetWebsockifyAudio)                                // Connect to the audio stream of a desktop over websockets
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop

@@ -17,9 +17,6 @@ jobs:
 
     - uses: actions/checkout@v1
 
-#    - name: Login to Quay
-#      run: echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
-
     - name: Login to container reigstry
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u tinyzimmer --password-stdin
 
@@ -35,8 +32,8 @@ jobs:
     - name: Build the app docker image
       run: VERSION=${{ steps.version.outputs.tag }} make build-app
 
-    - name: Build the novnc-proxy docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-novnc-proxy
+    - name: Build the kvdi-proxy docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-kvdi-proxy
 
     - name: Push the manager docker image
       run: VERSION=${{ steps.version.outputs.tag }} make push-manager
@@ -46,8 +43,8 @@ jobs:
       run: VERSION=${{ steps.version.outputs.tag }} make push-app
       if: ${{ github.event_name != 'pull_request' }}
 
-    - name: Push the novnc-proxy docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make push-novnc-proxy
+    - name: Push the kvdi-proxy docker image
+      run: VERSION=${{ steps.version.outputs.tag }} make push-kvdi-proxy
       if: ${{ github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh main
