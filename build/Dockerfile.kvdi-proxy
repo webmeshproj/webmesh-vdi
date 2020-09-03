@@ -26,13 +26,13 @@ ENV GIT_COMMIT=${GIT_COMMIT}
 # Copy go code
 COPY version/         /build/version
 COPY pkg/             /build/pkg
-COPY cmd/novnc-proxy  /build/cmd/novnc-proxy
+COPY cmd/kvdi-proxy  /build/cmd/kvdi-proxy
 
 # Build the binary
 RUN go build \
-  -o /tmp/novnc-proxy \
+  -o /tmp/kvdi-proxy \
   -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
-  ./cmd/novnc-proxy && upx /tmp/novnc-proxy
+  ./cmd/kvdi-proxy && upx /tmp/kvdi-proxy
 
 ###############
 # Final Image #
@@ -43,7 +43,7 @@ RUN apk add --update --no-cache \
         gstreamer gstreamer-tools gst-plugins-good pulseaudio-utils vorbis-tools lame sudo \
       && adduser -D -u 9000 audioproxy
 
-COPY --from=builder /tmp/novnc-proxy /novnc-proxy
+COPY --from=builder /tmp/kvdi-proxy /kvdi-proxy
 
 EXPOSE 8443
-ENTRYPOINT ["/novnc-proxy"]
+ENTRYPOINT ["/kvdi-proxy"]
