@@ -22,12 +22,12 @@ SDK_PLATFORM := apple-darwin
 endif
 
 # Image Options
-MANAGER_IMAGE ?= ${REPO}/${NAME}:manager-${VERSION}
-APP_IMAGE ?= ${REPO}/${NAME}:app-${VERSION}
-NOVNC_PROXY_IMAGE ?= ${REPO}/${NAME}:novnc-proxy-${VERSION}
-UBUNTU_BASE_IMAGE ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
-ARCH_BASE_IMAGE ?= ${REPO}/${NAME}:arch-base-${VERSION}
-APP_PROFILE_BASE_IMAGE ?= ${REPO}/${NAME}:app-base-${VERSION}
+MANAGER_IMAGE ?= ${REPO}/${NAME}/manager:${VERSION}
+APP_IMAGE ?= ${REPO}/${NAME}/app:${VERSION}
+KVDI_PROXY_IMAGE ?= ${REPO}/${NAME}/kvdi-proxy:${VERSION}
+UBUNTU_BASE_IMAGE ?= ${REPO}/${NAME}/ubuntu-base:${VERSION}
+ARCH_BASE_IMAGE ?= ${REPO}/${NAME}/arch-base:${VERSION}
+APP_PROFILE_BASE_IMAGE ?= ${REPO}/${NAME}/app-base:${VERSION}
 
 # Operator SDK
 OPERATOR_SDK ?= _bin/operator-sdk
@@ -35,7 +35,7 @@ OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/
 
 # Kind Options
 KIND_VERSION ?= v0.7.0
-KUBERNETES_VERSION ?= v1.18.4
+KUBERNETES_VERSION ?= v1.19.0
 METALLB_VERSION ?= v0.9.3
 HELM_VERSION ?= v3.1.2
 

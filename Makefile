@@ -20,7 +20,7 @@ SHELL := /bin/bash
 build: build-all
 
 ## make build-all          # Build the manager, app, and nonvnc-proxy images.
-build-all: build-manager build-app build-novnc-proxy
+build-all: build-manager build-app build-kvdi-proxy
 
 ## make build-manager      # Build the manager docker image.
 build-manager:
@@ -30,19 +30,19 @@ build-manager:
 build-app:
 	$(call build_docker,app,${APP_IMAGE})
 
-## make build-novnc-proxy  # Build the novnc-proxy image.
-build-novnc-proxy:
-	$(call build_docker,novnc-proxy,${NOVNC_PROXY_IMAGE})
+## make build-kvdi-proxy  # Build the kvdi-proxy image.
+build-kvdi-proxy:
+	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
 ##
 ## # Pushing images
 ##
 
 ## make push               # Alias to make push-all.
-push: build-manager push-manager push-novnc-proxy
+push: build-manager push-manager push-kvdi-proxy
 
-## make push-all           # Push the manager, app, and novnc-proxy images.
-push-all: push-manager push-app push-novnc-proxy
+## make push-all           # Push the manager, app, and kvdi-proxy images.
+push-all: push-manager push-app push-kvdi-proxy
 
 ## make push-manager       # Push the manager docker image.
 push-manager: build-manager
@@ -52,9 +52,9 @@ push-manager: build-manager
 push-app: build-app
 	docker push ${APP_IMAGE}
 
-## make push-nonvnc-proxy  # Push the novnc-proxy docker image.
-push-novnc-proxy: build-novnc-proxy
-	docker push ${NOVNC_PROXY_IMAGE}
+## make push-kvdi-proxy  # Push the kvdi-proxy docker image.
+push-kvdi-proxy: build-kvdi-proxy
+	docker push ${KVDI_PROXY_IMAGE}
 
 ##
 ## # Helm Chart Functions
@@ -140,7 +140,7 @@ test-cluster: ${KIND}
 
 ##
 ## make load-all               # Load all the docker images into the local kind cluster.
-load-all: load-manager load-app load-novnc-proxy
+load-all: load-manager load-app load-kvdi-proxy
 
 ## make load-manager
 load-manager: ${KIND} build-manager
@@ -150,9 +150,9 @@ load-manager: ${KIND} build-manager
 load-app: ${KIND} build-app
 	$(call load_image,${APP_IMAGE})
 
-## make load-novnc-proxy
-load-novnc-proxy: ${KIND} build-novnc-proxy
-	$(call load_image,${NOVNC_PROXY_IMAGE})
+## make load-kvdi-proxy
+load-kvdi-proxy: ${KIND} build-kvdi-proxy
+	$(call load_image,${KVDI_PROXY_IMAGE})
 
 KUBECTL_KIND = ${KUBECTL} --kubeconfig ${KIND_KUBECONFIG}
 HELM_KIND = ${HELM} --kubeconfig ${KIND_KUBECONFIG}
