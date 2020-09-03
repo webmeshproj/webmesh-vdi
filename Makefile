@@ -1,4 +1,4 @@
-REPO ?= quay.io/tinyzimmer
+REPO ?= docker.pkg.github.com/tinyzimmer
 NAME ?= kvdi
 VERSION ?= v0.0.23
 

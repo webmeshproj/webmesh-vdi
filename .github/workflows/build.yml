@@ -17,8 +17,11 @@ jobs:
 
     - uses: actions/checkout@v1
 
-    - name: Login to Quay
-      run: echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+#    - name: Login to Quay
+#      run: echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+
+    - name: Login to container reigstry
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u tinyzimmer --password-stdin
 
     - name: Get image version
       shell: bash
