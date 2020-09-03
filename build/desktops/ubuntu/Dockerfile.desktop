@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=docker.pkg.github.com/tinyzimmer/kvdi/ubuntu-base:latest
+ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:ubuntu-base-latest
 FROM ${BASE_IMAGE}
 
 # Window manager install

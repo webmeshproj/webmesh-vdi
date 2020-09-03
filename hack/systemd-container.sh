@@ -10,4 +10,4 @@ docker run -it --rm \
   --cap-add CAP_SYS_ADMIN \
   --name desktop \
   --entrypoint ${ENTRYPOINT:-/usr/local/sbin/init} \
-  docker.pkg.github.com/tinyzimmer/kvdi/${IMAGE}
+  ghcr.io/tinyzimmer/kvdi:${IMAGE}

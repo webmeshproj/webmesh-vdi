@@ -20,19 +20,19 @@ build-ubuntu-%:
 		-f Dockerfile.desktop \
 		--build-arg BASE_IMAGE=${UBUNTU_BASE_IMAGE} \
 		--build-arg DESKTOP_PACKAGE=$* \
-		-t ${REPO}/${NAME}/ubuntu-$*:${VERSION}
+		-t ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
 build-arch-%:
 	cd build/desktops/arch && docker build . \
 		-f Dockerfile.$* \
 		--build-arg BASE_IMAGE=${ARCH_BASE_IMAGE} \
-		-t ${REPO}/${NAME}/arch-$*:${VERSION}
+		-t ${REPO}/${NAME}:arch-$*-${VERSION}
 
 build-app-%:
 	cd build/desktops/app-profiles && docker build . \
 		-f Dockerfile.$* \
 		--build-arg BASE_IMAGE=${APP_PROFILE_BASE_IMAGE} \
-		-t ${REPO}/${NAME}/app-$*:${VERSION}
+		-t ${REPO}/${NAME}:app-$*-${VERSION}
 
 # Pushers
 
@@ -43,24 +43,24 @@ push-arch-base: build-arch-base
 	docker push ${ARCH_BASE_IMAGE}
 
 push-ubuntu-%: build-ubuntu-%
-	docker push ${REPO}/${NAME}/ubuntu-$*:${VERSION}
+	docker push ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
 push-arch-%: build-arch-%
-	docker push ${REPO}/${NAME}/arch-$*:${VERSION}
+	docker push ${REPO}/${NAME}:arch-$*-${VERSION}
 
 push-app-%: build-app-%
-	docker push ${REPO}/${NAME}/app-$*:${VERSION}
+	docker push ${REPO}/${NAME}:app-$*-${VERSION}
 
 # Loaders
 
 load-ubuntu-%: ${KIND} build-ubuntu-%
-	$(call load_image,${REPO}/${NAME}/ubuntu-$*:${VERSION})
+	$(call load_image,${REPO}/${NAME}:ubuntu-$*-${VERSION})
 
 load-arch-%: ${KIND} build-arch-%
-	$(call load_image,${REPO}/${NAME}/arch-$*:${VERSION})
+	$(call load_image,${REPO}/${NAME}:arch-$*-${VERSION})
 
 load-app-%: ${KIND} build-app-%
-	$(call load_image,${REPO}/${NAME}/app-$*:${VERSION})
+	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})
 
 #
 # For building demo environment

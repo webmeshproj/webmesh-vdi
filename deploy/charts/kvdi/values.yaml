@@ -21,11 +21,11 @@ manager:
   replicaCount: 1
   image:
     # manager.image.repository -- The repository to pull the manager image from..
-    repository: docker.pkg.github.com/tinyzimmer/kvdi
-    # manager.image.name -- The name of the docker image to use for the manager.
-    name: manager
-    # manager.image.tag -- Override the tag for the kVDI manager. Defaults to the chart version.
-    tag: ""
+    repository: ghcr.io/tinyzimmer
+    # manager.image.name -- The image name in the repository where kvdi images are stored.
+    name: kvdi
+    # manager.image.tagOverride -- Override the tag for the kVDI manager. Defaults to `manager-{chart_version}`.
+    tagOverride: ""
     # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.
     pullPolicy: IfNotPresent
   # manager.imagePullSecrets -- Image pull secrets for the manager pod.
@@ -63,7 +63,7 @@ vdi:
     # @default -- The values described below are the same as the `VDICluster` CRD defaults.
     app:
       # vdi.spec.app.image -- The image to use for app pods.
-      # @default -- `docker.pkg.github.com/tinyzimmer/kvdi/app:${VERSION}`
+      # @default -- `ghcr.io/tinyzimmer/kvdi:app-${VERSION}`
       image: ""
       # vdi.spec.app.corsEnabled -- Enables CORS headers in API responses.
       corsEnabled: false

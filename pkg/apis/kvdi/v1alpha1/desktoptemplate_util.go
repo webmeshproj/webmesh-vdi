@@ -43,7 +43,7 @@ func (t *DesktopTemplate) GetKVDIVNCProxyImage() string {
 	if t.Spec.Config != nil && t.Spec.Config.ProxyImage != "" {
 		return t.Spec.Config.ProxyImage
 	}
-	return fmt.Sprintf("docker.pkg.github.com/tinyzimmer/kvdi/kvdi-proxy:%s", version.Version)
+	return fmt.Sprintf("ghcr.io/tinyzimmer/kvdi:kvdi-proxy-%s", version.Version)
 }
 
 // GetDesktopImage returns the docker image to use for instances booted from

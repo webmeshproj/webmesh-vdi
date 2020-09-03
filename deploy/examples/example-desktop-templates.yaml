@@ -3,7 +3,7 @@ kind: DesktopTemplate
 metadata:
   name: ubuntu-xfce
 spec:
-  image: quay.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
+  image: ghcr.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
   imagePullPolicy: IfNotPresent
   config:
     allowFileTransfer: true
@@ -20,7 +20,7 @@ kind: DesktopTemplate
 metadata:
   name: arch-xfce
 spec:
-  image: quay.io/tinyzimmer/kvdi:arch-xfce-latest
+  image: ghcr.io/tinyzimmer/kvdi:arch-xfce-latest
   imagePullPolicy: IfNotPresent
   config:
     allowRoot: true

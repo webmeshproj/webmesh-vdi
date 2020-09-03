@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=docker.pkg.github.com/tinyzimmer/kvdi/app-base:latest
+ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:app-base-latest
 FROM ${BASE_IMAGE}
 
 RUN apt-get update && apt-get install -y fuse libnss3 libxss1 \

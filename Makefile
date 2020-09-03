@@ -1,4 +1,4 @@
-REPO ?= docker.pkg.github.com/tinyzimmer
+REPO ?= ghcr.io/tinyzimmer
 NAME ?= kvdi
 VERSION ?= v0.0.25
 

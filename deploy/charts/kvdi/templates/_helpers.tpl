@@ -64,5 +64,5 @@ Create the name of the service account to use
 
 
 {{- define "kvdi.managerTag" -}}
-{{ default .Chart.AppVersion .Values.manager.image.tag }}
+{{ default (printf "manager-%s" .Chart.AppVersion) .Values.manager.image.tagOverride }}
 {{- end -}}
