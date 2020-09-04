@@ -71,8 +71,8 @@
 </template>
 
 <script>
-import FilePreviewDialog from './FilePreview.vue'
-import { getErrorMessage } from '../../util/common.js'
+import FilePreviewDialog from 'components/dialogs/FilePreview.vue'
+import { getErrorMessage } from '../../lib/common.js'
 import path from 'path'
 
 export default {

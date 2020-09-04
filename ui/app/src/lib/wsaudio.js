@@ -3,11 +3,26 @@ export default class {
 
   constructor (config) {
     this.config = config
+    this.socket = null
   }
 
-  start () {    
-    var socket = new WebSocket(this.config.server.url)
-    socket.binaryType = 'arraybuffer'
+  _connect () {
+    this.socket = new WebSocket(this.config.server.url)
+    this.socket.binaryType = 'arraybuffer'
+  }
+
+  _addListener (f) {
+    this.socket.addEventListener('message', f, false)
+  }
+
+  startRecording () {
+    return
+  }
+
+  startPlayback () {
+    if (!this.socket) {
+      this._connect()
+    }
 
     var mediaSource = new MediaSource()
     var buffer
@@ -31,14 +46,7 @@ export default class {
       })
     }, false)
 
-
-    mediaSource.addEventListener('sourceopen', function(e) { console.log('sourceopen: ' + mediaSource.readyState) })
-    mediaSource.addEventListener('sourceended', function(e) { console.log('sourceended: ' + mediaSource.readyState) })
-    mediaSource.addEventListener('sourceclose', function(e) { console.log('sourceclose: ' + mediaSource.readyState) })
-    mediaSource.addEventListener('error', function(e) { console.log('error: ' + mediaSource.readyState) })
-
-
-    socket.addEventListener('message', function (e) {
+    this._addListener((e) => {
       if (typeof e.data !== 'string') {
           if (buffer.updating || queue.length > 0) {
               queue.push(e.data)
@@ -46,10 +54,13 @@ export default class {
               buffer.appendBuffer(e.data)
           }
        }
-    }, false)
+    })
 
-    this.stop = function () {
-      socket.close()
+  }
+
+  close () {
+    if (this.socket) {
+      this.socket.close()
     }
   }
 

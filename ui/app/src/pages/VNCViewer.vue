@@ -21,44 +21,15 @@
 <script>
 import RFB from '@novnc/novnc/core/rfb'
 import WSAudioPlayer from '../lib/wsaudio.js'
+import {
+  getWebsockifyAddr,
+  getWebsockifyAudioAddr,
+  getXpraServerArgs,
+  iframeRef
+} from '../lib/common.js'
 
 // The view div for displays
 var view
-
-function getWebsockifyAddr (namespace, name, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/desktops/websockify/${namespace}/${name}?token=${token}`
-}
-
-function getXpraServerArgs (namespace, name, token) {
-  const host = window.location.hostname
-  const path = `/api/desktops/websockify/${namespace}/${name}?token=${token}`
-
-  let port = window.location.port
-  let secure = false
-
-  if (window.location.protocol.replace(/:$/g, '') === 'https') {
-    secure = true
-    if (port === '') {
-      port = 443
-    }
-  } else {
-    if (port === '') {
-      port = 80
-    }
-  }
-
-  return { host: host, path: path, port: port, secure: secure }
-}
-
-function getWebsockifyAudioAddr (namespace, name, token) {
-  return `${window.location.origin.replace('http', 'ws')}/api/desktops/wsaudio/${namespace}/${name}?token=${token}`
-}
-
-function iframeRef (frameRef) {
-  return frameRef.contentWindow
-    ? frameRef.contentWindow.document
-    : frameRef.contentDocument
-}
 
 export default {
   name: 'VNCViewer',
@@ -125,13 +96,13 @@ export default {
       console.log(`Connecting to audio stream at ${audioUrl}`)
       const playerCfg = { server: { url: audioUrl } }
       this.player = new WSAudioPlayer(playerCfg)
-      this.player.start()
+      this.player.startPlayback()
     },
 
     disableAudio () {
       if (this.player !== null) {
         console.log('Stopping audio stream')
-        this.player.stop()
+        this.player.close()
         this.player = null
       }
     },

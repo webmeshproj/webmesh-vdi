@@ -299,7 +299,7 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
-	"/api/desktops/websockify/{namespace}/{name}": {
+	"/api/desktops/ws/{namespace}/{name}/display": {
 		"GET": {
 			Actions: []v1.APIAction{
 				{
@@ -312,11 +312,24 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
-	"/api/desktops/wsaudio/{namespace}/{name}": {
+	"/api/desktops/ws/{namespace}/{name}/audio": {
 		"GET": {
 			Actions: []v1.APIAction{
 				{
 					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
+			},
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
+	"/api/desktops/ws/{namespace}/{name}/status": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbRead,
 					ResourceType: v1.ResourceTemplates,
 				},
 			},

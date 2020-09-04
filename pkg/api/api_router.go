@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/net/websocket"
 )
 
 // buildRouter builds the API router
@@ -82,8 +83,12 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE") // Stop a desktop session
 
 	// Methods passed to the kvdi-proxy websocket
-	protected.HandleFunc("/desktops/websockify/{namespace}/{name}", d.GetWebsockify)                                  // Connect to the VNC socket on a desktop over websockets
-	protected.HandleFunc("/desktops/wsaudio/{namespace}/{name}", d.GetWebsockifyAudio)                                // Connect to the audio stream of a desktop over websockets
+	protected.Path("/desktops/ws/{namespace}/{name}/status").Handler(&websocket.Server{
+		Handshake: func(*websocket.Config, *http.Request) error { return nil },
+		Handler:   d.GetDesktopSessionStatusWebsocket,
+	})
+	protected.HandleFunc("/desktops/ws/{namespace}/{name}/display", d.GetWebsockify)                                  // Connect to the VNC socket on a desktop over websockets
+	protected.HandleFunc("/desktops/ws/{namespace}/{name}/audio", d.GetWebsockifyAudio)                               // Connect to the audio stream of a desktop over websockets
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
 	protected.HandleFunc("/desktops/fs/{namespace}/{name}/put", d.PutDesktopFile).Methods("PUT")                      // Uploads a file to a desktop

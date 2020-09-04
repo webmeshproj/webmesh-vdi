@@ -77,14 +77,14 @@ func newServer() (*http.Server, error) {
 
 	// The websockify route is in charge of proxying noVNC conncetions to the local
 	// VNC socket. This route is pretty bulletproof.
-	r.Path("/api/desktops/websockify/{namespace}/{name}").Handler(&websocket.Server{
+	r.Path("/api/desktops/ws/{namespace}/{name}/display").Handler(&websocket.Server{
 		Handshake: wsHandshake,
 		Handler:   websockifyHandler,
 	})
 
 	// This route creates a recorder on the local pulseaudio sink and ships
 	// the data back to the client over a websocket.
-	r.Path("/api/desktops/wsaudio/{namespace}/{name}").Handler(&websocket.Server{
+	r.Path("/api/desktops/ws/{namespace}/{name}/audio").Handler(&websocket.Server{
 		Handshake: wsHandshake,
 		Handler:   wsAudioHandler,
 	})

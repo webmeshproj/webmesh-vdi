@@ -228,7 +228,7 @@
 import SessionTab from 'components/SessionTab.vue'
 import MFADialog from 'components/dialogs/MFADialog.vue'
 import FileTransferDialog from 'components/dialogs/FileTransfer.vue'
-import { getErrorMessage } from '../util/common.js'
+import { getErrorMessage } from '../lib/common.js'
 
 var menuTimeout = null
 

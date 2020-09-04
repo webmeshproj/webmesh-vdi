@@ -21,7 +21,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// swagger:operation GET /api/desktops/websockify/{namespace}/{name} Desktops doWebsocket
+// swagger:operation GET /api/desktops/ws/{namespace}/{name}/display Desktops doWebsocket
 // ---
 // summary: Start an mTLS noVNC connection with the provided Desktop.
 // description: Assumes the requesting client is a noVNC RFB object.
@@ -72,7 +72,7 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 	d.ServeWebsocketProxy(w, r)
 }
 
-// swagger:operation GET /api/desktops/wsaudio/{namespace}/{name} Desktops doAudio
+// swagger:operation GET /api/desktops/ws/{namespace}/{name}/audio Desktops doAudio
 // ---
 // summary: Retrieve the audio stream from the given desktop session.
 // parameters:

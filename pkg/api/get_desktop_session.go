@@ -2,12 +2,17 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
+	"golang.org/x/net/websocket"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,20 +41,16 @@ import (
 //   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopSessionStatus(w http.ResponseWriter, r *http.Request) {
-	nn := apiutil.GetNamespacedNameFromRequest(r)
-	found := &v1alpha1.Desktop{}
-	if err := d.client.Get(context.TODO(), nn, found); err != nil {
+	desktop, err := d.getDesktopForRequest(r)
+	if err != nil {
 		if client.IgnoreNotFound(err) == nil {
-			apiutil.ReturnAPINotFound(fmt.Errorf("No desktop session %s found", nn.String()), w)
+			apiutil.ReturnAPINotFound(fmt.Errorf("No desktop session %s found", apiutil.GetNamespacedNameFromRequest(r).String()), w)
 			return
 		}
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	res := make(map[string]interface{})
-	res["running"] = found.Status.Running
-	res["podPhase"] = found.Status.PodPhase
-	apiutil.WriteJSON(res, w)
+	apiutil.WriteJSON(toReturnStatus(desktop), w)
 }
 
 // Session status response
@@ -57,4 +58,59 @@ func (d *desktopAPI) GetDesktopSessionStatus(w http.ResponseWriter, r *http.Requ
 type swaggerGetSessionResponse struct {
 	// in:body
 	Body map[string]interface{}
+}
+
+func (d *desktopAPI) GetDesktopSessionStatusWebsocket(conn *websocket.Conn) {
+	defer conn.Close()
+
+	ticker := time.NewTicker(time.Duration(2) * time.Second)
+	for range ticker.C {
+
+		desktop, err := d.getDesktopForRequest(conn.Request())
+		if err != nil {
+			if _, err := conn.Write(errors.ToAPIError(err).JSON()); err != nil {
+				apiLogger.Error(err, "Failed to write error to websocket connection")
+				return
+			}
+			if client.IgnoreNotFound(err) == nil {
+				// If the desktop doesn't exist, we should give up entirely.
+				// Other api errors are worth letting the client retry.
+				return
+			}
+		}
+		st := toReturnStatus(desktop)
+		if _, err := conn.Write(st.JSON()); err != nil {
+			apiLogger.Error(err, "Failed to write status to websocket connection")
+			return
+		}
+
+		if st.Running && st.PodPhase == corev1.PodRunning {
+			// we are done here, the client shouldn't need anything else
+			return
+		}
+
+	}
+}
+
+func (d *desktopAPI) getDesktopForRequest(r *http.Request) (*v1alpha1.Desktop, error) {
+	nn := apiutil.GetNamespacedNameFromRequest(r)
+	found := &v1alpha1.Desktop{}
+	return found, d.client.Get(context.TODO(), nn, found)
+}
+
+type desktopStatus struct {
+	Running  bool            `json:"running"`
+	PodPhase corev1.PodPhase `json:"podPhase"`
+}
+
+func toReturnStatus(desktop *v1alpha1.Desktop) *desktopStatus {
+	return &desktopStatus{
+		Running:  desktop.Status.Running,
+		PodPhase: desktop.Status.PodPhase,
+	}
+}
+
+func (d *desktopStatus) JSON() []byte {
+	out, _ := json.Marshal(d)
+	return out
 }
