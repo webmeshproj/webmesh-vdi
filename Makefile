@@ -207,6 +207,9 @@ HELM_ARGS ?=
 deploy: ${HELM} chart-yaml
 	${HELM_KIND} upgrade --install ${NAME} deploy/charts/kvdi --wait ${HELM_ARGS}
 
+helm-template: ${HELM} chart-yaml
+	${HELM_KIND} template ${NAME} deploy/charts/kvdi ${HELM_ARGS}
+
 ## make deploy-with-vault      # Deploys kVDI into the kind cluster with a vault configuration for the product of `test-vault`.
 deploy-with-vault:
 	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-vault-helm-values.yaml"
