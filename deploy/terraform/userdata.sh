@@ -28,7 +28,7 @@ EOF
 # K3s installation args
 export INSTALL_K3S_SKIP_START="true"
 export INSTALL_K3S_EXEC="server --disable traefik --resolv-conf /etc/k3s-resolv.conf"
-export PROMETHEUS_OPERATOR_VERSION="v0.41.0"
+export PROMETHEUS_OPERATOR_VERSION="${prom_operator_version}"
 export K3S_MANIFEST_DIR="/var/lib/rancher/k3s/server/manifests"
 
 # Install K3s and symlink to global PATH
@@ -115,7 +115,6 @@ spec:
             tags:
               os: ubuntu
               desktop: xfce4
-              applications: minimal
 EOF
 
 # Start k3s
@@ -153,6 +152,3 @@ spec:
     certResolver: tls
 EOF
 %{ endif }
-
-## To get the admin password from a booted instance
-# sudo k3s kubectl get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo

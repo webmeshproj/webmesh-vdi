@@ -56,3 +56,9 @@ variable "acme_email" {
   description = "The email address to use for ACME registration."
   default     = "38474291+tinyzimmer@users.noreply.github.com"
 }
+
+variable "prom_operator_version" {
+  type        = string
+  description = "The version of prometheus-operator to install alongside kVDI"
+  default     = "v0.41.0"
+}

@@ -25,9 +25,10 @@ data "template_file" "userdata" {
   template = file("${path.module}/userdata.sh")
 
   vars = {
-    kvdi_hostname    = "${var.kvdi_host}.${var.dns_domain}"
-    acme_email       = var.acme_email
-    use_lets_encrypt = var.use_lets_encrypt
+    kvdi_hostname         = "${var.kvdi_host}.${var.dns_domain}"
+    acme_email            = var.acme_email
+    use_lets_encrypt      = var.use_lets_encrypt
+    prom_operator_version = var.prom_operator_version
   }
 }
 
