@@ -1,14 +1,12 @@
 <template>
   <q-page flex>
     <div id="view" :class="className">
-      <div q-gutter-md row v-if="status === 'disconnected' && currentSession !== null">
+      <div q-gutter-md row v-if="status === 'disconnected' && currentSession">
         <q-spinner-hourglass color="grey" size="4em" />
         <q-space />
-        <div v-for="line in statusLines" :key="line">
-          {{ line }}
-        </div>
+        <pre>{{ statusText }}</pre>
       </div>
-      <div q-gutter-md row items-center v-if="status === 'disconnected' && currentSession === null">
+      <div q-gutter-md row items-center v-if="status === 'disconnected' && !currentSession">
         <q-icon name="warning" class="text-red" style="font-size: 4rem;" />
         <br />
         There are no active desktop sessions
@@ -19,45 +17,53 @@
 </template>
 
 <script>
-import RFB from '@novnc/novnc/core/rfb'
-import WSAudioPlayer from '../lib/wsaudio.js'
-import {
-  getWebsockifyAddr,
-  getWebsockifyAudioAddr,
-  getXpraServerArgs,
-  iframeRef
-} from '../lib/common.js'
-
-// The view div for displays
-var view
+import DisplayManager from '../lib/displayManager.js'
 
 export default {
   name: 'VNCViewer',
 
   data () {
     return {
-      client: null,
-      player: null,
-      currentSession: null,
       status: 'disconnected',
       statusLines: [],
       className: 'info',
       xpraClassname: 'iframe-container',
-      audioEnabled: false
+      statusText: '',
+      currentSession: null
     }
   },
 
   created () {
-    this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
+    this.displayManager = new DisplayManager({
+      userStore: this.$userStore,
+      sessionStore: this.$desktopSessions,
+      onError: (err) => {
+        this.currentSession = this.displayManager.getCurrentSession()
+        this.$root.$emit('notify-error', err)
+      },
+      onStatusUpdate: (st) => {
+        this.currentSession = this.displayManager.getCurrentSession()
+        this.statusText = st
+      },
+      onDisconnect: () => {
+        this.currentSession = this.displayManager.getCurrentSession()
+        this.status = 'disconnected'
+        this.className = 'info'
+      },
+      onConnect: () => {
+        this.currentSession = this.displayManager.getCurrentSession()
+        this.status = 'connected'
+        this.className = 'no-margin display-container'
+      }
+    })
     this.$root.$on('set-fullscreen', this.setFullscreen)
-    this.$root.$on('paste-clipboard', this.onPaste)
+    this.$root.$on('paste-clipboard', this.displayManager.syncClipboardData)
   },
 
   beforeDestroy () {
-    this.unsubscribeSessions()
     this.$root.$off('set-fullscreen', this.setFullscreen)
-    this.$root.$off('paste-clipboard', this.onPaste)
-    this.disconnect()
+    this.$root.$off('paste-clipboard', this.displayManager.syncClipboardData)
+    this.displayManager.destroy()
   },
 
   computed: {
@@ -65,7 +71,7 @@ export default {
       if (this.status !== 'connected') {
         return ''
       }
-      const args = getXpraServerArgs(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
+      const args = this.displayManager.xpraArgs()
       return `\
       server=${args.host}\
       &port=${args.port}\
@@ -82,66 +88,6 @@ export default {
   },
 
   methods: {
-    onPaste (data) {
-      if (this.client !== null) {
-        if (this.currentSession.socketType === 'xvnc') {
-          console.log(`Copying clipboard contents: ${data}`)
-          this.client.clipboardPasteFrom(data)
-        }
-      }
-    },
-
-    enableAudio () {
-      const audioUrl = getWebsockifyAudioAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-      console.log(`Connecting to audio stream at ${audioUrl}`)
-      const playerCfg = { server: { url: audioUrl } }
-      this.player = new WSAudioPlayer(playerCfg)
-      this.player.startPlayback()
-    },
-
-    disableAudio () {
-      if (this.player !== null) {
-        console.log('Stopping audio stream')
-        this.player.close()
-        this.player = null
-      }
-    },
-
-    handleSessionsChange (mutation, state) {
-      const activeSession = this.$desktopSessions.getters.activeSession
-      if (mutation.type === 'set_active_session') {
-        console.log(`Received a session change to ${JSON.stringify(activeSession)}`)
-        if (activeSession === undefined) {
-          console.log('There are no more active sessions, disconnecting')
-          this.currentSession = null
-          this.disconnect()
-        } else {
-          if (this.currentSession === activeSession) {
-            console.log(`${activeSession.namespace}/${activeSession.name} is already the active session`)
-            return
-          }
-          console.log(`Disconnecting from ${this.currentSession.name} and connecting to ${activeSession.name}`)
-          this.disconnect().then(() => {
-            this.currentSession = activeSession
-            this.checkStatusAndConnect()
-          })
-        }
-      }
-      if (mutation.type === 'delete_session') {
-        const sessions = this.$desktopSessions.getters.sessions
-        if (sessions.length === 0) {
-          this.resetStatus()
-          this.currentSession = null
-        }
-      }
-      if (mutation.type === 'toggle_audio' && this.status === 'connected') {
-        if (this.$desktopSessions.getters.audioEnabled) {
-          this.enableAudio()
-        } else {
-          this.disableAudio()
-        }
-      }
-    },
 
     setFullscreen (val) {
       if (val) {
@@ -154,192 +100,15 @@ export default {
         this.className = 'info'
         this.xpraClassname = 'iframe-container'
       }
-    },
-
-    async checkStatusAndConnect () {
-      try {
-        const doConnect = await this.checkStatusLoop()
-        if (doConnect) {
-          this.createConnection()
-        }
-      } catch (err) {
-        this.$root.$emit('notify-error', err)
-      }
-    },
-
-    async checkStatusLoop () {
-      let podPhase
-      let running
-      let loopCount = 0
-      const currentSession = this.currentSession
-      while (this.sessionIsActiveSession(currentSession) && this.$router.currentRoute.name === 'control') {
-        const status = await this.$desktopSessions.getters.sessionStatus(this.currentSession)
-        console.log(status)
-        if (this.statusIsReady(status) && loopCount === 0) {
-          break
-        }
-        if (status.podPhase === '') {
-          await new Promise((resolve, reject) => setTimeout(resolve, 2000))
-          continue
-        } else if (status.podPhase !== podPhase) {
-          podPhase = status.podPhase
-          if (status.podPhase === 'Pending' || status.podPhase === 'ContainerCreating') {
-            this.statusLines.push('Waiting for container to start...')
-          } else if (status.podPhase === 'Running') {
-            this.statusLines.push('Container has started')
-          }
-        } else if (status.podPhase === 'Pending' && loopCount === 20) {
-          this.statusLines.push('This is taking a while...the server might be pulling the image for the first time')
-        } else if (status.podPhase === 'Running' && status.running !== running) {
-          running = status.running
-          if (!running) {
-            this.statusLines.push('Waiting for desktop to finish booting...')
-          } else {
-            this.statusLines.push('Desktop has finished booting')
-          }
-        }
-        if (this.statusIsReady(status)) {
-          this.statusLines.push('Your desktop is ready')
-          break
-        }
-        loopCount++
-        await new Promise((resolve, reject) => setTimeout(resolve, 2000))
-      }
-
-      // Extra check to see if we were cancelled eaerly
-      if (!this.sessionIsActiveSession(currentSession || this.$router.currentRoute.name !== 'control')) {
-        return false
-      }
-
-      return true
-    },
-
-    sessionIsActiveSession (statusSession) {
-      return this.$desktopSessions.getters.activeSession !== undefined && this.$desktopSessions.getters.activeSession === statusSession
-    },
-
-    statusIsReady (status) {
-      return status.podPhase === 'Running' && status.running
-    },
-
-    async createConnection () {
-      console.log('Connecting to display server')
-      console.log(this.currentSession)
-
-      // set the view port for the display
-      view = document.getElementById('view')
-      if (view === null || view === undefined) {
-        return
-      }
-
-      // get the websocket address with the token included as a query argument
-      const url = getWebsockifyAddr(this.currentSession.namespace, this.currentSession.name, this.$userStore.getters.token)
-
-      try {
-        if (this.currentSession.socketType === 'xvnc') {
-          // create a vnc connection
-          await this.createRFBConnection(url)
-        } else {
-          // create an xpra connection
-          await this.createXpraConnection(url)
-        }
-      } catch (err) {
-        console.error(`Unable to create display client: ${err}`)
-        this.disconnectedFromServer({ detail: { clean: false } })
-        return
-      }
-
-      this.status = 'connected'
-      this.className = 'no-margin display-container'
-
-      if (this.currentSession.socketType === 'xpra') {
-        var inside = iframeRef(document.getElementById('xpra'))
-        console.log(inside)
-      }
-    },
-
-    async createRFBConnection (url) {
-      const rfb = new RFB(view, url)
-      rfb.addEventListener('connect', this.connectedToServer)
-      rfb.addEventListener('disconnect', this.disconnectedFromServer)
-      rfb.resizeSession = true
-      this.client = rfb
-    },
-
-    async createXpraConnection (url) {
-      console.log(url)
-    },
-
-    connectedToServer () {
-      console.log('connected to display server!')
-      if (this.currentSession.socketType === 'xvnc') {
-        this.client.scaleViewport = true
-        this.client.resizeSession = true
-      }
-    },
-
-    async disconnectedFromServer (e) {
-      this.resetStatus()
-      if (e.detail.clean) {
-        // The server disconnecting cleanly would mean expired session,
-        // but this should probably be handled better.
-        if (this.currentSession !== null) {
-          const data = this.currentSession
-          try {
-            // check if the desktop still exists, if we get an error back
-            // it was deleted.
-            await this.$axios.get(`/api/sessions/${data.namespace}/${data.name}`)
-          } catch {
-            this.$desktopSessions.dispatch('deleteSession', this.currentSession)
-            this.currentSession = null
-            this.$q.notify({
-              color: 'orange-4',
-              textColor: 'white',
-              icon: 'stop_screen_share',
-              message: 'The desktop session has ended'
-            })
-          }
-        }
-        console.log('Disconnected')
-      } else {
-        console.log('Something went wrong, connection is closed')
-        await this.checkStatusAndConnect()
-      }
-
-      // no matter what, make user recreate audio connection
-      // TODO: know that the user was using audio and recreate
-      // stream automatically if session is still active.
-      if (this.player !== null) {
-        this.player.stop()
-        this.player = null
-        this.$desktopSessions.dispatch('toggleAudio', false)
-      }
-    },
-
-    resetStatus () {
-      this.connecting = false
-      this.status = 'disconnected'
-      this.statusLines = []
-      this.className = 'info'
-    },
-
-    async disconnect () {
-      this.resetStatus()
-      if (this.client !== null) {
-        this.client.disconnect()
-        this.client = null
-      }
     }
+
   },
 
   mounted () {
     this.$nextTick(() => {
-      const currentSession = this.$desktopSessions.getters.activeSession
-      if (currentSession === undefined) {
-        return
+      if (this.displayManager.hasActiveSession()) {
+        this.displayManager.connect()
       }
-      this.currentSession = currentSession
-      this.checkStatusAndConnect()
     })
   }
 }
