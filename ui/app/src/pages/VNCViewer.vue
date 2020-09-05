@@ -37,32 +37,18 @@ export default {
     this.displayManager = new DisplayManager({
       userStore: this.$userStore,
       sessionStore: this.$desktopSessions,
-      onError: (err) => {
-        this.currentSession = this.displayManager.getCurrentSession()
-        this.$root.$emit('notify-error', err)
-      },
-      onStatusUpdate: (st) => {
-        this.currentSession = this.displayManager.getCurrentSession()
-        this.statusText = st
-      },
-      onDisconnect: () => {
-        this.currentSession = this.displayManager.getCurrentSession()
-        this.status = 'disconnected'
-        this.className = 'info'
-      },
-      onConnect: () => {
-        this.currentSession = this.displayManager.getCurrentSession()
-        this.status = 'connected'
-        this.className = 'no-margin display-container'
-      }
+      onError: this.onError,
+      onStatusUpdate: this.onStatusUpdate,
+      onDisconnect: this.onDisconnect,
+      onConnect: this.onConnect
     })
     this.$root.$on('set-fullscreen', this.setFullscreen)
-    this.$root.$on('paste-clipboard', this.displayManager.syncClipboardData)
+    this.$root.$on('paste-clipboard', this.onPaste)
   },
 
   beforeDestroy () {
     this.$root.$off('set-fullscreen', this.setFullscreen)
-    this.$root.$off('paste-clipboard', this.displayManager.syncClipboardData)
+    this.$root.$off('paste-clipboard', this.onPaste)
     this.displayManager.destroy()
   },
 
@@ -89,6 +75,10 @@ export default {
 
   methods: {
 
+    onPaste (data) { this.displayManager.syncClipboardData(data) },
+
+    setCurrentSession () { this.currentSession = this.displayManager.getCurrentSession() },
+
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
@@ -100,16 +90,34 @@ export default {
         this.className = 'info'
         this.xpraClassname = 'iframe-container'
       }
+    },
+
+    onConnect () {
+      this.setCurrentSession()
+      this.status = 'connected'
+      this.className = 'no-margin display-container'
+    },
+
+    onDisconnect () {
+      this.setCurrentSession()
+      this.status = 'disconnected'
+      this.className = 'info'
+    },
+
+    onStatusUpdate (st) {
+      this.setCurrentSession()
+      this.statusText = st
+    },
+
+    onError (err) {
+      this.setCurrentSession()
+      this.$root.$emit('notify-error', err)
     }
 
   },
 
   mounted () {
-    this.$nextTick(() => {
-      if (this.displayManager.hasActiveSession()) {
-        this.displayManager.connect()
-      }
-    })
+    this.$nextTick(() => { this.displayManager.connect() })
   }
 }
 </script>

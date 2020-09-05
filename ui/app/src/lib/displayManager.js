@@ -1,7 +1,6 @@
 import RFB from '@novnc/novnc/core/rfb'
-import WSAudioPlayer from '../lib/wsaudio.js'
-import { DesktopAddressGetter } from '../lib/common.js'
-import { parseConfigFileTextToJson } from 'app/node_modules/typescript/lib/typescript.js'
+import WSAudioPlayer from './wsaudio.js'
+import { DesktopAddressGetter } from './common.js'
 
 // DisplayManager handles display and audio connections to remote desktop sessions.
 export default class DisplayManager {
@@ -279,6 +278,7 @@ export default class DisplayManager {
     // connect will query the status of the active desktop session and then open
     // a new display.
     connect () {
+        if (!this.hasActiveSession()) { return }
         this._doStatusWebsocket()
     }
 
