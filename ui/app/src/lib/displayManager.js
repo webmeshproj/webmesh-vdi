@@ -1,39 +1,58 @@
 import RFB from '@novnc/novnc/core/rfb'
-import WSAudioPlayer from './wsaudio.js'
-import { DesktopAddressGetter } from './common.js'
+import WSAudioPlayer from './audioPlayer.js'
 
 // DisplayManager handles display and audio connections to remote desktop sessions.
 export default class DisplayManager {
     // Builds the DisplayManager instance. The userStore and sessionStore are Vuex
     // Store instances that reflect the currently logged in user and the current desktop
-    // sessions respectively. The errCb is a function to call when internal errors occur.
+    // sessions respectively.
     constructor ({ userStore, sessionStore, onError, onStatusUpdate, onDisconnect, onConnect }) {
-        this.userStore = userStore
-        this.sessionStore = sessionStore
-        this.errCb = onError
-        this.disconnectCb = onDisconnect
-        this.connectCb = onConnect
-        this.statusCb = onStatusUpdate
+        // Vuex stores
+        this._userStore = userStore
+        this._sessionStore = sessionStore
+        // Event listeners - I am sure there is a more correct way to do this
+        this._errCb = onError
+        this._disconnectCb = onDisconnect
+        this._connectCb = onConnect
+        this._statusCb = onStatusUpdate
         // Current session represents the session that the rfbClient is currently connected
         // to. This is not always the same as the activeSession as far as the sessionStore
         // is concerned.
         this._currentSession = this._getActiveSession()
+        // A socket being used to query a desktop's boot status
+        this._statusSocket = null
+        // Status text to display to a user when a connection is pending
         this._statusText = ''
-        this.rfbClient = null
-        this.audioPlayer = null
-        this.unsubscribeSessions = this.sessionStore.subscribe((mutation) => {
+        // The RFB client for noVNC connections
+        this._rfbClient = null
+        // The audio player for streaming playback
+        this._audioPlayer = null
+        // Subscribe to changes to desktop sessions
+        this._unsubscribeSessions = this._sessionStore.subscribe((mutation) => {
             this._handleSessionChange(mutation)
         })
     }
 
+    // _callDisconnect will call the onDisconnect callback if configured.
+    _callDisconnect () { if (this._disconnectCb) { this._disconnectCb() }}
+
+    // _callConnect will call the onConnect callback if configured.
+    _callConnect () { if (this._connectCb) { this._connectCb() } }
+
+    // _callStatusUpdate will call the onStatusUpdate callback if configured.
+    _callStatusUpdate (st) { if (this._statusCb) { this._statusCb(st) } }
+
+    // _callError will call the onError callback if configured.
+    _callError (err) { if (this._errCb) { this._errCb(err) } }
+
     // _getActiveSession returns the session currently marked as active in the session store.
     _getActiveSession () {
-        return this.sessionStore.getters.activeSession
+        return this._sessionStore.getters.activeSession
     }
 
     // _audioIsEnabled returns true if audio is currently enabled
     _audioIsEnabled () {
-        return this.sessionStore.getters.audioEnabled
+        return this._sessionStore.getters.audioEnabled
     }
 
     // _getSessionURLs returns an object that can easily retrieve URLs for the different
@@ -41,7 +60,7 @@ export default class DisplayManager {
     _getSessionURLs () {
         const activeSession = this._getActiveSession()
         return new DesktopAddressGetter(
-            this.userStore,
+            this._userStore,
             activeSession.namespace,
             activeSession.name
         )
@@ -96,18 +115,18 @@ export default class DisplayManager {
         console.log('Enabling audio playback')
         const urls = this._getSessionURLs()
         const audioUrl = urls.audioURL()
-        console.log(`Connecting to audio stream at ${audioUrl}`)
+        console.log(`Connecting to audio stream`)
         const playerCfg = { server: { url: audioUrl } }
-        this.audioPlayer = new WSAudioPlayer(playerCfg)
-        this.audioPlayer.startPlayback()
+        this._audioPlayer = new WSAudioPlayer(playerCfg)
+        this._audioPlayer.startPlayback()
     }
 
     // _disableAudio will stop an audio stream if it is currently running.
     _disableAudio() {
-        if (this.audioPlayer !== null) {
+        if (this._audioPlayer !== null) {
             console.log('Stopping audio stream')
-            this.audioPlayer.close()
-            this.audioPlayer = null
+            this._audioPlayer.close()
+            this._audioPlayer = null
         }
     }
 
@@ -129,7 +148,7 @@ export default class DisplayManager {
         let msgCount = 0
 
         socket.onopen = (e) => {
-            this.statusCb(`Starting desktop ${activeSession.namespace}/${activeSession.name}`)
+            this._callStatusUpdate(`Starting desktop ${activeSession.namespace}/${activeSession.name}`)
         }
           
         socket.onmessage = (event) => {
@@ -137,51 +156,61 @@ export default class DisplayManager {
 
             console.log(`[status] Status update ${msgCount} received from server: ${event.data}`)
             const st = JSON.parse(event.data)
+
+            // If there is an error on the pipe, send it to the user.
             if (st.error) {
                 this._currentSession = this._getActiveSession()
-                this.disconnectCb()
-                this.errCb(new Error(st.error))
+                this._callDisconnect()
+                this._callError(new Error(st.error))
                 return
             }
+
+            // If the desktop is ready then create a connection, clear the status, and close this socket
             if (this._statusIsReady(st)) {
                 this._createConnection()
                 if (socket.readyState === 1) {
                     socket.close()
                 }
-                this.statusCb('')
+                this._callStatusUpdate('')
+                return
             }
 
+            // Update the status text for the user
             let statusText = `Waiting for ${activeSession.namespace}/${activeSession.name}`
-            if (msgCount > 5) {
-                statusText += '\n\nThis is taking a while, the server might be pulling the image for the first time'
+            if (msgCount > 6) {
+                statusText += '\n\nThis is taking a while. The server might be pulling the'
+                statusText += '\nimage for the first time, or the control-plane is having'
+                statusText += '\ntrouble scheduling the desktop instance.'
             }
-            this.statusCb(statusText)
+            this._callStatusUpdate(statusText)
         }
 
         socket.onclose = (event) => {
             if (event.wasClean) {
                 console.log(`[status] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
             } else {
-                this.errCb(new Error(`Error getting session status: ${event.code} ${event.reason}`))
+                this._callError(new Error(`Error getting session status: ${event.code} ${event.reason}`))
             }
         }
           
         socket.onerror = (err) => {
-            this.errCb(err)
-            this.disconnectCb()
+            this._callError(err)
+            this._callDisconnect()
         }
 
+        this._statusSocket = socket
     }
 
     // _createConnection will create a new RFB connection if the socketType
     // is xvnc. xpra sockets use the official client embedded in an iframe.
     async _createConnection () {
         if (this._currentSession.socketType !== 'xvnc') {
-            this.connectCb()
+            // xpra sockets are handled via an iframe currently
+            this._callConnect()
             return
         }
+        // get the websocket display address
         const urls = this._getSessionURLs()
-        // get the websocket address with the token included as a query argument
         const displayURL = urls.displayURL()
         // get the view port for the display
         const view = document.getElementById('view')
@@ -192,12 +221,12 @@ export default class DisplayManager {
             // create a vnc connection
             await this._createRFBConnection(view, displayURL)
         } catch (err) {
-            this.disconnectCb()
-            this._currentSession = null
-            this.errCb(err)
+            this._callDisconnect()
+            this._callError(err)
+            this._currentSession = this._getActiveSession()
             return
         }
-        this.connectCb()
+        this._callConnect()
     }
 
     // _createRFBConnection creates a new RFB connection.
@@ -206,7 +235,7 @@ export default class DisplayManager {
         rfb.addEventListener('connect', () => { this._connectedToRFBServer() })
         rfb.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
         rfb.resizeSession = true
-        this.rfbClient = rfb
+        this._rfbClient = rfb
     }
 
     // _connectedToRFBServer is called when the RFB connection is established
@@ -214,15 +243,15 @@ export default class DisplayManager {
     _connectedToRFBServer() {
         const activeSession = this._getActiveSession()
         if (activeSession.socketType === 'xvnc') {
-            this.rfbClient.scaleViewport = true
-            this.rfbClient.resizeSession = true
+            this._rfbClient.scaleViewport = true
+            this._rfbClient.resizeSession = true
         }
     }
 
     // _disconnectedFromRFBServer is called when the connection is dropped to a
     // desktop session.
     async _disconnectedFromRFBServer (event) {
-        this.disconnectCb()
+        this._callDisconnect()
 
         if (event.detail.clean) {
             // The server disconnecting cleanly would mean expired session,
@@ -231,11 +260,11 @@ export default class DisplayManager {
                 try {
                     // check if the desktop still exists, if we get an error back
                     // it was deleted.
-                    await this.sessionStore.getters.sessionStatus(this._currentSession)
+                    await this._sessionStore.getters.sessionStatus(this._currentSession)
                 } catch {
-                    this.sessionStore.dispatch('deleteSession', this._currentSession)
+                    this._sessionStore.dispatch('deleteSession', this._currentSession)
                     this._currentSession = null
-                    this.errCb(new Error("The desktop session has ended"))
+                    this._callError(new Error("The desktop session has ended"))
                 }
             }
             console.log('Disconnected')
@@ -249,7 +278,7 @@ export default class DisplayManager {
         // stream automatically if session is still active.
         if (this.audioPlayer !== null) {
             this._disableAudio()
-            this.sessionStore.dispatch('toggleAudio', false)
+            this._sessionStore.dispatch('toggleAudio', false)
         }
 
         this._currentSession = this._getActiveSession()
@@ -257,24 +286,33 @@ export default class DisplayManager {
 
     // _disconnect will close any connections currently open
     _disconnect () {
-        if (this.rfbClient) {
+        if (this._rfbClient) {
             try {
                 // _disconnectedFromRFBServer will call the disconnect callback
-                this.rfbClient.disconnect()
+                this._rfbClient.disconnect()
             } catch (err) {
                 console.log(err)
             } finally {
-                this.rfbClient = null
+                this._rfbClient = null
             }
             return
         }
-        this.disconnectCb()
+        if (this._statusSocket) {
+            try {
+                this._statusSocket.close()
+            } catch (err) {
+                console.log(err)
+            } finally {
+                this._statusSocket = null
+            }
+        }
+        this._callDisconnect()
     }
 
     // destroy is called when the viewport holding this display manager is destroyed.
     // It will unsubscribe from the Vuex store and close any currently open connections.
     destroy () {
-        this.unsubscribeSessions()
+        this._unsubscribeSessions()
         this._disconnect()
     }
 
@@ -305,14 +343,14 @@ export default class DisplayManager {
     // syncClipboardData syncs the provied data to the clipboard inside the currently
     // active RFB connection.
     syncClipboardData (data) {
-        if (!this.rfbClient) {
+        if (!this._rfbClient) {
             return
         }
         const session = this._getActiveSession()
         if (session.socketType !== 'xvnc') {
             return
         }
-        this.rfbClient.clipboardPasteFrom(data)
+        this._rfbClient.clipboardPasteFrom(data)
     }
 
     // xpraArgs returns the xpra args for the given desktop session
@@ -321,3 +359,63 @@ export default class DisplayManager {
         return urls.xpraArgs()
     }
 }
+
+// DesktopAddressGetter is a convenience wrapper around retrieving connection
+// URLs for a given desktop instance.
+export class DesktopAddressGetter {
+    // constructor takes the Vuex user session store (for token retrieval) and
+    // the namespace and name of the desktop instance.
+    constructor (userStore, namespace, name) {
+      this.userStore = userStore
+      this.namespace = namespace
+      this.name = name
+    }
+  
+    // _getToken returns the current authentication token.
+    _getToken () {
+      return this.userStore.getters.token
+    }
+  
+    // _buildAddress builds a websocket address for the given desktop function (endpoint).
+    _buildAddress (endpoint) {
+      return `${window.location.origin.replace('http', 'ws')}/api/desktops/ws/${this.namespace}/${this.name}/${endpoint}?token=${this._getToken()}`
+    }
+  
+    // displayURL returns the websocket address for display connections.
+    displayURL () {
+      return this._buildAddress('display')
+    }
+  
+    // audioURL returns the websocket address for audio connections.
+    audioURL () {
+      return this._buildAddress('audio')
+    }
+  
+    // statusURL returns the websocket address for querying desktop status.
+    statusURL () {
+      return this._buildAddress('status')
+    }
+  
+    // xpraArgs returns the arguments to pass to the xpra iframe for app-profile
+    // desktop sessions.
+    xpraArgs () {
+      const host = window.location.hostname
+      const path = `/api/desktops/ws/${this.namespace}/${this.name}/display?token=${this._getToken()}`
+    
+      let port = window.location.port
+      let secure = false
+    
+      if (window.location.protocol.replace(/:$/g, '') === 'https') {
+        secure = true
+        if (port === '') {
+          port = 443
+        }
+      } else {
+        if (port === '') {
+          port = 80
+        }
+      }
+    
+      return { host: host, path: path, port: port, secure: secure }
+    }
+  }
