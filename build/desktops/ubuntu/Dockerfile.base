@@ -9,7 +9,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         coreutils iputils-ping sudo software-properties-common curl net-tools zenity xz-utils apt-utils \
         dbus-x11 x11-utils alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
-        systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty \
+        systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty ca-certificates \
     && apt-get autoclean -y \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \

@@ -222,6 +222,8 @@ export default class DisplayManager {
     // _disconnectedFromRFBServer is called when the connection is dropped to a
     // desktop session.
     async _disconnectedFromRFBServer (event) {
+        this.disconnectCb()
+
         if (event.detail.clean) {
             // The server disconnecting cleanly would mean expired session,
             // but this should probably be handled better.
@@ -246,13 +248,12 @@ export default class DisplayManager {
         // TODO: know that the user was using audio and recreate
         // stream automatically if session is still active.
         if (this.audioPlayer !== null) {
-            this.audioPlayer.stop()
+            this.audioPlayer.close()
             this.audioPlayer = null
             this.sessionStore.dispatch('toggleAudio', false)
         }
 
         this._currentSession = this._getActiveSession()
-        this.disconnectCb()
     }
 
     // _disconnect will close any connections currently open
