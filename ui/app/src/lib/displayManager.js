@@ -248,8 +248,7 @@ export default class DisplayManager {
         // TODO: know that the user was using audio and recreate
         // stream automatically if session is still active.
         if (this.audioPlayer !== null) {
-            this.audioPlayer.close()
-            this.audioPlayer = null
+            this._disableAudio()
             this.sessionStore.dispatch('toggleAudio', false)
         }
 
@@ -260,13 +259,16 @@ export default class DisplayManager {
     _disconnect () {
         if (this.rfbClient) {
             try {
+                // _disconnectedFromRFBServer will call the disconnect callback
                 this.rfbClient.disconnect()
             } catch (err) {
                 console.log(err)
             } finally {
                 this.rfbClient = null
             }
+            return
         }
+        this.disconnectCb()
     }
 
     // destroy is called when the viewport holding this display manager is destroyed.
