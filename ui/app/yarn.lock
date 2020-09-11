@@ -971,9 +971,9 @@
     fastq "^1.6.0"
 
 "@novnc/novnc@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@novnc/novnc/-/novnc-1.1.0.tgz#3827b623e9e201ee1e1c8a61d107c51cbfaeb871"
-  integrity sha512-W90Q79EuCYT++39aT/VKGyk7hUt2gPN3rN+ifPUvY4rdjgZlfwdCg9q7yzj04hke/zgdHsbXFfyFijBvrRuU5A==
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@novnc/novnc/-/novnc-1.2.0.tgz#535ffd7d074022d35205deae2753100f1f2b29f3"
+  integrity sha512-FaUckOedGhSbwQBXk/KGyxKt9ngskg4wPw6ghbHWXOUEmQscAZr3467lTU5DSfppwHJt5k+lQiHoeYUuY90l2Q==
 
 "@npmcli/move-file@^1.0.1":
   version "1.0.1"
@@ -7157,6 +7157,11 @@ optionator@^0.8.3:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
     word-wrap "~1.2.3"
+
+opus-recorder@^8.0.3:
+  version "8.0.3"
+  resolved "https://registry.yarnpkg.com/opus-recorder/-/opus-recorder-8.0.3.tgz#f7b44f8f68500c9b96a15042a69f915fd9c1716d"
+  integrity sha512-8vXGiRwlJAavT9D3yYzukNVXQ8vEcKHcsQL/zXO24DQtJ0PLXvoPHNQPJrbMCdB4ypJgWDExvHF4JitQDL7dng==
 
 original@^1.0.0:
   version "1.0.2"

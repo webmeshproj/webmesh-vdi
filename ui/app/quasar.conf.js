@@ -97,6 +97,14 @@ module.exports = function (/* ctx */) {
             formatter: require('eslint').CLIEngine.getFormatter('stylish')
           }
         })
+        cfg.module.rules.push({
+          test: /encoderWorker\.min\.js$/,
+          use: [{ loader: 'file-loader' }]
+        })
+        cfg.module.rules.push({
+          test: /waveWorker\.min\.js$/,
+          use: [{ loader: 'file-loader' }]
+        })
       }
     },
 
@@ -106,13 +114,7 @@ module.exports = function (/* ctx */) {
       port: 8080,
       open: true, // opens browser window automatically
       proxy: {
-        '/api/desktops/websockify': {
-          target: 'wss://localhost:8443',
-          changeOrigin: true,
-          ws: true,
-          secure: false
-        },
-        '/api/desktops/wsaudio': {
+        '/api/desktops/ws': {
           target: 'wss://localhost:8443',
           changeOrigin: true,
           ws: true,

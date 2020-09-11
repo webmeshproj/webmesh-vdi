@@ -34,14 +34,7 @@ export default {
   },
 
   created () {
-    this.displayManager = new DisplayManager({
-      userStore: this.$userStore,
-      sessionStore: this.$desktopSessions,
-      onError: this.onError,
-      onStatusUpdate: this.onStatusUpdate,
-      onDisconnect: this.onDisconnect,
-      onConnect: this.onConnect
-    })
+    this.displayManager = new DisplayManager(this.displayManagerArgs)
     this.$root.$on('set-fullscreen', this.setFullscreen)
     this.$root.$on('paste-clipboard', this.onPaste)
   },
@@ -53,6 +46,17 @@ export default {
   },
 
   computed: {
+    displayManagerArgs () {
+      return {
+        userStore: this.$userStore,
+        sessionStore: this.$desktopSessions,
+        onError: this.onError,
+        onStatusUpdate: this.onStatusUpdate,
+        onDisconnect: this.onDisconnect,
+        onConnect: this.onConnect
+      }
+    },
+
     xpraArgs () {
       if (this.status !== 'connected') {
         return ''

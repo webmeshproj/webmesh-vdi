@@ -28,7 +28,7 @@ import (
 // const audioBufferSize = 8 * 1024
 
 // our local logger instance
-var log = logf.Log.WithName("novnc_proxy")
+var log = logf.Log.WithName("kvdi_proxy")
 
 // vnc configurations
 var vncAddr string

@@ -150,61 +150,70 @@ func (w *websocketWatcher) prometheusLabels() prometheus.Labels {
 // prometheusMiddleware implements mux.MiddlewareFunc and tracks request metrics.s
 func prometheusMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// get the path for this request
-		path := strings.TrimSuffix(apiutil.GetGorillaPath(r), "/")
-
-		// determine if this is a websocket path
-		isWebsocket := strings.HasSuffix(path, "websockify") || strings.HasSuffix(path, "wsaudio")
-
-		var timer *prometheus.Timer
-
 		// wrap the response writer so we can intercept request metadata
 		aw := &apiResponseWriter{ResponseWriter: w, status: http.StatusOK}
 
-		if !isWebsocket {
-			// start a timer for non-websocket endpoints
-			timer = prometheus.NewTimer(requestDuration.With(prometheus.Labels{
-				"path":   path,
-				"method": r.Method,
-			}))
+		if isWebsocket(apiutil.GetGorillaPath(r)) {
+			doWebsocketMetrics(next, aw, r)
 		} else {
-			// Track active websocket connections
-			aw.clientAddr = strings.Split(r.RemoteAddr, ":")[0]
-			aw.desktopName = apiutil.GetNamespacedNameFromRequest(r).String()
-			if strings.HasSuffix(path, "websockify") {
-				// this is a display connection
-				activeDisplayStreams.Inc()
-				aw.isDisplay = true
-			} else if strings.HasSuffix(path, "wsaudio") {
-				// this is an audio connection
-				activeAudioStreams.Inc()
-				aw.isAudio = true
-			}
+			doRequestMetrics(next, aw, r)
 		}
-
-		// run the request flow
-		next.ServeHTTP(aw, r)
-
-		// post request flow logic
-
-		if !isWebsocket {
-			// incremement the requestsTotal metric
-			requestsTotal.With(prometheus.Labels{
-				"path":   path,
-				"method": r.Method,
-				"code":   strconv.Itoa(aw.Status()),
-			}).Inc()
-			// record the duration of the request
-			timer.ObserveDuration()
-		} else {
-			if strings.HasSuffix(path, "websockify") {
-				// this was a display connection
-				activeDisplayStreams.Dec()
-			} else if strings.HasSuffix(path, "wsaudio") {
-				// this was an audio connection
-				activeAudioStreams.Dec()
-			}
-		}
-
 	})
 }
+
+func doRequestMetrics(next http.Handler, w *apiResponseWriter, r *http.Request) {
+	path := apiutil.GetGorillaPath(r)
+	// start a timer
+	timer := prometheus.NewTimer(requestDuration.With(prometheus.Labels{
+		"path":   path,
+		"method": r.Method,
+	}))
+
+	// run the request flow
+	next.ServeHTTP(w, r)
+
+	// incremement the requestsTotal metric
+	requestsTotal.With(prometheus.Labels{
+		"path":   path,
+		"method": r.Method,
+		"code":   strconv.Itoa(w.Status()),
+	}).Inc()
+	// record the duration of the request
+	timer.ObserveDuration()
+}
+
+func doWebsocketMetrics(next http.Handler, w *apiResponseWriter, r *http.Request) {
+	path := apiutil.GetGorillaPath(r)
+	w.clientAddr = strings.Split(r.RemoteAddr, ":")[0]
+	w.desktopName = apiutil.GetNamespacedNameFromRequest(r).String()
+	if isDisplayWebsocket(path) {
+		// this is a display connection
+		activeDisplayStreams.Inc()
+		w.isDisplay = true
+	} else if isAudioWebsocket(path) {
+		// this is an audio connection
+		activeAudioStreams.Inc()
+		w.isAudio = true
+	}
+
+	// run the request flow
+	next.ServeHTTP(w, r)
+
+	if isDisplayWebsocket(path) {
+		// this was a display connection
+		activeDisplayStreams.Dec()
+	} else if isAudioWebsocket(path) {
+		// this was an audio connection
+		activeAudioStreams.Dec()
+	}
+}
+
+func isDisplayWebsocket(path string) bool {
+	return strings.HasSuffix(strings.TrimSuffix(path, "/"), "display")
+}
+
+func isAudioWebsocket(path string) bool {
+	return strings.HasSuffix(strings.TrimSuffix(path, "/"), "audio")
+}
+
+func isWebsocket(path string) bool { return strings.Contains(path, "/ws/") }

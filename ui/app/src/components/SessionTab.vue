@@ -19,6 +19,10 @@
     </template>
 
     <q-list>
+      <q-item clickable @click="onLogs">
+        <q-item-section>Logs</q-item-section>
+      </q-item>
+      <q-separator />
       <q-item clickable @click="onDisconnect">
         <q-item-section>Disconnect</q-item-section>
       </q-item>
@@ -27,6 +31,8 @@
 </template>
 
 <script>
+import LogViewerDialog from 'components/dialogs/LogViewer.vue'
+
 export default {
   name: 'SessionTab',
 
@@ -56,6 +62,17 @@ export default {
         this.$root.$emit('set-control')
         this.$router.push('control')
       }
+    },
+    onLogs () {
+      this.$q.dialog({
+        component: LogViewerDialog,
+        parent: this,
+        name: this.name,
+        namespace: this.namespace
+      }).onOk(() => {
+      }).onCancel(() => {
+      }).onDismiss(() => {
+      })
     },
     onDisconnect () {
       this.$desktopSessions.dispatch('deleteSession', this)

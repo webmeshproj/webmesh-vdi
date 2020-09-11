@@ -37,17 +37,26 @@ func GetRequestObject(r *http.Request) interface{} {
 	return context.Get(r, ContextRequestObjectKey)
 }
 
+func getRequestVar(r *http.Request, name string) string {
+	vars := mux.Vars(r)
+	return vars[name]
+}
+
 // GetNameFromRequest returns the name of the Desktop instance for the given request.
 func GetNameFromRequest(r *http.Request) string {
-	vars := mux.Vars(r)
-	return vars["name"]
+	return getRequestVar(r, "name")
 }
 
 // GetNamespaceFromRequest returns the namespace of the Desktop instance for the given
 // request.
 func GetNamespaceFromRequest(r *http.Request) string {
-	vars := mux.Vars(r)
-	return vars["namespace"]
+	return getRequestVar(r, "namespace")
+}
+
+// GetContainerFromRequest returns the container inside the Desktop instance for the given
+// request.
+func GetContainerFromRequest(r *http.Request) string {
+	return getRequestVar(r, "container")
 }
 
 // GetNamespacedNameFromRequest returns the namespaced name of the Desktop instance

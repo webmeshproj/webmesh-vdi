@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,11 +11,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/audio"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+
+	"github.com/gorilla/mux"
 	"golang.org/x/net/websocket"
 )
 
@@ -60,38 +61,67 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 
 	audioBuffer := audio.NewBuffer(log, strconv.Itoa(userID))
 
+	// Start the audio buffer
 	if err := audioBuffer.Start(audio.CodecOpus); err != nil {
 		log.Error(err, "Error setting up audio buffer")
 		return
 	}
 
+	// Make double sure GST processes are dead when the handler returns
 	defer func() {
-		if err := audioBuffer.Close(); err != nil {
-			log.Error(err, "Error closing audio buffer")
+		if !audioBuffer.IsClosed() {
+			if err := audioBuffer.Close(); err != nil {
+				log.Error(err, "Error closing audio buffer")
+			}
 		}
 	}()
 
+	// Copy audo playback data to the connection
 	go func() {
-
 		if _, err := io.Copy(wsconn, audioBuffer); err != nil {
-			log.Error(err, "Error while copying from audio stream to websocket connection")
+			if !audioBuffer.IsClosed() {
+				if cerr := audioBuffer.Close(); cerr != nil {
+					log.Error(cerr, "Error closing audio buffer")
+				}
+			}
+			if !errors.IsBrokenPipeError(err) {
+				log.Error(err, "Error while copying from audio stream to websocket connection")
+			}
 		}
 	}()
 
+	// Copy any received recording data to the buffer
+	go func() {
+		if _, err := io.Copy(audioBuffer, wsconn); err != nil {
+			if !audioBuffer.IsClosed() {
+				if cerr := audioBuffer.Close(); cerr != nil {
+					log.Error(cerr, "Error closing audio buffer")
+				}
+			}
+			if !errors.IsBrokenPipeError(err) {
+				log.Error(err, "Error while copying from websocket connection to audio buffer")
+			}
+		}
+	}()
+
+	// Wait for the audiobuffer to exit
 	if err := audioBuffer.Wait(); err != nil {
-		if err := audioBuffer.Error(); err != nil {
-			log.Error(err, "Error while streaming audio")
-			if _, err := wsconn.Write(append([]byte(err.Error()), []byte("\n")...)); err != nil {
-				log.Error(err, "Failed to write error to websocket client")
+		if errs := audioBuffer.Errors(); errs != nil {
+			log.Error(err, "Errors occured while streaming audio")
+			for _, e := range errs {
+				log.Info(e.Error())
 			}
 		}
 	}
 
+	// Close the websocket connection
 	if err := wsconn.Close(); err != nil {
-		log.Error(err, "Error closing websocket connection")
+		if !errors.IsBrokenPipeError(err) {
+			log.Error(err, "Error closing websocket connection")
+		}
 	}
 
-	log.Info("Finishing proxying audio stream")
+	log.Info("Audio stream proxy ended")
 }
 
 func statFileHandler(w http.ResponseWriter, r *http.Request) {

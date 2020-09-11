@@ -1,5 +1,5 @@
-import RFB from '@novnc/novnc/core/rfb'
-import WSAudioPlayer from './audioPlayer.js'
+import RFB from '@novnc/novnc/core/rfb.js'
+import AudioManager from './audioManager.js'
 
 // DisplayManager handles display and audio connections to remote desktop sessions.
 export default class DisplayManager {
@@ -26,7 +26,7 @@ export default class DisplayManager {
         // The RFB client for noVNC connections
         this._rfbClient = null
         // The audio player for streaming playback
-        this._audioPlayer = null
+        this._audioManager = null
         // Subscribe to changes to desktop sessions
         this._unsubscribeSessions = this._sessionStore.subscribe((mutation) => {
             this._handleSessionChange(mutation)
@@ -55,6 +55,10 @@ export default class DisplayManager {
         return this._sessionStore.getters.audioEnabled
     }
 
+    _recordingIsEnabled () {
+        return this._sessionStore.getters.recordingEnabled
+    }
+
     // _getSessionURLs returns an object that can easily retrieve URLs for the different
     // websocket endpoints.
     _getSessionURLs () {
@@ -75,6 +79,8 @@ export default class DisplayManager {
             this._handleDeleteSession()
         } else if (mutation.type === 'toggle_audio') {
             this._handleToggleAudio()
+        } else if (mutation.type === 'toggle_recording') {
+            this._handleToggleRecording()
         }
     }
 
@@ -103,6 +109,7 @@ export default class DisplayManager {
 
     // _handleToggleAudio is called when the user toggles audio.
     _handleToggleAudio () {
+        if (!this._currentSession) { return }
         if (this._audioIsEnabled()) {
             this._enableAudio()
         } else {
@@ -110,23 +117,64 @@ export default class DisplayManager {
         }
     }
 
-    // _enableAudio starts a new audio stream over the websocket endpoint.
-    _enableAudio () {
-        console.log('Enabling audio playback')
+    // _handleToggleRecording is called when the user toggles the microphone.
+    _handleToggleRecording () {
+        if (!this._currentSession) { return }
+        if (this._recordingIsEnabled()) {
+            this._enableRecording()
+        } else {
+            this._disableRecording()
+        }
+    }
+
+    // _createAudioManager creates a new AudioManager object for this DisplayManager
+    _createAudioManager () {
         const urls = this._getSessionURLs()
         const audioUrl = urls.audioURL()
-        console.log(`Connecting to audio stream`)
-        const playerCfg = { server: { url: audioUrl } }
-        this._audioPlayer = new WSAudioPlayer(playerCfg)
-        this._audioPlayer.startPlayback()
+        const playerCfg = {
+            server: { url: audioUrl },
+            onDisconnect: () => { this._resetAudioStatus() },
+            onError: (err) => { this._callError(err) }
+        }
+        this._audioManager = new AudioManager(playerCfg)
+    }
+
+    // _enableAudio starts a new audio stream over the websocket endpoint.
+    _enableAudio () {
+        if (!this._audioManager) {
+            this._createAudioManager()
+        }
+        console.log('Connecting to audio stream')
+        this._audioManager.startPlayback()
+    }
+
+    // _enableRecording will stream microphone data to the audio input on the desktop session.
+    _enableRecording () {
+        // if there is no audioManager yet, call _enableAudio first, since it will also open
+        // the websocket. I guess it should be possible to use microphone separate from playback.
+        if (!this._audioManager) {
+            this._enableAudio()
+        }
+        console.log('Starting microphone stream')
+        this._audioManager.startRecording()
     }
 
     // _disableAudio will stop an audio stream if it is currently running.
     _disableAudio() {
-        if (this._audioPlayer !== null) {
+        if (this._audioManager) {
             console.log('Stopping audio stream')
-            this._audioPlayer.close()
-            this._audioPlayer = null
+            try {
+                this._audioManager.close()
+            } finally {
+                this._audioManager = null
+            }
+        }
+    }
+
+    // _disableRecording will disable microphone streaming.
+    _disableRecording () {
+        if (this._audioManager) {
+            this._audioManager.stopRecording()
         }
     }
 
@@ -231,16 +279,19 @@ export default class DisplayManager {
 
     // _createRFBConnection creates a new RFB connection.
     async _createRFBConnection (view, url) {
+        if (this._rfbClient) { return }
         const rfb = new RFB(view, url)
         rfb.addEventListener('connect', () => { this._connectedToRFBServer() })
         rfb.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
         rfb.resizeSession = true
+        rfb.scaleViewport = true
         this._rfbClient = rfb
     }
 
     // _connectedToRFBServer is called when the RFB connection is established
     // with the desktop session.
     _connectedToRFBServer() {
+        console.log('Connected to display server!')
         const activeSession = this._getActiveSession()
         if (activeSession.socketType === 'xvnc') {
             this._rfbClient.scaleViewport = true
@@ -251,6 +302,9 @@ export default class DisplayManager {
     // _disconnectedFromRFBServer is called when the connection is dropped to a
     // desktop session.
     async _disconnectedFromRFBServer (event) {
+        if (this._rfbClient) {
+            this._rfbClient = null
+        }
         this._callDisconnect()
 
         if (event.detail.clean) {
@@ -276,12 +330,18 @@ export default class DisplayManager {
         // no matter what, make user recreate audio connection
         // TODO: know that the user was using audio and recreate
         // stream automatically if session is still active.
-        if (this.audioPlayer !== null) {
+        if (this.audioPlayer) {
             this._disableAudio()
-            this._sessionStore.dispatch('toggleAudio', false)
+            this._resetAudioStatus()
         }
 
         this._currentSession = this._getActiveSession()
+    }
+
+    // _resetAudioStatus will reset the audio toggles in the Vuex store
+    _resetAudioStatus () {
+        this._sessionStore.dispatch('toggleAudio', false)
+        this._sessionStore.dispatch('toggleRecording', false)
     }
 
     // _disconnect will close any connections currently open
@@ -395,7 +455,15 @@ export class DesktopAddressGetter {
     statusURL () {
       return this._buildAddress('status')
     }
+
+    logsFollowURL (container) {
+        return this._buildAddress(`logs/${container}`)
+    }
   
+    logsURL (container) {
+        return `/api/desktops/${this.namespace}/${this.name}/logs/${container}`
+    }
+
     // xpraArgs returns the arguments to pass to the xpra iframe for app-profile
     // desktop sessions.
     xpraArgs () {

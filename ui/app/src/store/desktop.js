@@ -9,13 +9,18 @@ export const DesktopSessions = new Vuex.Store({
 
   state: {
     sessions: localStorage.getItem('desktopSessions') || [],
-    audioEnabled: false
+    audioEnabled: false,
+    recordingEnabled: false
   },
 
   mutations: {
 
     toggle_audio (state, data) {
       state.audioEnabled = data
+    },
+
+    toggle_recording (state, data) {
+      state.recordingEnabled = data
     },
 
     new_session (state, data) {
@@ -50,6 +55,10 @@ export const DesktopSessions = new Vuex.Store({
   actions: {
     toggleAudio ({ commit }, data) {
       commit('toggle_audio', data)
+    },
+
+    toggleRecording ({ commit }, data) {
+      commit('toggle_recording', data)
     },
 
     async newSession ({ commit }, { template, namespace }) {
@@ -98,6 +107,7 @@ export const DesktopSessions = new Vuex.Store({
     sessions: state => state.sessions,
     activeSession: state => state.sessions.filter(sess => sess.active)[0],
     audioEnabled: state => state.audioEnabled,
+    recordingEnabled: state => state.recordingEnabled,
     sessionStatus: (state) => async (data) => {
       try {
         const res = await Vue.prototype.$axios.get(

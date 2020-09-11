@@ -19,7 +19,7 @@ import (
 // swagger:operation GET /api/sessions/{namespace}/{name} Sessions getSession
 // ---
 // summary: Retrieve the status of the requested desktop session.
-// description: Details include the podPhase and CRD status.
+// description: Details include the PodPhase and CRD status.
 // parameters:
 // - name: namespace
 //   in: path
@@ -60,6 +60,29 @@ type swaggerGetSessionResponse struct {
 	Body map[string]interface{}
 }
 
+// swagger:operation GET /api/desktops/ws/{namespace}/{name}/status Desktops getSessionStatusWs
+// ---
+// summary: Retrieve status updates of the requested desktop session over a websocket.
+// description: Details include the PodPhase and CRD status.
+// parameters:
+// - name: namespace
+//   in: path
+//   description: The namespace of the desktop session
+//   type: string
+//   required: true
+// - name: name
+//   in: path
+//   description: The name of the desktop session
+//   type: string
+//   required: true
+// responses:
+//   "UPGRADE": {}
+//   "400":
+//     "$ref": "#/responses/error"
+//   "403":
+//     "$ref": "#/responses/error"
+//   "404":
+//     "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopSessionStatusWebsocket(conn *websocket.Conn) {
 	defer conn.Close()
 

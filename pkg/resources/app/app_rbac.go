@@ -18,7 +18,7 @@ var appRules = []rbacv1.PolicyRule{
 	},
 	{
 		APIGroups: []string{""},
-		Resources: []string{"pods", "services", "namespaces", "endpoints"},
+		Resources: []string{"pods", "pods/log", "services", "namespaces", "endpoints"},
 		Verbs:     verbsReadOnly,
 	},
 	{

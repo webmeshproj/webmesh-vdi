@@ -4,13 +4,19 @@
 package audio
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"os/exec"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/go-logr/logr"
+
+	"github.com/tinyzimmer/kvdi/pkg/util/audio/gst"
+	"github.com/tinyzimmer/kvdi/pkg/util/audio/pa"
 )
 
 // Codec represents the encoder to use to process the raw PCM data.
@@ -30,15 +36,12 @@ const (
 // Buffer provides a Reader interface for proxying audio data to a websocket
 // connection
 type Buffer struct {
-	exec       func(string, ...string) *exec.Cmd
-	cmd        *exec.Cmd
-	buffer     io.ReadCloser
-	stderr     bytes.Buffer
-	closed     bool
-	logger     logr.Logger
-	userID     string
-	channels   int
-	sampleRate int
+	logger                            logr.Logger
+	deviceManager                     *pa.DeviceManager
+	pbkPipeline, recPipeline          *gst.Pipeline
+	channels, sampleRate              int
+	userID, nullSinkID, inputDeviceID string
+	closed                            bool
 }
 
 var _ io.ReadCloser = &Buffer{}
@@ -46,34 +49,62 @@ var _ io.ReadCloser = &Buffer{}
 // NewBuffer returns a new Buffer.
 func NewBuffer(logger logr.Logger, userID string) *Buffer {
 	return &Buffer{
-		exec:       exec.Command,
-		userID:     userID,
-		logger:     logger,
-		channels:   2,
-		sampleRate: 24000,
+		deviceManager: pa.NewDeviceManager(logger.WithName("pa_devices"), userID),
+		userID:        userID,
+		logger:        logger.WithName("audio_buffer"),
+		channels:      2,
+		sampleRate:    24000,
 	}
 }
 
-func (a *Buffer) buildPipeline(codec Codec) string {
-	pipeline := fmt.Sprintf(
-		"sudo -u audioproxy gst-launch-1.0 -q pulsesrc server=/run/user/%s/pulse/native ! audio/x-raw, channels=%d, rate=%d",
-		a.userID,
-		a.channels,
-		a.sampleRate,
-	)
+// buildPlaybackPipeline builds a GST pipeline for recording data from the dummy monitor
+// and making it available on the io.Reader interface.
+func (a *Buffer) buildPlaybackPipeline(codec Codec) *gst.Pipeline {
+	pipeline := gst.NewPipeline(a.userID, a.logger.WithName("gst_playback")).
+		WithPulseSrc(a.userID, "kvdi.monitor", a.channels, a.sampleRate)
+
 	switch codec {
 	case CodecVorbis:
-		pipeline = fmt.Sprintf("%s ! vorbisenc ! oggmux", pipeline)
+		pipeline = pipeline.WithVorbisEncode().WithOggMux()
 	case CodecOpus:
-		pipeline = fmt.Sprintf("%s ! cutter ! opusenc ! webmmux", pipeline)
+		pipeline = pipeline.WithCutter().WithOpusEncode().WithWebmMux()
 	case CodecMP3:
-		pipeline = fmt.Sprintf("%s ! lamemp3enc", pipeline)
+		pipeline = pipeline.WithLameEncode()
 	default:
 		a.logger.Info(fmt.Sprintf("Invalid codec for gst pipeline %s, defaulting to opus/webm", codec))
-		pipeline = fmt.Sprintf("%s ! cutter ! opusenc ! webmmux", pipeline)
+		pipeline = pipeline.WithCutter().WithOpusEncode().WithWebmMux()
 	}
 
-	return fmt.Sprintf("%s ! fdsink fd=1", pipeline)
+	return pipeline.WithFdSink(1)
+}
+
+// buildRecordingPipeline builds a GST pipeline for receiving data from the Write interface
+// and writing it to the source on the pipeline.
+func (a *Buffer) buildRecordingPipeline(codec Codec) *gst.Pipeline {
+	recPipeline := gst.NewPipeline(a.userID, a.logger.WithName("gst_recorder")).
+		WithFdSrc(0, false).
+		WithPlugin("decodebin").
+		WithAudioConvert().WithAudioResample().
+		WithRawCaps("s16le", 1, 16000).
+		WithFileSink(fmt.Sprintf("/run/user/%s/pulse/mic.fifo", a.userID), true)
+	return recPipeline
+}
+
+func (a *Buffer) setupDevices() error {
+	if err := a.deviceManager.AddSink("kvdi", "kvdi-playback"); err != nil {
+		return err
+	}
+
+	if err := a.deviceManager.AddSource(
+		"virtmic",
+		"kvdi-microphone",
+		fmt.Sprintf("/run/user/%s/pulse/mic.fifo", a.userID),
+		"s16le", 1, 16000,
+	); err != nil {
+		return err
+	}
+
+	return a.deviceManager.SetDefaultSource("virtmic")
 }
 
 // SetChannels sets the number of channels to record from gstreamer. When this method is not called
@@ -84,33 +115,48 @@ func (a *Buffer) SetChannels(c int) { a.channels = c }
 // the value defaults to 24000.
 func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
 
-// Start starts the gstreamer process
-func (a *Buffer) Start(codec Codec) error {
-
-	pipeline := a.buildPipeline(codec)
-
-	a.logger.Info(fmt.Sprintf("Running command: %s", pipeline))
-
-	a.cmd = a.exec("/bin/sh", "-c", pipeline)
-
-	var err error
-
-	a.buffer, err = a.cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	errPipe, err := a.cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		if _, err := io.Copy(&a.stderr, errPipe); err != nil {
-			a.logger.Error(err, "Erroring reading stderr from recorder process")
+func (a *Buffer) waitForProcPort(proto string, pid, port, retries, interval int64) error {
+	portHex := strings.ToUpper(strconv.FormatInt(port, 16))
+	tries := int64(0)
+	ticker := time.NewTicker(time.Second * time.Duration(interval))
+	for range ticker.C {
+		f, err := os.Open(fmt.Sprintf("/proc/%d/net/%s", pid, proto))
+		if err != nil {
+			return err
 		}
-	}()
+		body, err := ioutil.ReadAll(f)
+		if err != nil {
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+		if strings.Contains(string(body), portHex) {
+			break
+		}
+		if tries == retries {
+			return fmt.Errorf("Hit retry limit waiting for port %s/%d on PID %d", proto, port, pid)
+		}
+	}
+	return nil
+}
 
-	if err := a.cmd.Start(); err != nil {
+// Start starts the gstreamer processes
+func (a *Buffer) Start(codec Codec) error {
+	if err := a.setupDevices(); err != nil {
+		return err
+	}
+
+	a.pbkPipeline = a.buildPlaybackPipeline(codec)
+	a.recPipeline = a.buildRecordingPipeline(codec)
+
+	// Start the playback device
+	if err := a.pbkPipeline.Start(); err != nil {
+		return err
+	}
+
+	// Start the recording device
+	if err := a.recPipeline.Start(); err != nil {
 		return err
 	}
 
@@ -120,42 +166,61 @@ func (a *Buffer) Start(codec Codec) error {
 // Wait will join to the streaming process and block until its finished,
 // returning an error if the process exits non-zero.
 func (a *Buffer) Wait() error {
-	return a.cmd.Wait()
+	errs := make([]string, 0)
+	if err := a.pbkPipeline.Wait(); err != nil {
+		errs = append(errs, err.Error())
+	}
+	if err := a.recPipeline.Wait(); err != nil {
+		errs = append(errs, err.Error())
+	}
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, " : "))
+	}
+	return nil
 }
 
-// Error returns any errors that ocurred during the streaming process.
-func (a *Buffer) Error() error {
-	if a.cmd.ProcessState == nil {
-		return nil
+// Errors returns any errors that ocurred during the streaming process.
+func (a *Buffer) Errors() []error {
+	errs := make([]error, 0)
+	if err := a.pbkPipeline.Error(); err != nil {
+		errs = append(errs, err)
 	}
-	if a.cmd.ProcessState.Exited() {
-		if a.cmd.ProcessState.ExitCode() != 0 {
-			return errors.New(a.stderr.String())
-		}
+	if err := a.recPipeline.Error(); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return errs
 	}
 	return nil
 }
 
 // Stderr returns any output from stderr on the streaming process.
 func (a *Buffer) Stderr() string {
-	return a.stderr.String()
+	return strings.Join([]string{a.pbkPipeline.Stderr(), a.recPipeline.Stderr()}, " : ")
 }
 
 // Read implements ReadCloser and returns data from the audio buffer.
-func (a *Buffer) Read(p []byte) (int, error) {
-	return a.buffer.Read(p)
-}
+func (a *Buffer) Read(p []byte) (int, error) { return a.pbkPipeline.Read(p) }
+
+// Write implements a WriteCloser and writes data to the audio buffer.
+func (a *Buffer) Write(p []byte) (int, error) { return a.recPipeline.Write(p) }
 
 // IsClosed returns true if the buffer is closed.
 func (a *Buffer) IsClosed() bool {
-	return a.closed || a.cmd.ProcessState.Exited()
+	return a.pbkPipeline.IsClosed() && a.recPipeline.IsClosed() && a.closed
 }
 
-// Close kills the gstreamer process.
+// Close kills the gstreamer processes and unloads pa modules.
 func (a *Buffer) Close() error {
 	if !a.IsClosed() {
+		if err := a.pbkPipeline.Close(); err != nil {
+			return err
+		}
+		if err := a.recPipeline.Close(); err != nil {
+			return err
+		}
+		a.deviceManager.Destroy()
 		a.closed = true
-		return a.cmd.Process.Kill()
 	}
 	return nil
 }

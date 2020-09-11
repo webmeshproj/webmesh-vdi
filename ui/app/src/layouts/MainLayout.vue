@@ -72,7 +72,36 @@
 
             </q-item>
 
-            <q-item dense :active="audioEnabled" clickable @click="onClickAudio">
+            <q-expansion-item
+              dense dense-toggle
+              v-model="audioExpanded"
+              :caption="audioCaption"
+              :icon="audioIcon"
+              :active="audioEnabled"
+              :header-class="audioHeaderClass"
+              :content-inset-level="0.2"
+              @click="onClickAudio"
+            >
+
+              <q-list v-if="audioExpanded">
+
+                <q-item dense :active="recordingEnabled" clickable @click="onClickRecord">
+
+                  <q-item-section avatar>
+                    <q-icon :name="recordingIcon" />
+                  </q-item-section>
+
+                  <q-item-section>
+                    <q-item-label caption>{{ recordingCaption }}</q-item-label>
+                  </q-item-section>
+
+                </q-item>
+
+              </q-list>
+
+            </q-expansion-item>
+
+            <!-- <q-item dense :active="audioEnabled" clickable @click="onClickAudio">
 
               <q-item-section avatar>
                 <q-icon :name="audioIcon" />
@@ -82,7 +111,7 @@
                 <q-item-label caption>{{ audioCaption }}</q-item-label>
               </q-item-section>
 
-            </q-item>
+            </q-item> -->
 
             <q-item dense clickable @click="onPaste">
 
@@ -228,7 +257,7 @@
 import SessionTab from 'components/SessionTab.vue'
 import MFADialog from 'components/dialogs/MFADialog.vue'
 import FileTransferDialog from 'components/dialogs/FileTransfer.vue'
-import { getErrorMessage } from '../lib/common.js'
+import { getErrorMessage } from '../lib/util.js'
 
 var menuTimeout = null
 
@@ -290,6 +319,7 @@ export default {
       loginActive: false,
       profileActive: false,
       metricsActive: false,
+      audioExpanded: false,
 
       controlSessions: []
     }
@@ -321,7 +351,26 @@ export default {
       }
       return 'volume_off'
     },
+    audioHeaderClass () {
+      if (this.audioEnabled) {
+        return 'text-blue'
+      }
+      return ''
+    },
+    recordingCaption () {
+      if (this.recordingEnabled) {
+        return 'Recording is currently enabled'
+      }
+      return 'Recording is currently disabled'
+    },
+    recordingIcon () {
+      if (this.recordingEnabled) {
+        return 'mic'
+      }
+      return 'mic_off'
+    },
     audioEnabled () { return this.$desktopSessions.getters.audioEnabled },
+    recordingEnabled () { return this.$desktopSessions.getters.recordingEnabled },
     user () { return this.$userStore.getters.user },
     isLoggedIn () { return this.$userStore.getters.isLoggedIn },
     grafanaEnabled () { return this.$configStore.getters.grafanaEnabled }
@@ -435,6 +484,10 @@ export default {
       this.$desktopSessions.dispatch('toggleAudio', !this.audioEnabled)
     },
 
+    onClickRecord () {
+      this.$desktopSessions.dispatch('toggleRecording', !this.recordingEnabled)
+    },
+
     async handleLoggedIn () {
       await this.$configStore.dispatch('getServerConfig')
       this.onClickDesktopTemplates()
@@ -457,15 +510,18 @@ export default {
     subscribeToBuses () {
       this.$root.$on('notify-error', this.notifyError)
       this.$root.$on('set-control', this.onClickControl)
+      this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
     },
 
     unsubscribeFromBuses () {
       this.$root.$off('notify-error', this.notifyError)
       this.$root.$off('set-control', this.onClickControl)
+      this.unsubscribeSessions()
     },
 
     handleSessionsChange (mutation, state) {
-      this.controlSessions = this.$desktopSessions.getters.sessions
+      this.audioExpanded = state.audioEnabled
+      this.controlSessions = state.sessions
     },
 
     async notifyError (err) {

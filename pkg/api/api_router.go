@@ -82,13 +82,21 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.GetDesktopSessionStatus).Methods("GET") // Get the status of a desktop session
 	protected.HandleFunc("/sessions/{namespace}/{name}", d.DeleteDesktopSession).Methods("DELETE") // Stop a desktop session
 
-	// Methods passed to the kvdi-proxy websocket
-	protected.Path("/desktops/ws/{namespace}/{name}/status").Handler(&websocket.Server{
+	// Methods for interacting with the kvdi-proxy
+	// // Plain HTTP routes
+	protected.HandleFunc("/desktops/{namespace}/{name}/logs/{container}", d.GetDesktopLogs).Methods("GET") // Retrieve the logs a container in the desktop
+	// // Websocket routes
+	protected.Path("/desktops/ws/{namespace}/{name}/status").Handler(&websocket.Server{ // Do a follow the session status for a desktop. Used to query connect readiness.
 		Handshake: func(*websocket.Config, *http.Request) error { return nil },
 		Handler:   d.GetDesktopSessionStatusWebsocket,
 	})
-	protected.HandleFunc("/desktops/ws/{namespace}/{name}/display", d.GetWebsockify)                                  // Connect to the VNC socket on a desktop over websockets
-	protected.HandleFunc("/desktops/ws/{namespace}/{name}/audio", d.GetWebsockifyAudio)                               // Connect to the audio stream of a desktop over websockets
+	protected.Path("/desktops/ws/{namespace}/{name}/logs/{container}").Handler(&websocket.Server{ // Do a follow of the logs for a container in the desktop
+		Handshake: func(*websocket.Config, *http.Request) error { return nil },
+		Handler:   d.GetDesktopLogsWebsocket,
+	})
+	protected.HandleFunc("/desktops/ws/{namespace}/{name}/display", d.GetWebsockify)    // Connect to the VNC socket on a desktop over websockets
+	protected.HandleFunc("/desktops/ws/{namespace}/{name}/audio", d.GetWebsockifyAudio) // Connect to the audio stream of a desktop over websockets
+	// // Filesystem access
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
 	protected.HandleFunc("/desktops/fs/{namespace}/{name}/put", d.PutDesktopFile).Methods("PUT")                      // Uploads a file to a desktop

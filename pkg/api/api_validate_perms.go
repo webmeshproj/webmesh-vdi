@@ -299,6 +299,32 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 			OverrideFunc:          allowSessionOwner,
 		},
 	},
+	"/api/desktops/{namespace}/{name}/logs/{container}": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
+			},
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
+	"/api/desktops/ws/{namespace}/{name}/logs/{container}": {
+		"GET": {
+			Actions: []v1.APIAction{
+				{
+					Verb:         v1.VerbUse,
+					ResourceType: v1.ResourceTemplates,
+				},
+			},
+			ResourceNameFunc:      apiutil.GetNameFromRequest,
+			ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
+			OverrideFunc:          allowSessionOwner,
+		},
+	},
 	"/api/desktops/ws/{namespace}/{name}/display": {
 		"GET": {
 			Actions: []v1.APIAction{
