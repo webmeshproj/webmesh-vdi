@@ -7,11 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-logr/logr"
 
@@ -36,12 +32,12 @@ const (
 // Buffer provides a Reader interface for proxying audio data to a websocket
 // connection
 type Buffer struct {
-	logger                            logr.Logger
-	deviceManager                     *pa.DeviceManager
-	pbkPipeline, recPipeline          *gst.Pipeline
-	channels, sampleRate              int
-	userID, nullSinkID, inputDeviceID string
-	closed                            bool
+	logger                   logr.Logger
+	deviceManager            *pa.DeviceManager
+	pbkPipeline, recPipeline *gst.Pipeline
+	channels, sampleRate     int
+	userID                   string
+	closed                   bool
 }
 
 var _ io.ReadCloser = &Buffer{}
@@ -114,32 +110,6 @@ func (a *Buffer) SetChannels(c int) { a.channels = c }
 // SetSampleRate sets the sample rate to use when recording from gstreamer. When this method is not called
 // the value defaults to 24000.
 func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
-
-func (a *Buffer) waitForProcPort(proto string, pid, port, retries, interval int64) error {
-	portHex := strings.ToUpper(strconv.FormatInt(port, 16))
-	tries := int64(0)
-	ticker := time.NewTicker(time.Second * time.Duration(interval))
-	for range ticker.C {
-		f, err := os.Open(fmt.Sprintf("/proc/%d/net/%s", pid, proto))
-		if err != nil {
-			return err
-		}
-		body, err := ioutil.ReadAll(f)
-		if err != nil {
-			return err
-		}
-		if err := f.Close(); err != nil {
-			return err
-		}
-		if strings.Contains(string(body), portHex) {
-			break
-		}
-		if tries == retries {
-			return fmt.Errorf("Hit retry limit waiting for port %s/%d on PID %d", proto, port, pid)
-		}
-	}
-	return nil
-}
 
 // Start starts the gstreamer processes
 func (a *Buffer) Start(codec Codec) error {

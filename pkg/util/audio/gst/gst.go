@@ -22,9 +22,7 @@ type Pipeline struct {
 	writer io.Writer
 	reader io.Reader
 
-	ready, closed           bool
-	socketSrc               bool
-	socketAddr, socketProto string
+	ready, closed bool
 }
 
 // NewPipeline returns a new empty Pipeline
