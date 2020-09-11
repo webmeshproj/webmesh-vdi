@@ -30,7 +30,7 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
   - Persistent user data
 
-  - Audio playback
+  - Audio playback and microphone support
 
   - File transfer to/from "desktop" sessions. Directories get archived into a gzipped tarball prior to download.
 
