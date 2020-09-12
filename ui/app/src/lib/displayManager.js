@@ -283,14 +283,30 @@ export default class DisplayManager {
         const rfb = new RFB(view, url)
         rfb.addEventListener('connect', () => { this._connectedToRFBServer() })
         rfb.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
+        rfb.addEventListener('clipboard', (ev) => { this._handleRecvClipboard(ev) })
         rfb.resizeSession = true
         rfb.scaleViewport = true
         this._rfbClient = rfb
     }
 
+    // _handleRecvClipboard is called when the RFB connection sends clipboard data
+    // from the server.
+    async _handleRecvClipboard (ev) {
+        if (!ev.detail.text) {
+            console.log(`Received invalid clipboard event: ${ev}`)
+            return
+        }
+        try {
+            await navigator.clipboard.writeText(ev.detail.text)
+            console.log('Synced remote clipboard contents to local')
+        } catch (err) {
+            this._callError(err)
+        }
+    }
+
     // _connectedToRFBServer is called when the RFB connection is established
     // with the desktop session.
-    _connectedToRFBServer() {
+    _connectedToRFBServer () {
         console.log('Connected to display server!')
         const activeSession = this._getActiveSession()
         if (activeSession.socketType === 'xvnc') {
