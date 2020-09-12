@@ -1,6 +1,6 @@
 <template>
   <q-page flex>
-    <div id="view" :class="className">
+    <div contenteditable="true" id="view" :class="className">
       <div q-gutter-md row v-if="status === 'disconnected' && currentSession">
         <q-spinner-hourglass color="grey" size="4em" />
         <q-space />

@@ -50,6 +50,13 @@ export default class DisplayManager {
         return this._sessionStore.getters.activeSession
     }
 
+    // _setRFBQualityLevel sets the quality level on an RFB instance
+    _setRFBQualityLevel (lvl) {
+        if (this._rfbClient) {
+            this._rfbClient.qualityLevel = lvl
+        }
+    }
+
     // _audioIsEnabled returns true if audio is currently enabled
     _audioIsEnabled () {
         return this._sessionStore.getters.audioEnabled
@@ -234,7 +241,7 @@ export default class DisplayManager {
         }
 
         socket.onclose = (event) => {
-            if (event.wasClean) {
+            if (event.wasClean || event.code === 1000) {
                 console.log(`[status] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
             } else {
                 this._callError(new Error(`Error getting session status: ${event.code} ${event.reason}`))
@@ -280,13 +287,12 @@ export default class DisplayManager {
     // _createRFBConnection creates a new RFB connection.
     async _createRFBConnection (view, url) {
         if (this._rfbClient) { return }
-        const rfb = new RFB(view, url)
-        rfb.addEventListener('connect', () => { this._connectedToRFBServer() })
-        rfb.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
-        rfb.addEventListener('clipboard', (ev) => { this._handleRecvClipboard(ev) })
-        rfb.resizeSession = true
-        rfb.scaleViewport = true
-        this._rfbClient = rfb
+        this._rfbClient = new RFB(view, url)
+        this._rfbClient.addEventListener('connect', () => { this._connectedToRFBServer() })
+        this._rfbClient.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
+        this._rfbClient.addEventListener('clipboard', (ev) => { this._handleRecvClipboard(ev) })
+        this._rfbClient.resizeSession = true
+        this._rfbClient.scaleViewport = true
     }
 
     // _handleRecvClipboard is called when the RFB connection sends clipboard data
@@ -308,11 +314,7 @@ export default class DisplayManager {
     // with the desktop session.
     _connectedToRFBServer () {
         console.log('Connected to display server!')
-        const activeSession = this._getActiveSession()
-        if (activeSession.socketType === 'xvnc') {
-            this._rfbClient.scaleViewport = true
-            this._rfbClient.resizeSession = true
-        }
+        this._currentSession = this._getActiveSession()
     }
 
     // _disconnectedFromRFBServer is called when the connection is dropped to a

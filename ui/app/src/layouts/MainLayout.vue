@@ -383,7 +383,8 @@ export default {
         const text = await navigator.clipboard.readText()
         this.$root.$emit('paste-clipboard', text)
       } catch (err) {
-        console.log('This browser does not appear to support retrieving clipboard text')
+        console.log(err)
+        this.$root.$emit('notify-error', new Error('This browser does not appear to support retrieving clipboard text'))
       }
     },
 
