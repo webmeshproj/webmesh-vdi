@@ -13,14 +13,9 @@ import Error404 from 'pages/Error404.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/templates',
     component: MainLayout,
     children: [
-      // {
-      //   path: '',
-      //   name: '',
-      //   component: DesktopTemplates,
-      //   meta: { requiresAuth: true }
-      // },
       {
         path: 'login',
         name: 'login',
