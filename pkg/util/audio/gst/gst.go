@@ -208,18 +208,6 @@ func (g *Pipeline) WithFdSrc(fd int, doTimestamp bool) *Pipeline {
 	return g.WithPlugin(fmt.Sprintf("fdsrc fd=%d do-timestamp=%v", fd, doTimestamp))
 }
 
-// WithTCPSrc should be called first and creates a TCP listener as the
-// source of the pipeline.
-func (g *Pipeline) WithTCPSrc(host string, port int, doTimestamp bool) *Pipeline {
-	return g.WithPlugin(fmt.Sprintf("tcpserversrc host=%s port=%d do-timestamp=%v", host, port, doTimestamp))
-}
-
-// WithUDPSrc should be called first and creates a UDP listener as the
-// source of the pipeline.
-func (g *Pipeline) WithUDPSrc(host string, port int) *Pipeline {
-	return g.WithPlugin(fmt.Sprintf("udpsrc address=%s port=%d", host, port))
-}
-
 // WithVorbisEncode encodes the next step in the pipeline to vorbis.
 func (g *Pipeline) WithVorbisEncode() *Pipeline {
 	return g.WithPlugin("vorbisenc")
@@ -249,11 +237,6 @@ func (g *Pipeline) WithLameEncode() *Pipeline {
 func (g *Pipeline) WithLameDecode() *Pipeline {
 	g = g.WithPlugin("mpegaudioparse")
 	return g.WithPlugin("mpg123audiodec")
-}
-
-// WithWavEncode encodes the next step in the pipeline to wav.
-func (g *Pipeline) WithWavEncode() *Pipeline {
-	return g.WithPlugin("wavenc")
 }
 
 // WithOggMux wraps the next step in the pipeline in an ogg container.
@@ -299,10 +282,9 @@ func (g *Pipeline) WithFileSink(file string, appendFile bool) *Pipeline {
 	return g.WithPlugin(fmt.Sprintf("filesink append=%v location=%s", appendFile, file))
 }
 
-// WithUDPSink is called last and writes the data from the pipeline to a
-// UDP socket.
-func (g *Pipeline) WithUDPSink(host string, port int) *Pipeline {
-	return g.WithPlugin(fmt.Sprintf("udpsink host=%s port=%d", host, port))
+// WithDecodeBin attempts to decode audio data automatically.
+func (g *Pipeline) WithDecodeBin() *Pipeline {
+	return g.WithPlugin("decodebin")
 }
 
 // WithPlugin adds the given plugin (and args) to the pipeline

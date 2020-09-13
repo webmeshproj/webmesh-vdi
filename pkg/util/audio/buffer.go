@@ -76,13 +76,12 @@ func (a *Buffer) buildPlaybackPipeline(codec Codec) *gst.Pipeline {
 
 // buildRecordingPipeline builds a GST pipeline for receiving data from the Write interface
 // and writing it to the source on the pipeline.
-func (a *Buffer) buildRecordingPipeline(codec Codec) *gst.Pipeline {
+func (a *Buffer) buildRecordingPipeline() *gst.Pipeline {
 	recPipeline := gst.NewPipeline(a.userID, a.logger.WithName("gst_recorder")).
 		WithFdSrc(0, false).
-		WithPlugin("decodebin").
-		WithAudioConvert().WithAudioResample().
-		WithRawCaps("s16le", 1, 16000).
-		WithFileSink(fmt.Sprintf("/run/user/%s/pulse/mic.fifo", a.userID), true)
+		WithDecodeBin().
+		WithAudioConvert().WithAudioResample().WithRawCaps("s16le", 1, 16000).
+		WithFileSink(a.getMicFifo(), true)
 	return recPipeline
 }
 
@@ -91,16 +90,15 @@ func (a *Buffer) setupDevices() error {
 		return err
 	}
 
-	if err := a.deviceManager.AddSource(
-		"virtmic",
-		"kvdi-microphone",
-		fmt.Sprintf("/run/user/%s/pulse/mic.fifo", a.userID),
-		"s16le", 1, 16000,
-	); err != nil {
+	if err := a.deviceManager.AddSource("virtmic", "kvdi-microphone", a.getMicFifo(), "s16le", 1, 16000); err != nil {
 		return err
 	}
 
 	return a.deviceManager.SetDefaultSource("virtmic")
+}
+
+func (a *Buffer) getMicFifo() string {
+	return fmt.Sprintf("/run/user/%s/pulse/mic.fifo", a.userID)
 }
 
 // SetChannels sets the number of channels to record from gstreamer. When this method is not called
@@ -118,7 +116,7 @@ func (a *Buffer) Start(codec Codec) error {
 	}
 
 	a.pbkPipeline = a.buildPlaybackPipeline(codec)
-	a.recPipeline = a.buildRecordingPipeline(codec)
+	a.recPipeline = a.buildRecordingPipeline()
 
 	// Start the playback device
 	if err := a.pbkPipeline.Start(); err != nil {
