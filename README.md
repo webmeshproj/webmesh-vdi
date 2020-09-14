@@ -51,7 +51,6 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 ### TODO
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
-  - Microphone support - shouldn't be too hard actually
   - Harden images more
   - UI needs serious makeover
 
