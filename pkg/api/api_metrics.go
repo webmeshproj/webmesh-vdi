@@ -92,6 +92,25 @@ func (a *apiResponseWriter) WriteHeader(s int) {
 
 func (a *apiResponseWriter) Status() int { return a.status }
 
+func (a *apiResponseWriter) getBytesSentCounter() (counter *prometheus.CounterVec) {
+	if a.isAudio {
+		counter = audioBytesSentTotal
+	}
+	if a.isDisplay {
+		counter = displayBytesSentTotal
+	}
+	return
+}
+func (a *apiResponseWriter) getBytesRcvdCounter() (counter *prometheus.CounterVec) {
+	if a.isAudio {
+		counter = audioBytesReceivedTotal
+	}
+	if a.isDisplay {
+		counter = displayBytesReceivedTotal
+	}
+	return
+}
+
 func (a *apiResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	h := a.ResponseWriter.(http.Hijacker)
 	conn, rw, err := h.Hijack()
@@ -100,13 +119,10 @@ func (a *apiResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		// WriteHeader has not been called yet
 		a.status = http.StatusSwitchingProtocols
 	}
-	watcher := apiutil.NewWebsocketWatcher(conn).WithMetadata(a.clientAddr, a.desktopName)
-	if a.isAudio {
-		watcher = watcher.WithMetrics(audioBytesSentTotal, audioBytesReceivedTotal)
-	}
-	if a.isDisplay {
-		watcher = watcher.WithMetrics(displayBytesSentTotal, displayBytesReceivedTotal)
-	}
+	watcher := apiutil.NewWebsocketWatcher(conn).
+		WithMetadata(a.clientAddr, a.desktopName).
+		WithMetrics(a.getBytesSentCounter(), a.getBytesRcvdCounter())
+
 	return watcher, rw, err
 }
 
