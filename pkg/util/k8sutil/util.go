@@ -171,9 +171,7 @@ func GetPodLogs(pod *corev1.Pod, containerName string, follow bool) (io.ReadClos
 	req = DefaultClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
 	followLogs, err := req.Stream(ctx) // use the context tied to the cancel func
 	if err != nil {
-		if err := follower.Close(); err != nil {
-			// err is always nil
-		}
+		follower.Close()
 		return nil, err
 	}
 
@@ -181,8 +179,7 @@ func GetPodLogs(pod *corev1.Pod, containerName string, follow bool) (io.ReadClos
 	go func() {
 		defer followLogs.Close()
 		if _, err = io.Copy(follower.buf, followLogs); err != nil {
-			if err := follower.Close(); err != nil {
-			} // run a close just in case, they are idempotent, err is always nil
+			follower.Close()
 			if !strings.Contains(err.Error(), "canceled") {
 				fmt.Println("Error copying pod logs to buffer:", err)
 			}
