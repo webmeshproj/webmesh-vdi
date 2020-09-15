@@ -64,7 +64,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info(fmt.Sprintf("Starting mTLS enabled novnc proxy on :%d", v1.WebPort))
+	log.Info(fmt.Sprintf("Starting kvdi proxy on :%d", v1.WebPort))
 	if err := server.ListenAndServeTLS(tlsutil.ServerKeypair()); err != nil {
 		log.Error(err, "Failed to start https server")
 		os.Exit(1)

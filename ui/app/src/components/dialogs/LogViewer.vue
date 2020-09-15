@@ -45,21 +45,40 @@ export default {
 
   async mounted () {
     this.urls = new DesktopAddressGetter(this.$userStore, this.namespace, this.name)
-    try {
-      const res = await this.$axios.get(this.urls.logsURL('kvdi-proxy'))
-      this.logData = res.data
-    } catch (err) {
-      this.$root.$emit('notify-error', err)
-      this.hide()
-    }
+    this.streamLogData()
+    // try {
+    //   const res = await this.$axios.get(this.urls.logsURL('kvdi-proxy'))
+    //   this.logData = res.data
+    // } catch (err) {
+    //   this.$root.$emit('notify-error', err)
+    //   this.hide()
+    // }
   },
 
   methods: {
+
+    streamLogData () {
+      if (this.socket) {
+        return
+      }
+      this.socket = new WebSocket(this.urls.logsFollowURL('kvdi-proxy'))
+      this.socket.addEventListener('message', (ev) => {
+        if (ev.data.replace(/\s/g, '') === '') {
+          return
+        }
+        this.logData = this.logData + ev.data
+      })
+    },
+
     show () {
       this.$refs.dialog.show()
     },
 
     hide () {
+      if (this.socket) {
+        this.socket.close()
+        this.socket = null
+      }
       this.$refs.dialog.hide()
     },
 

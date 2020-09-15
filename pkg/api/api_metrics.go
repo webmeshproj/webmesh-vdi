@@ -100,51 +100,14 @@ func (a *apiResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		// WriteHeader has not been called yet
 		a.status = http.StatusSwitchingProtocols
 	}
-	return &websocketWatcher{
-		Conn:        conn,
-		isAudio:     a.isAudio,
-		isDisplay:   a.isDisplay,
-		clientAddr:  a.clientAddr,
-		desktopName: a.desktopName,
-	}, rw, err
-}
-
-type websocketWatcher struct {
-	net.Conn
-
-	rsize int
-	wsize int
-
-	isAudio, isDisplay      bool
-	clientAddr, desktopName string
-}
-
-func (w *websocketWatcher) Read(b []byte) (int, error) {
-	size, err := w.Conn.Read(b)
-	w.rsize += size
-	if w.isDisplay {
-		displayBytesReceivedTotal.With(w.prometheusLabels()).Add(float64(size))
+	watcher := apiutil.NewWebsocketWatcher(conn).WithMetadata(a.clientAddr, a.desktopName)
+	if a.isAudio {
+		watcher = watcher.WithMetrics(audioBytesSentTotal, audioBytesReceivedTotal)
 	}
-	if w.isAudio {
-		audioBytesReceivedTotal.With(w.prometheusLabels()).Add(float64(size))
+	if a.isDisplay {
+		watcher = watcher.WithMetrics(displayBytesSentTotal, displayBytesReceivedTotal)
 	}
-	return size, err
-}
-
-func (w *websocketWatcher) Write(b []byte) (int, error) {
-	size, err := w.Conn.Write(b)
-	w.wsize += size
-	if w.isDisplay {
-		displayBytesSentTotal.With(w.prometheusLabels()).Add(float64(size))
-	}
-	if w.isAudio {
-		audioBytesSentTotal.With(w.prometheusLabels()).Add(float64(size))
-	}
-	return size, err
-}
-
-func (w *websocketWatcher) prometheusLabels() prometheus.Labels {
-	return prometheus.Labels{"desktop": w.desktopName, "client": w.clientAddr}
+	return watcher, rw, err
 }
 
 // prometheusMiddleware implements mux.MiddlewareFunc and tracks request metrics.s
