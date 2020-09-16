@@ -115,8 +115,80 @@ func GetThisPod(c client.Client) (*corev1.Pod, error) {
 
 // LogFollower implements a ReadCloser for reading logs from a container in a pod.
 type LogFollower struct {
-	cancel func()
-	buf    *bytes.Buffer
+	ctx           context.Context
+	cancel        func()
+	buf           io.ReadWriter
+	pod           *corev1.Pod
+	containerName string
+}
+
+// NewLogFollower returns a new LogFollower for the given pod and container.
+func NewLogFollower(pod *corev1.Pod, containerName string) *LogFollower {
+	buf := new(bytes.Buffer)
+	ctx, cancel := context.WithCancel(context.Background())
+	return &LogFollower{
+		ctx:           ctx,
+		cancel:        cancel,
+		buf:           buf,
+		pod:           pod,
+		containerName: containerName,
+	}
+}
+
+// Stream will start the log stream
+func (l *LogFollower) Stream(follow bool) error {
+	if DefaultClient == nil {
+		return errors.New("There is no raw client configured for scraping logs")
+	}
+
+	var err error
+	defer func() {
+		if err != nil {
+			l.Close()
+		}
+	}()
+
+	// No matter what, first retrieve logs with no follow. Running with follow true will not return
+	// previous logs.
+	podLogOpts := corev1.PodLogOptions{Follow: false, Container: l.containerName}
+	req := DefaultClient.CoreV1().Pods(l.pod.Namespace).GetLogs(l.pod.Name, &podLogOpts)
+	var podLogs io.ReadCloser
+	podLogs, err = req.Stream(l.ctx)
+	if err != nil {
+		return err
+	}
+	defer podLogs.Close()
+
+	// Copy the logs to the buffer
+	if _, err = io.Copy(l, podLogs); err != nil {
+		return err
+	}
+
+	if !follow {
+		return nil
+	}
+
+	// create a new stream
+	now := metav1.Now()
+	podLogOpts = corev1.PodLogOptions{Follow: true, Container: l.containerName, SinceTime: &now}
+	req = DefaultClient.CoreV1().Pods(l.pod.Namespace).GetLogs(l.pod.Name, &podLogOpts)
+	var followLogs io.ReadCloser
+	followLogs, err = req.Stream(l.ctx)
+	if err != nil {
+		return err
+	}
+
+	// Spawn a copy in a goroutine
+	go func() {
+		defer l.Close()
+		if _, err = io.Copy(l, followLogs); err != nil {
+			if !strings.Contains(err.Error(), "canceled") {
+				fmt.Println("Error copying pod logs to buffer:", err)
+			}
+		}
+	}()
+
+	return nil
 }
 
 // Read reads data from the log buffer
@@ -124,70 +196,15 @@ func (l *LogFollower) Read(p []byte) (int, error) {
 	return l.buf.Read(p)
 }
 
+// Write writes data to the log buffer
+func (l *LogFollower) Write(p []byte) (int, error) {
+	return l.buf.Write(p)
+}
+
 // Close cancels the log stream
 func (l *LogFollower) Close() error {
 	l.cancel()
 	return nil
-}
-
-// GetPodLogs attempts to return the logs for the given pod instance.
-func GetPodLogs(pod *corev1.Pod, containerName string, follow bool) (io.ReadCloser, error) {
-	if DefaultClient == nil {
-		return nil, errors.New("There is no raw client configured for scraping logs")
-	}
-
-	// No matter what, first retrieve logs with no follow. Running with follow true will not return
-	// previous logs.
-	podLogOpts := corev1.PodLogOptions{Follow: false, Container: containerName}
-	req := DefaultClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
-	podLogs, err := req.Stream(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	defer podLogs.Close()
-
-	// Create a new buffer for the response
-	follower := &LogFollower{
-		buf:    new(bytes.Buffer),
-		cancel: func() {},
-	}
-
-	// Copy the logs to the buffer
-	if _, err = io.Copy(follower.buf, podLogs); err != nil {
-		return nil, err
-	}
-
-	// If we aren't following, return here
-	if !follow {
-		return follower, nil
-	}
-
-	// create ctx and a cancel func
-	var ctx context.Context
-	ctx, follower.cancel = context.WithCancel(context.Background())
-
-	// create a new stream
-	podLogOpts = corev1.PodLogOptions{Follow: true, Container: containerName}
-	req = DefaultClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
-	followLogs, err := req.Stream(ctx) // use the context tied to the cancel func
-	if err != nil {
-		follower.Close()
-		return nil, err
-	}
-
-	// Spawn a copy in a gorouting
-	go func() {
-		defer followLogs.Close()
-		if _, err = io.Copy(follower.buf, followLogs); err != nil {
-			follower.Close()
-			if !strings.Contains(err.Error(), "canceled") {
-				fmt.Println("Error copying pod logs to buffer:", err)
-			}
-		}
-	}()
-
-	// return the buffer and the cancel function
-	return follower, nil
 }
 
 func getClientSet() (*kubernetes.Clientset, error) {

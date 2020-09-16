@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
@@ -17,7 +16,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
-	"github.com/gorilla/mux"
 	"golang.org/x/net/websocket"
 )
 
@@ -37,25 +35,34 @@ func websockifyHandler(wsconn *websocket.Conn) {
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
+	// wrap the connection so we can log metrics
+	watcher := apiutil.NewWebsocketWatcher(wsconn)
+
+	stChan := logWatcherMetrics("display", watcher)
+	defer func() { stChan <- struct{}{} }()
+
 	// Copy client connection to the server
 	go func() {
-		if _, err := io.Copy(vncConn, wsconn); err != nil {
+		if _, err := io.Copy(vncConn, watcher); err != nil {
 			log.Error(err, "Error while copying stream from websocket connection to display socket")
 		}
+		stChan <- struct{}{}
 	}()
 
 	// Copy server connection to the client
 	go func() {
-		if _, err := io.Copy(wsconn, vncConn); err != nil {
+		if _, err := io.Copy(watcher, vncConn); err != nil {
 			log.Error(err, "Error while copying stream from display socket to websocket connection")
 		}
+		stChan <- struct{}{}
 	}()
 
+	// need a better way to block here
 	select {}
 }
 
 func wsAudioHandler(wsconn *websocket.Conn) {
-	log.Info(fmt.Sprintf("Received validated proxy request, connecting to audio stream"))
+	log.Info(fmt.Sprintf("Received audio proxy request, setting up pulseaudio/g-streamer"))
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
@@ -67,23 +74,22 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 		return
 	}
 
-	// Make double sure GST processes are dead when the handler returns
+	watcher := apiutil.NewWebsocketWatcher(wsconn)
+	stChan := logWatcherMetrics("audio", watcher)
+
+	// Make sure GST processes and watchers are dead when the handler returns
 	defer func() {
 		if !audioBuffer.IsClosed() {
 			if err := audioBuffer.Close(); err != nil {
 				log.Error(err, "Error closing audio buffer")
 			}
 		}
+		stChan <- struct{}{}
 	}()
 
 	// Copy audo playback data to the connection
 	go func() {
-		if _, err := io.Copy(wsconn, audioBuffer); err != nil {
-			if !audioBuffer.IsClosed() {
-				if cerr := audioBuffer.Close(); cerr != nil {
-					log.Error(cerr, "Error closing audio buffer")
-				}
-			}
+		if _, err := io.Copy(watcher, audioBuffer); err != nil {
 			if !errors.IsBrokenPipeError(err) {
 				log.Error(err, "Error while copying from audio stream to websocket connection")
 			}
@@ -92,12 +98,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 
 	// Copy any received recording data to the buffer
 	go func() {
-		if _, err := io.Copy(audioBuffer, wsconn); err != nil {
-			if !audioBuffer.IsClosed() {
-				if cerr := audioBuffer.Close(); cerr != nil {
-					log.Error(cerr, "Error closing audio buffer")
-				}
-			}
+		if _, err := io.Copy(audioBuffer, watcher); err != nil {
 			if !errors.IsBrokenPipeError(err) {
 				log.Error(err, "Error while copying from websocket connection to audio buffer")
 			}
@@ -115,7 +116,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 	}
 
 	// Close the websocket connection
-	if err := wsconn.Close(); err != nil {
+	if err := watcher.Close(); err != nil {
 		if !errors.IsBrokenPipeError(err) {
 			log.Error(err, "Error closing websocket connection")
 		}
@@ -280,26 +281,4 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apiutil.WriteOK(w)
-}
-
-func getLocalPathFromRequest(r *http.Request) (path string, err error) {
-	if _, err := os.Stat(v1.DesktopHomeMntPath); err != nil {
-		return "", errors.New("File transfer is disabled for this desktop session")
-	}
-
-	// build out the path prefix to strip from the request URL
-	pathPrefix := apiutil.GetGorillaPath(r)
-	pathPrefix = strings.Replace(pathPrefix, "{name}", mux.Vars(r)["name"], 1)
-	pathPrefix = strings.Replace(pathPrefix, "{namespace}", mux.Vars(r)["namespace"], 1)
-
-	fPath := filepath.Join(v1.DesktopHomeMntPath, strings.TrimPrefix(r.URL.Path, pathPrefix))
-	absPath, err := filepath.Abs(fPath)
-	if err != nil {
-		return "", err
-	}
-	if !strings.HasPrefix(absPath, v1.DesktopHomeMntPath) {
-		// requestor tried to traverse outside the user's home directory (into proxy root fs)
-		return "", fmt.Errorf("%s is outside the user's home directory", fPath)
-	}
-	return absPath, nil
 }

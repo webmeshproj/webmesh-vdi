@@ -1,9 +1,12 @@
 package apiutil
 
 import (
+	"bufio"
 	"net"
+	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // WebsocketWatcher implements a wrapper around websocket connections,
@@ -14,7 +17,7 @@ type WebsocketWatcher struct {
 	rsize int
 	wsize int
 
-	clientAddr, desktopName  string
+	labels                   map[string]string
 	sendCounter, recvCounter *prometheus.CounterVec
 }
 
@@ -30,11 +33,22 @@ func (w *WebsocketWatcher) WithMetrics(sendCounter, recvCounter *prometheus.Coun
 	return w
 }
 
-// WithMetadata adds client and desktop metadata to the prometheus metrics.
-func (w *WebsocketWatcher) WithMetadata(clientAddr, desktopName string) *WebsocketWatcher {
-	w.clientAddr = clientAddr
-	w.desktopName = desktopName
+// WithLabels adds the given labels to the prometheus metrics.
+func (w *WebsocketWatcher) WithLabels(labels map[string]string) *WebsocketWatcher {
+	w.labels = labels
 	return w
+}
+
+// Hijack will hijack the given ResponseWriter. Use `nil` for NewWebsocketWatcher when intending to
+// call this method.
+func (w *WebsocketWatcher) Hijack(writer http.ResponseWriter) (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := writer.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("Attempted to call Hijack on a non http.Hijacker")
+	}
+	conn, rw, err := h.Hijack()
+	w.Conn = conn
+	return w, rw, err
 }
 
 // Read implements read on the net.Conn interface.
@@ -57,13 +71,16 @@ func (w *WebsocketWatcher) Write(b []byte) (int, error) {
 	return size, err
 }
 
-// ReadCount returns the total number of bytes read on the connection so far.
-func (w *WebsocketWatcher) ReadCount() int { return w.rsize }
+// BytesRecvdCount returns the total number of bytes read on the connection so far.
+func (w *WebsocketWatcher) BytesRecvdCount() int { return w.rsize }
 
-// WriteCount returns the total number of bytes written to the connection so far.
-func (w *WebsocketWatcher) WriteCount() int { return w.wsize }
+// BytesSentCount returns the total number of bytes written to the connection so far.
+func (w *WebsocketWatcher) BytesSentCount() int { return w.wsize }
 
 // prometheusLabels returns the labels to apply to the prometheus counters.
 func (w *WebsocketWatcher) prometheusLabels() prometheus.Labels {
-	return prometheus.Labels{"desktop": w.desktopName, "client": w.clientAddr}
+	if w.labels == nil {
+		return prometheus.Labels{}
+	}
+	return prometheus.Labels(w.labels)
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -54,8 +55,8 @@ func (d *desktopAPI) GetDesktopLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	container := apiutil.GetContainerFromRequest(r)
-	logRdr, err := k8sutil.GetPodLogs(pod, container, false)
-	if err != nil {
+	logRdr := k8sutil.NewLogFollower(pod, container)
+	if err := logRdr.Stream(false); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
@@ -116,8 +117,8 @@ func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 		return
 	}
 	container := apiutil.GetContainerFromRequest(wsconn.Request())
-	logRdr, err := k8sutil.GetPodLogs(pod, container, true)
-	if err != nil {
+	logRdr := k8sutil.NewLogFollower(pod, container)
+	if err := logRdr.Stream(true); err != nil {
 		if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
 			apiLogger.Error(err, "Error retrieving logs from pod")
 			apiLogger.Error(werr, "Failed to write error to websocket connection")
@@ -127,25 +128,33 @@ func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 
 	defer logRdr.Close()
 
-	scanner := bufio.NewScanner(logRdr)
+	buf := bufio.NewReader(logRdr)
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if _, err := wsconn.Write(append(line, []byte("\n")...)); err != nil {
+	for {
+		line, err := buf.ReadBytes('\n')
+		if err != nil {
+			if err == io.EOF {
+				// EOF in this context means we are still waiting for data on the stream.
+				// Sleep and continue.
+				time.Sleep(time.Second)
+				continue
+			}
+			if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
+				apiLogger.Error(err, "Error occured while reading from log reader")
+				apiLogger.Error(werr, "Failed to write error to websocket connection")
+			}
+			return
+		}
+		if _, err := wsconn.Write(line); err != nil {
 			if errors.IsBrokenPipeError(err) {
+				apiLogger.Info("Client has disconnected, finishing log stream")
 				return
 			}
 			apiLogger.Error(err, "Error while writing log event to websocket")
+			return
 		}
 	}
 
-	if err := scanner.Err(); err != io.EOF && err != nil {
-		if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
-			apiLogger.Error(err, "Error occured while scanning log reader")
-			apiLogger.Error(werr, "Failed to write error to websocket connection")
-		}
-		return
-	}
 }
 
 func (d *desktopAPI) getDesktopPodForRequest(r *http.Request) (*corev1.Pod, error) {

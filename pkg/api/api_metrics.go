@@ -112,18 +112,18 @@ func (a *apiResponseWriter) getBytesRcvdCounter() (counter *prometheus.CounterVe
 }
 
 func (a *apiResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	h := a.ResponseWriter.(http.Hijacker)
-	conn, rw, err := h.Hijack()
+	conn, rw, err := apiutil.NewWebsocketWatcher(nil).
+		WithLabels(map[string]string{"desktop": a.desktopName, "client": a.clientAddr}).
+		WithMetrics(a.getBytesSentCounter(), a.getBytesRcvdCounter()).
+		Hijack(a.ResponseWriter)
+
 	if err == nil && a.status == http.StatusOK {
 		// The status will be StatusSwitchingProtocols if there was no error and
 		// WriteHeader has not been called yet
 		a.status = http.StatusSwitchingProtocols
 	}
-	watcher := apiutil.NewWebsocketWatcher(conn).
-		WithMetadata(a.clientAddr, a.desktopName).
-		WithMetrics(a.getBytesSentCounter(), a.getBytesRcvdCounter())
 
-	return watcher, rw, err
+	return conn, rw, err
 }
 
 // prometheusMiddleware implements mux.MiddlewareFunc and tracks request metrics.s

@@ -2,17 +2,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
@@ -20,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/pflag"
 	"golang.org/x/net/websocket"
-
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -116,33 +111,4 @@ func newServer() (*http.Server, error) {
 		WriteTimeout: 300 * time.Second,
 		ReadTimeout:  300 * time.Second,
 	}, nil
-}
-
-// LogOutput represents a log message
-type LogOutput struct {
-	Time       time.Time `json:"time"`
-	Method     string    `json:"method"`
-	Path       string    `json:"path"`
-	StatusCode int       `json:"statusCode"`
-	Size       int       `json:"size"`
-	RemoteHost string    `json:"remoteHost"`
-}
-
-func formatLog(writer io.Writer, params handlers.LogFormatterParams) {
-	host, _, err := net.SplitHostPort(params.Request.RemoteAddr)
-	if err != nil {
-		host = params.Request.RemoteAddr
-	}
-	if out, err := json.Marshal(&LogOutput{
-		Time:       params.TimeStamp,
-		Method:     params.Request.Method,
-		Path:       params.URL.Path,
-		StatusCode: params.StatusCode,
-		RemoteHost: host,
-		Size:       params.Size,
-	}); err == nil {
-		if _, err := writer.Write(append(out, []byte("\n")...)); err != nil {
-			fmt.Println(string(out))
-		}
-	}
 }

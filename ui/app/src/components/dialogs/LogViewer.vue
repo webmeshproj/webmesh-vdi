@@ -1,12 +1,25 @@
 <template>
-  <q-dialog ref="dialog" @hide="onDialogHide" full-width>
-    <q-card>
+  <q-dialog ref="dialog" @hide="onDialogHide">
+    <q-card style="width: 1400px; max-width: 80vw;">
+
+      <!-- Header -->
       <q-card-section>
         <div class="text-h6 q-mb-md">kvdi-proxy logs</div>
       </q-card-section>
-      <q-card-section>
+
+      <!-- Log content -->
+      <q-card-section style="max-height: 30vh" class="scroll" id="logs">
         <pre>{{logData}}</pre>
       </q-card-section>
+
+      <q-separator />
+
+      <!-- Close dialog  -->
+      <q-card-actions align="right">
+        <q-btn flat :label="toggleLabel" color="primary" @click="onToggle" />
+        <q-btn flat label="Close" color="primary" v-close-popup />
+      </q-card-actions>
+
     </q-card>
   </q-dialog>
 </template>
@@ -33,7 +46,9 @@ export default {
       follow: false,
       socket: null,
       urls: null,
-      logData: ''
+      paused: false,
+      logData: '',
+      buffer: []
     }
   },
 
@@ -46,16 +61,30 @@ export default {
   async mounted () {
     this.urls = new DesktopAddressGetter(this.$userStore, this.namespace, this.name)
     this.streamLogData()
-    // try {
-    //   const res = await this.$axios.get(this.urls.logsURL('kvdi-proxy'))
-    //   this.logData = res.data
-    // } catch (err) {
-    //   this.$root.$emit('notify-error', err)
-    //   this.hide()
-    // }
+  },
+
+  computed: {
+    toggleLabel () {
+      if (this.paused) {
+        return 'Resume'
+      }
+      return 'Pause'
+    }
   },
 
   methods: {
+
+    onToggle () {
+      this.paused = !this.paused
+      if (!this.paused) {
+        if (this.buffer.length > 0) {
+          this.buffer.forEach((msg) => {
+            this.logData = this.logData + msg
+          })
+          this.buffer = []
+        }
+      }
+    },
 
     streamLogData () {
       if (this.socket) {
@@ -66,7 +95,13 @@ export default {
         if (ev.data.replace(/\s/g, '') === '') {
           return
         }
+        if (this.paused) {
+          this.buffer.push(ev.data)
+          return
+        }
         this.logData = this.logData + ev.data
+        const logDiv = document.getElementById('logs')
+        logDiv.scrollTop = logDiv.scrollHeight
       })
     },
 
