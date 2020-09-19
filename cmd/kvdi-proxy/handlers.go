@@ -11,8 +11,9 @@ import (
 	"strconv"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/audio"
+	"github.com/tinyzimmer/kvdi/pkg/audio/pa"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/audio"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -31,7 +32,27 @@ func websockifyHandler(wsconn *websocket.Conn) {
 		return
 	}
 
-	log.Info("Connection established, proxying display")
+	log.Info("Connection to vnc server established")
+
+	log.Info("Setting up pulse-audio devices")
+
+	paDevices := pa.NewDeviceManager(log.WithName("pa_devices"), strconv.Itoa(userID))
+
+	if err := paDevices.AddSink("kvdi", "kvdi-playback"); err != nil {
+		log.Error(err, "Failed to add kvdi-playback device, audio playback may not work as expected")
+	}
+
+	if err := paDevices.AddSource("virtmic", "kvdi-microphone", filepath.Join(v1.DesktopRunDir, "mic.fifo"), "s16le", 1, 16000); err != nil {
+		log.Error(err, "Failed to add virtmic device, microphone support may not work as expected")
+	}
+
+	if err := paDevices.SetDefaultSource("virtmic"); err != nil {
+		log.Error(err, "Failed to set virtmic to default source, microphone support may not work as expected")
+	}
+
+	defer paDevices.Destroy()
+
+	log.Info("Starting display proxy")
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
@@ -69,13 +90,14 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 	audioBuffer := audio.NewBuffer(log, strconv.Itoa(userID))
 
 	// Start the audio buffer
-	if err := audioBuffer.Start(audio.CodecOpus); err != nil {
+	if err := audioBuffer.Start(); err != nil {
 		log.Error(err, "Error setting up audio buffer")
 		return
 	}
 
 	watcher := apiutil.NewWebsocketWatcher(wsconn)
 	stChan := logWatcherMetrics("audio", watcher)
+	defer func() { stChan <- struct{}{} }()
 
 	// Make sure GST processes and watchers are dead when the handler returns
 	defer func() {
@@ -94,6 +116,11 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 				log.Error(err, "Error while copying from audio stream to websocket connection")
 			}
 		}
+		if !audioBuffer.IsClosed() {
+			if err := audioBuffer.Close(); err != nil {
+				log.Error(err, "Error closing audio buffer")
+			}
+		}
 	}()
 
 	// Copy any received recording data to the buffer
@@ -103,10 +130,16 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 				log.Error(err, "Error while copying from websocket connection to audio buffer")
 			}
 		}
+		if !audioBuffer.IsClosed() {
+			if err := audioBuffer.Close(); err != nil {
+				log.Error(err, "Error closing audio buffer")
+			}
+		}
 	}()
 
 	// Wait for the audiobuffer to exit
 	if err := audioBuffer.Wait(); err != nil {
+		log.Info(err.Error())
 		if errs := audioBuffer.Errors(); errs != nil {
 			log.Error(err, "Errors occured while streaming audio")
 			for _, e := range errs {
