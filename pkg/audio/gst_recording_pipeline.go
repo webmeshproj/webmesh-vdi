@@ -25,17 +25,20 @@ type RecordingPipeline struct {
 func NewRecordingPipeline(logger logr.Logger, opts *RecordingPipelineOpts) (*RecordingPipeline, error) {
 	// TODO: decodebin required dynamic linking so a little more complex than playback
 	// Though would like more control over pads in this pipeline to try to reduce latency
-	pipelineString := fmt.Sprintf(
+	pipeline, err := gst.NewPipelineFromLaunchString(logger, newPipelineStringFromOpts(opts), true, false)
+	if err != nil {
+		return nil, err
+	}
+	recPipeline := &RecordingPipeline{pipeline}
+	return recPipeline, nil
+}
+
+func newPipelineStringFromOpts(opts *RecordingPipelineOpts) string {
+	return fmt.Sprintf(
 		"decodebin ! audioconvert ! audioresample ! audio/x-raw, format=%s, rate=%d, channels=%d ! filesink location=%s append=true",
 		opts.DeviceFormat,
 		opts.DeviceRate,
 		opts.DeviceChannels,
 		opts.DeviceFifo,
 	)
-	pipeline, err := gst.NewPipelineFromLaunchString(logger, pipelineString, true, false)
-	if err != nil {
-		return nil, err
-	}
-	recPipeline := &RecordingPipeline{pipeline}
-	return recPipeline, nil
 }
