@@ -13,15 +13,14 @@ import (
 	"github.com/go-logr/logr"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
 )
 
 // Buffer provides a ReadWriteCloser for proxying audio data to
 // and from a websocket connection.
 type Buffer struct {
 	logger               logr.Logger
-	pbkPipeline          *gst.PlaybackPipeline
-	recPipeline          *gst.RecordingPipeline
+	pbkPipeline          *PlaybackPipeline
+	recPipeline          *RecordingPipeline
 	channels, sampleRate int
 	userID               string
 	closed               bool
@@ -51,9 +50,9 @@ func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
 func (a *Buffer) Start() error {
 	var err error
 
-	a.pbkPipeline, err = gst.NewPlaybackPipeline(
+	a.pbkPipeline, err = NewPlaybackPipeline(
 		a.logger.WithName("gst_playback"),
-		&gst.PlaybackPipelineOpts{
+		&PlaybackPipelineOpts{
 			PulseServer:    fmt.Sprintf("/run/user/%s/pulse/native", a.userID),
 			DeviceName:     "kvdi.monitor",
 			SourceFormat:   "S16LE",
@@ -63,9 +62,9 @@ func (a *Buffer) Start() error {
 	if err != nil {
 		return err
 	}
-	a.recPipeline, err = gst.NewRecordingPipeline(
+	a.recPipeline, err = NewRecordingPipeline(
 		a.logger.WithName("gst_recorder"),
-		&gst.RecordingPipelineOpts{
+		&RecordingPipelineOpts{
 			DeviceFifo:     filepath.Join(v1.DesktopRunDir, "mic.fifo"),
 			DeviceFormat:   "S16LE",
 			DeviceRate:     16000,

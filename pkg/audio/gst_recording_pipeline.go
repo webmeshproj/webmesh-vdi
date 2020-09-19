@@ -1,9 +1,10 @@
-package gst
+package audio
 
 import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
 )
 
 // RecordingPipelineOpts are options passed to the playback pipeline.
@@ -16,7 +17,7 @@ type RecordingPipelineOpts struct {
 // a virtual mic on a pulse server. It is assumed the audio source is parseable
 // by gst decodebin.
 type RecordingPipeline struct {
-	*Pipeline
+	*gst.Pipeline
 }
 
 // NewRecordingPipeline returns a new RecordingPipeline. For now the pipeline is construced using
@@ -31,7 +32,7 @@ func NewRecordingPipeline(logger logr.Logger, opts *RecordingPipelineOpts) (*Rec
 		opts.DeviceChannels,
 		opts.DeviceFifo,
 	)
-	pipeline, err := NewPipelineFromLaunchString(logger, pipelineString, true, false)
+	pipeline, err := gst.NewPipelineFromLaunchString(logger, pipelineString, true, false)
 	if err != nil {
 		return nil, err
 	}

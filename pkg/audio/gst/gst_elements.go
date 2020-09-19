@@ -38,8 +38,9 @@ func newPipelineFromString(launchv string) (*C.GstElement, error) {
 	return pipeline, nil
 }
 
-func newFdSink(fd int) (*C.GstElement, error) {
-	fdSink, err := newElement("fdsink")
+// NewFdSink returns a new sink writing to the given file descriptor.
+func NewFdSink(fd int) (*C.GstElement, error) {
+	fdSink, err := NewElement("fdsink")
 	if err != nil {
 		return nil, err
 	}
@@ -50,24 +51,27 @@ func newFdSink(fd int) (*C.GstElement, error) {
 	return fdSink, nil
 }
 
-func newPulseSrc(opts *PlaybackPipelineOpts) (*C.GstElement, error) {
-	pulseSrc, err := newElement("pulsesrc")
+// NewPulseSrc returns a new audio source for the device on the given
+// pulse server.
+func NewPulseSrc(server, device string) (*C.GstElement, error) {
+	pulseSrc, err := NewElement("pulsesrc")
 	if err != nil {
 		return nil, err
 	}
 
 	gsrc := glib.Take(unsafe.Pointer(pulseSrc))
-	if err := gsrc.Set("server", opts.PulseServer); err != nil {
+	if err := gsrc.Set("server", server); err != nil {
 		return nil, err
 	}
-	if err := gsrc.Set("device", opts.DeviceName); err != nil {
+	if err := gsrc.Set("device", device); err != nil {
 		return nil, err
 	}
 
 	return pulseSrc, nil
 }
 
-func newPulseCaps(format string, rate, channels int) (*C.GstCaps, error) {
+// NewPulseCaps returns new caps to apply to a pulse source with the given format, rate, and channels.
+func NewPulseCaps(format string, rate, channels int) (*C.GstCaps, error) {
 	caps := &Caps{
 		Type: "audio/x-raw",
 		Data: map[string]interface{}{
@@ -79,7 +83,8 @@ func newPulseCaps(format string, rate, channels int) (*C.GstCaps, error) {
 	return caps.toCGstCaps()
 }
 
-func newElement(name string) (*C.GstElement, error) {
+// NewElement is a generic wrapper around `gst_element_factory_make`.
+func NewElement(name string) (*C.GstElement, error) {
 	elemName := C.CString(name)
 	defer C.free(unsafe.Pointer(elemName))
 	elem := C.gst_element_factory_make((*C.gchar)(elemName), nil)

@@ -95,11 +95,20 @@ func NewPipelineFromLaunchString(logger logr.Logger, launchStr string, useFdSrc,
 	}, nil
 }
 
+// Native returns the pointer to the underlying pipeline element.
+func (p *Pipeline) Native() *C.GstElement { return p.pipelineElement }
+
 // Read implements a Reader and returns data from the read buffer.
 func (p *Pipeline) Read(b []byte) (int, error) { return p.rbuf.Read(b) }
 
+// ReaderFd returns the file descriptor for the read buffer.
+func (p *Pipeline) ReaderFd() uintptr { return p.reader.Fd() }
+
 // Write implements a Writer and places data in the write buffer.
 func (p *Pipeline) Write(b []byte) (int, error) { return p.wbuf.Write(b) }
+
+// WriterFd returns the file descriptor for the write buffer.
+func (p *Pipeline) WriterFd() uintptr { return p.writer.Fd() }
 
 // Start will start the underlying pipeline.
 func (p *Pipeline) Start() error {
@@ -148,7 +157,7 @@ func (p *Pipeline) Errors() []error {
 func (p *Pipeline) NewElementMany(elemNames ...string) (map[string]*C.GstElement, error) {
 	elemMap := make(map[string]*C.GstElement)
 	for _, name := range elemNames {
-		elem, err := newElement(name)
+		elem, err := NewElement(name)
 		if err != nil {
 			return nil, err
 		}

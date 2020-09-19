@@ -1,7 +1,8 @@
-package gst
+package audio
 
 import (
 	"github.com/go-logr/logr"
+	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
 )
 
 // PlaybackPipelineOpts are options passed to the playback pipeline.
@@ -14,13 +15,13 @@ type PlaybackPipelineOpts struct {
 // pulseaudio server, encodes it to opus/webm, and makes it available on an
 // internal buffer for reading.
 type PlaybackPipeline struct {
-	*Pipeline
+	*gst.Pipeline
 	opts *PlaybackPipelineOpts
 }
 
 // NewPlaybackPipeline returns a new PlaybackPipeline.
 func NewPlaybackPipeline(logger logr.Logger, opts *PlaybackPipelineOpts) (*PlaybackPipeline, error) {
-	pipeline, err := NewPipeline(logger)
+	pipeline, err := gst.NewPipeline(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -42,11 +43,11 @@ const (
 
 func (p *PlaybackPipeline) setupPipeline() error {
 	// Build all the elements
-	pulseSrc, err := newPulseSrc(p.opts)
+	pulseSrc, err := gst.NewPulseSrc(p.opts.PulseServer, p.opts.DeviceName)
 	if err != nil {
 		return err
 	}
-	pulseCaps, err := newPulseCaps(p.opts.SourceFormat, p.opts.SourceRate, p.opts.SourceChannels)
+	pulseCaps, err := gst.NewPulseCaps(p.opts.SourceFormat, p.opts.SourceRate, p.opts.SourceChannels)
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (p *PlaybackPipeline) setupPipeline() error {
 	if err != nil {
 		return err
 	}
-	fdSink, err := newFdSink(int(p.writer.Fd()))
+	fdSink, err := gst.NewFdSink(int(p.WriterFd()))
 	if err != nil {
 		return err
 	}
