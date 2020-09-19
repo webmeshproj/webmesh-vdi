@@ -6,6 +6,7 @@ package gst
 #include <gst/gst.h>
 */
 import "C"
+import "unsafe"
 
 // init runs gst_init at luanch
 func init() {
@@ -15,4 +16,9 @@ func init() {
 // gobool provides an easy type conversion between C.gboolean and a go bool.
 func gobool(b C.gboolean) bool {
 	return b != 0
+}
+
+// elementGoName retrieves the name of the given element as a Go string
+func elementGoName(elem *C.GstElement) string {
+	return C.GoString((*C.GstObject)(unsafe.Pointer(elem)).name)
 }

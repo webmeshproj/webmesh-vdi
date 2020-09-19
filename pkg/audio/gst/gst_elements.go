@@ -1,18 +1,73 @@
 package gst
 
-// #cgo pkg-config: gstreamer-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
-// #include <gst/gst.h>
+/*
+#cgo pkg-config: gstreamer-1.0
+#cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
+#include <gst/gst.h>
+
+void cgo_g_object_set_string (GObject * obj, gchar * fieldName, gchar * value) {
+	  g_object_set (obj, fieldName, value, NULL);
+}
+
+void cgo_g_object_set_int (GObject * obj, gchar * fieldName, gint value) {
+	  g_object_set (obj, fieldName, value, NULL);
+}
+*/
 import "C"
 
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 	"unsafe"
-
-	"github.com/gotk3/gotk3/glib"
 )
+
+// Element is a Go wrapper around a GstElement. This is intended to be used with plugins
+// and not pipelines.
+type Element struct {
+	elem *C.GstElement
+}
+
+// NewElement is a generic wrapper around `gst_element_factory_make`.
+func NewElement(name string) (*Element, error) {
+	elemName := C.CString(name)
+	defer C.free(unsafe.Pointer(elemName))
+	elem := C.gst_element_factory_make((*C.gchar)(elemName), nil)
+	if elem == nil {
+		return nil, fmt.Errorf("Could not create element: %s", name)
+	}
+	return &Element{elem: elem}, nil
+}
+
+// Native returns the underlying GstElement.
+func (e *Element) Native() *C.GstElement { return e.elem }
+
+// Set sets fieldName to fieldValue on the underlying GstElement.
+func (e *Element) Set(fieldName string, fieldValue interface{}) error {
+	cfieldName := C.CString(fieldName)
+	defer C.free(unsafe.Pointer(cfieldName))
+	switch reflect.TypeOf(fieldValue).Kind() {
+	case reflect.String:
+		cval := C.CString(fieldValue.(string))
+		defer C.free(unsafe.Pointer(cval))
+		C.cgo_g_object_set_string(
+			(*C.GObject)(unsafe.Pointer(e.elem)),
+			(*C.gchar)(cfieldName),
+			(*C.gchar)(cval),
+		)
+	case reflect.Int:
+		cval := C.gint(fieldValue.(int))
+		C.cgo_g_object_set_int(
+			(*C.GObject)(unsafe.Pointer(e.elem)),
+			(*C.gchar)(cfieldName),
+			(C.gint)(cval),
+		)
+	default:
+		return fmt.Errorf("Unhandled type for Element.Set(): %s", reflect.TypeOf(fieldValue).String())
+	}
+	return nil
+}
 
 func newPipeline() (*C.GstElement, error) {
 	pipelineName := C.CString(time.Now().String())
@@ -36,60 +91,4 @@ func newPipelineFromString(launchv string) (*C.GstElement, error) {
 		return nil, errors.New(errMsg)
 	}
 	return pipeline, nil
-}
-
-// NewFdSink returns a new sink writing to the given file descriptor.
-func NewFdSink(fd int) (*C.GstElement, error) {
-	fdSink, err := NewElement("fdsink")
-	if err != nil {
-		return nil, err
-	}
-	gsink := glib.Take(unsafe.Pointer(fdSink))
-	if err := gsink.Set("fd", fd); err != nil {
-		return nil, err
-	}
-	return fdSink, nil
-}
-
-// NewPulseSrc returns a new audio source for the device on the given
-// pulse server.
-func NewPulseSrc(server, device string) (*C.GstElement, error) {
-	pulseSrc, err := NewElement("pulsesrc")
-	if err != nil {
-		return nil, err
-	}
-
-	gsrc := glib.Take(unsafe.Pointer(pulseSrc))
-	if err := gsrc.Set("server", server); err != nil {
-		return nil, err
-	}
-	if err := gsrc.Set("device", device); err != nil {
-		return nil, err
-	}
-
-	return pulseSrc, nil
-}
-
-// NewPulseCaps returns new caps to apply to a pulse source with the given format, rate, and channels.
-func NewPulseCaps(format string, rate, channels int) (*C.GstCaps, error) {
-	caps := &Caps{
-		Type: "audio/x-raw",
-		Data: map[string]interface{}{
-			"format":   format,
-			"rate":     rate,
-			"channels": channels,
-		},
-	}
-	return caps.toCGstCaps()
-}
-
-// NewElement is a generic wrapper around `gst_element_factory_make`.
-func NewElement(name string) (*C.GstElement, error) {
-	elemName := C.CString(name)
-	defer C.free(unsafe.Pointer(elemName))
-	elem := C.gst_element_factory_make((*C.gchar)(elemName), nil)
-	if elem == nil {
-		return nil, fmt.Errorf("Could not create element: %s", name)
-	}
-	return elem, nil
 }

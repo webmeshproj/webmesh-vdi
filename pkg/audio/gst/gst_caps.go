@@ -12,14 +12,28 @@ import (
 	"unsafe"
 )
 
-// Caps is a wrapper around C.GstCaps. It provides an internal function for easy type
+// Caps is a wrapper around GstCaps. It provides a function for easy type
 // conversion.
 type Caps struct {
 	Type string
 	Data map[string]interface{}
 }
 
-func (g *Caps) toCGstCaps() (*C.GstCaps, error) {
+// NewRawCaps returns new GstCaps with the given format, sample-rate, and channels.
+func NewRawCaps(format string, rate, channels int) *Caps {
+	caps := &Caps{
+		Type: "audio/x-raw",
+		Data: map[string]interface{}{
+			"format":   format,
+			"rate":     rate,
+			"channels": channels,
+		},
+	}
+	return caps
+}
+
+// ToGstCaps returns the GstCaps representation of this Caps instance.
+func (g *Caps) ToGstCaps() (*C.GstCaps, error) {
 	var structStr string
 	structStr = g.Type
 	// build a structure string from the data

@@ -36,43 +36,43 @@ func NewPlaybackPipeline(logger logr.Logger, opts *PlaybackPipelineOpts) (*Playb
 }
 
 const (
-	cutter  = "cutter"
-	opusenc = "opusenc"
-	webmmux = "webmmux"
+	pulsesrc = "pulsesrc"
+	fdsink   = "fdsink"
+	cutter   = "cutter"
+	opusenc  = "opusenc"
+	webmmux  = "webmmux"
 )
 
 func (p *PlaybackPipeline) setupPipeline() error {
 	// Build all the elements
-	pulseSrc, err := gst.NewPulseSrc(p.opts.PulseServer, p.opts.DeviceName)
+	pulseCaps := gst.NewRawCaps(p.opts.SourceFormat, p.opts.SourceRate, p.opts.SourceChannels)
+	encoderElements, err := p.NewElementMany(pulsesrc, cutter, opusenc, webmmux, fdsink)
 	if err != nil {
 		return err
 	}
-	pulseCaps, err := gst.NewPulseCaps(p.opts.SourceFormat, p.opts.SourceRate, p.opts.SourceChannels)
-	if err != nil {
+	if err := encoderElements[fdsink].Set("fd", int(p.WriterFd())); err != nil {
 		return err
 	}
-	encoderElements, err := p.NewElementMany(cutter, opusenc, webmmux)
-	if err != nil {
+	if err := encoderElements[pulsesrc].Set("server", p.opts.PulseServer); err != nil {
 		return err
 	}
-	fdSink, err := gst.NewFdSink(int(p.WriterFd()))
-	if err != nil {
+	if err := encoderElements[pulsesrc].Set("device", p.opts.DeviceName); err != nil {
 		return err
 	}
 
 	// Add all the elements to the pipeline
 	if err := p.BinAddMany(
-		pulseSrc,
+		encoderElements[pulsesrc],
 		encoderElements[cutter],
 		encoderElements[opusenc],
 		encoderElements[webmmux],
-		fdSink,
+		encoderElements[fdsink],
 	); err != nil {
 		return err
 	}
 
 	// Link the pulsesrc to cutter with caps
-	if err := p.ElementLinkFiltered(pulseSrc, encoderElements[cutter], pulseCaps); err != nil {
+	if err := p.ElementLinkFiltered(encoderElements[pulsesrc], encoderElements[cutter], pulseCaps); err != nil {
 		return err
 	}
 
@@ -81,7 +81,7 @@ func (p *PlaybackPipeline) setupPipeline() error {
 		encoderElements[cutter],
 		encoderElements[opusenc],
 		encoderElements[webmmux],
-		fdSink,
+		encoderElements[fdsink],
 	); err != nil {
 		return err
 	}
