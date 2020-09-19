@@ -35,11 +35,11 @@ jobs:
 
     - name: Install gstreamer dependencies
       run: |
-        sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y libgstreamer1.0-0 gstreamer1.0-plugins-base pkg-config build-essential
+        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libgstreamer1.0-0 libgstreamer1.0-dev pkg-config build-essential
 
-    # - name: Lint all packages
-    #   run: |
-    #     CGO_ENABLED=1 make lint
+    - name: Lint all packages
+      run: |
+        CGO_ENABLED=1 make lint
 
     - name: Run all unit tests
       run: |
