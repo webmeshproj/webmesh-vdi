@@ -21,7 +21,7 @@ import (
 
 // Pipeline is the base implementation of a GstPipeline using CGO to wrap
 // gstreamer API calls. It provides methods to be inherited by the extending
-// PlaybackPipeline and RecordingPipeline structs. The struct itself implements
+// PlaybackPipeline and RecordingPipeline objects. The struct itself implements
 // a ReadWriteCloser.
 type Pipeline struct {
 	// A logger interface for messages
