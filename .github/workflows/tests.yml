@@ -35,7 +35,7 @@ jobs:
 
     - name: Install gstreamer dependencies
       run: |
-        sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y libgstreamer1.0-0 gstreamer1.0-plugins-base pkg-config
+        sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y libgstreamer1.0-0 gstreamer1.0-plugins-base pkg-config build-essential
 
     - name: Lint all packages
       run: |
