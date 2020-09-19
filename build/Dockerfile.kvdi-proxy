@@ -9,14 +9,17 @@ RUN apk --update-cache add upx
 RUN mkdir -p /build
 WORKDIR /build
 
-# Go build options
-ENV GO111MODULE=on
-ENV CGO_ENABLED=0
-
 # Fetch deps first as they don't change frequently
 COPY go.mod /build/go.mod
 COPY go.sum /build/go.sum
 RUN go mod download
+
+# Go build options
+ENV GO111MODULE=on
+## CGO is required for GST bindings
+ENV CGO_ENABLED=1
+
+RUN apk add glib-dev gstreamer-dev gst-plugins-base-dev pkgconfig gcc musl-dev
 
 ARG VERSION
 ENV VERSION=${VERSION}
@@ -40,7 +43,8 @@ RUN go build \
 FROM alpine
 
 RUN apk add --update --no-cache \
-        gstreamer gstreamer-tools gst-plugins-good pulseaudio-utils vorbis-tools lame sudo \
+        gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad \
+        pulseaudio-utils sudo \
       && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/kvdi-proxy /kvdi-proxy

@@ -7,14 +7,14 @@ RUN apk --update-cache add upx
 RUN mkdir -p /build
 WORKDIR /build
 
-# Go build options
-ENV GO111MODULE=on
-ENV CGO_ENABLED=0
-
 # Fetch deps first as they don't change frequently
 COPY go.mod /build/go.mod
 COPY go.sum /build/go.sum
 RUN go mod download
+
+# Go build options
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
 
 ARG VERSION
 ENV VERSION=${VERSION}
