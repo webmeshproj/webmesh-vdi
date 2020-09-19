@@ -10,11 +10,15 @@ write () {
 }
 
 echo "** Setting up user account: ${USER}"
-useradd --uid 9000 --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
+useradd --uid ${USER_ID} --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
 passwd -d ${USER}
 mkdir -p "${HOME}"
+mkdir -p "${HOME}/.config/pulse"
+echo "load-module module-native-protocol-unix auth-anonymous=1" > "${HOME}/.config/pulse/default.pa"
 cp /etc/.gtkrc-2.0 "${HOME}"
-chown ${USER}: "${HOME}"
+chown -R ${USER}: "${HOME}"
+
+echo "** Setting up user runtime dir"
 mkdir -p /run/user/${USER_ID} && chmod 0700 /run/user/${USER_ID} && chown ${USER}: /run/user/${USER_ID}
 
 # This could be more cleverly done inside the image itself as opposed to at boot.
