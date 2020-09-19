@@ -33,10 +33,14 @@ jobs:
       run: |
         go mod download
 
+    - name: Install gstreamer dependencies
+      run: |
+        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libgstreamer1.0-0 gstreamer1.0-plugins-base pkg-config
+
     - name: Lint all packages
       run: |
-        make lint
+        CGO_ENABLED=1 make lint
 
     - name: Run all unit tests
       run: |
-        make test
+        CGO_ENABLED=1 make test

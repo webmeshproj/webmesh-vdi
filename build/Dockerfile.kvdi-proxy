@@ -19,7 +19,7 @@ ENV GO111MODULE=on
 ## CGO is required for GST bindings
 ENV CGO_ENABLED=1
 
-RUN apk add glib-dev gstreamer-dev gst-plugins-base-dev pkgconfig gcc musl-dev
+RUN apk add glib-dev gstreamer-dev pkgconfig gcc musl-dev
 
 ARG VERSION
 ENV VERSION=${VERSION}
