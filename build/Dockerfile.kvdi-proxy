@@ -43,7 +43,7 @@ RUN go build \
 FROM alpine
 
 RUN apk add --update --no-cache \
-        gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad \
+        gstreamer gst-plugins-base gst-plugins-good \
         pulseaudio-utils sudo \
       && adduser -D -u 9000 audioproxy
 
