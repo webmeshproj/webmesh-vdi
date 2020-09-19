@@ -22,6 +22,7 @@ type Caps struct {
 func (g *Caps) toCGstCaps() (*C.GstCaps, error) {
 	var structStr string
 	structStr = g.Type
+	// build a structure string from the data
 	if g.Data != nil {
 		elems := make([]string, 0)
 		for k, v := range g.Data {
@@ -29,19 +30,24 @@ func (g *Caps) toCGstCaps() (*C.GstCaps, error) {
 		}
 		structStr = fmt.Sprintf("%s, %s", g.Type, strings.Join(elems, ", "))
 	}
+	// convert the structure string to a cstring
 	cstr := C.CString(structStr)
 	defer C.free(unsafe.Pointer(cstr))
+	// a small buffer for garbage
 	p := C.malloc(C.size_t(128))
 	defer C.free(p)
+	// create a structure from the string
 	cstruct := C.gst_structure_from_string((*C.gchar)(cstr), (**C.gchar)(p))
 	if cstruct == nil {
 		return nil, errors.New("Could not create GstStructure from Structure")
 	}
-
+	// create a new empty caps object
 	caps := C.gst_caps_new_empty()
 	if caps == nil {
 		return nil, errors.New("Could not create new empty caps")
 	}
+
+	// append the structure to the caps
 	C.gst_caps_append_structure((*C.GstCaps)(caps), (*C.GstStructure)(cstruct))
 
 	return caps, nil
