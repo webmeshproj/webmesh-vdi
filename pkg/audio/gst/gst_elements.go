@@ -38,21 +38,6 @@ func newPipelineFromString(launchv string) (*C.GstElement, error) {
 	return pipeline, nil
 }
 
-func newFifoSink(fifoName string) (*C.GstElement, error) {
-	fifoSink, err := newElement("filesink")
-	if err != nil {
-		return nil, err
-	}
-	gsink := glib.Take(unsafe.Pointer(fifoSink))
-	if err := gsink.Set("location", fifoName); err != nil {
-		return nil, err
-	}
-	if err := gsink.Set("append", true); err != nil {
-		return nil, err
-	}
-	return fifoSink, nil
-}
-
 func newFdSink(fd int) (*C.GstElement, error) {
 	fdSink, err := newElement("fdsink")
 	if err != nil {
@@ -63,18 +48,6 @@ func newFdSink(fd int) (*C.GstElement, error) {
 		return nil, err
 	}
 	return fdSink, nil
-}
-
-func newFdSrc(fd int) (*C.GstElement, error) {
-	fdSrc, err := newElement("fdsrc")
-	if err != nil {
-		return nil, err
-	}
-	gsink := glib.Take(unsafe.Pointer(fdSrc))
-	if err := gsink.Set("fd", fd); err != nil {
-		return nil, err
-	}
-	return fdSrc, nil
 }
 
 func newPulseSrc(opts *PlaybackPipelineOpts) (*C.GstElement, error) {

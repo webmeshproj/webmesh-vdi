@@ -12,16 +12,6 @@ func init() {
 	C.gst_init(nil, nil)
 }
 
-func gbool(b bool) C.gboolean {
-	if b {
-		return C.gboolean(1)
-	}
-	return C.gboolean(0)
-}
-
 func gobool(b C.gboolean) bool {
-	if b != 0 {
-		return true
-	}
-	return false
+	return b != 0
 }
