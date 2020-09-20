@@ -10,7 +10,6 @@ export default class AudioManager {
     this._config = config
     this._socket = null
     this._mediaRecorder = null
-    this._context = null
   }
 
   // _connect will create a new Websocket connection. Use novnc/websockify-js 
@@ -45,22 +44,6 @@ export default class AudioManager {
     }
   }
 
-  // _startMicrophone (stream) {
-  //   if (!this._socket) {
-  //     this._connect()
-  //   }
-  //   this._context = new AudioContext()
-  //   const source = this._context.createMediaStreamSource(stream)
-  //   const processor = this._context.createScriptProcessor(256, 1, 1)
-
-  //   source.connect(processor)
-  //   processor.connect(this._context.destination)
-
-  //   processor.onaudioprocess = (e) => {
-  //     this._send(e.inputBuffer.getChannelData(0))
-  //   }
-  // }
-
   // startRecording starts the recording process.
   startRecording () {
     // build a config for the OpusRecorder
@@ -89,35 +72,11 @@ export default class AudioManager {
 
   // stopRecording stops the audio recorder process
   async stopRecording () {
-    if (this._context) {
-      // this._mediaRecorder.close()
+    if (this._mediaRecorder) {
       this._mediaRecorder.stop()
       this._mediaRecorder = null
-      // await this._context.close()
-      // this._context = null
     }
   }
-
-  // // This implementation uses raw PCM data.
-  // startRecording () {
-  //   if (!navigator.getUserMedia) {
-  //     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
-  //                 navigator.mozGetUserMedia || navigator.msGetUserMedia
-  //   }
-  //   if (!navigator.getUserMedia) {
-  //     throw new Error('Audio recording is not supported in this browser')
-  //   }
-  //   // will prompt the user for microphone access if not already provided
-  //   navigator.getUserMedia({ audio:true }, 
-  //     (stream) => {
-  //         this._startMicrophone(stream)
-  //     },
-  //     (err) => {
-  //       throw err
-  //     }
-  //   )
-  //   return
-  // }
 
   // startPlayback starts the playback process
   startPlayback () {

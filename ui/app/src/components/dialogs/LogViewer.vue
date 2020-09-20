@@ -16,6 +16,7 @@
 
       <!-- Close dialog  -->
       <q-card-actions align="right">
+        <q-btn flat label="Download" color="primary" @click="onDownload" />
         <q-btn flat :label="toggleLabel" color="primary" @click="onToggle" />
         <q-btn flat label="Close" color="primary" v-close-popup />
       </q-card-actions>
@@ -84,6 +85,16 @@ export default {
           this.buffer = []
         }
       }
+    },
+
+    onDownload () {
+      const localname = `${this.name}_logs.txt`
+      const fileURL = window.URL.createObjectURL(new Blob([this.logData]))
+      const fileLink = document.createElement('a')
+      fileLink.href = fileURL
+      fileLink.setAttribute('download', localname)
+      document.body.appendChild(fileLink)
+      fileLink.click()
     },
 
     streamLogData () {
