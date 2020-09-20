@@ -7,8 +7,8 @@ package gst
 */
 import "C"
 
-// init runs gst_init at luanch
-func init() {
+// Init runs `gst_init`. It currently does not support arguments.
+func Init() {
 	C.gst_init(nil, nil)
 }
 

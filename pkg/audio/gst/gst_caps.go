@@ -1,8 +1,10 @@
 package gst
 
-// #cgo pkg-config: gstreamer-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
-// #include <gst/gst.h>
+/*
+#cgo pkg-config: gstreamer-1.0
+#cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
+#include <gst/gst.h>
+*/
 import "C"
 
 import (
