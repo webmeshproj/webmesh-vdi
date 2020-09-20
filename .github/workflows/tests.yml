@@ -33,9 +33,9 @@ jobs:
       run: |
         go mod download
 
-    - name: Install gstreamer dependencies
+    - name: Install gstreamer/pulse dependencies
       run: |
-        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libgstreamer1.0-0 libgstreamer1.0-dev pkg-config build-essential
+        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libpulse-dev libgstreamer1.0-0 libgstreamer1.0-dev pkg-config build-essential
 
     - name: Lint all packages
       run: |
