@@ -121,7 +121,7 @@ func (a *Buffer) Start() error {
 	// enough to ultimately cause a race.
 	go a.watchRecPipeline()
 
-	// Start a dump of the contents on the mic device to ioutil.Discard.
+	// Start a dump of the contents on the mic device.
 	// This allows PulseAudio to flush the buffer on the device so when other
 	// applications request audio from it they don't get dumped the entire history
 	// at once.
@@ -177,7 +177,7 @@ func (a *Buffer) watchRecPipeline() {
 // should still do a Close() after this returns to make sure all processes are cleaned up.
 //
 // Currently the recording pipeline is not checked since it can die when the user toggles
-// audio, leading to a race condition with this function
+// audio, leading to a race condition with this function.
 func (a *Buffer) Wait() error {
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
