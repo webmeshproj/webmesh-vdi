@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "0.0.1",
+  "version": "v0.0.30",
   "description": "A Kubernetes-Native VDI",
   "productName": "kvdi",
   "cordovaId": "org.cordova.quasar.app",
