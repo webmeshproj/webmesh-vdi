@@ -21,7 +21,7 @@
     "js-yaml": "^3.13.1",
     "opus-recorder": "^8.0.3",
     "qrcode.vue": "^1.7.0",
-    "quasar": "^1.13.2",
+    "quasar": "^1.14.0",
     "swagger-ui": "^3.25.0",
     "swagger-ui-dist": "^3.25.0",
     "vue2-ace-editor": "^0.0.15",

@@ -22,16 +22,20 @@ build: build-all
 ## make build-all          # Build the manager, app, and nonvnc-proxy images.
 build-all: build-manager build-app build-kvdi-proxy
 
+## make build-base         # Builds the base image that contains common go build dependies.
+build-base:
+	$(call build_docker,base,$(BASE_IMAGE))
+
 ## make build-manager      # Build the manager docker image.
-build-manager:
+build-manager: build-base
 	$(call build_docker,manager,${MANAGER_IMAGE})
 
 ## make build-app          # Build the app docker image.
-build-app:
+build-app: build-base
 	$(call build_docker,app,${APP_IMAGE})
 
 ## make build-kvdi-proxy  # Build the kvdi-proxy image.
-build-kvdi-proxy:
+build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
 ##

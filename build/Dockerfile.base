@@ -1,0 +1,15 @@
+######################
+# Dependencies image #
+######################
+FROM golang:1.15-alpine as builder
+
+RUN apk --update-cache add upx curl
+
+# Setup build directory
+RUN mkdir -p /build
+WORKDIR /build
+
+# Fetch deps first as they don't change frequently
+COPY go.mod /build/go.mod
+COPY go.sum /build/go.sum
+RUN go mod download

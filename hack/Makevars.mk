@@ -22,6 +22,7 @@ SDK_PLATFORM := apple-darwin
 endif
 
 # Image Options
+BASE_IMAGE ?= ${REPO}/${NAME}:build-base-${VERSION}
 MANAGER_IMAGE ?= ${REPO}/${NAME}:manager-${VERSION}
 APP_IMAGE ?= ${REPO}/${NAME}:app-${VERSION}
 KVDI_PROXY_IMAGE ?= ${REPO}/${NAME}:kvdi-proxy-${VERSION}
@@ -75,6 +76,7 @@ define build_docker
 		-f build/Dockerfile.$(1) \
 		-t $(2) \
 		--build-arg VERSION=$(VERSION) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg GIT_COMMIT=$(shell git rev-parse HEAD)
 endef
 

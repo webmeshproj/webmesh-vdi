@@ -1,32 +1,21 @@
 #################
 # Compile image #
 #################
-FROM golang:1.15-alpine as builder
-
-RUN apk --update-cache add upx
-
-# Setup build directory
-RUN mkdir -p /build
-WORKDIR /build
-
-# Fetch deps first as they don't change frequently
-COPY go.mod /build/go.mod
-COPY go.sum /build/go.sum
-RUN go mod download
+ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:build-base-latest
+FROM ${BASE_IMAGE} as builder
 
 # Go build options
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
+ARG GO_SWAGGER_VERSION=v0.23.0
+RUN curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
+  && chmod +x /usr/local/bin/swagger
+
 ARG VERSION
 ENV VERSION=${VERSION}
 ARG GIT_COMMIT
 ENV GIT_COMMIT=${GIT_COMMIT}
-
-ARG GO_SWAGGER_VERSION=v0.23.0
-RUN apk add --update curl \
-  && curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
-  && chmod +x /usr/local/bin/swagger
 
 # Copy go code
 COPY version/     /build/version

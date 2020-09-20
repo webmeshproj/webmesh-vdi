@@ -1,25 +1,15 @@
 #################
 # Compile image #
 #################
-FROM golang:1.15-alpine as builder
-
-RUN apk --update-cache add upx
-
-# Setup build directory
-RUN mkdir -p /build
-WORKDIR /build
-
-# Fetch deps first as they don't change frequently
-COPY go.mod /build/go.mod
-COPY go.sum /build/go.sum
-RUN go mod download
+ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:build-base-latest
+FROM ${BASE_IMAGE} as builder
 
 # Go build options
 ENV GO111MODULE=on
 ## CGO is required for GST bindings
 ENV CGO_ENABLED=1
 
-RUN apk add glib-dev gstreamer-dev pkgconfig gcc musl-dev
+RUN apk add pulseaudio-dev glib-dev gstreamer-dev pkgconfig gcc musl-dev
 
 ARG VERSION
 ENV VERSION=${VERSION}
@@ -43,8 +33,7 @@ RUN go build \
 FROM alpine
 
 RUN apk add --update --no-cache \
-        gstreamer gst-plugins-base gst-plugins-good \
-        pulseaudio-utils sudo \
+      libpulse gstreamer gst-plugins-good \
       && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/kvdi-proxy /kvdi-proxy
