@@ -5,6 +5,10 @@ package gst
 #cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
 #include <gst/gst.h>
 
+void cgo_g_object_set_boolean (GObject * obj, gchar * fieldName, gboolean value) {
+		  g_object_set (obj, fieldName, value, NULL);
+}
+
 void cgo_g_object_set_string (GObject * obj, gchar * fieldName, gchar * value) {
 	  g_object_set (obj, fieldName, value, NULL);
 }
@@ -40,8 +44,26 @@ func NewElement(name string) (*Element, error) {
 	return &Element{elem: elem}, nil
 }
 
-// Native returns the underlying GstElement.
-func (e *Element) Native() *C.GstElement { return e.elem }
+// NewElementMany is a convenience wrapper around building many GstElements in a
+// single function call. It returns an error if the creation of any element fails. A
+// map is returned with keys matching the names provided as arguments.
+func NewElementMany(elemNames ...string) (map[string]*Element, error) {
+	elemMap := make(map[string]*Element)
+	for _, name := range elemNames {
+		elem, err := NewElement(name)
+		if err != nil {
+			return nil, err
+		}
+		elemMap[name] = elem
+	}
+	return elemMap, nil
+}
+
+// native returns the underlying GstElement.
+func (e *Element) native() *C.GstElement { return e.elem }
+
+// Name returns the name of this GstElement.
+func (e *Element) Name() string { return C.GoString((*C.GstObject)(unsafe.Pointer(e.elem)).name) }
 
 // Set sets fieldName to fieldValue on the underlying GstElement.
 func (e *Element) Set(fieldName string, fieldValue interface{}) error {
@@ -63,13 +85,22 @@ func (e *Element) Set(fieldName string, fieldValue interface{}) error {
 			(*C.gchar)(cfieldName),
 			(C.gint)(cval),
 		)
+
+	case reflect.Bool:
+		cval := gboolean(fieldValue.(bool))
+		C.cgo_g_object_set_boolean(
+			(*C.GObject)(unsafe.Pointer(e.elem)),
+			(*C.gchar)(cfieldName),
+			(C.gboolean)(cval),
+		)
+
 	default:
 		return fmt.Errorf("Unhandled type for Element.Set(): %s", reflect.TypeOf(fieldValue).String())
 	}
 	return nil
 }
 
-func newPipeline() (*C.GstElement, error) {
+func newEmptyPipeline() (*C.GstElement, error) {
 	pipelineName := C.CString(time.Now().String())
 	defer C.free(unsafe.Pointer(pipelineName))
 

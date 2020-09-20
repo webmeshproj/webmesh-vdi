@@ -87,7 +87,14 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
-	audioBuffer := audio.NewBuffer(log, strconv.Itoa(userID))
+	// Create a new audio buffer
+	audioBuffer := audio.NewBuffer(&audio.BufferOpts{
+		Logger:           log,
+		PulseServer:      fmt.Sprintf("/run/user/%d/pulse/native", userID),
+		PulseMonitorName: "kvdi.monitor",
+		PulseMicName:     "virtmic",
+		PulseMicPath:     filepath.Join(v1.DesktopRunDir, "mic.fifo"),
+	})
 
 	// Start the audio buffer
 	if err := audioBuffer.Start(); err != nil {

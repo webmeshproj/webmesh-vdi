@@ -5,36 +5,66 @@ package audio
 
 import (
 	"errors"
-	"fmt"
 	"io"
-	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
 )
 
+// BufferOpts represents options passed to NewBuffer when building
+// a recording or playback pipeline.
+type BufferOpts struct {
+	// A Logger to log messages to, one will be created if this
+	// is nil.
+	Logger logr.Logger
+	// The path to the PulseAudio UNIX socket
+	PulseServer string
+	// The name of the device to monitor for playback on the read-buffer.
+	PulseMonitorName string
+	// The name of the PulseSource to write to when recording on the write-buffer.
+	// This is required because an additional monitor needs to be created on the
+	// mic device to allow PulseAudio to flush its buffers.
+	PulseMicName string
+	// The path of the PulseAudio FIFO to write to when recording on the write-buffer.
+	PulseMicPath string
+}
+
 // Buffer provides a ReadWriteCloser for proxying audio data to
-// and from a websocket connection.
+// and from a websocket connection. The read-buffer is populated with opus/webm
+// data and writes to write-buffer can be in any format that gstreamer `decodebin`
+// supports.
 type Buffer struct {
-	logger               logr.Logger
-	pbkPipeline          *PlaybackPipeline
-	recPipeline          *RecordingPipeline
-	channels, sampleRate int
-	userID               string
-	closed               bool
+	logger                                                         logr.Logger
+	pbkPipeline, recPipeline, micSinkPipeline                      *gst.Pipeline
+	channels, sampleRate, micChannels, micSampleRate               int
+	pulseServer, pulseFormat, pulseMonitor, pulseMic, pulseMicPath string
+	closed                                                         bool
+	wmux                                                           sync.Mutex
+	wsize                                                          int
 }
 
 var _ io.ReadWriteCloser = &Buffer{}
 
 // NewBuffer returns a new Buffer.
-func NewBuffer(logger logr.Logger, userID string) *Buffer {
+func NewBuffer(opts *BufferOpts) *Buffer {
+	if opts.Logger == nil {
+		opts.Logger = logf.Log.WithName("audio_buffer")
+	}
 	return &Buffer{
-		userID:     userID,
-		logger:     logger.WithName("audio_buffer"),
-		channels:   2,
-		sampleRate: 24000,
+		logger:        opts.Logger,
+		channels:      2,
+		micChannels:   1,
+		micSampleRate: 16000,
+		sampleRate:    24000,
+		pulseServer:   opts.PulseServer,
+		pulseFormat:   "S16LE",
+		pulseMonitor:  opts.PulseMonitorName,
+		pulseMic:      opts.PulseMicName,
+		pulseMicPath:  opts.PulseMicPath,
 	}
 }
 
@@ -46,31 +76,58 @@ func (a *Buffer) SetChannels(c int) { a.channels = c }
 // the value defaults to 24000.
 func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
 
+func (a *Buffer) newSinkPipeline() (*gst.Pipeline, error) {
+	return NewSinkPipeline(
+		a.logger.WithName("mic_null_monitor"),
+		&PlaybackPipelineOpts{
+			PulseServer:    a.pulseServer,
+			DeviceName:     a.pulseMic,
+			SourceFormat:   a.pulseFormat,
+			SourceRate:     a.micSampleRate,
+			SourceChannels: a.micChannels,
+		},
+	)
+}
+
+func (a *Buffer) newRecordingPipeline() (*gst.Pipeline, error) {
+	return NewRecordingPipeline(
+		a.logger.WithName("gst_recorder"),
+		&RecordingPipelineOpts{
+			DeviceFifo:     a.pulseMicPath,
+			DeviceFormat:   a.pulseFormat,
+			DeviceRate:     a.micSampleRate,
+			DeviceChannels: a.micChannels,
+		},
+	)
+}
+
+func (a *Buffer) newPlaybackPipeline() (*gst.Pipeline, error) {
+	return NewPlaybackPipeline(
+		a.logger.WithName("gst_playback"),
+		&PlaybackPipelineOpts{
+			PulseServer:    a.pulseServer,
+			DeviceName:     a.pulseMonitor,
+			SourceFormat:   a.pulseFormat,
+			SourceRate:     a.sampleRate,
+			SourceChannels: a.channels,
+		},
+	)
+}
+
 // Start starts the gstreamer processes
 func (a *Buffer) Start() error {
 	var err error
 
-	a.pbkPipeline, err = NewPlaybackPipeline(
-		a.logger.WithName("gst_playback"),
-		&PlaybackPipelineOpts{
-			PulseServer:    fmt.Sprintf("/run/user/%s/pulse/native", a.userID),
-			DeviceName:     "kvdi.monitor",
-			SourceFormat:   "S16LE",
-			SourceRate:     a.sampleRate,
-			SourceChannels: a.channels,
-		})
+	a.pbkPipeline, err = a.newPlaybackPipeline()
 	if err != nil {
 		return err
 	}
-	a.recPipeline, err = NewRecordingPipeline(
-		a.logger.WithName("gst_recorder"),
-		&RecordingPipelineOpts{
-			DeviceFifo:     filepath.Join(v1.DesktopRunDir, "mic.fifo"),
-			DeviceFormat:   "S16LE",
-			DeviceRate:     16000,
-			DeviceChannels: 1,
-		},
-	)
+	a.recPipeline, err = a.newRecordingPipeline()
+	if err != nil {
+		return err
+	}
+
+	a.micSinkPipeline, err = a.newSinkPipeline()
 	if err != nil {
 		return err
 	}
@@ -85,22 +142,84 @@ func (a *Buffer) Start() error {
 		return err
 	}
 
+	// Watch the mic pipeline and restart it if there is ever more than a
+	// one second period of silence. This is a workaround to inferring that
+	// the user has toggled audio. There should really be a way to signal that
+	// to this process instead, since a trigger happy user can bash the toggle
+	// enough to ultimately cause a race.
+	go a.watchRecPipeline()
+
+	// Start a dump of the contents on the mic device to ioutil.Discard.
+	// This allows PulseAudio to flush the buffer on the device so when other
+	// applications request audio from it they don't get dumped the entire history
+	// at once.
+	if err := a.micSinkPipeline.Start(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// Wait will watch the gstreamer pipelines and return once one or both of them has
-// stopped.
+func (a *Buffer) restartRecorder() error {
+	a.wmux.Lock()
+	defer a.wmux.Unlock()
+	var err error
+	if err = a.recPipeline.Close(); err != nil {
+		return err
+	}
+	a.recPipeline, err = a.newRecordingPipeline()
+	if err != nil {
+		return err
+	}
+	return a.recPipeline.Start()
+}
+
+func (a *Buffer) watchRecPipeline() {
+	ticker := time.NewTicker(time.Second * 1)
+	lastSize := a.wsize
+	lastStartSize := a.wsize
+	for range ticker.C {
+		// if the playback pipeline is dead, return
+		if a.pbkPipeline.IsClosed() {
+			return
+		}
+		if a.wsize == lastSize {
+			if lastStartSize == a.wsize {
+				// we have restarted already and there is no data still yet
+				continue
+			}
+			a.logger.Info("Restarting recording pipeline")
+			if err := a.restartRecorder(); err != nil {
+				a.logger.Error(err, "Failed to restart recording pipeline")
+				return
+			}
+			a.logger.Info("Recording pipeline restarted")
+			lastStartSize = a.wsize
+		}
+		lastSize = a.wsize
+	}
+}
+
+// Wait will watch the gstreamer pipelines and return once one of of them has
+// stopped. Since this function returns on any pipeline being dead, the caller
+// should still do a Close() after this returns to make sure all processes are cleaned up.
+//
+// Currently the recording pipeline is not checked since it can die when the user toggles
+// audio, leading to a race condition with this function
 func (a *Buffer) Wait() error {
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
-		if a.pbkPipeline.IsRunning() && a.recPipeline.IsRunning() {
+		if a.pbkPipeline.IsRunning() && a.micSinkPipeline.IsRunning() {
 			continue
 		}
-		if len(a.pbkPipeline.Errors()) > 0 {
+		if a.pbkPipeline.Error() != nil {
 			return errors.New("Errors occurred on the playback pipeline")
 		}
-		if len(a.recPipeline.Errors()) > 0 {
+		if a.recPipeline.Error() != nil {
 			return errors.New("Errors occurred on the recording pipeline")
+		}
+		if a.micSinkPipeline.Error() != nil {
+			return errors.New("Errors occurred on the mic-sink pipeline")
 		}
 		break
 	}
@@ -110,11 +229,14 @@ func (a *Buffer) Wait() error {
 // Errors returns any errors that ocurred during the streaming process.
 func (a *Buffer) Errors() []error {
 	errs := make([]error, 0)
-	if pbkErrs := a.pbkPipeline.Errors(); pbkErrs != nil {
-		errs = append(errs, pbkErrs...)
+	if pbkErr := a.pbkPipeline.Error(); pbkErr != nil {
+		errs = append(errs, pbkErr)
 	}
-	if recErrs := a.recPipeline.Errors(); recErrs != nil {
-		errs = append(errs, recErrs...)
+	if recErr := a.recPipeline.Error(); recErr != nil {
+		errs = append(errs, recErr)
+	}
+	if sinkErr := a.micSinkPipeline.Error(); sinkErr != nil {
+		errs = append(errs, sinkErr)
 	}
 	if len(errs) > 0 {
 		return errs
@@ -126,21 +248,39 @@ func (a *Buffer) Errors() []error {
 func (a *Buffer) Read(p []byte) (int, error) { return a.pbkPipeline.Read(p) }
 
 // Write implements a WriteCloser and writes data to the audio buffer.
-func (a *Buffer) Write(p []byte) (int, error) { return a.recPipeline.Write(p) }
+func (a *Buffer) Write(p []byte) (int, error) {
+	a.wmux.Lock()
+	defer a.wmux.Unlock()
+	s, err := a.recPipeline.Write(p)
+	if err != nil {
+		return s, err
+	}
+	a.wsize += s
+	return s, nil
+}
 
 // IsClosed returns true if the buffer is closed.
 func (a *Buffer) IsClosed() bool {
 	return a.closed
 }
 
-// Close kills the gstreamer processes and unloads pa modules.
+// Close kills the gstreamer pipelines.
 func (a *Buffer) Close() error {
 	if !a.IsClosed() {
-		if err := a.pbkPipeline.Close(); err != nil {
-			return err
+		if !a.pbkPipeline.IsClosed() {
+			if err := a.pbkPipeline.Close(); err != nil {
+				return err
+			}
 		}
-		if err := a.recPipeline.Close(); err != nil {
-			return err
+		if !a.recPipeline.IsClosed() {
+			if err := a.recPipeline.Close(); err != nil {
+				return err
+			}
+		}
+		if !a.micSinkPipeline.IsClosed() {
+			if err := a.micSinkPipeline.Close(); err != nil {
+				return err
+			}
 		}
 		a.closed = true
 	}

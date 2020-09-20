@@ -43,9 +43,9 @@ func getLocalPathFromRequest(r *http.Request) (path string, err error) {
 
 func logWatcherMetrics(proxyType string, watcher *apiutil.WebsocketWatcher) chan struct{} {
 	st := make(chan struct{})
-	logger := log.WithValues("connection", proxyType)
+	logger := log.WithValues("Connection", proxyType)
 	go func() {
-		ticker := time.NewTicker(time.Second * 5)
+		ticker := time.NewTicker(time.Second * 10)
 		for {
 			select {
 			case <-st:

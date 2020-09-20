@@ -4,43 +4,39 @@ package gst
 // #cgo CFLAGS: -Wno-deprecated-declarations -g -Wall
 // #include <gst/gst.h>
 import "C"
-import (
-	"errors"
-	"unsafe"
-)
 
 // Bus is a Go wrapper around a GstBus. It provides convenience methods for
 // unref-ing and popping messages from the queue.
 type Bus struct {
-	bus *C.GstBus
+	pipeline *Pipeline
+	bus      *C.GstBus
 }
 
-// BusFromPipeline returns a new Bus object for the GstBus on the given GstPipeline.
-func BusFromPipeline(pipeline *C.GstElement) (*Bus, error) {
-	bus := C.gst_element_get_bus((*C.GstElement)(pipeline))
-	if bus == nil {
-		return nil, errors.New("Could not retrieve bus from pipeline")
-	}
-	return &Bus{bus: bus}, nil
-}
+// native returns the underlying GstBus.
+func (b *Bus) native() *C.GstBus { return b.bus }
 
-// Native returns the native pointer to the GstBus.
-func (b *Bus) Native() unsafe.Pointer { return unsafe.Pointer(b.bus) }
-
-// BlockPopMessage blocks until a message is available on the bus and then returns in.
+// BlockPopMessage blocks until a message is available on the bus and then returns it.
+// If the underlying pipeline is stopped while this function is being called, it will
+// return nil.
 func (b *Bus) BlockPopMessage() *Message {
-	msg := C.gst_bus_timed_pop_filtered(
-		(*C.GstBus)(b.bus),
-		C.GST_CLOCK_TIME_NONE,
-		C.GST_MESSAGE_ANY,
-	)
-	if msg == nil {
-		return nil
+	for {
+		msg := C.gst_bus_timed_pop_filtered(
+			(*C.GstBus)(b.native()),
+			C.GST_SECOND,
+			C.GST_MESSAGE_ANY,
+		)
+		if msg == nil {
+			if b.pipeline.IsClosed() {
+				break
+			}
+			continue
+		}
+		return NewMessage(msg)
 	}
-	return NewMessage(msg)
+	return nil
 }
 
 // Unref wraps `gst_object_unref` on the underlying GstBus.
 func (b *Bus) Unref() {
-	C.gst_object_unref((C.gpointer)(b.bus))
+	C.gst_object_unref((C.gpointer)(b.native()))
 }

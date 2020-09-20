@@ -13,24 +13,12 @@ type RecordingPipelineOpts struct {
 	DeviceRate, DeviceChannels int
 }
 
-// RecordingPipeline implements a WriteCloser that writes raw audio data to
-// a virtual mic on a pulse server. It is assumed the audio source is parseable
-// by gst decodebin.
-type RecordingPipeline struct {
-	*gst.Pipeline
-}
-
 // NewRecordingPipeline returns a new RecordingPipeline. For now the pipeline is construced using
 // `gst_parse_launch`. However, this should be refactored to gain more control over latency.
-func NewRecordingPipeline(logger logr.Logger, opts *RecordingPipelineOpts) (*RecordingPipeline, error) {
+func NewRecordingPipeline(logger logr.Logger, opts *RecordingPipelineOpts) (*gst.Pipeline, error) {
 	// TODO: decodebin required dynamic linking so a little more complex than playback
 	// Though would like more control over pads in this pipeline to try to reduce latency
-	pipeline, err := gst.NewPipelineFromLaunchString(logger, newPipelineStringFromOpts(opts), true, false)
-	if err != nil {
-		return nil, err
-	}
-	recPipeline := &RecordingPipeline{pipeline}
-	return recPipeline, nil
+	return gst.NewPipelineFromLaunchString(logger, newPipelineStringFromOpts(opts), true, false)
 }
 
 func newPipelineStringFromOpts(opts *RecordingPipelineOpts) string {
