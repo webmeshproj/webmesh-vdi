@@ -10,28 +10,9 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
 )
-
-// BufferOpts represents options passed to NewBuffer when building
-// a recording or playback pipeline.
-type BufferOpts struct {
-	// A Logger to log messages to, one will be created if this
-	// is nil.
-	Logger logr.Logger
-	// The path to the PulseAudio UNIX socket
-	PulseServer string
-	// The name of the device to monitor for playback on the read-buffer.
-	PulseMonitorName string
-	// The name of the PulseSource to write to when recording on the write-buffer.
-	// This is required because an additional monitor needs to be created on the
-	// mic device to allow PulseAudio to flush its buffers.
-	PulseMicName string
-	// The path of the PulseAudio FIFO to write to when recording on the write-buffer.
-	PulseMicPath string
-}
 
 // Buffer provides a ReadWriteCloser for proxying audio data to
 // and from a websocket connection. The read-buffer is populated with opus/webm
@@ -47,34 +28,25 @@ type Buffer struct {
 	wsize                                                          int
 }
 
+// Make sure Buffer implements a io.ReadWriteCloser
 var _ io.ReadWriteCloser = &Buffer{}
 
 // NewBuffer returns a new Buffer.
 func NewBuffer(opts *BufferOpts) *Buffer {
-	if opts.Logger == nil {
-		opts.Logger = logf.Log.WithName("audio_buffer")
-	}
+	gst.Init()
 	return &Buffer{
-		logger:        opts.Logger,
-		channels:      2,
-		micChannels:   1,
-		micSampleRate: 16000,
-		sampleRate:    24000,
-		pulseServer:   opts.PulseServer,
-		pulseFormat:   "S16LE",
-		pulseMonitor:  opts.PulseMonitorName,
-		pulseMic:      opts.PulseMicName,
-		pulseMicPath:  opts.PulseMicPath,
+		logger:        opts.getLogger(),
+		pulseServer:   opts.getPulseServer(),
+		pulseFormat:   opts.getPulseFormat(),
+		channels:      opts.getPulseMonitorChannels(),
+		micChannels:   opts.getPulseMicChannels(),
+		micSampleRate: opts.getPulseMicRate(),
+		sampleRate:    opts.getPulsePlaybackRate(),
+		pulseMonitor:  opts.getPulseMonitorName(),
+		pulseMic:      opts.getMicName(),
+		pulseMicPath:  opts.getMicPath(),
 	}
 }
-
-// SetChannels sets the number of channels to record from gstreamer. When this method is not called
-// the value defaults to 2 (stereo).
-func (a *Buffer) SetChannels(c int) { a.channels = c }
-
-// SetSampleRate sets the sample rate to use when recording from gstreamer. When this method is not called
-// the value defaults to 24000.
-func (a *Buffer) SetSampleRate(r int) { a.sampleRate = r }
 
 func (a *Buffer) newSinkPipeline() (*gst.Pipeline, error) {
 	return NewSinkPipeline(

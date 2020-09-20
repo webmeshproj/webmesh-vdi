@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/audio"
@@ -20,7 +22,46 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+var (
+	monitorDeviceName    = "kvdi"
+	monitorDeviceMonitor = "kvdi.monitor"
+	monitorDescription   = "kvdi-playback"
+	micDeviceName        = "virtmixc"
+	micDeviceDescription = "kvdi-microphone"
+	micDevicePath        = filepath.Join(v1.DesktopRunDir, "mic.fifo")
+	micDeviceFormat      = "s16le"
+	micDeviceChannels    = 1
+	micDeviceSampleRate  = 16000
+)
+
 func wsHandshake(*websocket.Config, *http.Request) error { return nil }
+
+func getPulseServer() string { return fmt.Sprintf("/run/user/%d/pulse/native", userID) }
+
+func setupPulseAudio(manager *pa.DeviceManager) error {
+	if err := manager.WaitForReady(time.Second * 2); err != nil {
+		return err
+	}
+	if _, err := manager.AddSink(monitorDeviceName, monitorDescription); err != nil {
+		return err
+	}
+
+	if _, err := manager.AddSource(&pa.SourceOpts{
+		Name:         micDeviceName,
+		Description:  micDeviceDescription,
+		FifoPath:     micDevicePath,
+		SampleFormat: micDeviceFormat,
+		SampleRate:   micDeviceSampleRate,
+		Channels:     micDeviceChannels,
+	}); err != nil {
+		return err
+	}
+
+	if err := manager.SetDefaultSource(micDeviceName); err != nil {
+		return err
+	}
+	return nil
+}
 
 func websockifyHandler(wsconn *websocket.Conn) {
 	log.Info(fmt.Sprintf("Received display proxy request, connecting to %s", vncAddr))
@@ -36,21 +77,27 @@ func websockifyHandler(wsconn *websocket.Conn) {
 
 	log.Info("Setting up pulse-audio devices")
 
-	paDevices := pa.NewDeviceManager(log.WithName("pa_devices"), strconv.Itoa(userID))
-
-	if err := paDevices.AddSink("kvdi", "kvdi-playback"); err != nil {
-		log.Error(err, "Failed to add kvdi-playback device, audio playback may not work as expected")
+	paDevices, err := pa.NewDeviceManager(&pa.DeviceManagerOpts{
+		PulseServer: getPulseServer(),
+	})
+	if err != nil {
+		log.Error(err, "Failed to create new PA device manager, audio will be disabled")
 	}
 
-	if err := paDevices.AddSource("virtmic", "kvdi-microphone", filepath.Join(v1.DesktopRunDir, "mic.fifo"), "s16le", 1, 16000); err != nil {
-		log.Error(err, "Failed to add virtmic device, microphone support may not work as expected")
+	if paDevices != nil {
+		if err := setupPulseAudio(paDevices); err != nil {
+			if derr := paDevices.Destroy(); derr != nil {
+				log.Error(derr, "Failed to cleanup device manager")
+			}
+			log.Error(err, "Failure while setting up pulse audio, audio will be disabled")
+		} else {
+			defer func() {
+				if derr := paDevices.Destroy(); derr != nil {
+					log.Error(derr, "Failed to cleanup device manager")
+				}
+			}()
+		}
 	}
-
-	if err := paDevices.SetDefaultSource("virtmic"); err != nil {
-		log.Error(err, "Failed to set virtmic to default source, microphone support may not work as expected")
-	}
-
-	defer paDevices.Destroy()
 
 	log.Info("Starting display proxy")
 
@@ -62,12 +109,14 @@ func websockifyHandler(wsconn *websocket.Conn) {
 	stChan := logWatcherMetrics("display", watcher)
 	defer func() { stChan <- struct{}{} }()
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	// Copy client connection to the server
 	go func() {
 		if _, err := io.Copy(vncConn, watcher); err != nil {
 			log.Error(err, "Error while copying stream from websocket connection to display socket")
 		}
-		stChan <- struct{}{}
+		cancel()
 	}()
 
 	// Copy server connection to the client
@@ -75,11 +124,12 @@ func websockifyHandler(wsconn *websocket.Conn) {
 		if _, err := io.Copy(watcher, vncConn); err != nil {
 			log.Error(err, "Error while copying stream from display socket to websocket connection")
 		}
-		stChan <- struct{}{}
+		cancel()
 	}()
 
-	// need a better way to block here
-	select {}
+	// block until the context is finished
+	for range ctx.Done() {
+	}
 }
 
 func wsAudioHandler(wsconn *websocket.Conn) {
@@ -90,10 +140,10 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 	// Create a new audio buffer
 	audioBuffer := audio.NewBuffer(&audio.BufferOpts{
 		Logger:           log,
-		PulseServer:      fmt.Sprintf("/run/user/%d/pulse/native", userID),
-		PulseMonitorName: "kvdi.monitor",
-		PulseMicName:     "virtmic",
-		PulseMicPath:     filepath.Join(v1.DesktopRunDir, "mic.fifo"),
+		PulseServer:      getPulseServer(),
+		PulseMonitorName: monitorDeviceMonitor,
+		PulseMicName:     micDeviceName,
+		PulseMicPath:     micDevicePath,
 	})
 
 	// Start the audio buffer
@@ -113,7 +163,6 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 				log.Error(err, "Error closing audio buffer")
 			}
 		}
-		stChan <- struct{}{}
 	}()
 
 	// Copy audo playback data to the connection
@@ -123,11 +172,6 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 				log.Error(err, "Error while copying from audio stream to websocket connection")
 			}
 		}
-		if !audioBuffer.IsClosed() {
-			if err := audioBuffer.Close(); err != nil {
-				log.Error(err, "Error closing audio buffer")
-			}
-		}
 	}()
 
 	// Copy any received recording data to the buffer
@@ -135,11 +179,6 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 		if _, err := io.Copy(audioBuffer, watcher); err != nil {
 			if !errors.IsBrokenPipeError(err) {
 				log.Error(err, "Error while copying from websocket connection to audio buffer")
-			}
-		}
-		if !audioBuffer.IsClosed() {
-			if err := audioBuffer.Close(); err != nil {
-				log.Error(err, "Error closing audio buffer")
 			}
 		}
 	}()

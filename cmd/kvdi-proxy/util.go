@@ -56,7 +56,6 @@ func logWatcherMetrics(proxyType string, watcher *apiutil.WebsocketWatcher) chan
 			}
 		}
 	}()
-
 	return st
 }
 

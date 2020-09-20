@@ -17,6 +17,7 @@ require (
 	github.com/hashicorp/vault v1.4.3
 	github.com/hashicorp/vault/api v1.0.5-0.20200317185738-82f498082f02
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
+	github.com/mattn/go-pointer v0.0.1
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/operator-framework/operator-sdk v0.19.2
 	github.com/prometheus/client_golang v1.7.1
