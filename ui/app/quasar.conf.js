@@ -79,7 +79,7 @@ module.exports = function (/* ctx */) {
 
       // rtl: false, // https://quasar.dev/options/rtl-support
       // showProgress: false,
-      // gzip: true,
+      gzip: true,
       // analyze: true,
 
       // Options below are automatically set depending on the env, set them if you want to override
@@ -99,10 +99,6 @@ module.exports = function (/* ctx */) {
         })
         cfg.module.rules.push({
           test: /encoderWorker\.min\.js$/,
-          use: [{ loader: 'file-loader' }]
-        })
-        cfg.module.rules.push({
-          test: /waveWorker\.min\.js$/,
           use: [{ loader: 'file-loader' }]
         })
       }

@@ -203,7 +203,7 @@ export default class DisplayManager {
         let msgCount = 0
 
         socket.onopen = (e) => {
-            this._callStatusUpdate(`Starting desktop ${activeSession.namespace}/${activeSession.name}`)
+            this._callStatusUpdate(`Connecting to ${activeSession.namespace}/${activeSession.name}`)
         }
           
         socket.onmessage = (event) => {

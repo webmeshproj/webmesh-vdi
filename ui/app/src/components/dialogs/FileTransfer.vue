@@ -72,7 +72,7 @@
 
 <script>
 import FilePreviewDialog from 'components/dialogs/FilePreview.vue'
-import { getErrorMessage } from '../../lib/util.js'
+import { getErrorMessage } from 'src/lib/util.js'
 import path from 'path'
 
 export default {

@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import DisplayManager from '../lib/displayManager.js'
+import DisplayManager from 'src/lib/displayManager.js'
 
 export default {
   name: 'VNCViewer',

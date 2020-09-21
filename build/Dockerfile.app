@@ -54,6 +54,8 @@ FROM scratch
 COPY --from=builder /tmp/app /app
 COPY --from=ui-builder /build/dist/spa /static
 COPY --from=builder /tmp/swagger.json /static/swagger.json
+# Latest quasar does not currently copy statics into dist
+COPY ui/app/src/statics /static/statics
 
 EXPOSE 8443
 ENTRYPOINT ["/app"]

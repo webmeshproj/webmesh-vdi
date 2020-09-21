@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import { DesktopAddressGetter } from '../../lib/displayManager.js'
+import { DesktopAddressGetter } from 'src/lib/displayManager.js'
 
 export default {
   name: 'LogViewerDialog',
