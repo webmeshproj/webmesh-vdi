@@ -6,7 +6,7 @@ GOROOT ?= `go env GOROOT`
 GIT_COMMIT ?= `git rev-parse HEAD`
 
 # Golang CI Options
-GOLANGCI_VERSION ?= 1.23.8
+GOLANGCI_VERSION ?= 1.31.0
 GOLANGCI_LINT ?= _bin/golangci-lint
 GOLANGCI_DOWNLOAD_URL ?= https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
 

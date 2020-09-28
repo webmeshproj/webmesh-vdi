@@ -256,7 +256,7 @@ func NewTestAPI() (srvr *http.Server, addr, adminPass string, err error) {
 
 	srvr = &http.Server{
 		Handler:      r,
-		Addr:         fmt.Sprintf(":0"),
+		Addr:         ":0",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

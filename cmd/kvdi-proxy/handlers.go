@@ -133,7 +133,7 @@ func websockifyHandler(wsconn *websocket.Conn) {
 }
 
 func wsAudioHandler(wsconn *websocket.Conn) {
-	log.Info(fmt.Sprintf("Received audio proxy request, setting up pulseaudio/g-streamer"))
+	log.Info("Received audio proxy request, setting up pulseaudio/g-streamer")
 
 	wsconn.PayloadType = websocket.BinaryFrame
 
