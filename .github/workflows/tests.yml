@@ -10,7 +10,7 @@ jobs:
 
   setup:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
 
     - name: Set up Go 1.15
