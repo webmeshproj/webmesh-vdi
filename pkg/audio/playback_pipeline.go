@@ -2,19 +2,20 @@ package audio
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/tinyzimmer/kvdi/pkg/audio/gst"
+	"github.com/tinyzimmer/go-gst/gst"
+	"github.com/tinyzimmer/go-gst/gst/gstauto"
 )
 
 // PlaybackPipelineOpts are options passed to the playback pipeline.
-type PlaybackPipelineOpts struct {
+type playbackPipelineOpts struct {
 	PulseServer, DeviceName, SourceFormat string
 	SourceRate, SourceChannels            int
 }
 
 // NewPlaybackPipeline returns a new Pipeline for audio playback.
-func NewPlaybackPipeline(logger logr.Logger, opts *PlaybackPipelineOpts) (*gst.Pipeline, error) {
-	cfg := &gst.PipelineConfig{
-		Plugins: []*gst.Plugin{
+func newPlaybackPipeline(logger logr.Logger, opts *playbackPipelineOpts) (*gstauto.PipelineReaderSimple, error) {
+	cfg := &gstauto.PipelineConfig{
+		Elements: []*gstauto.PipelineElement{
 			{
 				Name: "pulsesrc",
 				Data: map[string]interface{}{
@@ -23,19 +24,10 @@ func NewPlaybackPipeline(logger logr.Logger, opts *PlaybackPipelineOpts) (*gst.P
 				},
 				SinkCaps: gst.NewRawCaps(opts.SourceFormat, opts.SourceRate, opts.SourceChannels),
 			},
-			{
-				Name: "cutter",
-			},
-			{
-				Name: "opusenc",
-			},
-			{
-				Name: "webmmux",
-			},
-			{
-				InternalSink: true,
-			},
+			{Name: "cutter"},
+			{Name: "opusenc"},
+			{Name: "webmmux"},
 		},
 	}
-	return gst.NewPipelineFromConfig(logger, cfg)
+	return gstauto.NewPipelineReaderSimpleFromConfig(cfg)
 }

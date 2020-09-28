@@ -8,7 +8,7 @@ require (
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-ldap/ldap/v3 v3.2.2
-	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/logr v0.2.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.2
@@ -22,6 +22,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.19.2
 	github.com/prometheus/client_golang v1.7.1
 	github.com/spf13/pflag v1.0.5
+	github.com/tinyzimmer/go-gst v0.0.7
 	github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119
 	go.opencensus.io v0.22.4 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
@@ -38,6 +39,7 @@ require (
 
 replace (
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible // Required by OLM
+	github.com/go-logr/zapr => github.com/go-logr/zapr v0.2.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191016113550-5357c4baaf65
 	k8s.io/apiserver => k8s.io/apiserver v0.0.0-20191016112112-5190913f932d
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20191016114015-74ad18325ed5
