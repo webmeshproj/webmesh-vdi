@@ -58,5 +58,9 @@ jobs:
     #   make bootstrap
     #   make release
 
+    - name: Install gstreamer/pulse dependencies
+      run: |
+        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libpulse-dev libgstreamer1.0-0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-0 pkg-config build-essential
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
