@@ -7,10 +7,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/kennygrant/sanitize"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -148,10 +148,14 @@ func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Overwrite the request object host to point to the desktop container
-	u := r.URL
+	u, err := url.Parse(r.URL.String())
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
 	u.Scheme = "https"
 	u.Host = desktopHost
-	u.Path = path.Clean(u.Path) + "/" // TODO: this method is used for kvdi-proxy requests which expect trailing slashes. come up with cleaner fix.
+	u.Path = sanitize.Path(u.Path) + "/" // TODO: this method is used for kvdi-proxy requests which expect trailing slashes. come up with cleaner fix.
 
 	// Buld a request from the source
 	req, err := http.NewRequest(r.Method, u.String(), bufio.NewReader(r.Body))

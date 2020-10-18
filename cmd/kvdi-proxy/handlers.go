@@ -19,6 +19,7 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
+	"github.com/kennygrant/sanitize"
 	"golang.org/x/net/websocket"
 )
 
@@ -324,9 +325,11 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	dstFile := filepath.Join(uploadDir, filepath.Clean(handler.Filename))
 
-	f, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0666)
+	fName := sanitize.BaseName(handler.Filename)
+	dstFile := filepath.Join(uploadDir, fName)
+
+	f, err := os.Create(dstFile)
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return

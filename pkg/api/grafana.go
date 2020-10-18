@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
@@ -10,7 +11,11 @@ import (
 
 func (d *desktopAPI) ProxyGrafana(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	u := r.URL
+	u, err := url.Parse(r.URL.String())
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
 	u.Scheme = "http"
 	u.Host = "127.0.0.1:3000"
 	u.Path = path.Clean(u.Path)

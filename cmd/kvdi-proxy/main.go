@@ -94,7 +94,7 @@ func newServer() (*http.Server, error) {
 
 	// This route is for uploading a file to the user's home directory when enabled in the
 	// DesktopTemplate.
-	r.Path("/api/desktops/fs/{namespace}/{name}/put").HandlerFunc(uploadFileHandler)
+	r.PathPrefix("/api/desktops/fs/{namespace}/{name}/put").HandlerFunc(uploadFileHandler)
 
 	wrapped := handlers.CustomLoggingHandler(os.Stdout, r, formatLog)
 

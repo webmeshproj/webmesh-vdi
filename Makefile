@@ -1,5 +1,5 @@
 REPO ?= ghcr.io/tinyzimmer
-NAME ?= kvdi
+NAME = kvdi
 VERSION ?= v0.0.31
 
 # includes
@@ -264,7 +264,7 @@ remove-cluster: ${KIND}
 
 ## make forward-app         # Run a kubectl port-forward to the app pod.
 forward-app: ${KUBECTL}
-	${KUBECTL_KIND} get pod | grep app | awk '{print$$1}' | xargs -I% ${KUBECTL_KIND} port-forward % 8443
+	${KUBECTL_KIND} port-forward --address 0.0.0.0 svc/kvdi-app 8443:443
 
 ## make get-app-secret      # Get the app client TLS certificate for debugging.
 get-app-secret: ${KUBECTL}
