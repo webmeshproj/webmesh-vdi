@@ -324,7 +324,7 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	dstFile := filepath.Join(uploadDir, handler.Filename)
+	dstFile := filepath.Join(uploadDir, filepath.Clean(handler.Filename))
 
 	f, err := os.OpenFile(dstFile, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/google/uuid"
@@ -150,6 +151,7 @@ func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 	u := r.URL
 	u.Scheme = "https"
 	u.Host = desktopHost
+	u.Path = path.Clean(u.Path) + "/" // TODO: this method is used for kvdi-proxy requests which expect trailing slashes. come up with cleaner fix.
 
 	// Buld a request from the source
 	req, err := http.NewRequest(r.Method, u.String(), bufio.NewReader(r.Body))
