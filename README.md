@@ -8,7 +8,11 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 ![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/tinyzimmer/kvdi)
 
-**This is a fast-changing work in progress and not recommended for production usage**
+This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
+That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
+
+This also means I won't be doing any major refactoring in the near future. So, if you were considering a pull request, I'm not as likely to be making all your work irrelevant.
+If I end up doing more refactoring, I'll work on branches and update documentation on `main` to reflect the work-in-progress. 
 
  - [API Reference](doc/crds.md)
  - [Installing](#Installing)
