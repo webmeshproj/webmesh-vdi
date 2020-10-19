@@ -1,16 +1,13 @@
 package api
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	"github.com/google/uuid"
-	"github.com/kennygrant/sanitize"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -147,58 +144,19 @@ func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Overwrite the request object host to point to the desktop container
-	u, err := url.Parse(r.URL.String())
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-	u.Scheme = "https"
-	u.Host = desktopHost
-	u.Path = sanitize.Path(u.Path) + "/" // TODO: this method is used for kvdi-proxy requests which expect trailing slashes. come up with cleaner fix.
-
-	// Buld a request from the source
-	req, err := http.NewRequest(r.Method, u.String(), bufio.NewReader(r.Body))
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
-	// Copy the headers over to the new request
-	for hdr, val := range r.Header {
-		req.Header.Add(hdr, strings.Join(val, ";"))
-	}
-
-	// Build an HTTP client
 	clientTLSConfig, err := tlsutil.NewClientTLSConfig()
 	if err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: clientTLSConfig,
-		},
-	}
 
-	// Do the request
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
+	proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+		Scheme: "https",
+		Host:   desktopHost,
+	})
+	proxy.Transport = &http.Transport{TLSClientConfig: clientTLSConfig}
 
-	defer resp.Body.Close()
-
-	// copy the response from the proxy to the requestor
-	for hdr, val := range resp.Header {
-		w.Header().Set(hdr, strings.Join(val, ";"))
-	}
-	w.WriteHeader(resp.StatusCode)
-	if _, err := io.Copy(w, resp.Body); err != nil {
-		apiLogger.Error(err, "Error copying response body from desktop proxy")
-	}
-
+	proxy.ServeHTTP(w, r)
 }
 
 // Session response

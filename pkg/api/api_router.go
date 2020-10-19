@@ -1,12 +1,21 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/websocket"
 )
+
+type proxyLogger struct{}
+
+func (p *proxyLogger) Printf(format string, args ...interface{}) {
+	apiLogger.Info(fmt.Sprintf(format, args...))
+}
 
 // buildRouter builds the API router
 func (d *desktopAPI) buildRouter() error {
@@ -28,7 +37,15 @@ func (d *desktopAPI) buildRouter() error {
 	// Grafana proxy - This is unprotected for now, but should figure out what
 	// permission model would work well for it. It doesn't fit well into the existing
 	// paradigms.
-	r.PathPrefix("/api/grafana").HandlerFunc(d.ProxyGrafana)
+	grafanaProxy := httputil.NewSingleHostReverseProxy(&url.URL{
+		Scheme: "http",
+		Host:   "127.0.0.1:3000",
+	})
+	grafanaProxy.ModifyResponse = func(res *http.Response) error {
+		res.Header.Del("X-Frame-Options")
+		return nil
+	}
+	r.PathPrefix("/api/grafana").Handler(grafanaProxy)
 
 	// Login route is not protected since it generates the tokens for which a user
 	// can use the protected routes.
@@ -96,6 +113,7 @@ func (d *desktopAPI) buildRouter() error {
 	})
 	protected.HandleFunc("/desktops/ws/{namespace}/{name}/display", d.GetWebsockify)    // Connect to the VNC socket on a desktop over websockets
 	protected.HandleFunc("/desktops/ws/{namespace}/{name}/audio", d.GetWebsockifyAudio) // Connect to the audio stream of a desktop over websockets
+
 	// // Filesystem access
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop

@@ -176,9 +176,9 @@ export default {
       // if (this.expanded.indexOf(`${this.homeDir}/Uploads`) === -1) {
       //   this.expanded.push(`${this.homeDir}/Uploads`)
       // }
-      // this.fileToUpload = null
-      // this.uploading = false
-      // this.hide()
+      this.fileToUpload = null
+      this.uploading = false
+      this.hide()
     },
 
     async onLazyLoad ({ node, key, done, fail }) {
