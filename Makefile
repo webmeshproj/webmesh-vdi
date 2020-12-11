@@ -298,6 +298,8 @@ helm-docs: ${HELM_DOCS} chart-yaml
 	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 
 
+prep-release: generate manifests api-docs helm-docs package-chart package-index
+
 ##
 ## ######################################################################################
 ##
