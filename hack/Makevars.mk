@@ -36,7 +36,7 @@ OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/
 
 # Kind Options
 KIND_VERSION ?= v0.7.0
-KUBERNETES_VERSION ?= v1.19.0
+KUBERNETES_VERSION ?= v1.19.4
 METALLB_VERSION ?= v0.9.3
 HELM_VERSION ?= v3.1.2
 

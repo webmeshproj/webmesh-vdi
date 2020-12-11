@@ -8,7 +8,7 @@ const equal = function (o1, o2) {
 export const DesktopSessions = new Vuex.Store({
 
   state: {
-    sessions: localStorage.getItem('desktopSessions') || [],
+    sessions: [], // deciding against local storage here, but it is still an option
     audioEnabled: false,
     recordingEnabled: false
   },
@@ -61,6 +61,10 @@ export const DesktopSessions = new Vuex.Store({
       commit('toggle_recording', data)
     },
 
+    addExistingSession ({ commit }, data) {
+      commit('new_session', data)
+    },
+
     async newSession ({ commit }, { template, namespace }) {
       if (!Vue.prototype.$configStore.getters.localConfig.readWriteMany) {
         if (this.getters.sessions.length > 0) {
@@ -85,9 +89,11 @@ export const DesktopSessions = new Vuex.Store({
         throw err
       }
     },
+
     setActiveSession ({ commit }, data) {
       commit('set_active_session', data)
     },
+
     async deleteSession ({ commit }, data) {
       try {
         await Vue.prototype.$axios.delete(`/api/sessions/${data.namespace}/${data.name}`)
@@ -96,11 +102,13 @@ export const DesktopSessions = new Vuex.Store({
       }
       commit('delete_session', data)
     },
+
     async clearSessions ({ commit }) {
       this.getters.sessions.forEach(async (session) => {
         await this.dispatch('deleteSession', session)
       })
     }
+
   },
 
   getters: {

@@ -222,6 +222,7 @@ export default class DisplayManager {
 
             // If the desktop is ready then create a connection, clear the status, and close this socket
             if (this._statusIsReady(st)) {
+                console.log(`Desktop is ready, connecting`)
                 this._createConnection()
                 if (socket.readyState === 1) {
                     socket.close()
@@ -270,10 +271,12 @@ export default class DisplayManager {
         // get the view port for the display
         const view = document.getElementById('view')
         if (view === null || view === undefined) {
+            console.log('No view found in the window')
             return
         }
         try {
             // create a vnc connection
+            console.log('Creating RFB connection')
             await this._createRFBConnection(view, displayURL)
         } catch (err) {
             this._callDisconnect()
@@ -286,7 +289,10 @@ export default class DisplayManager {
 
     // _createRFBConnection creates a new RFB connection.
     async _createRFBConnection (view, url) {
-        if (this._rfbClient) { return }
+        if (this._rfbClient) { 
+            console.log('An RFB client already appears to be connected, returning')
+            return 
+        }
         this._rfbClient = new RFB(view, url)
         this._rfbClient.addEventListener('connect', () => { this._connectedToRFBServer() })
         this._rfbClient.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })

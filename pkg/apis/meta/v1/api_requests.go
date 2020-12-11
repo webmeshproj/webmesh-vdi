@@ -273,6 +273,8 @@ type DesktopSession struct {
 	Namespace string `json:"namespace"`
 	// The username of the user who owns this session.
 	User string `json:"user"`
+	// The type of display socket the desktop is using
+	SocketType string `json:"socketType"` // This is technically an enum from v1alpha1 - should probably be moved to this package
 	// Connection status for the session.
 	Status *DesktopSessionStatus `json:"status"`
 }
