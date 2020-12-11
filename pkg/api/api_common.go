@@ -24,17 +24,6 @@ const TokenHeader = "X-Session-Token"
 // RefreshTokenCookie is the cookie used to store a user's refresh token
 const RefreshTokenCookie = "refreshToken"
 
-// swagger:route GET /api/whoami Miscellaneous whoAmI
-// Retrieves information about the current user session.
-// responses:
-//   200: userResponse
-//   403: error
-//   500: error
-func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
-	session := apiutil.GetRequestUserSession(r)
-	apiutil.WriteJSON(session.User, w)
-}
-
 // returnNewJWT will return a new JSON web token to the requestor.
 func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *v1.AuthResult, authorized bool, state string) {
 	// fetch the JWT signing secret

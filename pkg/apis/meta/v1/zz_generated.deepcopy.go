@@ -459,6 +459,17 @@ func (in *VDIUser) DeepCopyInto(out *VDIUser) {
 		*out = new(UserMFAStatus)
 		**out = **in
 	}
+	if in.Sessions != nil {
+		in, out := &in.Sessions, &out.Sessions
+		*out = make([]*DesktopSession, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(DesktopSession)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	return
 }
 

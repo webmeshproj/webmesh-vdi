@@ -60,11 +60,17 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 
 	// iterate desktops and parse properties and connection status
 	for _, desktop := range desktops.Items {
+		socketType := "unknown" // let's not fail on any errors here for now - enough is changing to satisfy session persistence
+		tmpl, err := desktop.GetTemplate(d.client)
+		if err == nil {
+			socketType = string(tmpl.GetDisplaySocketType())
+		}
 		sess := &v1.DesktopSession{
-			Name:      desktop.GetName(),
-			Namespace: desktop.GetNamespace(),
-			User:      desktop.GetUser(),
-			Status:    getSessionStatus(d.vdiCluster, desktop, displayLocks.Items, audioLocks.Items),
+			Name:       desktop.GetName(),
+			Namespace:  desktop.GetNamespace(),
+			User:       desktop.GetUser(),
+			Status:     getSessionStatus(d.vdiCluster, desktop, displayLocks.Items, audioLocks.Items),
+			SocketType: socketType,
 		}
 		res.Sessions = append(res.Sessions, sess)
 	}

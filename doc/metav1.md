@@ -198,6 +198,10 @@ DesktopSession describes the properties and status of a desktop session.
 <td><p>The username of the user who owns this session.</p></td>
 </tr>
 <tr class="even">
+<td><code>socketType</code> <em>string</em></td>
+<td><p>The type of display socket the desktop is using</p></td>
+</tr>
+<tr class="odd">
 <td><code>status</code> <em><a href="#DesktopSessionStatus">DesktopSessionStatus</a></em></td>
 <td><p>Connection status for the session.</p></td>
 </tr>
@@ -575,6 +579,10 @@ claims defining this object.
 <td><code>mfa</code> <em><a href="#UserMFAStatus">UserMFAStatus</a></em></td>
 <td><p>MFA status for the user</p></td>
 </tr>
+<tr class="even">
+<td><code>sessions</code> <em><a href="#DesktopSession">[]*github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.DesktopSession</a></em></td>
+<td><p>Any active sessions for the user - new field that is only populated on a /api/whoami request.</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -611,4 +619,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `ad442e4`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `eade2e6`.*

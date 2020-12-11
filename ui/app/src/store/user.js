@@ -105,6 +105,12 @@ export const UserStore = new Vuex.Store({
           }
           const res = await Vue.prototype.$axios.get('/api/whoami')
           commit('auth_got_user', res.data)
+          if (res.data.sessions) {
+            res.data.sessions.forEach((item) => {
+              console.log(`Adding existing session ${item.namespace}/${item.name}`)
+              Vue.prototype.$desktopSessions.dispatch('addExistingSession', item)
+            })
+          }
           console.log(`Resuming session as ${res.data.name}`)
         } catch (err) {
           console.log('Could not fetch user information')

@@ -75,6 +75,9 @@ type VDIUser struct {
 	Roles []*VDIUserRole `json:"roles"`
 	// MFA status for the user
 	MFA *UserMFAStatus `json:"mfa"`
+	// Any active sessions for the user - new field that is only populated on a
+	// /api/whoami request.
+	Sessions []*DesktopSession `json:"sessions,omitempty"`
 }
 
 // UserMFAStatus contains information about the MFA configurations
