@@ -1,6 +1,6 @@
 REPO ?= ghcr.io/tinyzimmer
 NAME = kvdi
-VERSION ?= v0.1.2
+VERSION ?= v0.1.3
 
 # includes
 -include hack/Makevars.mk
