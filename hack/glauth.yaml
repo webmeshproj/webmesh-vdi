@@ -71,6 +71,7 @@ data:
       otherGroups = [5502]
       loginShell = "/bin/sh"
       passsha256 = "6478579e37aff45f013e14eeb30b3cc56c72ccdc310123bcdf53e0333e3f416a" # dogood
+      disabled = true
 
     # Test user showing 2 factor auth authentication
     [[users]]
