@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -44,8 +44,8 @@ func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 					searchRequest := ldapv3.NewSearchRequest(
 						a.getUserBase(),
 						ldapv3.ScopeWholeSubtree, ldapv3.NeverDerefAliases, 0, 0, false,
-						fmt.Sprintf(groupUsersFilter, group),
-						userAttrs,
+						fmt.Sprintf(a.groupUsersFilter(), group),
+						a.userAttrs(),
 						nil,
 					)
 					sr, err := conn.Search(searchRequest)
@@ -53,7 +53,7 @@ func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 						return nil, err
 					}
 					for _, entry := range sr.Entries {
-						vdiUsers = appendUser(vdiUsers, entry.GetAttributeValue("uid"), userRole)
+						vdiUsers = appendUser(vdiUsers, entry.GetAttributeValue(a.cluster.GetLDAPUserIDAttribute()), userRole)
 					}
 				}
 			}
@@ -85,8 +85,8 @@ func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 	searchRequest := ldapv3.NewSearchRequest(
 		a.getUserBase(),
 		ldapv3.ScopeWholeSubtree, ldapv3.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf(userFilter, username),
-		userAttrs,
+		fmt.Sprintf(a.userFilter(), username),
+		a.userAttrs(),
 		nil,
 	)
 	sr, err := conn.Search(searchRequest)
@@ -114,7 +114,7 @@ RoleLoop:
 					if group == "" {
 						continue GroupLoop
 					}
-					if common.StringSliceContains(user.GetAttributeValues("memberOf"), group) {
+					if common.StringSliceContains(user.GetAttributeValues(a.cluster.GetLDAPUserGroupsAttribute()), group) {
 						vdiUser.Roles = append(vdiUser.Roles, role.ToUserRole())
 						continue RoleLoop
 					}

@@ -35,8 +35,8 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	searchRequest := ldapv3.NewSearchRequest(
 		a.getUserBase(),
 		ldapv3.ScopeWholeSubtree, ldapv3.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf(userFilter, req.Username),
-		userAttrs,
+		fmt.Sprintf(a.userFilter(), req.Username),
+		a.userAttrs(),
 		nil,
 	)
 	sr, err := conn.Search(searchRequest)
@@ -50,8 +50,10 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 
 	user := sr.Entries[0]
 
-	if strings.ToLower(user.GetAttributeValue("accountStatus")) != "active" {
-		return nil, fmt.Errorf("User account %s is disabled", user.GetAttributeValue("uid"))
+	if !a.cluster.GetLDAPSkipUserStatusCheck() {
+		if strings.ToLower(user.GetAttributeValue(a.cluster.GetLDAPUserStatusAttribute())) != "active" {
+			return nil, fmt.Errorf("User account %s is disabled", user.GetAttributeValue(a.cluster.GetLDAPUserIDAttribute()))
+		}
 	}
 
 	// perform a bind to check the credentials
@@ -68,7 +70,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	// we'll have to iterate our available roles and check if any have an annotation
 	// binding it to one of this user's ldap groups
 	boundRoles := make([]string, 0)
-	userGroups := user.GetAttributeValues("memberOf")
+	userGroups := user.GetAttributeValues(a.cluster.GetLDAPUserGroupsAttribute())
 
 	for _, role := range roles {
 		boundRoles = appendRoleIfBound(boundRoles, userGroups, role)

@@ -136,6 +136,13 @@ spec:
                           In default configurations this is `kvdi-app-secrets`. Defaults
                           to `ldap-userdn`.
                         type: string
+                      insecureSkipStatusCheck:
+                        description: Disable checking if an account is active when
+                          authenticating users with LDAP. Defaults to `false`. This
+                          may be required for LDAP providers that don't provide an
+                          `accountStatus` and instead just don't allow binding to
+                          begin with.
+                        type: boolean
                       tlsCACert:
                         description: The base64 encoded CA certificate to use when
                           verifying the TLS certificate of the LDAP server.
@@ -147,9 +154,25 @@ spec:
                       url:
                         description: The URL to the LDAP server.
                         type: string
+                      userGroupsAttribute:
+                        description: The user attribute use to lookup group membership
+                          in LDAP. Defaults to `memberOf`.
+                        type: string
+                      userIDAttribute:
+                        description: The user ID attribute to use when looking up
+                          a provided username. Defaults to `uid`. This value may be
+                          different depending on the LDAP provider. For example, in
+                          an Active Directory environment you may want to set this
+                          value to `sAMAccountName`.
+                        type: string
                       userSearchBase:
                         description: The base scope to search for users in. Default
                           is to search the entire directory.
+                        type: string
+                      userStatusAttribute:
+                        description: The user attribute to use when querying if an
+                          account is active. Defaults to `accountStatus`. To disable
+                          this check entirely, see insecureSkipStatusCheck.
                         type: string
                     type: object
                   localAuth:

@@ -14,11 +14,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const userFilter = "(uid=%s)"
-const groupUsersFilter = "(memberOf=%s)"
-
-var userAttrs = []string{"cn", "dn", "uid", "memberOf", "accountStatus"}
-
 // AuthProvider implements an auth provider that uses an LDAP server as the
 // authentication backend. Access to groups in LDAP is supplied through annotations
 // on VDIRoles.

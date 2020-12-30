@@ -7,3 +7,4 @@ vdi:
         bindPasswordSecretKey: "ldap-password"
         adminGroups: ["cn=kvdi-admins,ou=groups,dc=kvdi,dc=io"]
         userSearchBase: "ou=users,dc=kvdi,dc=io"
+        userIDAttribute: mail
