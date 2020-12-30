@@ -1,5 +1,4 @@
-kVDI CRD Reference
-------------------
+## kVDI CRD Reference
 
 ### Packages:
 
@@ -33,8 +32,7 @@ Types
 -   [VDIUserRole](#VDIUserRole)
 -   [Verb](#Verb)
 
-kvdi.io/v1
-----------
+## kvdi.io/v1
 
 Package v1 contains API Schema definitions for the meta v1 API group
 
@@ -619,4 +617,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `eade2e6`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `4ba8b7e`.*

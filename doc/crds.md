@@ -1,5 +1,4 @@
-kVDI CRD Reference
-------------------
+## kVDI CRD Reference
 
 ### Packages:
 
@@ -32,8 +31,7 @@ Types
 -   [VDIRole](#VDIRole)
 -   [VaultConfig](#VaultConfig)
 
-kvdi.io/v1alpha1
-----------------
+## kvdi.io/v1alpha1
 
 Package v1alpha1 contains API Schema definitions for the kvdi v1alpha1
 API group
@@ -479,6 +477,22 @@ authentication backend.
 <td><code>userSearchBase</code> <em>string</em></td>
 <td><p>The base scope to search for users in. Default is to search the entire directory.</p></td>
 </tr>
+<tr class="odd">
+<td><code>userIDAttribute</code> <em>string</em></td>
+<td><p>The user ID attribute to use when looking up a provided username. Defaults to <code>uid</code>. This value may be different depending on the LDAP provider. For example, in an Active Directory environment you may want to set this value to <code>sAMAccountName</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>userGroupsAttribute</code> <em>string</em></td>
+<td><p>The user attribute use to lookup group membership in LDAP. Defaults to <code>memberOf</code>.</p></td>
+</tr>
+<tr class="odd">
+<td><code>userStatusAttribute</code> <em>string</em></td>
+<td><p>The user attribute to use when querying if an account is active. Defaults to <code>accountStatus</code>. To disable this check entirely, see insecureSkipStatusCheck.</p></td>
+</tr>
+<tr class="even">
+<td><code>insecureSkipStatusCheck</code> <em>bool</em></td>
+<td><p>Disable checking if an account is active when authenticating users with LDAP. Defaults to <code>false</code>. This may be required for LDAP providers that don’t provide an <code>accountStatus</code> and instead just don’t allow binding to begin with.</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -869,4 +883,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `eade2e6`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `4ba8b7e`.*
