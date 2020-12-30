@@ -122,11 +122,21 @@ func (c *VDICluster) GetLDAPUserStatusAttribute() string {
 	return "accountStatus"
 }
 
-// GetLDAPSkipUserStatusCheck returns if the account status check should be skipped when performing
-// user authentication.
-func (c *VDICluster) GetLDAPSkipUserStatusCheck() bool {
+// GetLDAPUserStatusDisabledValue returns the value to match that means the user is disabled.
+func (c *VDICluster) GetLDAPUserStatusDisabledValue() string {
 	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.InsecureSkipStatusCheck
+		if c.Spec.Auth.LDAPAuth.UserStatusDisabledValue != "" {
+			return c.Spec.Auth.LDAPAuth.UserStatusDisabledValue
+		}
+	}
+	return "inactive"
+}
+
+// GetLDAPDoUserStatusCheck returns if the account status check should be done when performing
+// user authentication.
+func (c *VDICluster) GetLDAPDoUserStatusCheck() bool {
+	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
+		return c.Spec.Auth.LDAPAuth.DoStatusCheck
 	}
 	return false
 }

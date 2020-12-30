@@ -487,11 +487,15 @@ authentication backend.
 </tr>
 <tr class="odd">
 <td><code>userStatusAttribute</code> <em>string</em></td>
-<td><p>The user attribute to use when querying if an account is active. Defaults to <code>accountStatus</code>. To disable this check entirely, see insecureSkipStatusCheck.</p></td>
+<td><p>The user attribute to use when querying if an account is active. Defaults to <code>accountStatus</code>. Only takes effect if <code>doStatusCheck</code> is <code>true</code>. A user is considered disabled when the attribute is both present and matches the value in <code>userStatusDisabledValue</code>.</p></td>
 </tr>
 <tr class="even">
-<td><code>insecureSkipStatusCheck</code> <em>bool</em></td>
-<td><p>Disable checking if an account is active when authenticating users with LDAP. Defaults to <code>false</code>. This may be required for LDAP providers that don’t provide an <code>accountStatus</code> and instead just don’t allow binding to begin with.</p></td>
+<td><code>userStatusDisabledValue</code> <em>string</em></td>
+<td><p>The value for the <code>userStatusAttribute</code> that signifies that the user is disabled. Defaults to <code>inactive</code>.</p></td>
+</tr>
+<tr class="odd">
+<td><code>doStatusCheck</code> <em>bool</em></td>
+<td><p>When set to true, the authentication provider will query the user’s attributes for the <code>userStatusAttribute</code> and make sure it matches the value in <code>userStatusEnabledValue</code> before attemtping to bind.</p></td>
 </tr>
 </tbody>
 </table>
@@ -883,4 +887,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `27fd1ad`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c18c30a`.*
