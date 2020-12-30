@@ -50,12 +50,6 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 
 	user := sr.Entries[0]
 
-	if !a.cluster.GetLDAPSkipUserStatusCheck() {
-		if strings.ToLower(user.GetAttributeValue(a.cluster.GetLDAPUserStatusAttribute())) != "active" {
-			return nil, fmt.Errorf("User account %s is disabled", user.GetAttributeValue(a.cluster.GetLDAPUserIDAttribute()))
-		}
-	}
-
 	// perform a bind to check the credentials
 	if err := conn.Bind(user.DN, req.Password); err != nil {
 		return nil, err

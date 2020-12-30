@@ -111,22 +111,3 @@ func (c *VDICluster) GetLDAPUserGroupsAttribute() string {
 	}
 	return "memberOf"
 }
-
-// GetLDAPUserStatusAttribute returns the user attribute to use when querying account status.
-func (c *VDICluster) GetLDAPUserStatusAttribute() string {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		if c.Spec.Auth.LDAPAuth.UserStatusAttribute != "" {
-			return c.Spec.Auth.LDAPAuth.UserStatusAttribute
-		}
-	}
-	return "accountStatus"
-}
-
-// GetLDAPSkipUserStatusCheck returns if the account status check should be skipped when performing
-// user authentication.
-func (c *VDICluster) GetLDAPSkipUserStatusCheck() bool {
-	if c.Spec.Auth != nil && c.Spec.Auth.LDAPAuth != nil {
-		return c.Spec.Auth.LDAPAuth.InsecureSkipStatusCheck
-	}
-	return false
-}

@@ -12,11 +12,7 @@ func (a *AuthProvider) getUserBase() string {
 }
 
 func (a *AuthProvider) userAttrs() []string {
-	attrs := []string{"cn", "dn", a.cluster.GetLDAPUserIDAttribute(), a.cluster.GetLDAPUserGroupsAttribute()}
-	if !a.cluster.GetLDAPSkipUserStatusCheck() {
-		attrs = append(attrs, a.cluster.GetLDAPUserStatusAttribute())
-	}
-	return attrs
+	return []string{"cn", "dn", a.cluster.GetLDAPUserIDAttribute(), a.cluster.GetLDAPUserGroupsAttribute()}
 }
 
 func (a *AuthProvider) userFilter() string {

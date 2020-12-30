@@ -173,13 +173,6 @@ type LDAPConfig struct {
 	UserIDAttribute string `json:"userIDAttribute,omitempty"`
 	// The user attribute use to lookup group membership in LDAP. Defaults to `memberOf`.
 	UserGroupsAttribute string `json:"userGroupsAttribute,omitempty"`
-	// The user attribute to use when querying if an account is active. Defaults to `accountStatus`.
-	// To disable this check entirely, see insecureSkipStatusCheck.
-	UserStatusAttribute string `json:"userStatusAttribute,omitempty"`
-	// Disable checking if an account is active when authenticating users with LDAP. Defaults to `false`.
-	// This may be required for LDAP providers that don't provide an `accountStatus` and instead just don't
-	// allow binding to begin with.
-	InsecureSkipStatusCheck bool `json:"insecureSkipStatusCheck,omitempty"`
 }
 
 // IsUndefined returns true if the given LDAPConfig object is not actually configured.
