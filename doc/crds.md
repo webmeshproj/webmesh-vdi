@@ -485,14 +485,6 @@ authentication backend.
 <td><code>userGroupsAttribute</code> <em>string</em></td>
 <td><p>The user attribute use to lookup group membership in LDAP. Defaults to <code>memberOf</code>.</p></td>
 </tr>
-<tr class="odd">
-<td><code>userStatusAttribute</code> <em>string</em></td>
-<td><p>The user attribute to use when querying if an account is active. Defaults to <code>accountStatus</code>. To disable this check entirely, see insecureSkipStatusCheck.</p></td>
-</tr>
-<tr class="even">
-<td><code>insecureSkipStatusCheck</code> <em>bool</em></td>
-<td><p>Disable checking if an account is active when authenticating users with LDAP. Defaults to <code>false</code>. This may be required for LDAP providers that don’t provide an <code>accountStatus</code> and instead just don’t allow binding to begin with.</p></td>
-</tr>
 </tbody>
 </table>
 
@@ -883,4 +875,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `27fd1ad`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `d224229`.*
