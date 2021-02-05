@@ -13,7 +13,7 @@ import (
 
 // ConfigMap reconciles a provided configmap with the cluster.
 func ConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
-	if err := k8sutil.SetCreationSpecAnnotation(&cm.ObjectMeta, cm.Data); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&cm.ObjectMeta, cm); err != nil {
 		return err
 	}
 	found := &corev1.ConfigMap{}

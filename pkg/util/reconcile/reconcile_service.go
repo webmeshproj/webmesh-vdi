@@ -14,7 +14,7 @@ import (
 
 // Service will reconcile a provided service spec with the cluster.
 func Service(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
-	if err := k8sutil.SetCreationSpecAnnotation(&svc.ObjectMeta, svc.Spec); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&svc.ObjectMeta, svc); err != nil {
 		return err
 	}
 	found := &corev1.Service{}

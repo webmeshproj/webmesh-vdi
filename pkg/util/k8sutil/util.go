@@ -3,6 +3,7 @@ package k8sutil
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -47,7 +49,7 @@ func IsMarkedForDeletion(cr *v1alpha1.VDICluster) bool {
 
 // SetCreationSpecAnnotation sets an annotation with a checksum of the desired
 // spec of the object.
-func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj interface{}) error {
+func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj runtime.Object) error {
 	annotations := meta.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -56,7 +58,11 @@ func SetCreationSpecAnnotation(meta *metav1.ObjectMeta, obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	annotations[v1.CreationSpecAnnotation] = string(spec)
+	h := sha256.New()
+	if _, err := h.Write(spec); err != nil {
+		return err
+	}
+	annotations[v1.CreationSpecAnnotation] = fmt.Sprintf("%x", h.Sum(nil))
 	meta.SetAnnotations(annotations)
 	return nil
 }
