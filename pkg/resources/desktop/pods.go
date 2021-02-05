@@ -9,8 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemplate, instance *v1alpha1.Desktop) *corev1.Pod {
-	return &corev1.Pod{
+func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemplate, instance *v1alpha1.Desktop, envSecret string) *corev1.Pod {
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
 			Namespace:       instance.GetNamespace(),
@@ -41,6 +41,18 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 			},
 		},
 	}
+	if envSecret != "" {
+		pod.Spec.Containers[1].EnvFrom = []corev1.EnvFromSource{
+			{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: envSecret,
+					},
+				},
+			},
+		}
+	}
+	return pod
 }
 
 func newServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *corev1.Service {

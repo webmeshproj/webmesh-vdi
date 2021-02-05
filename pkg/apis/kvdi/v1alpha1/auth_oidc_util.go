@@ -110,3 +110,12 @@ func (c *VDICluster) AllowNonGroupedReadOnly() bool {
 	}
 	return false
 }
+
+// PreserveOIDCTokens returns whether OIDC tokens should be preserved and stored in the kvdi claims
+// for the user.
+func (c *VDICluster) PreserveOIDCTokens() bool {
+	if c.Spec.Auth != nil && c.Spec.Auth.OIDCAuth != nil {
+		return c.Spec.Auth.OIDCAuth.PreserveTokens
+	}
+	return false
+}

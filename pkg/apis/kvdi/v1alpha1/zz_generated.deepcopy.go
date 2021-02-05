@@ -260,6 +260,20 @@ func (in *DesktopTemplateSpec) DeepCopyInto(out *DesktopTemplateSpec) {
 		*out = make([]corev1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	if in.Env != nil {
+		in, out := &in.Env, &out.Env
+		*out = make([]corev1.EnvVar, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.EnvTemplates != nil {
+		in, out := &in.EnvTemplates, &out.EnvTemplates
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	in.Resources.DeepCopyInto(&out.Resources)
 	if in.Config != nil {
 		in, out := &in.Config, &out.Config

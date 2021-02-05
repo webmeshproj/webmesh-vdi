@@ -267,6 +267,29 @@ spec:
                       issuerURL:
                         description: The OIDC issuer URL used for discovery
                         type: string
+                      preserveTokens:
+                        description: "The access tokens returned by the OIDC provider
+                          are usually discarded after identify information is retrieved
+                          from them. If you set this to true, these fields will be
+                          available for mapping in desktops at the following paths:
+                          \n   - `{{ .Session.Data.access_token }}`   - `{{ .Session.Data.token_type
+                          }}`   - `{{ .Session.Data.refresh_token }}`   - `{{ .Session.Data.expiry
+                          }}` \n **NOTE:** This should be considered an insecure option
+                          and only turned on taking into account the inherent risks.
+                          If the access token used for authorizing actions against
+                          the kvdi API gets compromised, it would be relatively easy
+                          for the attacker to extract this information from the token
+                          and use it for authenticating against third-party resources.
+                          Additionally, when mapping these values to desktops, they
+                          will be stored temporarily in Kubernetes Secrets. The security
+                          of those secrets depends highly on your Kubernetes RBAC
+                          setup and who has access to secrets in the namespace where
+                          the Desktop is. So in short, it would be wise to only use
+                          this setting in trusted environments where access to the
+                          necessary kubernetes APIs is only available to a select
+                          group of administrators, and the risk of the user using
+                          a compromised browser is minimal."
+                        type: boolean
                       redirectURL:
                         description: The redirect URL path configured in the OIDC
                           provider. This should be the full path where kvdi is hosted
@@ -319,10 +342,7 @@ spec:
                 description: Metrics configurations.
                 properties:
                   grafana:
-                    description: Grafana sidecar configurations. **NOT IMPLEMENTED:**
-                      In the same spirit as the prometheus configurations, toying
-                      with the idea of running grafana sidecars for visualizing metrics
-                      in the UI.
+                    description: Grafana sidecar configurations.
                     properties:
                       enabled:
                         description: Set to true to run a grafana sidecar with the
@@ -331,9 +351,7 @@ spec:
                         type: boolean
                     type: object
                   prometheus:
-                    description: Prometheus deployment configurations. **NOT IMPLEMENTED:**
-                      Toying with the idea of having the manager deploy a prometheus
-                      instance for scraping.
+                    description: Prometheus deployment configurations.g.
                     properties:
                       create:
                         description: Set to true to create a prometheus instance.

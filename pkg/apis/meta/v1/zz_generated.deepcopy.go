@@ -28,6 +28,13 @@ func (in *AuthResult) DeepCopyInto(out *AuthResult) {
 		*out = new(VDIUser)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Data != nil {
+		in, out := &in.Data, &out.Data
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 
@@ -248,6 +255,13 @@ func (in *JWTClaims) DeepCopyInto(out *JWTClaims) {
 		in, out := &in.User, &out.User
 		*out = new(VDIUser)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.Data != nil {
+		in, out := &in.Data, &out.Data
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	out.StandardClaims = in.StandardClaims
 	return

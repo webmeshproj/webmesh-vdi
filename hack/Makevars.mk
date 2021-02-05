@@ -1,14 +1,11 @@
 # Go options
 GO111MODULE ?= auto
 CGO_ENABLED ?= 0
-GOROOT ?= `go env GOROOT`
+GOROOT      ?= `go env GOROOT`
+GOPATH      ?= $(shell go env GOPATH)
+GOBIN       ?= $(GOPATH)/bin
 
 GIT_COMMIT ?= `git rev-parse HEAD`
-
-# Golang CI Options
-GOLANGCI_VERSION ?= 1.31.0
-GOLANGCI_LINT ?= _bin/golangci-lint
-GOLANGCI_DOWNLOAD_URL ?= https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
 
 # Operator SDK options
 SDK_VERSION ?= v0.19.2
@@ -34,18 +31,12 @@ APP_PROFILE_BASE_IMAGE ?= ${REPO}/${NAME}:app-base-${VERSION}
 OPERATOR_SDK ?= _bin/operator-sdk
 OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/download/${SDK_VERSION}/operator-sdk-${SDK_VERSION}-x86_64-${SDK_PLATFORM}
 
-# Kind Options
-KIND_VERSION ?= v0.7.0
-KUBERNETES_VERSION ?= v1.19.4
-METALLB_VERSION ?= v0.9.3
+# K3d Options
 HELM_VERSION ?= v3.1.2
-
 CLUSTER_NAME ?= vdi
-KIND_DOWNLOAD_URL ?= https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(shell uname)-amd64
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
-KIND_KUBECONFIG ?= _bin/kubeconfig.yaml
-KIND ?= _bin/kind
+CLUSTER_KUBECONFIG ?= _bin/kubeconfig.yaml
 KUBECTL ?= _bin/kubectl
 HELM ?= _bin/helm
 
@@ -81,7 +72,7 @@ define build_docker
 endef
 
 define load_image
-	$(KIND) load --name $(CLUSTER_NAME) docker-image $(1)
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(1)
 endef
 
 define CHART_YAML
@@ -93,3 +84,11 @@ version: ${VERSION}
 appVersion: ${VERSION}
 endef
 export CHART_YAML
+
+define VAULT_POLICY
+path "kvdi/*" {
+    capabilities = ["create", "read", "update", "delete", "list"]
+}
+endef
+
+export VAULT_POLICY

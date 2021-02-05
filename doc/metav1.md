@@ -61,6 +61,10 @@ requirements.
 <td><p>The provider can populate this field to signify a redirect is required, e.g. for OIDC.</p></td>
 </tr>
 <tr class="odd">
+<td><code>Data</code> <em>map[string]string</em></td>
+<td><p>The provider can supply additional data to encode into the generated JWT.</p></td>
+</tr>
+<tr class="even">
 <td><code>RefreshNotSupported</code> <em>bool</em></td>
 <td><p>In the case of OIDC, the refresh tokens cannot be used. Because when the user tries to use them, there is no way to query the provider for the user’s information without initializing a new auth flow. For now, the provider can set this to false to signal to the server that a refresh is not possible.</p></td>
 </tr>
@@ -287,6 +291,10 @@ JWTClaims represents the claims used when issuing JWT tokens.
 <td><p>Whether a refresh token was issued with the claims</p></td>
 </tr>
 <tr class="even">
+<td><code>data</code> <em>map[string]string</em></td>
+<td><p>Additional data that was provided by the authentication provider</p></td>
+</tr>
+<tr class="odd">
 <td><code>StandardClaims</code> <em>github.com/dgrijalva/jwt-go.StandardClaims</em></td>
 <td><p>The standard JWT claims</p></td>
 </tr>
@@ -617,4 +625,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b0b9a80`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `104322f`.*

@@ -3,9 +3,11 @@ package desktop
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/pki"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
@@ -96,8 +98,37 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 		return err
 	}
 
+	// If a secret was pre-created by the API for extra environment variables, fetch its name
+	var secretName string
+	if envTemplates := template.GetEnvTemplates(); len(envTemplates) > 0 {
+		secretList := &corev1.SecretList{}
+		if err := f.client.List(context.TODO(), secretList, client.InNamespace(instance.GetNamespace()), client.MatchingLabels{v1.DesktopNameLabel: instance.GetName()}); err != nil {
+			return err
+		}
+		if len(secretList.Items) == 0 {
+			return errors.New("Could not find env secret for this desktop instance")
+		}
+		var secret *corev1.Secret
+		for _, s := range secretList.Items {
+			if strings.HasPrefix(s.GetName(), instance.GetUser()) {
+				secret = &s
+				break
+			}
+		}
+		if secret == nil {
+			return errors.New("Could not find env secret for this desktop instance")
+		}
+		if refs := secret.GetOwnerReferences(); refs == nil || len(refs) == 0 {
+			secret.OwnerReferences = instance.OwnerReferences()
+			if err := f.client.Update(context.TODO(), secret); err != nil {
+				return err
+			}
+		}
+		secretName = secret.GetName()
+	}
+
 	// ensure the pod
-	if _, err := reconcile.Pod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance)); err != nil {
+	if _, err := reconcile.Pod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance, secretName)); err != nil {
 		return err
 	}
 

@@ -16,6 +16,7 @@ import (
 func GenerateJWT(secret []byte, authResult *v1.AuthResult, authorized bool, sessionLength time.Duration) (v1.JWTClaims, string, error) {
 	claims := v1.JWTClaims{
 		User:       authResult.User,
+		Data:       authResult.Data,
 		Authorized: authorized,
 		Renewable:  !authResult.RefreshNotSupported,
 		StandardClaims: jwt.StandardClaims{

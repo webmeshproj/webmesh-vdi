@@ -12,7 +12,7 @@ import (
 
 // ServiceMonitor reconciles a ServiceMonitor with the cluster.
 func ServiceMonitor(reqLogger logr.Logger, c client.Client, sm *promv1.ServiceMonitor) error {
-	if err := k8sutil.SetCreationSpecAnnotation(&sm.ObjectMeta, sm); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&sm.ObjectMeta, sm.Spec); err != nil {
 		return err
 	}
 	found := &promv1.ServiceMonitor{}

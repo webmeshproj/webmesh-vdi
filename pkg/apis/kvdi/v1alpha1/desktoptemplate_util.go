@@ -12,6 +12,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// GetStaticEnvVars returns the environment variables configured in the template.
+func (t *DesktopTemplate) GetStaticEnvVars() []corev1.EnvVar { return t.Spec.Env }
+
+// GetEnvTemplates returns the environment variable templates.
+func (t *DesktopTemplate) GetEnvTemplates() map[string]string { return t.Spec.EnvTemplates }
+
 // GetVolumes returns the additional volumes to apply to a pod.
 func (t *DesktopTemplate) GetVolumes() []corev1.Volume {
 	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.Volumes != nil {
@@ -153,6 +159,9 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 			Name:  v1.EnableRootEnvVar,
 			Value: "true",
 		})
+	}
+	if static := t.GetStaticEnvVars(); static != nil {
+		envVars = append(envVars, static...)
 	}
 	return envVars
 }

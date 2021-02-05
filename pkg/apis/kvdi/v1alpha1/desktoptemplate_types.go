@@ -49,6 +49,15 @@ type DesktopTemplateSpec struct {
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Any pull secrets required for pulling the container image.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// Additional environment variables to pass to containers booted from this template.
+	Env []corev1.EnvVar `json:"env,omitempty"`
+	// Optionally map additional information about the user (and potentially extended further
+	// in the future) into the environment of desktops booted from this template. The keys in the
+	// map are the environment variable to set inside the desktop, and the values are go templates
+	// or strings to set to the value. Currently the go templates are only passed a `Session` object
+	// containing the information in the claims for the user that created the desktop. For more information
+	// see the [JWTCLaims object](./metav1.md#JWTClaims) and corresponding go types.
+	EnvTemplates map[string]string `json:"envTemplates,omitempty"`
 	// Resource requirements to apply to desktops booted from this template.
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 	// Configuration options for the instances. These are highly dependant on using

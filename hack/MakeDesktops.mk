@@ -53,13 +53,13 @@ push-app-%: build-app-%
 
 # Loaders
 
-load-ubuntu-%: ${KIND} build-ubuntu-%
+load-ubuntu-%: $(K3D) build-ubuntu-%
 	$(call load_image,${REPO}/${NAME}:ubuntu-$*-${VERSION})
 
-load-arch-%: ${KIND} build-arch-%
+load-arch-%: $(K3D) build-arch-%
 	$(call load_image,${REPO}/${NAME}:arch-$*-${VERSION})
 
-load-app-%: ${KIND} build-app-%
+load-app-%: $(K3D) build-app-%
 	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})
 
 #

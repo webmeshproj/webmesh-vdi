@@ -309,6 +309,14 @@ DesktopTemplate is the Schema for the desktoptemplates API
 <td><p>Any pull secrets required for pulling the container image.</p></td>
 </tr>
 <tr class="even">
+<td><code>env</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core">[]Kubernetes core/v1.EnvVar</a></em></td>
+<td><p>Additional environment variables to pass to containers booted from this template.</p></td>
+</tr>
+<tr class="odd">
+<td><code>envTemplates</code> <em>map[string]string</em></td>
+<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="./metav1.md#JWTClaims">JWTCLaims object</a> and corresponding go types.</p></td>
+</tr>
+<tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource requirements to apply to desktops booted from this template.</p></td>
 </tr>
@@ -359,6 +367,14 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 <tr class="odd">
 <td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Any pull secrets required for pulling the container image.</p></td>
+</tr>
+<tr class="even">
+<td><code>env</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core">[]Kubernetes core/v1.EnvVar</a></em></td>
+<td><p>Additional environment variables to pass to containers booted from this template.</p></td>
+</tr>
+<tr class="odd">
+<td><code>envTemplates</code> <em>map[string]string</em></td>
+<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="./metav1.md#JWTClaims">JWTCLaims object</a> and corresponding go types.</p></td>
 </tr>
 <tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
@@ -570,11 +586,11 @@ MetricsConfig contains configuration options for gathering metrics.
 </tr>
 <tr class="even">
 <td><code>prometheus</code> <em><a href="#PrometheusConfig">PrometheusConfig</a></em></td>
-<td><p>Prometheus deployment configurations. <strong>NOT IMPLEMENTED:</strong> Toying with the idea of having the manager deploy a prometheus instance for scraping.</p></td>
+<td><p>Prometheus deployment configurations.g.</p></td>
 </tr>
 <tr class="odd">
 <td><code>grafana</code> <em><a href="#GrafanaConfig">GrafanaConfig</a></em></td>
-<td><p>Grafana sidecar configurations. <strong>NOT IMPLEMENTED:</strong> In the same spirit as the prometheus configurations, toying with the idea of running grafana sidecars for visualizing metrics in the UI.</p></td>
+<td><p>Grafana sidecar configurations.</p></td>
 </tr>
 </tbody>
 </table>
@@ -587,6 +603,10 @@ OIDCConfig represents configurations for using an OIDC/OAuth provider
 for authentication.
 
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Field</th>
@@ -637,6 +657,17 @@ for authentication.
 <tr class="odd">
 <td><code>allowNonGroupedReadOnly</code> <em>bool</em></td>
 <td><p>Set to true if the OIDC provider does not support the “groups” claim (or any valid alternative) and/or you would like to allow any authenticated user read-only access.</p></td>
+</tr>
+<tr class="even">
+<td><code>preserveTokens</code> <em>bool</em></td>
+<td><p>The access tokens returned by the OIDC provider are usually discarded after identify information is retrieved from them. If you set this to true, these fields will be available for mapping in desktops at the following paths:</p>
+<ul>
+<li><code>{{ .Session.Data.access_token }}</code></li>
+<li><code>{{ .Session.Data.token_type }}</code></li>
+<li><code>{{ .Session.Data.refresh_token }}</code></li>
+<li><code>{{ .Session.Data.expiry }}</code></li>
+</ul>
+<p><strong>NOTE:</strong> This should be considered an insecure option and only turned on taking into account the inherent risks. If the access token used for authorizing actions against the kvdi API gets compromised, it would be relatively easy for the attacker to extract this information from the token and use it for authenticating against third-party resources. Additionally, when mapping these values to desktops, they will be stored temporarily in Kubernetes Secrets. The security of those secrets depends highly on your Kubernetes RBAC setup and who has access to secrets in the namespace where the Desktop is. So in short, it would be wise to only use this setting in trusted environments where access to the necessary kubernetes APIs is only available to a select group of administrators, and the risk of the user using a compromised browser is minimal.</p></td>
 </tr>
 </tbody>
 </table>
@@ -931,4 +962,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b0b9a80`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `104322f`.*

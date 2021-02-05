@@ -12,7 +12,7 @@ import (
 
 // Prometheus reconciles a Prometheus CR with the cluster.
 func Prometheus(reqLogger logr.Logger, c client.Client, prom *promv1.Prometheus) error {
-	if err := k8sutil.SetCreationSpecAnnotation(&prom.ObjectMeta, prom); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&prom.ObjectMeta, prom.Spec); err != nil {
 		return err
 	}
 	found := &promv1.Prometheus{}

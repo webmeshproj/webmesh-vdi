@@ -45,6 +45,8 @@ type AuthResult struct {
 	// The provider can populate this field to signify a redirect is required,
 	// e.g. for OIDC.
 	RedirectURL string
+	// The provider can supply additional data to encode into the generated JWT.
+	Data map[string]string
 	// In the case of OIDC, the refresh tokens cannot be used. Because when the user
 	// tries to use them, there is no way to query the provider for the user's information
 	// without initializing a new auth flow. For now, the provider can set this to false to
@@ -60,6 +62,8 @@ type JWTClaims struct {
 	Authorized bool `json:"authorized"`
 	// Whether a refresh token was issued with the claims
 	Renewable bool `json:"renewable"`
+	// Additional data that was provided by the authentication provider
+	Data map[string]string `json:"data"`
 	// The standard JWT claims
 	jwt.StandardClaims
 }

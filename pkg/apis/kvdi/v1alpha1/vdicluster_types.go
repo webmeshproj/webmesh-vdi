@@ -73,14 +73,9 @@ type MetricsConfig struct {
 	// Configurations for creating a ServiceMonitor CR for a pre-existing
 	// prometheus-operator installation.
 	ServiceMonitor *ServiceMonitorConfig `json:"serviceMonitor,omitempty"`
-	// Prometheus deployment configurations.
-	// **NOT IMPLEMENTED:** Toying with the idea of having the manager deploy
-	// a prometheus instance for scraping.
+	// Prometheus deployment configurations.g.
 	Prometheus *PrometheusConfig `json:"prometheus,omitempty"`
 	// Grafana sidecar configurations.
-	// **NOT IMPLEMENTED:** In the same spirit as the prometheus configurations,
-	// toying with the idea of running grafana sidecars for visualizing metrics in
-	// the UI.
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
 }
 
@@ -235,6 +230,24 @@ type OIDCConfig struct {
 	// valid alternative) and/or you would like to allow any authenticated user
 	// read-only access.
 	AllowNonGroupedReadOnly bool `json:"allowNonGroupedReadOnly,omitempty"`
+	// The access tokens returned by the OIDC provider are usually discarded after identify information
+	// is retrieved from them. If you set this to true, these fields will be available for mapping in
+	// desktops at the following paths:
+	//
+	//   - `{{ .Session.Data.access_token }}`
+	//   - `{{ .Session.Data.token_type }}`
+	//   - `{{ .Session.Data.refresh_token }}`
+	//   - `{{ .Session.Data.expiry }}`
+	//
+	// **NOTE:** This should be considered an insecure option and only turned on taking into account
+	// the inherent risks. If the access token used for authorizing actions against the kvdi API gets compromised,
+	// it would be relatively easy for the attacker to extract this information from the token and use it for
+	// authenticating against third-party resources. Additionally, when mapping these values to desktops, they will
+	// be stored temporarily in Kubernetes Secrets. The security of those secrets depends highly on your Kubernetes
+	// RBAC setup and who has access to secrets in the namespace where the Desktop is. So in short, it would be wise to
+	// only use this setting in trusted environments where access to the necessary kubernetes APIs is only available to
+	// a select group of administrators, and the risk of the user using a compromised browser is minimal.
+	PreserveTokens bool `json:"preserveTokens,omitempty"`
 }
 
 // IsUndefined returns true if the given OIDCConfig object is not actually configured.

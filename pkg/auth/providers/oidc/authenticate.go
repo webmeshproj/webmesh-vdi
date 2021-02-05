@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+
 	"golang.org/x/oauth2"
 )
 
@@ -93,9 +95,22 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	if err != nil {
 		return nil, err
 	}
-	user := &v1.VDIUser{
-		Name:  username,
-		Roles: make([]*v1.VDIUserRole, 0),
+
+	result := &v1.AuthResult{
+		User: &v1.VDIUser{
+			Name:  username,
+			Roles: make([]*v1.VDIUserRole, 0),
+		},
+		RefreshNotSupported: true,
+	}
+
+	if a.cluster.PreserveOIDCTokens() {
+		result.Data = map[string]string{
+			"access_token":  oauth2Token.AccessToken,
+			"token_type":    oauth2Token.TokenType,
+			"refresh_token": oauth2Token.RefreshToken,
+			"expiry":        oauth2Token.Expiry.Format(time.RFC3339),
+		}
 	}
 
 	// check if we can handle group membership
@@ -104,11 +119,8 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		// if we can't determine group membership, check if cluster configuration
 		// allows the user in anyway.
 		if a.cluster.AllowNonGroupedReadOnly() {
-			user.Roles = []*v1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
-			return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{
-				User:                user,
-				RefreshNotSupported: true,
-			})
+			result.User.Roles = []*v1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
+			return nil, a.marshalClaimsToSecret(stateKey, result)
 		}
 		return nil, errors.New("No groups provided in claims and allow non-grouped users is set to false")
 	}
@@ -129,15 +141,12 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		boundRoles = appendRoleIfBound(boundRoles, userGroupSlc, role)
 	}
 
-	user.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
+	result.User.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
 	fmt.Println("Saving claims to state key", stateKey)
 
 	// save the claims to the secret backend, they will be retrieved on the next POST
 	// for this state.
-	return nil, a.marshalClaimsToSecret(stateKey, &v1.AuthResult{
-		User:                user,
-		RefreshNotSupported: true,
-	})
+	return nil, a.marshalClaimsToSecret(stateKey, result)
 }
 
 func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1.AuthResult) error {

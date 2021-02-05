@@ -15,7 +15,7 @@ import (
 // cluster. If it exists, we do nothing for now.
 func PersistentVolumeClaim(reqLogger logr.Logger, c client.Client, pvc *corev1.PersistentVolumeClaim) error {
 	// Set the creation spec anyway so it's there if we need it in the future
-	if err := k8sutil.SetCreationSpecAnnotation(&pvc.ObjectMeta, pvc); err != nil {
+	if err := k8sutil.SetCreationSpecAnnotation(&pvc.ObjectMeta, pvc.Spec); err != nil {
 		return err
 	}
 

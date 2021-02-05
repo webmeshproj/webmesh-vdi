@@ -1,17 +1,21 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"text/template"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Request for a new desktop session
@@ -49,11 +53,40 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	tmplnn := types.NamespacedName{Name: req.GetTemplate(), Namespace: metav1.NamespaceAll}
+	tmpl := &v1alpha1.DesktopTemplate{}
+	if err := d.client.Get(context.TODO(), tmplnn, tmpl); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
 	desktop := d.newDesktopForRequest(req, sess.User.GetName())
 
 	if err := d.client.Create(context.TODO(), desktop); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
+	}
+
+	if envTemplates := tmpl.GetEnvTemplates(); len(envTemplates) > 0 {
+		var secretErr error
+		defer func() {
+			if secretErr != nil {
+				if err := d.client.Delete(context.TODO(), desktop); err != nil {
+					apiLogger.Error(err, "Couldn't cleanup desktop from failed secret creation")
+				}
+			}
+		}()
+		var data map[string][]byte
+		data, secretErr = executeEnvTemplates(sess, envTemplates)
+		if secretErr != nil {
+			apiutil.ReturnAPIError(secretErr, w)
+			return
+		}
+		secret := d.newEnvSecretForRequest(req, desktop, sess.User.GetName(), data)
+		if secretErr = d.client.Create(context.TODO(), secret); secretErr != nil {
+			apiutil.ReturnAPIError(secretErr, w)
+			return
+		}
 	}
 
 	apiutil.WriteJSON(&CreateSessionResponse{
@@ -75,4 +108,35 @@ func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username
 			User:       username,
 		},
 	}
+}
+
+func (d *desktopAPI) newEnvSecretForRequest(req *v1.CreateSessionRequest, desktop *v1alpha1.Desktop, username string, data map[string][]byte) *corev1.Secret {
+	labels := desktop.GetLabels()
+	labels[v1.DesktopNameLabel] = desktop.GetName()
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: fmt.Sprintf("%s-env-", username),
+			Namespace:    req.GetNamespace(),
+			Labels:       labels,
+		},
+		Data: data,
+	}
+}
+
+func executeEnvTemplates(sess *v1.JWTClaims, envTemplates map[string]string) (map[string][]byte, error) {
+	data := make(map[string][]byte)
+	for envVar, envVarTmpl := range envTemplates {
+		t, err := template.New("").Parse(envVarTmpl)
+		if err != nil {
+			return nil, err
+		}
+		var buf bytes.Buffer
+		if err := t.Execute(&buf, map[string]interface{}{
+			"Session": sess,
+		}); err != nil {
+			return nil, err
+		}
+		data[envVar] = buf.Bytes()
+	}
+	return data, nil
 }
