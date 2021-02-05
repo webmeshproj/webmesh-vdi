@@ -79,8 +79,23 @@ func (t *DesktopTemplate) GetDesktopServiceAccount() string {
 	return ""
 }
 
-// GetDisplaySocketAddr returns the display socket address to pass to the nonvnc-proxy.
-func (t *DesktopTemplate) GetDisplaySocketAddr() string {
+// IsTCPDisplaySocket returns true if the VNC server is listening on a TCP socket.
+func (t *DesktopTemplate) IsTCPDisplaySocket() bool {
+	return strings.HasPrefix(t.GetDisplaySocketURI(), "tcp://")
+}
+
+// IsUNIXDisplaySocket returns true if the VNC server is listening on a UNIX socket.
+func (t *DesktopTemplate) IsUNIXDisplaySocket() bool {
+	return strings.HasPrefix(t.GetDisplaySocketURI(), "unix://")
+}
+
+// GetDisplaySocketAddress returns just the address portion of the display socket URI.
+func (t *DesktopTemplate) GetDisplaySocketAddress() string {
+	return strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketURI(), "unix://"), "tcp://")
+}
+
+// GetDisplaySocketURI returns the display socket URI to pass to the nonvnc-proxy.
+func (t *DesktopTemplate) GetDisplaySocketURI() string {
 	if t.Spec.Config != nil && t.Spec.Config.SocketAddr != "" {
 		return t.Spec.Config.SocketAddr
 	}
@@ -102,10 +117,12 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 			Name:  v1.UserEnvVar,
 			Value: desktop.GetUser(),
 		},
-		{
+	}
+	if t.IsUNIXDisplaySocket() {
+		envVars = append(envVars, corev1.EnvVar{
 			Name:  v1.VNCSockEnvVar,
-			Value: strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://"),
-		},
+			Value: t.GetDisplaySocketAddress(),
+		})
 	}
 	if t.RootEnabled() {
 		envVars = append(envVars, corev1.EnvVar{
@@ -179,12 +196,6 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 			},
 		},
 		{
-			Name: vncSockVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		{
 			Name: shmVolume,
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
@@ -200,6 +211,15 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 				},
 			},
 		},
+	}
+
+	if t.IsUNIXDisplaySocket() {
+		volumes = append(volumes, corev1.Volume{
+			Name: vncSockVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
 	}
 
 	// A PVC claim for the user if specified, otherwise use an EmptyDir.
@@ -241,7 +261,6 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 
 // GetDesktopVolumeMounts returns the volume mounts for the main desktop container.
 func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *Desktop) []corev1.VolumeMount {
-
 	mounts := []corev1.VolumeMount{
 		{
 			Name:      tmpVolume,
@@ -256,10 +275,6 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			MountPath: v1.DesktopRunLockPath,
 		},
 		{
-			Name:      vncSockVolume,
-			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
-		},
-		{
 			Name:      shmVolume,
 			MountPath: v1.DesktopShmPath,
 		},
@@ -268,13 +283,17 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			MountPath: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
 	}
+	if t.IsUNIXDisplaySocket() {
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      vncSockVolume,
+			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
+		})
+	}
 	if t.GetInitSystem() == InitSystemd {
-		mounts = append(mounts, []corev1.VolumeMount{
-			{
-				Name:      cgroupsVolume,
-				MountPath: v1.DesktopCgroupPath,
-			},
-		}...)
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      cgroupsVolume,
+			MountPath: v1.DesktopCgroupPath,
+		})
 	}
 	return mounts
 }
@@ -295,10 +314,12 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			MountPath: v1.ServerCertificateMountPath,
 			ReadOnly:  true,
 		},
-		{
+	}
+	if t.IsUNIXDisplaySocket() {
+		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
 			Name:      vncSockVolume,
-			MountPath: filepath.Dir(strings.TrimPrefix(strings.TrimPrefix(t.GetDisplaySocketAddr(), "unix://"), "tcp://")),
-		},
+			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
+		})
 	}
 	if t.FileTransferEnabled() {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
@@ -310,7 +331,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		Name:            "kvdi-proxy",
 		Image:           t.GetKVDIVNCProxyImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Args:            []string{"--vnc-addr", t.GetDisplaySocketAddr()},
+		Args:            []string{"--vnc-addr", t.GetDisplaySocketURI()},
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          "web",

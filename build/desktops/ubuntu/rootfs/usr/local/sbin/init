@@ -27,9 +27,9 @@ if [[ "${ENABLE_ROOT}" == "true" ]] ; then
     echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 fi
 
-# Set the VNC socket dir
+# Set the VNC socket dir - this will effectivelt do nothing if the UNIX socket env var is not set
 if [[ -z "${VNC_SOCK_ADDR}" ]] ; then
-    export VNC_SOCK_ADDR="/tmp/vnc.sock"
+    export VNC_SOCK_ADDR="/run/user/${USER_ID}/vnc.sock"
 fi
 
 # Pre-create the vnc socket directory and give it to the user
