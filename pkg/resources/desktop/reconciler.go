@@ -118,7 +118,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 		if secret == nil {
 			return errors.New("Could not find env secret for this desktop instance")
 		}
-		if refs := secret.GetOwnerReferences(); refs == nil || len(refs) == 0 {
+		if refs := secret.GetOwnerReferences(); len(refs) == 0 {
 			secret.OwnerReferences = instance.OwnerReferences()
 			if err := f.client.Update(context.TODO(), secret); err != nil {
 				return err
