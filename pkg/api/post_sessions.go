@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
-	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -67,9 +65,9 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username string) *v1alpha1.Desktop {
 	return &v1alpha1.Desktop{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", req.GetTemplate(), strings.Split(uuid.New().String(), "-")[0]),
-			Namespace: req.GetNamespace(),
-			Labels:    d.vdiCluster.GetUserDesktopLabels(username),
+			GenerateName: fmt.Sprintf("%s-", req.GetTemplate()),
+			Namespace:    req.GetNamespace(),
+			Labels:       d.vdiCluster.GetUserDesktopSelector(username),
 		},
 		Spec: v1alpha1.DesktopSpec{
 			VDICluster: d.vdiCluster.GetName(),

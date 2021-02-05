@@ -12,6 +12,30 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// GetVolumes returns the additional volumes to apply to a pod.
+func (t *DesktopTemplate) GetVolumes() []corev1.Volume {
+	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.Volumes != nil {
+		return t.Spec.VolumeConfig.Volumes
+	}
+	return nil
+}
+
+// GetVolumeMounts returns the additional volume mounts to apply to the desktop container.
+func (t *DesktopTemplate) GetVolumeMounts() []corev1.VolumeMount {
+	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.VolumeMounts != nil {
+		return t.Spec.VolumeConfig.VolumeMounts
+	}
+	return nil
+}
+
+// GetVolumeDevices returns the additional volume devices to apply to the desktop container.
+func (t *DesktopTemplate) GetVolumeDevices() []corev1.VolumeDevice {
+	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.VolumeDevices != nil {
+		return t.Spec.VolumeConfig.VolumeDevices
+	}
+	return nil
+}
+
 // GetInitSystem returns the init system used by the docker image in this template.
 func (t *DesktopTemplate) GetInitSystem() DesktopInit {
 	if t.Spec.Config != nil && t.Spec.Config.Init != "" {
@@ -256,6 +280,10 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 		}...)
 	}
 
+	if additionalVolumes := t.GetVolumes(); additionalVolumes != nil {
+		volumes = append(volumes, additionalVolumes...)
+	}
+
 	return volumes
 }
 
@@ -294,6 +322,9 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			Name:      cgroupsVolume,
 			MountPath: v1.DesktopCgroupPath,
 		})
+	}
+	if additionalMounts := t.GetVolumeMounts(); additionalMounts != nil {
+		mounts = append(mounts, additionalMounts...)
 	}
 	return mounts
 }

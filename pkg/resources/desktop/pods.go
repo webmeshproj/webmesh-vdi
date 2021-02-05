@@ -32,6 +32,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 					Image:           tmpl.GetDesktopImage(),
 					ImagePullPolicy: tmpl.GetDesktopPullPolicy(),
 					VolumeMounts:    tmpl.GetDesktopVolumeMounts(cluster, instance),
+					VolumeDevices:   tmpl.GetVolumeDevices(),
 					SecurityContext: tmpl.GetDesktopContainerSecurityContext(),
 					Env:             tmpl.GetDesktopEnvVars(instance),
 					Lifecycle:       tmpl.GetLifecycle(),

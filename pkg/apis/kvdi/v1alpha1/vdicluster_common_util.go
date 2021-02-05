@@ -66,28 +66,6 @@ func (c *VDICluster) GetUserDesktopsSelector(username string) client.MatchingLab
 	}
 }
 
-// GetUserDesktopLabels returns the labels to apply to the pod for a user's desktop session.
-func (c *VDICluster) GetUserDesktopLabels(username string) map[string]string {
-	return map[string]string{
-		v1.UserLabel:       username,
-		v1.VDIClusterLabel: c.GetName(),
-	}
-}
-
-// GetDesktopLabels returns desktop labels.
-// TODO: Find out if this or GetUserDesktopLabels is actually being used.
-func (c *VDICluster) GetDesktopLabels(desktop *Desktop) map[string]string {
-	labels := desktop.GetLabels()
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels[v1.UserLabel] = desktop.Spec.User
-	labels[v1.VDIClusterLabel] = c.GetName()
-	labels[v1.ComponentLabel] = "desktop"
-	labels[v1.DesktopNameLabel] = desktop.GetName()
-	return labels
-}
-
 // OwnerReferences returns an owner reference slice with this VDICluster
 // instance as the owner.
 func (c *VDICluster) OwnerReferences() []metav1.OwnerReference {

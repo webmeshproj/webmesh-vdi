@@ -51,9 +51,12 @@ type DesktopTemplateSpec struct {
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Resource requirements to apply to desktops booted from this template.
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-	// Configuration options for the instances. This is highly dependant on using
+	// Configuration options for the instances. These are highly dependant on using
 	// the Dockerfiles (or close derivitives) provided in this repository.
 	Config *DesktopConfig `json:"config,omitempty"`
+	// Volume configurations for the instances. These can be used for mounting custom
+	// volumes at arbitrary paths in desktops.
+	VolumeConfig *DesktopVolumeConfig `json:"volumeConfig,omitempty"`
 	// Arbitrary tags for displaying in the app UI.
 	Tags map[string]string `json:"tags,omitempty"`
 }
@@ -93,12 +96,20 @@ type DesktopConfig struct {
 	Init DesktopInit `json:"init,omitempty"`
 }
 
-// DesktopTemplateStatus defines the observed state of DesktopTemplate
-type DesktopTemplateStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+// DesktopVolumeConfig represents configurations for volumes attached to pods booted from
+// a template.
+type DesktopVolumeConfig struct {
+	// Additional volumes to attach to pods booted from this template. To mount them there
+	// must be cooresponding `volumeMounts` or `volumeDevices` specified.
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
+	// Volume mounts for the desktop container.
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+	// Volume devices for the desktop container.
+	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty"`
 }
+
+// DesktopTemplateStatus defines the observed state of DesktopTemplate
+type DesktopTemplateStatus struct{}
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

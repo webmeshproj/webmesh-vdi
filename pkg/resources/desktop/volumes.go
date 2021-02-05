@@ -99,7 +99,7 @@ func newPVCForUser(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop, exi
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            cluster.GetUserdataVolumeName(instance.GetUser()),
 			Namespace:       instance.GetNamespace(),
-			Labels:          cluster.GetUserDesktopLabels(instance.GetUser()),
+			Labels:          cluster.GetDesktopLabels(instance),
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: *spec,

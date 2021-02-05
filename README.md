@@ -19,6 +19,7 @@ If I end up doing more refactoring, I'll work on branches and update documentati
    - [Standalone](#Install-standalone)
    - [Kubernetes](#Install-to-a-pre-existing-cluster)
    - [Standalone on EC2 with Terraform](#Install-to-an-AWS-EC2-Instance)
+ - [Upgrading](#Upgrading)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
  - [Screenshots/Video](doc/screenshots.md)
@@ -109,6 +110,32 @@ By default there are no desktop templates configured. If you'd like, you can app
 I am toying with the idea of launching a demo site, and I've included the terraform code for it in this repository. It is located in [`deploy/terraform`](deploy/terraform).
 
 There is a single required variable of `ext_ip`. Set this to your public IP to be able to access SSH and the web port. See `deploy/terraform/variables.tf` for other configuration options.
+
+## Upgrading
+
+Most of the time you can just run a regular helm upgrade to update your deployment manifests to the latest images.
+
+```bash
+helm upgrade kvdi tinyzimmer/kvdi --version v0.1.4
+```
+
+However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible. 
+Due to the way helm manages CRDs, it will ignore changes to those on an existing installation. 
+You can get around this by applying the CRDs for the version you are upgrading to directly from this repo.
+
+For example:
+
+```bash
+export KVDI_VERSION=v0.1.4
+
+kubectl apply \
+  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/kvdi.io_desktops_crd.yaml \
+  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/kvdi.io_desktoptemplates_crd.yaml \
+  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/kvdi.io_vdiclusters_crd.yaml \
+  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/kvdi.io_vdiroles_crd.yaml
+```
+
+When there is a change to one or more CRDs, it will be mentioned in the notes for that release.
 
 ## Building and Running Locally
 

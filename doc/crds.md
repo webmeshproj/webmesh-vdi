@@ -14,6 +14,7 @@ Types
 -   [DesktopSpec](#DesktopSpec)
 -   [DesktopTemplate](#DesktopTemplate)
 -   [DesktopTemplateSpec](#DesktopTemplateSpec)
+-   [DesktopVolumeConfig](#DesktopVolumeConfig)
 -   [DesktopsConfig](#DesktopsConfig)
 -   [GrafanaConfig](#GrafanaConfig)
 -   [K8SSecretConfig](#K8SSecretConfig)
@@ -115,14 +116,18 @@ to support multiple backends, e.g. local, oauth, ldap, etc.
 <td><p>How long issued access tokens should be valid for. When using OIDC auth you may want to set this to a higher value (e.g. 8-10h) since the refresh token flow will not be able to lookup a user’s grants from the provider. Defaults to <code>15m</code>.</p></td>
 </tr>
 <tr class="even">
+<td><code>defaultRoleRules</code> <em><a href="./metav1.md#Rule">[]github.com/tinyzimmer/kvdi/pkg/apis/meta/v1.Rule</a></em></td>
+<td><p>The rules to apply to the default role created for this cluster. These are the rules applied to anonymous users (if allowed) and non-grouped OIDC users. They can also be used for convenience when getting started. The defaults only allow for launching templates in the <code>appNamespace</code>.</p></td>
+</tr>
+<tr class="odd">
 <td><code>localAuth</code> <em><a href="#LocalAuthConfig">LocalAuthConfig</a></em></td>
 <td><p>Use local auth (secret-backed) authentication</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>ldapAuth</code> <em><a href="#LDAPConfig">LDAPConfig</a></em></td>
 <td><p>Use LDAP for authentication.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>oidcAuth</code> <em><a href="#OIDCConfig">OIDCConfig</a></em></td>
 <td><p>Use OIDC for authentication</p></td>
 </tr>
@@ -309,9 +314,13 @@ DesktopTemplate is the Schema for the desktoptemplates API
 </tr>
 <tr class="odd">
 <td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
-<td><p>Configuration options for the instances. This is highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
+<td><p>Configuration options for the instances. These are highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
+<td><code>volumeConfig</code> <em><a href="#DesktopVolumeConfig">DesktopVolumeConfig</a></em></td>
+<td><p>Volume configurations for the instances. These can be used for mounting custom volumes at arbitrary paths in desktops.</p></td>
+</tr>
+<tr class="odd">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
 </tr>
@@ -357,11 +366,46 @@ DesktopTemplateSpec defines the desired state of DesktopTemplate
 </tr>
 <tr class="odd">
 <td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
-<td><p>Configuration options for the instances. This is highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
+<td><p>Configuration options for the instances. These are highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
+<td><code>volumeConfig</code> <em><a href="#DesktopVolumeConfig">DesktopVolumeConfig</a></em></td>
+<td><p>Volume configurations for the instances. These can be used for mounting custom volumes at arbitrary paths in desktops.</p></td>
+</tr>
+<tr class="odd">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
+</tr>
+</tbody>
+</table>
+
+### DesktopVolumeConfig
+
+(*Appears on:*
+[DesktopTemplateSpec](#DesktopTemplateSpec))
+
+DesktopVolumeConfig represents configurations for volumes attached to
+pods booted from a template.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
+<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
+</tr>
+<tr class="even">
+<td><code>volumeMounts</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core">[]Kubernetes core/v1.VolumeMount</a></em></td>
+<td><p>Volume mounts for the desktop container.</p></td>
+</tr>
+<tr class="odd">
+<td><code>volumeDevices</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumedevice-v1-core">[]Kubernetes core/v1.VolumeDevice</a></em></td>
+<td><p>Volume devices for the desktop container.</p></td>
 </tr>
 </tbody>
 </table>
@@ -887,4 +931,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `a5df547`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `d0d9f78`.*

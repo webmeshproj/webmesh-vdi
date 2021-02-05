@@ -25,7 +25,7 @@ func allowSessionOwner(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (all
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return false, false, err
 	}
-	userDesktopLabels := d.vdiCluster.GetUserDesktopLabels(reqUser.Name)
+	userDesktopLabels := d.vdiCluster.GetUserDesktopSelector(reqUser.Name)
 	// extra safety check - cant accurately determine ownership without labels
 	if found.GetLabels() == nil {
 		return false, false, nil

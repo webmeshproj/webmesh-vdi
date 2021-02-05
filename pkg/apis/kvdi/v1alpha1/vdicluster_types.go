@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -118,6 +120,10 @@ type AuthConfig struct {
 	// you may want to set this to a higher value (e.g. 8-10h) since the refresh token
 	// flow will not be able to lookup a user's grants from the provider. Defaults to `15m`.
 	TokenDuration string `json:"tokenDuration,omitempty"`
+	// The rules to apply to the default role created for this cluster. These are the rules applied to
+	// anonymous users (if allowed) and non-grouped OIDC users. They can also be used for convenience
+	// when getting started. The defaults only allow for launching templates in the `appNamespace`.
+	DefaultRoleRules []v1.Rule `json:"defaultRoleRules,omitempty"`
 	// Use local auth (secret-backed) authentication
 	LocalAuth *LocalAuthConfig `json:"localAuth,omitempty"`
 	// Use LDAP for authentication.
