@@ -37,6 +37,11 @@ type DesktopsConfig struct {
 	// When configured, desktop sessions will be forcefully terminated when
 	// the time limit is reached.
 	MaxSessionLength string `json:"maxSessionLength,omitempty"`
+	// The maximum number of sessions a user can run at a time. A zero value (or undefined)
+	// means no limit. When using a `userdataSpec`, you might want to set this value to 1 if
+	// you aren't using ReadWriteMany volumes. The storage controller would inevitably enforce
+	// this behavior anyway, but you would save the `kvdi-manager` some extra work.
+	SessionsPerUser int `json:"sessionsPerUser,omitempty"`
 }
 
 // AppConfig represents app configurations for the VDI cluster

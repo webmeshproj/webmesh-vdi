@@ -4,20 +4,13 @@ import Vuex from 'vuex'
 export const ConfigStore = new Vuex.Store({
 
   state: {
-    serverConfig: {},
-    localConfig: {
-      readWriteMany: false
-    }
+    serverConfig: {}
   },
 
   mutations: {
 
     set_server_config (state, data) {
       state.serverConfig = data
-    },
-
-    set_read_write_many (state, val) {
-      state.localConfig.readWriteMany = val
     }
 
   },
@@ -32,14 +25,10 @@ export const ConfigStore = new Vuex.Store({
         console.error(err)
         throw err
       }
-    },
-    setReadWriteMany ({ commit }, val) {
-      commit('set_read_write_many', val)
     }
   },
 
   getters: {
-    localConfig: state => state.localConfig,
     serverConfig: state => state.serverConfig,
     grafanaEnabled: state => {
       if (state.serverConfig.metrics && state.serverConfig.metrics.grafana) {

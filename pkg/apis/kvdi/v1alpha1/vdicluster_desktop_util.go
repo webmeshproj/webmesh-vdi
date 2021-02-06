@@ -19,6 +19,14 @@ func (c *VDICluster) GetMaxSessionLength() time.Duration {
 	return time.Duration(0)
 }
 
+// GetMaxSessionsPerUser returns the maximum number of sessions a user can run for this VDICluster.
+func (c *VDICluster) GetMaxSessionsPerUser() int {
+	if c.Spec.Desktops != nil {
+		return c.Spec.Desktops.SessionsPerUser
+	}
+	return 0
+}
+
 // GetUserDesktopSelector returns a selector that can be used to find desktops for a given user.
 func (c *VDICluster) GetUserDesktopSelector(username string) map[string]string {
 	return map[string]string{

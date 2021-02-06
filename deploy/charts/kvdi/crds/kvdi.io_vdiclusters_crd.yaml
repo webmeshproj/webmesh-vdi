@@ -325,6 +325,14 @@ spec:
                     description: When configured, desktop sessions will be forcefully
                       terminated when the time limit is reached.
                     type: string
+                  sessionsPerUser:
+                    description: The maximum number of sessions a user can run at
+                      a time. A zero value (or undefined) means no limit. When using
+                      a `userdataSpec`, you might want to set this value to 1 if you
+                      aren't using ReadWriteMany volumes. The storage controller would
+                      inevitably enforce this behavior anyway, but you would save
+                      the `kvdi-manager` some extra work.
+                    type: integer
                 type: object
               imagePullSecrets:
                 description: Pull secrets to use when pulling container images

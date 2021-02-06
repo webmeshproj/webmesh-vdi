@@ -64,17 +64,19 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) error {
 
 	if d.vdiCluster == nil {
 		// we are setting up the api the first time
-		d.vdiCluster = &v1alpha1.VDICluster{}
 		apiLogger.Info("Setting up kVDI runtime")
 	} else {
+		// This is an update
 		apiLogger.Info("Syncing kVDI runtime configuration with VDICluster spec")
 	}
 
 	var err error
 	// overwrite the api vdicluster object with the remote state
-	if err = d.client.Get(context.TODO(), req.NamespacedName, d.vdiCluster); err != nil {
+	changed := &v1alpha1.VDICluster{}
+	if err = d.client.Get(context.TODO(), req.NamespacedName, changed); err != nil {
 		return err
 	}
+	d.vdiCluster = changed
 
 	if d.secrets == nil {
 		// we have not set up secrets yet

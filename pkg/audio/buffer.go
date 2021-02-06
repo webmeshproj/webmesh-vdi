@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-logr/logr"
 
+	"github.com/tinyzimmer/go-glib/glib"
 	"github.com/tinyzimmer/go-gst/gst"
-	"github.com/tinyzimmer/go-gst/gst/gstauto"
 )
 
 // Buffer provides a ReadWriteCloser for proxying audio data to
@@ -19,15 +19,17 @@ import (
 // data and writes to write-buffer can be in any format that gstreamer `decodebin`
 // supports.
 type Buffer struct {
+	mainLoop                                                       *glib.MainLoop
 	logger                                                         logr.Logger
-	pbkPipeline                                                    *gstauto.PipelineReaderSimple
-	recPipeline                                                    *gstauto.PipelineWriterSimple
-	micSinkPipeline                                                *gstauto.PipelinerSimple
+	pbkReader                                                      io.ReadCloser
+	recWriter                                                      io.WriteCloser
+	micSinkPipeline                                                *gst.Pipeline
 	channels, sampleRate, micChannels, micSampleRate               int
 	pulseServer, pulseFormat, pulseMonitor, pulseMic, pulseMicPath string
 	closed                                                         bool
 	wmux                                                           sync.Mutex
 	wsize                                                          int
+	errChan                                                        chan error
 }
 
 // Make sure Buffer implements a io.ReadWriteCloser
@@ -37,6 +39,7 @@ var _ io.ReadWriteCloser = &Buffer{}
 func NewBuffer(opts *BufferOpts) *Buffer {
 	gst.Init(nil)
 	return &Buffer{
+		mainLoop:      glib.NewMainLoop(glib.MainContextDefault(), false),
 		logger:        opts.getLogger(),
 		pulseServer:   opts.getPulseServer(),
 		pulseFormat:   opts.getPulseFormat(),
@@ -47,12 +50,14 @@ func NewBuffer(opts *BufferOpts) *Buffer {
 		pulseMonitor:  opts.getPulseMonitorName(),
 		pulseMic:      opts.getMicName(),
 		pulseMicPath:  opts.getMicPath(),
+		errChan:       make(chan error),
 	}
 }
 
-func (a *Buffer) newSinkPipeline() (*gstauto.PipelinerSimple, error) {
+func (a *Buffer) newSinkPipeline() (*gst.Pipeline, error) {
 	return newSinkPipeline(
-		a.logger.WithName("mic_null_monitor"),
+		a.logger.WithName("sink_pipeline"),
+		a.errChan,
 		&playbackPipelineOpts{
 			PulseServer:    a.pulseServer,
 			DeviceName:     a.pulseMic,
@@ -63,9 +68,10 @@ func (a *Buffer) newSinkPipeline() (*gstauto.PipelinerSimple, error) {
 	)
 }
 
-func (a *Buffer) newRecordingPipeline() (*gstauto.PipelineWriterSimple, error) {
-	return newRecordingPipeline(
-		a.logger.WithName("gst_recorder"),
+func (a *Buffer) newRecordingPipeline() (io.WriteCloser, error) {
+	return newRecordingPipelineWriter(
+		a.logger.WithName("recording_pipeline"),
+		a.errChan,
 		&recordingPipelineOpts{
 			DeviceFifo:     a.pulseMicPath,
 			DeviceFormat:   a.pulseFormat,
@@ -75,9 +81,10 @@ func (a *Buffer) newRecordingPipeline() (*gstauto.PipelineWriterSimple, error) {
 	)
 }
 
-func (a *Buffer) newPlaybackPipeline() (*gstauto.PipelineReaderSimple, error) {
-	return newPlaybackPipeline(
-		a.logger.WithName("gst_playback"),
+func (a *Buffer) newPlaybackPipeline() (io.ReadCloser, error) {
+	return newPlaybackPipelineReader(
+		a.logger.WithName("playback_pipeline"),
+		a.errChan,
 		&playbackPipelineOpts{
 			PulseServer:    a.pulseServer,
 			DeviceName:     a.pulseMonitor,
@@ -92,27 +99,17 @@ func (a *Buffer) newPlaybackPipeline() (*gstauto.PipelineReaderSimple, error) {
 func (a *Buffer) Start() error {
 	var err error
 
-	a.pbkPipeline, err = a.newPlaybackPipeline()
+	a.pbkReader, err = a.newPlaybackPipeline()
 	if err != nil {
 		return err
 	}
-	a.recPipeline, err = a.newRecordingPipeline()
+	a.recWriter, err = a.newRecordingPipeline()
 	if err != nil {
 		return err
 	}
 
 	a.micSinkPipeline, err = a.newSinkPipeline()
 	if err != nil {
-		return err
-	}
-
-	// Start the playback device
-	if err := a.pbkPipeline.Start(); err != nil {
-		return err
-	}
-
-	// Start the recording device
-	if err := a.recPipeline.Start(); err != nil {
 		return err
 	}
 
@@ -127,25 +124,28 @@ func (a *Buffer) Start() error {
 	// This allows PulseAudio to flush the buffer on the device so when other
 	// applications request audio from it they don't get dumped the entire history
 	// at once.
-	if err := a.micSinkPipeline.Start(); err != nil {
+	if err := a.micSinkPipeline.SetState(gst.StatePlaying); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// RunLoop will run the main loop, blocking until one of the pipelines ends, closes, or any errors.
+func (a *Buffer) RunLoop() { a.mainLoop.Run() }
+
 func (a *Buffer) restartRecorder() error {
 	a.wmux.Lock()
 	defer a.wmux.Unlock()
 	var err error
-	if err = a.recPipeline.Close(); err != nil {
+	if err = a.recWriter.Close(); err != nil {
 		return err
 	}
-	a.recPipeline, err = a.newRecordingPipeline()
+	a.recWriter, err = a.newRecordingPipeline()
 	if err != nil {
 		return err
 	}
-	return a.recPipeline.Start()
+	return nil
 }
 
 func (a *Buffer) watchRecPipeline() {
@@ -154,7 +154,7 @@ func (a *Buffer) watchRecPipeline() {
 	lastStartSize := a.wsize
 	for range ticker.C {
 		// if the playback pipeline is dead, return
-		if a.pbkPipeline.Pipeline().GetState() == gst.StateNull {
+		if a.IsClosed() {
 			return
 		}
 		if a.wsize == lastSize {
@@ -174,43 +174,56 @@ func (a *Buffer) watchRecPipeline() {
 	}
 }
 
-// Wait will wait for the main playback pipeline to complete.
-func (a *Buffer) Wait() {
-	gst.Wait(a.pbkPipeline.Pipeline())
-}
-
 // Read implements ReadCloser and returns data from the audio buffer.
-func (a *Buffer) Read(p []byte) (int, error) { return a.pbkPipeline.Read(p) }
+func (a *Buffer) Read(p []byte) (int, error) {
+	select {
+	case err := <-a.errChan:
+		a.mainLoop.Quit()
+		return 0, err
+	default:
+		n, err := a.pbkReader.Read(p)
+		if err != nil {
+			a.mainLoop.Quit()
+		}
+		return n, err
+	}
+}
 
 // Write implements a WriteCloser and writes data to the audio buffer.
 func (a *Buffer) Write(p []byte) (int, error) {
-	a.wmux.Lock()
-	defer a.wmux.Unlock()
-	s, err := a.recPipeline.Write(p)
-	if err != nil {
-		return s, err
+	select {
+	case err := <-a.errChan:
+		a.mainLoop.Quit()
+		return 0, err
+	default:
+		a.wmux.Lock()
+		defer a.wmux.Unlock()
+		s, err := a.recWriter.Write(p)
+		if err != nil {
+			a.mainLoop.Quit()
+			return s, err
+		}
+		a.wsize += s
+		return s, nil
 	}
-	a.wsize += s
-	return s, nil
 }
 
 // IsClosed returns true if the buffer is closed.
-func (a *Buffer) IsClosed() bool {
-	return a.closed
-}
+func (a *Buffer) IsClosed() bool { return a.closed }
 
 // Close kills the gstreamer pipelines.
 func (a *Buffer) Close() error {
 	if !a.IsClosed() {
-		if err := a.pbkPipeline.Close(); err != nil {
+		if err := a.pbkReader.Close(); err != nil {
 			return err
 		}
-		if err := a.recPipeline.Close(); err != nil {
+		if err := a.recWriter.Close(); err != nil {
 			return err
 		}
-		if err := a.micSinkPipeline.Pipeline().Destroy(); err != nil {
+		if err := a.micSinkPipeline.BlockSetState(gst.StateNull); err != nil {
 			return err
 		}
+		a.mainLoop.Quit()
 		a.closed = true
 	}
 	return nil

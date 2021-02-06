@@ -1,6 +1,6 @@
 REPO ?= ghcr.io/tinyzimmer
 NAME = kvdi
-VERSION ?= v0.1.4
+VERSION ?= latest
 
 # includes
 -include hack/Makevars.mk
@@ -286,7 +286,12 @@ helm-docs: ${HELM_DOCS} chart-yaml
 	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 
 
-prep-release: generate manifests api-docs helm-docs package-chart package-index
+check-release:
+	@if [[ "$(VERSION)" == "latest" ]] ; then \
+		echo "You must specify a VERSION for release" ; exit 1 ; \
+	fi
+
+prep-release: check-release generate manifests api-docs helm-docs package-chart package-index
 
 ##
 ## ######################################################################################

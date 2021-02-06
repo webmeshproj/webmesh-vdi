@@ -56,8 +56,8 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 ### TODO
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
-  - Harden images more
-  - UI needs serious makeover
+  - DOSBox/Game profiles could be cool...
+  - UI could use a serious makeover from someone who actually knows what they are doing
 
 ## Requirements
 

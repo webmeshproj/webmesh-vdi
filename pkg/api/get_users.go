@@ -43,7 +43,7 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 // swagger:operation GET /api/users/{user} Users getUser
 // ---
 // summary: Retrieve the specified user.
-// description: Details include the roles, grants, namespaces, and template patterns for the user.
+// description: Details include the roles and grants for the user.
 // parameters:
 // - name: user
 //   in: path

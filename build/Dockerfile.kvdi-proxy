@@ -9,7 +9,7 @@ ENV GO111MODULE=on
 ## CGO is required for GST bindings
 ENV CGO_ENABLED=1
 
-RUN apk add pulseaudio-dev glib-dev gstreamer-dev pkgconfig gcc musl-dev
+RUN apk add pulseaudio-dev glib-dev gstreamer-dev gst-plugins-base-dev pkgconfig gcc musl-dev
 
 ARG VERSION
 ENV VERSION=${VERSION}
@@ -33,7 +33,7 @@ RUN go build \
 FROM alpine
 
 RUN apk add --update --no-cache \
-      libpulse gstreamer gst-plugins-good \
+      libpulse gstreamer gst-plugins-good gst-plugins-base \
       && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/kvdi-proxy /kvdi-proxy

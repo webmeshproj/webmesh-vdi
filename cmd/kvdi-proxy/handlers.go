@@ -152,6 +152,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 		log.Error(err, "Error setting up audio buffer")
 		return
 	}
+	defer audioBuffer.Close()
 
 	watcher := apiutil.NewWebsocketWatcher(wsconn)
 	stChan := logWatcherMetrics("audio", watcher)
@@ -159,17 +160,21 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 
 	// Copy audio playback data to the connection
 	go func() {
-		if _, err := io.Copy(watcher, audioBuffer); err != nil {
+		buf := make([]byte, 256)
+		if _, err := io.CopyBuffer(watcher, audioBuffer, buf); err != nil {
 			if !errors.IsBrokenPipeError(err) {
 				log.Error(err, "Error while copying from audio stream to websocket connection")
 			}
 		}
-		audioBuffer.Close()
+		if !audioBuffer.IsClosed() {
+			audioBuffer.Close()
+		}
 	}()
 
 	// Copy any received recording data to the buffer
 	go func() {
-		if _, err := io.Copy(audioBuffer, watcher); err != nil {
+		buf := make([]byte, 256)
+		if _, err := io.CopyBuffer(audioBuffer, watcher, buf); err != nil {
 			if !errors.IsBrokenPipeError(err) {
 				log.Error(err, "Error while copying from websocket connection to audio buffer")
 			}
@@ -177,7 +182,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 	}()
 
 	// Wait for the audiobuffer to exit
-	audioBuffer.Wait()
+	audioBuffer.RunLoop()
 
 	// Close the websocket connection
 	if err := watcher.Close(); err != nil {

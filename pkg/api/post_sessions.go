@@ -10,6 +10,7 @@ import (
 
 	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
@@ -51,6 +52,18 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
+	}
+
+	if max := d.vdiCluster.GetMaxSessionsPerUser(); max > 0 {
+		desktops := &v1alpha1.DesktopList{}
+		if err := d.client.List(context.TODO(), desktops, client.InNamespace(metav1.NamespaceAll), client.MatchingLabels(d.vdiCluster.GetUserDesktopSelector(sess.User.Name))); err != nil {
+			apiutil.ReturnAPIError(err, w)
+			return
+		}
+		if len(desktops.Items) >= max {
+			apiutil.ReturnAPIError(fmt.Errorf("%s has reached the maximum allowed (%d) running desktops", sess.User.Name, max), w)
+			return
+		}
 	}
 
 	tmplnn := types.NamespacedName{Name: req.GetTemplate(), Namespace: metav1.NamespaceAll}

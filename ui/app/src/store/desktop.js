@@ -66,11 +66,6 @@ export const DesktopSessions = new Vuex.Store({
     },
 
     async newSession ({ commit }, { template, namespace }) {
-      if (!Vue.prototype.$configStore.getters.localConfig.readWriteMany) {
-        if (this.getters.sessions.length > 0) {
-          throw Error('You cannot run two sessions while using persistence.\n\nTo override this behavior, go to Settings > Configuration -> Allow multiple sessions')
-        }
-      }
       try {
         const data = { template: template.metadata.name, namespace: namespace }
         const session = await Vue.prototype.$axios.post('/api/sessions', data)
