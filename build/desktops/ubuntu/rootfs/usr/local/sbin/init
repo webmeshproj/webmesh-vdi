@@ -1,7 +1,6 @@
 #!/bin/bash
 
 export HOME="/home/${USER}"
-export USER_ID="9000"
 
 # simple function for ensuring a basedir then writing a file from stdin
 write () {
@@ -10,7 +9,7 @@ write () {
 }
 
 echo "** Setting up user account: ${USER}"
-useradd --uid ${USER_ID} --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
+useradd --uid ${UID} --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
 passwd -d ${USER}
 mkdir -p "${HOME}"
 mkdir -p "${HOME}/.config/pulse"
@@ -19,7 +18,7 @@ cp /etc/.gtkrc-2.0 "${HOME}"
 chown -R ${USER}: "${HOME}"
 
 echo "** Setting up user runtime dir"
-mkdir -p /run/user/${USER_ID} && chmod 0700 /run/user/${USER_ID} && chown ${USER}: /run/user/${USER_ID}
+mkdir -p /run/user/${UID} && chmod 0700 /run/user/${UID} && chown ${USER}: /run/user/${UID}
 
 # This could be more cleverly done inside the image itself as opposed to at boot.
 if [[ "${ENABLE_ROOT}" == "true" ]] ; then
@@ -29,7 +28,7 @@ fi
 
 # Set the VNC socket dir - this will effectivelt do nothing if the UNIX socket env var is not set
 if [[ -z "${VNC_SOCK_ADDR}" ]] ; then
-    export VNC_SOCK_ADDR="/run/user/${USER_ID}/vnc.sock"
+    export VNC_SOCK_ADDR="/run/user/${UID}/vnc.sock"
 fi
 
 # Pre-create the vnc socket directory and give it to the user
@@ -40,7 +39,7 @@ find /etc/default -type f -exec \
     sed -i \
       -e "s|%USER%|${USER}|g" \
       -e "s|%UNIX_SOCK%|${VNC_SOCK_ADDR}|g" \
-      -e "s|%USER_ID%|${USER_ID}|g" \
+      -e "s|%USER_ID%|${UID}|g" \
       -e "s|%HOME%|${HOME}|g" {} +
 
 # Append the current environment to /etc/default/kvdi
