@@ -10,37 +10,20 @@ jobs:
 
   setup:
     name: Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-20.10
     steps:
-
-    - name: Set up Go 1.15
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.15
-      id: go
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
-    - uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Get dependencies
+    - name: Build test image
       run: |
-        go mod download
-
-    - name: Install gstreamer/pulse dependencies
-      run: |
-        sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libpulse-dev libgstreamer1.0-0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-0 pkg-config build-essential
+        make test-docker-build
 
     - name: Lint all packages
       run: |
-        CGO_ENABLED=1 make lint
+        make lint-in-docker
 
     - name: Run all unit tests
       run: |
-        CGO_ENABLED=1 make test
+        make test-in-docker

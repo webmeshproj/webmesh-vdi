@@ -101,7 +101,7 @@ $(GOLANGCI_LINT):
 
 ## make lint   # Lint files
 lint: $(GOLANGCI_LINT)
-	$(GOLANGCI_LINT) run -v --timeout 300s
+	$(GOLANGCI_LINT) run -v --timeout 600s
 
 ## make test   # Run unit tests
 GO_PACKAGES ?= $(shell go list ./... | grep -v 'pkg/apis' | xargs | sed -e 's/ /,/g')
@@ -300,3 +300,29 @@ prep-release: check-release generate manifests api-docs helm-docs package-chart 
 help:
 	@echo "# MAKEFILE USAGE" && echo
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
+
+
+
+TEST_DOCKER_IMAGE ?= "kvdi-tests"
+
+test-docker-build:
+	docker build . \
+	    -f .github/tests.Dockerfile \
+	    -t $(TEST_DOCKER_IMAGE)
+
+TEST_CMD ?= /bin/bash
+run-in-docker: test-docker-build
+	docker run -it --rm --privileged \
+	    -v /lib/modules:/lib/modules:ro \
+	    -v /sys:/sys:ro \
+	    -v /usr/src:/usr/src:ro \
+	    -v "$(PWD)":/workspace \
+		-w /workspace \
+		-e HOME=/tmp \
+	    $(TEST_DOCKER_IMAGE) $(TEST_CMD)
+
+test-in-docker:
+	$(MAKE) run-in-docker TEST_CMD="make test"
+
+lint-in-docker:
+	$(MAKE) run-in-docker TEST_CMD="make lint"
