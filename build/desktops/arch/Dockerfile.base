@@ -1,9 +1,7 @@
-FROM archlinux
-
-ENV container docker
+FROM archlinux:latest
 
 # Core deps
-RUN pacman --noconfirm -Syyu \
+RUN mkdir -p /var/lib/pacman \
   && pacman --noconfirm -S \
       sudo net-tools xz dbus xorg-apps alsa-utils mesa xpra tigervnc libcanberra \
       pulseaudio pavucontrol chromium vim coreutils iputils dnsutils \
