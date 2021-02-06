@@ -312,7 +312,7 @@ test-docker-build:
 
 TEST_CMD ?= /bin/bash
 run-in-docker: test-docker-build
-	docker run -it --rm --privileged \
+	docker run --rm --privileged \
 	    -v /lib/modules:/lib/modules:ro \
 	    -v /sys:/sys:ro \
 	    -v /usr/src:/usr/src:ro \
