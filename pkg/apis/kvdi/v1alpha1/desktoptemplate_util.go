@@ -2,7 +2,9 @@ package v1alpha1
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
@@ -12,11 +14,22 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// TODO (Do something about this)
+var desktopUserID = 9000
+
 // GetStaticEnvVars returns the environment variables configured in the template.
 func (t *DesktopTemplate) GetStaticEnvVars() []corev1.EnvVar { return t.Spec.Env }
 
 // GetEnvTemplates returns the environment variable templates.
 func (t *DesktopTemplate) GetEnvTemplates() map[string]string { return t.Spec.EnvTemplates }
+
+// GetPulseServer returns the pulse server to give to the proxy for handling audio streams.
+func (t *DesktopTemplate) GetPulseServer() string {
+	if t.Spec.Config != nil && t.Spec.Config.PulseServer != "" {
+		return t.Spec.Config.PulseServer
+	}
+	return fmt.Sprintf("/run/user/%d/pulse/native", desktopUserID)
+}
 
 // GetVolumes returns the additional volumes to apply to a pod.
 func (t *DesktopTemplate) GetVolumes() []corev1.Volume {
@@ -47,7 +60,7 @@ func (t *DesktopTemplate) GetInitSystem() DesktopInit {
 	if t.Spec.Config != nil && t.Spec.Config.Init != "" {
 		return t.Spec.Config.Init
 	}
-	return InitSupervisord
+	return InitSystemd
 }
 
 // RootEnabled returns true if desktops booted from the template should allow
@@ -147,6 +160,10 @@ func (t *DesktopTemplate) GetDesktopEnvVars(desktop *Desktop) []corev1.EnvVar {
 			Name:  v1.UserEnvVar,
 			Value: desktop.GetUser(),
 		},
+		{
+			Name:  "UID",
+			Value: strconv.Itoa(desktopUserID), // TODO: Better here than in the images, but still needs refactoring
+		},
 	}
 	if t.IsUNIXDisplaySocket() {
 		envVars = append(envVars, corev1.EnvVar{
@@ -178,17 +195,25 @@ func (t *DesktopTemplate) GetDesktopPodSecurityContext() *corev1.PodSecurityCont
 // pods booted from this template.
 func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityContext {
 	capabilities := make([]corev1.Capability, 0)
+	var privileged bool
+	var user int64
 	if t.GetInitSystem() == InitSystemd {
 		// The method of using systemd-logind to trigger a systemd --user process
 		// requires CAP_SYS_ADMIN. Specifically, SECCOMP spawning. There might
 		// be other ways around this by just using system unit files for everything.
 		capabilities = append(capabilities, "SYS_ADMIN")
+		privileged = true
+		user = 0
+	} else {
+		privileged = false
+		user = int64(desktopUserID)
 	}
 	if t.Spec.Config != nil {
 		capabilities = append(capabilities, t.Spec.Config.Capabilities...)
 	}
 	return &corev1.SecurityContext{
-		Privileged: &v1.TrueVal,
+		Privileged: &privileged,
+		RunAsUser:  &user,
 		Capabilities: &corev1.Capabilities{
 			Add: capabilities,
 		},
@@ -246,7 +271,7 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 		},
 	}
 
-	if t.IsUNIXDisplaySocket() {
+	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		volumes = append(volumes, corev1.Volume{
 			Name: vncSockVolume,
 			VolumeSource: corev1.VolumeSource{
@@ -320,7 +345,7 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			MountPath: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
 	}
-	if t.IsUNIXDisplaySocket() {
+	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      vncSockVolume,
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
@@ -342,6 +367,10 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 	proxyVolMounts := []corev1.VolumeMount{
 		{
+			Name:      tmpVolume,
+			MountPath: v1.DesktopTmpPath,
+		},
+		{
 			Name:      runVolume,
 			MountPath: v1.DesktopRunPath,
 		},
@@ -355,7 +384,7 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 			ReadOnly:  true,
 		},
 	}
-	if t.IsUNIXDisplaySocket() {
+	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
 			Name:      vncSockVolume,
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
@@ -371,7 +400,11 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		Name:            "kvdi-proxy",
 		Image:           t.GetKVDIVNCProxyImage(),
 		ImagePullPolicy: corev1.PullIfNotPresent,
-		Args:            []string{"--vnc-addr", t.GetDisplaySocketURI()},
+		Args: []string{
+			"--vnc-addr", t.GetDisplaySocketURI(),
+			"--user-id", strconv.Itoa(desktopUserID),
+			"--pulse-server", t.GetPulseServer(),
+		},
 		Ports: []corev1.ContainerPort{
 			{
 				Name:          "web",

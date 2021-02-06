@@ -87,6 +87,10 @@ type DesktopConfig struct {
 	// websockify requests validated by mTLS to this socket.
 	// Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
 	SocketAddr string `json:"socketAddr,omitempty"`
+	// Override the address of the PulseAudio server that the proxy will try to connect to
+	// when serving audio. This defaults to what the ubuntu/arch desktop images are configured
+	// to do during init.
+	PulseServer string `json:"pulseServer,omitempty"`
 	// The type of service listening on the configured socket. Can either be `xpra` or
 	// `xvnc`. Currently `xpra` is used to serve "app profiles" and `xvnc` to serve full
 	// desktops. Defaults to `xvnc`.

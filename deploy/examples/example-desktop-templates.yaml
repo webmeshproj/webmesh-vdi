@@ -8,7 +8,6 @@ spec:
   config:
     allowFileTransfer: true
     allowRoot: true
-    init: systemd
   tags:
     os: ubuntu
     desktop: xfce4
@@ -24,11 +23,26 @@ spec:
   imagePullPolicy: IfNotPresent
   config:
     allowRoot: true
-    init: systemd
   tags:
     os: archlinux
     desktop: xfce4
     applications: minimal
+
+---
+apiVersion: kvdi.io/v1alpha1
+kind: DesktopTemplate
+metadata:
+  name: dosbox
+spec:
+  image: dosbox:latest
+  imagePullPolicy: IfNotPresent
+  config:
+    init: supervisord
+    pulseServer: /tmp/pulse-server
+    socketAddr: unix:///tmp/display.sock
+  tags:
+    os: ubuntu
+    desktop: dosbox
 
 # ---
 # apiVersion: kvdi.io/v1alpha1

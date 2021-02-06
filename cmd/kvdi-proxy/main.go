@@ -25,9 +25,10 @@ import (
 // our local logger instance
 var log = logf.Log.WithName("kvdi_proxy")
 
-// vnc configurations
+// vnc/audio configurations
 var vncAddr string
 var userID int
+var pulseServer string
 var vncConnectProto, vncConnectAddr string
 
 // main application entry point
@@ -35,7 +36,9 @@ func main() {
 
 	// parse flags and setup logging
 	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "unix:///var/run/kvdi/display.sock", "The tcp or unix-socket address of the vnc server")
-	pflag.CommandLine.IntVar(&userID, "user-id", 9000, "The ID of the main user in the desktop container")
+	pflag.CommandLine.IntVar(&userID, "user-id", 9000, "The ID of the main user in the desktop container, used for chown operations")
+	pflag.CommandLine.StringVar(&pulseServer, "pulse-server", "", "The socket where pulseaudio is accepting connections. Defaults to /run/user/<userID>/pulse/native")
+
 	common.ParseFlagsAndSetupLogging()
 	common.PrintVersion(log)
 
@@ -50,6 +53,11 @@ func main() {
 		// Should never happen as the manager is usually in charge of us
 		log.Info(fmt.Sprintf("%s is an invalid vnc address", vncAddr))
 		os.Exit(1)
+	}
+
+	// Populate the default pulseserver path if not set on the command line
+	if pulseServer == "" {
+		pulseServer = fmt.Sprintf("/run/user/%d/pulse/native", userID)
 	}
 
 	// build and run the server

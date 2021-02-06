@@ -33,7 +33,7 @@ OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/
 
 # K3d Options
 HELM_VERSION ?= v3.1.2
-CLUSTER_NAME ?= vdi
+CLUSTER_NAME ?= kvdi
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
 CLUSTER_KUBECONFIG ?= _bin/kubeconfig.yaml

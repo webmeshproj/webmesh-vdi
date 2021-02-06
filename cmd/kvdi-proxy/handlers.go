@@ -37,8 +37,6 @@ var (
 
 func wsHandshake(*websocket.Config, *http.Request) error { return nil }
 
-func getPulseServer() string { return fmt.Sprintf("/run/user/%d/pulse/native", userID) }
-
 func setupPulseAudio(manager *pa.DeviceManager) error {
 	if err := manager.WaitForReady(time.Second * 2); err != nil {
 		return err
@@ -79,7 +77,7 @@ func websockifyHandler(wsconn *websocket.Conn) {
 	log.Info("Setting up pulse-audio devices")
 
 	paDevices, err := pa.NewDeviceManager(&pa.DeviceManagerOpts{
-		PulseServer: getPulseServer(),
+		PulseServer: pulseServer,
 	})
 	if err != nil {
 		log.Error(err, "Failed to create new PA device manager, audio will be disabled")
@@ -141,7 +139,7 @@ func wsAudioHandler(wsconn *websocket.Conn) {
 	// Create a new audio buffer
 	audioBuffer := audio.NewBuffer(&audio.BufferOpts{
 		Logger:           log,
-		PulseServer:      getPulseServer(),
+		PulseServer:      pulseServer,
 		PulseMonitorName: monitorDeviceMonitor,
 		PulseMicName:     micDeviceName,
 		PulseMicPath:     micDevicePath,

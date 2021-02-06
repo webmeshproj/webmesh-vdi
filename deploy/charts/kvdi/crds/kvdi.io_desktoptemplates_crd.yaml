@@ -69,6 +69,12 @@ spec:
                       to the public kvdi-proxy image matching the version of the currrently
                       running manager.
                     type: string
+                  pulseServer:
+                    description: Override the address of the PulseAudio server that
+                      the proxy will try to connect to when serving audio. This defaults
+                      to what the ubuntu/arch desktop images are configured to do
+                      during init.
+                    type: string
                   serviceAccount:
                     description: 'A service account to tie to desktops booted from
                       this template. TODO: This should really be per-desktop and by
