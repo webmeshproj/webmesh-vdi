@@ -4,35 +4,29 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
     && apt-get -y -u dist-upgrade \
     && apt-get -y --no-install-recommends install \
-        dosbox tigervnc-standalone-server xpra xfonts-base \
-        lwm wget ca-certificates supervisor zip unzip pwgen \
-        xdotool telnet mtools vim alsa-utils pulseaudio \
+        dosbox tigervnc-standalone-server xpra xfonts-base lwm wget ca-certificates supervisor unzip \
+        xdotool vim alsa-utils pulseaudio timidity libsdl1.2debian \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN echo "Set up dosbox" \
     && mkdir -p /dos/drive_c \
     && mkdir -p /dos/drive_d \
-    && mkdir -p /dos/drive_e \
-    && mkdir -p /dos/drive_f \
-    && mkdir -p /dos/drive_g \
-    && mkdir -p /dos/drive_y \
-    && mkdir -p /dos/drive_y/SCRIPTS \
+    && mkdir -p /dos/drive_d/SCRIPTS \
+    && mkdir -p /dos/drive_d/GAMES \
     && mv `dosbox -printconf` /dos/dosbox.conf \
     && echo "mount c /dos/drive_c" >> /dos/dosbox.conf \
     && echo "mount d /dos/drive_d" >> /dos/dosbox.conf \
-    && echo "mount e /dos/drive_e" >> /dos/dosbox.conf \
-    && echo "mount f /dos/drive_f" >> /dos/dosbox.conf \
-    && echo "mount g /dos/drive_g" >> /dos/dosbox.conf \
-    && echo "mount y /dos/drive_y" >> /dos/dosbox.conf \
-    && echo 'path %PATH%;Y:\\DOS;Y:\\SCRIPTS' >> /dos/dosbox.conf \
     && sed -i 's/usescancodes=true/usescancodes=false/' /dos/dosbox.conf \
     && sed -i 's/fullscreen=false/fullscreen=true/' /dos/dosbox.conf \
     && sed -i 's/fulldouble=false/fulldouble=true/' /dos/dosbox.conf \
-    && sed -i 's/fullresolution=original/fullresolution=auto/' /dos/dosbox.conf \
-    && sed -i 's/windowresolution=original/windowresolution=auto/' /dos/dosbox.conf \
+    && sed -i 's/fullresolution=original/fullresolution=1366x768/' /dos/dosbox.conf \
+    && sed -i 's/windowresolution=original/windowresolution=1366x768/' /dos/dosbox.conf \
     && sed -i 's/output=surface/output=opengl/' /dos/dosbox.conf \
-    && echo "load-module module-native-protocol-unix auth-group=audio socket=/tmp/pulse-server" >> /etc/pulse/default.pa \
-    && chmod 777 /var/log/supervisor
+    && sed -i 's/midiconfig=/midiconfig=128:0/' /dos/dosbox.conf \
+    && echo "load-module module-native-protocol-unix auth-anonymous=1 socket=/var/run/kvdi/pulse-server" >> /etc/pulse/default.pa \
+    && chmod 777 /var/log/supervisor \
+    && find /dos -type d -exec chmod 777 {} \; \
+    && find /dos -type f -exec chmod 666 {} \;
 
 COPY supervisor/ /etc/supervisor/conf.d/
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

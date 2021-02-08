@@ -38,8 +38,7 @@ spec:
 #   imagePullPolicy: IfNotPresent
 #   config:
 #     init: supervisord
-#     pulseServer: /tmp/pulse-server
-#     socketAddr: unix:///tmp/display.sock
+#     pulseServer: /var/run/kvdi/pulse-server
 #   tags:
 #     os: ubuntu
 #     desktop: dosbox

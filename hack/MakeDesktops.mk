@@ -15,6 +15,11 @@ build-app-base:
 		-f Dockerfile.base \
 		-t ${APP_PROFILE_BASE_IMAGE}
 
+build-dosbox:
+	cd build/desktops/dosbox && docker build . \
+		-f Dockerfile.base \
+		-t dosbox:latest
+
 build-ubuntu-%:
 	cd build/desktops/ubuntu && docker build . \
 		-f Dockerfile.desktop \
