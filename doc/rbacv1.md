@@ -45,11 +45,11 @@ addition of a namespace selector.
 <tbody>
 <tr class="odd">
 <td><code>verbs</code> <em><a href="#Verb">[]Verb</a></em></td>
-<td><p>The actions this rule applies for. VerbAll matches all actions.</p></td>
+<td><p>The actions this rule applies for. VerbAll matches all actions. Recognized options are: <code>["create", "read", "update", "delete", "use", "launch", "*"]</code></p></td>
 </tr>
 <tr class="even">
 <td><code>resources</code> <em><a href="#Resource">[]Resource</a></em></td>
-<td><p>Resources this rule applies to. ResourceAll matches all resources.</p></td>
+<td><p>Resources this rule applies to. ResourceAll matches all resources. Recognized options are: <code>["users", "roles", "templates", "serviceaccounts", "*"]</code></p></td>
 </tr>
 <tr class="odd">
 <td><code>resourcePatterns</code> <em>[]string</em></td>
@@ -58,7 +58,7 @@ addition of a namespace selector.
 </tr>
 <tr class="even">
 <td><code>namespaces</code> <em>[]string</em></td>
-<td><p>Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.</p></td>
+<td><p>Namespaces this rule applies to. Only evaluated for template launching permissions. Including “*” as an option matches all namespaces.</p></td>
 </tr>
 </tbody>
 </table>
@@ -94,4 +94,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `688fde7`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `f973203`.*

@@ -31,8 +31,10 @@ import (
 // namespace selector.
 type Rule struct {
 	// The actions this rule applies for. VerbAll matches all actions.
+	// Recognized options are: `["create", "read", "update", "delete", "use", "launch", "*"]`
 	Verbs []Verb `json:"verbs,omitempty"`
 	// Resources this rule applies to. ResourceAll matches all resources.
+	// Recognized options are: `["users", "roles", "templates", "serviceaccounts", "*"]`
 	Resources []Resource `json:"resources,omitempty"`
 	// Resource regexes that match this rule. This can be template patterns, role
 	// names or user names. There is no All representation because * will have
@@ -48,7 +50,7 @@ type Rule struct {
 	// approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.
 	ResourcePatterns []string `json:"resourcePatterns,omitempty"`
 	// Namespaces this rule applies to. Only evaluated for template launching
-	// permissions. NamespaceAll matches all namespaces.
+	// permissions. Including "*" as an option matches all namespaces.
 	Namespaces []string `json:"namespaces,omitempty"`
 }
 

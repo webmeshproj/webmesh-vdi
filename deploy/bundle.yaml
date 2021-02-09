@@ -1342,7 +1342,7 @@ spec:
                       description: Rule represents a set of permissions applied to a VDIRole. It mostly resembles an rbacv1.PolicyRule, with resources being a regex and the addition of a namespace selector.
                       properties:
                         namespaces:
-                          description: Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.
+                          description: Namespaces this rule applies to. Only evaluated for template launching permissions. Including "*" as an option matches all namespaces.
                           items:
                             type: string
                           type: array
@@ -1352,7 +1352,7 @@ spec:
                             type: string
                           type: array
                         resources:
-                          description: Resources this rule applies to. ResourceAll matches all resources.
+                          description: 'Resources this rule applies to. ResourceAll matches all resources. Recognized options are: `["users", "roles", "templates", "serviceaccounts", "*"]`'
                           items:
                             description: Resource represents the target of an API action
                             enum:
@@ -1364,7 +1364,7 @@ spec:
                             type: string
                           type: array
                         verbs:
-                          description: The actions this rule applies for. VerbAll matches all actions.
+                          description: 'The actions this rule applies for. VerbAll matches all actions. Recognized options are: `["create", "read", "update", "delete", "use", "launch", "*"]`'
                           items:
                             description: Verb represents an API action
                             enum:
@@ -1717,7 +1717,7 @@ spec:
               description: Rule represents a set of permissions applied to a VDIRole. It mostly resembles an rbacv1.PolicyRule, with resources being a regex and the addition of a namespace selector.
               properties:
                 namespaces:
-                  description: Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.
+                  description: Namespaces this rule applies to. Only evaluated for template launching permissions. Including "*" as an option matches all namespaces.
                   items:
                     type: string
                   type: array
@@ -1727,7 +1727,7 @@ spec:
                     type: string
                   type: array
                 resources:
-                  description: Resources this rule applies to. ResourceAll matches all resources.
+                  description: 'Resources this rule applies to. ResourceAll matches all resources. Recognized options are: `["users", "roles", "templates", "serviceaccounts", "*"]`'
                   items:
                     description: Resource represents the target of an API action
                     enum:
@@ -1739,7 +1739,7 @@ spec:
                     type: string
                   type: array
                 verbs:
-                  description: The actions this rule applies for. VerbAll matches all actions.
+                  description: 'The actions this rule applies for. VerbAll matches all actions. Recognized options are: `["create", "read", "update", "delete", "use", "launch", "*"]`'
                   items:
                     description: Verb represents an API action
                     enum:
@@ -3116,7 +3116,7 @@ spec:
                       description: Rule represents a set of permissions applied to a VDIRole. It mostly resembles an rbacv1.PolicyRule, with resources being a regex and the addition of a namespace selector.
                       properties:
                         namespaces:
-                          description: Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.
+                          description: Namespaces this rule applies to. Only evaluated for template launching permissions. Including "*" as an option matches all namespaces.
                           items:
                             type: string
                           type: array
@@ -3126,7 +3126,7 @@ spec:
                             type: string
                           type: array
                         resources:
-                          description: Resources this rule applies to. ResourceAll matches all resources.
+                          description: 'Resources this rule applies to. ResourceAll matches all resources. Recognized options are: `["users", "roles", "templates", "serviceaccounts", "*"]`'
                           items:
                             description: Resource represents the target of an API action
                             enum:
@@ -3138,7 +3138,7 @@ spec:
                             type: string
                           type: array
                         verbs:
-                          description: The actions this rule applies for. VerbAll matches all actions.
+                          description: 'The actions this rule applies for. VerbAll matches all actions. Recognized options are: `["create", "read", "update", "delete", "use", "launch", "*"]`'
                           items:
                             description: Verb represents an API action
                             enum:
@@ -3491,7 +3491,7 @@ spec:
               description: Rule represents a set of permissions applied to a VDIRole. It mostly resembles an rbacv1.PolicyRule, with resources being a regex and the addition of a namespace selector.
               properties:
                 namespaces:
-                  description: Namespaces this rule applies to. Only evaluated for template launching permissions. NamespaceAll matches all namespaces.
+                  description: Namespaces this rule applies to. Only evaluated for template launching permissions. Including "*" as an option matches all namespaces.
                   items:
                     type: string
                   type: array
@@ -3501,7 +3501,7 @@ spec:
                     type: string
                   type: array
                 resources:
-                  description: Resources this rule applies to. ResourceAll matches all resources.
+                  description: 'Resources this rule applies to. ResourceAll matches all resources. Recognized options are: `["users", "roles", "templates", "serviceaccounts", "*"]`'
                   items:
                     description: Resource represents the target of an API action
                     enum:
@@ -3513,7 +3513,7 @@ spec:
                     type: string
                   type: array
                 verbs:
-                  description: The actions this rule applies for. VerbAll matches all actions.
+                  description: 'The actions this rule applies for. VerbAll matches all actions. Recognized options are: `["create", "read", "update", "delete", "use", "launch", "*"]`'
                   items:
                     description: Verb represents an API action
                     enum:
