@@ -26,25 +26,11 @@ jobs:
         echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
       id: version
 
-    - name: Build the manager docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-manager
+    - name: Build the manager, app, and kvdi-proxy docker images
+      run: VERSION=${{ steps.version.outputs.tag }} make -j 3 build-manager build-app build-kvdi-proxy
 
-    - name: Build the app docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-app
-
-    - name: Build the kvdi-proxy docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-kvdi-proxy
-
-    - name: Push the manager docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make push-manager
-      if: ${{ github.event_name != 'pull_request' }}
-
-    - name: Push the app docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make push-app
-      if: ${{ github.event_name != 'pull_request' }}
-
-    - name: Push the kvdi-proxy docker image
-      run: VERSION=${{ steps.version.outputs.tag }} make push-kvdi-proxy
+    - name: Push the manager, app, and kvdi-proxy docker images
+      run: VERSION=${{ steps.version.outputs.tag }} make -j 3 push-manager push-app push-kvdi-proxy
       if: ${{ github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh main

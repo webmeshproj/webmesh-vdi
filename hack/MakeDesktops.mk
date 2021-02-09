@@ -18,7 +18,7 @@ build-app-base:
 build-dosbox:
 	cd build/desktops/dosbox && docker build . \
 		-f Dockerfile.base \
-		-t dosbox:latest
+		-t ${DOSBOX_IMAGE}
 
 build-ubuntu-%: build-ubuntu-base
 	cd build/desktops/ubuntu && docker build . \
@@ -47,6 +47,9 @@ push-ubuntu-base: build-ubuntu-base
 push-arch-base: build-arch-base
 	docker push ${ARCH_BASE_IMAGE}
 
+push-dosbox: build-dosbox
+	docker push ${DOSBOX_IMAGE}
+
 push-ubuntu-%: build-ubuntu-%
 	docker push ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
@@ -68,7 +71,7 @@ load-app-%: $(K3D) build-app-%
 	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})
 
 load-dosbox: $(K3D) build-dosbox
-	$(call load_image,dosbox:latest)
+	$(call load_image,${DOSBOX_IMAGE})
 
 #
 # For building demo environment

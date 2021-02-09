@@ -34,7 +34,7 @@ spec:
 # metadata:
 #   name: dosbox
 # spec:
-#   image: dosbox:latest
+#   image: ghcr.io/tinyzimmer/kvdi:dosbox-latest
 #   imagePullPolicy: IfNotPresent
 #   config:
 #     init: supervisord
