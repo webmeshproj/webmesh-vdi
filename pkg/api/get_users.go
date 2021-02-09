@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -46,12 +46,12 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, user := range users {
 		if verified, ok := mfaUsers[user.Name]; ok {
-			user.MFA = &v1.UserMFAStatus{
+			user.MFA = &types.UserMFAStatus{
 				Enabled:  true,
 				Verified: verified,
 			}
 		} else {
-			user.MFA = &v1.UserMFAStatus{
+			user.MFA = &types.UserMFAStatus{
 				Enabled: false,
 			}
 		}
@@ -94,11 +94,11 @@ func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}
-		user.MFA = &v1.UserMFAStatus{
+		user.MFA = &types.UserMFAStatus{
 			Enabled: false,
 		}
 	} else if err == nil {
-		user.MFA = &v1.UserMFAStatus{
+		user.MFA = &types.UserMFAStatus{
 			Enabled:  true,
 			Verified: verified,
 		}
@@ -110,12 +110,12 @@ func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 // swagger:response usersResponse
 type swaggerUsersResponse struct {
 	// in:body
-	Body []v1.VDIUser
+	Body []types.VDIUser
 }
 
 // A single user
 // swagger:response userResponse
 type swaggerUserResponse struct {
 	// in:body
-	Body v1.VDIUser
+	Body types.VDIUser
 }

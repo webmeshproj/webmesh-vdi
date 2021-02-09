@@ -30,8 +30,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,13 +56,13 @@ func init() {
 }
 
 // LookupClusterByName fetches the VDICluster with the given name
-func LookupClusterByName(c client.Client, name string) (*v1alpha1.VDICluster, error) {
-	found := &v1alpha1.VDICluster{}
+func LookupClusterByName(c client.Client, name string) (*appv1.VDICluster, error) {
+	found := &appv1.VDICluster{}
 	return found, c.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: metav1.NamespaceAll}, found)
 }
 
 // IsMarkedForDeletion returns true if the given cluster is marked for deletion.
-func IsMarkedForDeletion(cr *v1alpha1.VDICluster) bool {
+func IsMarkedForDeletion(cr *appv1.VDICluster) bool {
 	return cr.GetDeletionTimestamp() != nil
 }
 

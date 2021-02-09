@@ -12,8 +12,6 @@ rbac:
     # rbac.serviceAccount.name -- The name of the `ServiceAccount` to use.
     # @default -- If not set and create is true, a name is generated using the fullname template.
     name:
-  # rbac.pspEnabled -- Specifies whether to create `PodSecurityPolicies` for the manager to use when booting desktops.
-  pspEnabled: false
 
 manager:
   # manager.replicaCount -- The number of manager replicas to run.
@@ -35,7 +33,13 @@ manager:
   # manager.securityContext -- The container security context for the manager pod.
   securityContext: {}
   # manager.resources -- Resource limits for the manager pod.
-  resources: {}
+  resources:
+    limits:
+      cpu: 100m
+      memory: 30Mi
+    requests:
+      cpu: 100m
+      memory: 20Mi
   # manager.nodeSelector -- Node selectors for the manager pod.
   nodeSelector: {}
   # manager.tolerations -- Node tolerations for the manager pod.

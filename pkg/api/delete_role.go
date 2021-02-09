@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +53,7 @@ import (
 func (d *desktopAPI) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	role := apiutil.GetRoleFromRequest(r)
 	nn := types.NamespacedName{Name: role, Namespace: metav1.NamespaceAll}
-	vdiRole := &v1alpha1.VDIRole{}
+	vdiRole := &rbacv1.VDIRole{}
 	if err := d.client.Get(context.TODO(), nn, vdiRole); err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(fmt.Errorf("The role '%s' doesn't exist", role), w)

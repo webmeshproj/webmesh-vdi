@@ -22,10 +22,10 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 )
 
 const userAnonymous = "anonymous"
@@ -44,7 +44,7 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		// Create a login request to pass to the auth backend containing just the
 		// raw request object. The backend provider should know how to use it to
 		// return valid claims.
-		req := &v1.LoginRequest{}
+		req := &types.LoginRequest{}
 		req.SetRequest(r)
 
 		// pass the request object to the auth backend, it should know how to handle a
@@ -64,7 +64,7 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve the request object
-	req := apiutil.GetRequestObject(r).(*v1.LoginRequest)
+	req := apiutil.GetRequestObject(r).(*types.LoginRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -80,10 +80,10 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 		apiLogger.Error(err, "Authentication failed, checking if anonymous is allowed")
 		// Allow anonymous if set in the configuration
 		if req.GetUsername() == userAnonymous && d.vdiCluster.AnonymousAllowed() {
-			result := &v1.AuthResult{
-				User: &v1.VDIUser{
+			result := &types.AuthResult{
+				User: &types.VDIUser{
 					Name:  userAnonymous,
-					Roles: []*v1.VDIUserRole{d.vdiCluster.GetLaunchTemplatesRole().ToUserRole()},
+					Roles: []*types.VDIUserRole{rbac.VDIRoleToUserRole(d.vdiCluster.GetLaunchTemplatesRole())},
 				},
 			}
 			d.returnNewJWT(w, result, true, req.GetState())
@@ -108,7 +108,7 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 	d.checkMFAAndReturnJWT(w, result, req.GetState())
 }
 
-func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1.AuthResult, state string) {
+func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *types.AuthResult, state string) {
 	// check if MFA is configured for the user and that they have verified their secret
 	if _, verified, err := d.mfa.GetUserMFAStatus(result.User.Name); err != nil || !verified {
 		// Return any error that isn't a not found error
@@ -129,5 +129,5 @@ func (d *desktopAPI) checkMFAAndReturnJWT(w http.ResponseWriter, result *v1.Auth
 // swagger:parameters loginRequest
 type swaggerLoginRequest struct {
 	// in:body
-	Body v1.LoginRequest
+	Body types.LoginRequest
 }

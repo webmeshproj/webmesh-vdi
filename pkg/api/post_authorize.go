@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -39,7 +39,7 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	userSession := apiutil.GetRequestUserSession(r)
 
 	// retrieve the OTP from the request
-	req := apiutil.GetRequestObject(r).(*v1.AuthorizeRequest)
+	req := apiutil.GetRequestObject(r).(*types.AuthorizeRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -53,7 +53,7 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 		}
 		// The user does not require MFA - this shouldn't happen but go ahead
 		// and send back an authorized token
-		d.returnNewJWT(w, &v1.AuthResult{
+		d.returnNewJWT(w, &types.AuthResult{
 			User:                userSession.User,
 			RefreshNotSupported: !userSession.Renewable,
 		}, true, req.GetState())
@@ -74,7 +74,7 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d.returnNewJWT(w, &v1.AuthResult{
+	d.returnNewJWT(w, &types.AuthResult{
 		User:                userSession.User,
 		RefreshNotSupported: !userSession.Renewable,
 	}, true, req.GetState())
@@ -84,5 +84,5 @@ func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters authorizeRequest
 type swaggerAuthorizeRequest struct {
 	// in:body
-	Body v1.AuthorizeRequest
+	Body types.AuthorizeRequest
 }

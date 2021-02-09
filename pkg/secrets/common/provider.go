@@ -21,7 +21,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package common
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -31,7 +31,7 @@ import (
 // this intreface could be implemented for things like vault.
 type SecretsProvider interface {
 	// Setup is called before the interface is used for any operations
-	Setup(client.Client, *v1alpha1.VDICluster) error
+	Setup(client.Client, *appv1.VDICluster) error
 	// ReadSecret should return the contents of a secret by name.
 	ReadSecret(name string) (contents []byte, err error)
 	// ReadSecretMap should return the contents of a secret map by name.

@@ -42,8 +42,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 <script>
 import jsyaml from 'js-yaml'
 
-const boilerplate = `apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
+const boilerplate = `apiVersion: desktops.kvdi.io/v1
+kind: Template
 metadata:
   name: my-new-template
 spec:

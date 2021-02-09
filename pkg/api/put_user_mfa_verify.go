@@ -22,9 +22,9 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	"github.com/xlzd/gotp"
 
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -53,7 +53,7 @@ import (
 //   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) PutUserMFAVerify(w http.ResponseWriter, r *http.Request) {
-	req := apiutil.GetRequestObject(r).(*v1.AuthorizeRequest)
+	req := apiutil.GetRequestObject(r).(*types.AuthorizeRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -91,7 +91,7 @@ func (d *desktopAPI) PutUserMFAVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return to the user the token was valid
-	apiutil.WriteJSON(&v1.MFAResponse{
+	apiutil.WriteJSON(&types.MFAResponse{
 		Enabled:  true,
 		Verified: true,
 	}, w)
@@ -101,12 +101,12 @@ func (d *desktopAPI) PutUserMFAVerify(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters verifyUserMFARequest
 type swaggerVerifyUserMFARequest struct {
 	// in:body
-	Body v1.AuthorizeRequest
+	Body types.AuthorizeRequest
 }
 
 // Response with mfa details for the user
 // swagger:response verifyUserMFAResponse
 type swaggerVerifyUserMFAResponse struct {
 	// in:body
-	Body v1.MFAResponse
+	Body types.MFAResponse
 }

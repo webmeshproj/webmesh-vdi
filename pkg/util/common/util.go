@@ -34,14 +34,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/version"
+	"github.com/tinyzimmer/kvdi/pkg/version"
 
 	"github.com/go-logr/logr"
-	"github.com/operator-framework/operator-sdk/pkg/log/zap"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	"github.com/spf13/pflag"
 	"golang.org/x/crypto/bcrypt"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 func init() {
@@ -100,16 +98,17 @@ func PrintVersion(log logr.Logger) {
 	log.Info(fmt.Sprintf("kVDI Commit: %s", version.GitCommit))
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 }
 
 // ParseFlagsAndSetupLogging is a utility function to setup logging
 // and parse any provided flags.
 func ParseFlagsAndSetupLogging() {
-	pflag.CommandLine.AddFlagSet(zap.FlagSet())
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Parse()
-	logf.SetLogger(zap.Logger())
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
+	flag.Parse()
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 }
 
 // resolvConf is the path to the resolv config file when running inside a cluster.

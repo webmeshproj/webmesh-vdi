@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -41,7 +42,8 @@ func (d *desktopAPI) GetNamespaces(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(sess.User.FilterNamespaces(namespaces), w)
+	rbac.FilterUserNamespaces(sess.User, namespaces)
+	apiutil.WriteJSON(rbac.FilterUserNamespaces(sess.User, namespaces), w)
 }
 
 // ListKubernetesNamespaces returns a string slice of all the namespaces

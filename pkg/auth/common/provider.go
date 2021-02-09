@@ -20,8 +20,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package common
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"context"
+
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,10 +35,10 @@ import (
 type AuthProvider interface {
 	// Reconcile should ensure any k8s resources required for this authentication
 	// provider.
-	Reconcile(logr.Logger, client.Client, *v1alpha1.VDICluster, string) error
+	Reconcile(context.Context, logr.Logger, client.Client, *appv1.VDICluster, string) error
 	// Setup is called when the kVDI app launches and is a chance for the provider
 	// to setup any resources it needs to serve requests.
-	Setup(client.Client, *v1alpha1.VDICluster) error
+	Setup(client.Client, *appv1.VDICluster) error
 	// Close is called after temporary uses of the auth provider. It should close
 	// any open connections and perform cleanup. It should be non-destructive.
 	Close() error
@@ -47,15 +49,15 @@ type AuthProvider interface {
 
 	// Authenticate is called for API authentication requests. It should generate
 	// a new JWTClaims object and serve an AuthResult back to the API.
-	Authenticate(*v1.LoginRequest) (*v1.AuthResult, error)
+	Authenticate(*types.LoginRequest) (*types.AuthResult, error)
 	// GetUsers should return a list of VDIUsers.
-	GetUsers() ([]*v1.VDIUser, error)
+	GetUsers() ([]*types.VDIUser, error)
 	// GetUser should retrieve a single VDIUser.
-	GetUser(string) (*v1.VDIUser, error)
+	GetUser(string) (*types.VDIUser, error)
 	// CreateUser should handle any logic required to register a new user in kVDI.
-	CreateUser(*v1.CreateUserRequest) error
+	CreateUser(*types.CreateUserRequest) error
 	// UpdateUser should update a VDIUser.
-	UpdateUser(string, *v1.UpdateUserRequest) error
+	UpdateUser(string, *types.UpdateUserRequest) error
 	// DeleteUser should remove a VDIUser
 	DeleteUser(string) error
 }

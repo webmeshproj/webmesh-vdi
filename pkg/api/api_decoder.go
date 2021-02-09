@@ -23,9 +23,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -33,34 +32,34 @@ import (
 // should be used for deserialization.
 var Decoders = map[string]map[string]interface{}{
 	"/api/authorize": {
-		"POST": v1.AuthorizeRequest{},
+		"POST": types.AuthorizeRequest{},
 	},
 	"/api/sessions": {
-		"POST": v1.CreateSessionRequest{},
+		"POST": types.CreateSessionRequest{},
 	},
 	"/api/users": {
-		"POST": v1.CreateUserRequest{},
+		"POST": types.CreateUserRequest{},
 	},
 	"/api/users/{user}": {
-		"PUT": v1.UpdateUserRequest{},
+		"PUT": types.UpdateUserRequest{},
 	},
 	"/api/users/{user}/mfa": {
-		"PUT": v1.UpdateMFARequest{},
+		"PUT": types.UpdateMFARequest{},
 	},
 	"/api/users/{user}/mfa/verify": {
-		"PUT": v1.AuthorizeRequest{},
+		"PUT": types.AuthorizeRequest{},
 	},
 	"/api/roles": {
-		"POST": v1.CreateRoleRequest{},
+		"POST": types.CreateRoleRequest{},
 	},
 	"/api/templates": {
-		"POST": v1alpha1.DesktopTemplate{},
+		"POST": desktopsv1.Template{},
 	},
 	"/api/roles/{role}": {
-		"PUT": v1.UpdateRoleRequest{},
+		"PUT": types.UpdateRoleRequest{},
 	},
 	"/api/login": {
-		"POST": v1.LoginRequest{},
+		"POST": types.LoginRequest{},
 	},
 }
 

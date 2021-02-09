@@ -23,10 +23,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/user"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -46,12 +45,12 @@ func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(user.FilterTemplates(sess.User, tmpls.Items), w)
+	apiutil.WriteJSON(rbac.FilterTemplates(sess.User, tmpls.Items), w)
 }
 
 // getAllDesktopTemplates lists the DesktopTemplates registered in the api servers.
-func (d *desktopAPI) getAllDesktopTemplates() (*v1alpha1.DesktopTemplateList, error) {
-	tmplList := &v1alpha1.DesktopTemplateList{}
+func (d *desktopAPI) getAllDesktopTemplates() (*desktopsv1.TemplateList, error) {
+	tmplList := &desktopsv1.TemplateList{}
 	return tmplList, d.client.List(context.TODO(), tmplList, client.InNamespace(metav1.NamespaceAll))
 }
 
@@ -76,7 +75,7 @@ func (d *desktopAPI) getAllDesktopTemplates() (*v1alpha1.DesktopTemplateList, er
 func (d *desktopAPI) GetDesktopTemplate(w http.ResponseWriter, r *http.Request) {
 	tmplName := apiutil.GetTemplateFromRequest(r)
 	nn := types.NamespacedName{Name: tmplName, Namespace: metav1.NamespaceAll}
-	tmpl := &v1alpha1.DesktopTemplate{}
+	tmpl := &desktopsv1.Template{}
 	if err := d.client.Get(context.TODO(), nn, tmpl); err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(err, w)
@@ -92,12 +91,12 @@ func (d *desktopAPI) GetDesktopTemplate(w http.ResponseWriter, r *http.Request) 
 // swagger:response templatesResponse
 type swaggerTemplatesResponse struct {
 	// in:body
-	Body []v1alpha1.DesktopTemplate
+	Body []desktopsv1.Template
 }
 
 // Templates response
 // swagger:response templateResponse
 type swaggerTemplateResponse struct {
 	// in:body
-	Body v1alpha1.DesktopTemplate
+	Body desktopsv1.Template
 }

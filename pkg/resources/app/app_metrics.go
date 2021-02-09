@@ -22,10 +22,10 @@ package app
 import (
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
-	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -45,7 +45,7 @@ datasources:
     url: %s.%s.svc:9090
 `
 
-func newGrafanaConfigForCR(instance *v1alpha1.VDICluster) *corev1.ConfigMap {
+func newGrafanaConfigForCR(instance *appv1.VDICluster) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            fmt.Sprintf("%s-grafana", instance.GetAppName()),
@@ -61,7 +61,7 @@ func newGrafanaConfigForCR(instance *v1alpha1.VDICluster) *corev1.ConfigMap {
 	}
 }
 
-func newAppServiceMonitorForCR(instance *v1alpha1.VDICluster) *promv1.ServiceMonitor {
+func newAppServiceMonitorForCR(instance *appv1.VDICluster) *promv1.ServiceMonitor {
 	return &promv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetAppName(),
@@ -87,7 +87,9 @@ func newAppServiceMonitorForCR(instance *v1alpha1.VDICluster) *promv1.ServiceMon
 					Interval: "10s",
 					Scheme:   "https",
 					TLSConfig: &promv1.TLSConfig{
-						InsecureSkipVerify: true,
+						SafeTLSConfig: promv1.SafeTLSConfig{
+							InsecureSkipVerify: true,
+						},
 					},
 				},
 			},
@@ -95,7 +97,7 @@ func newAppServiceMonitorForCR(instance *v1alpha1.VDICluster) *promv1.ServiceMon
 	}
 }
 
-func newPrometheusForCR(instance *v1alpha1.VDICluster) *promv1.Prometheus {
+func newPrometheusForCR(instance *appv1.VDICluster) *promv1.Prometheus {
 	return &promv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetPrometheusName(),
@@ -114,7 +116,7 @@ func newPrometheusForCR(instance *v1alpha1.VDICluster) *promv1.Prometheus {
 	}
 }
 
-func newPrometheusServiceForCR(instance *v1alpha1.VDICluster) *corev1.Service {
+func newPrometheusServiceForCR(instance *appv1.VDICluster) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetPrometheusName(),

@@ -7,17 +7,6 @@ GOBIN       ?= $(GOPATH)/bin
 
 GIT_COMMIT ?= `git rev-parse HEAD`
 
-# Operator SDK options
-SDK_VERSION ?= v0.19.2
-
-UNAME := $(shell uname)
-ifeq ($(UNAME), Linux)
-SDK_PLATFORM := linux-gnu
-endif
-ifeq ($(UNAME), Darwin)
-SDK_PLATFORM := apple-darwin
-endif
-
 # Image Options
 BASE_IMAGE ?= ${REPO}/${NAME}:build-base-${VERSION}
 MANAGER_IMAGE ?= ${REPO}/${NAME}:manager-${VERSION}
@@ -27,22 +16,23 @@ UBUNTU_BASE_IMAGE ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
 ARCH_BASE_IMAGE ?= ${REPO}/${NAME}:arch-base-${VERSION}
 APP_PROFILE_BASE_IMAGE ?= ${REPO}/${NAME}:app-base-${VERSION}
 
-# Operator SDK
-OPERATOR_SDK ?= _bin/operator-sdk
-OPERATOR_SDK_URL ?= https://github.com/operator-framework/operator-sdk/releases/download/${SDK_VERSION}/operator-sdk-${SDK_VERSION}-x86_64-${SDK_PLATFORM}
-
 # K3d Options
 HELM_VERSION ?= v3.1.2
 CLUSTER_NAME ?= kvdi
+KUBERNETES_VERSION ?= v1.20.2
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
-CLUSTER_KUBECONFIG ?= _bin/kubeconfig.yaml
-KUBECTL ?= _bin/kubectl
-HELM ?= _bin/helm
+CLUSTER_KUBECONFIG ?= bin/kubeconfig.yaml
+KUBECTL ?= bin/kubectl
+HELM ?= bin/helm
 
-# Gendocs
-REFDOCS ?= _bin/refdocs
+# Refdocs
+REFDOCS ?= bin/refdocs
 REFDOCS_CLONE ?= $(dir ${REFDOCS})/gen-crd-api-reference-docs
+
+###
+
+# Functions
 
 define download_bin
 	mkdir -p $(dir $(1))

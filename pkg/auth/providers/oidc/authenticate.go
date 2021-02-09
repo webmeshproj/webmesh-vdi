@@ -26,18 +26,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 
 	"golang.org/x/oauth2"
 )
 
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
-func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
+func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult, error) {
 	r := req.GetRequest()
 
 	// POST methods are the start and end of an oidc flow. If we recorded claims
@@ -60,7 +63,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 			// If the secret is not found it means we have not generated claims yet
 			// for this user. Return the oauth redirect.
 			if errors.IsSecretNotFoundError(err) {
-				return &v1.AuthResult{
+				return &types.AuthResult{
 					// Use offline access to get a refresh token that we can use to generate new
 					// internal access tokens for the user.
 					RedirectURL: a.oauthCfg.AuthCodeURL(req.GetState(), oauth2.AccessTypeOffline),
@@ -76,7 +79,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		if err := a.secrets.WriteSecret(stateKey, nil); err != nil {
 			return nil, err
 		}
-		authResult := &v1.AuthResult{}
+		authResult := &types.AuthResult{}
 		return authResult, json.Unmarshal(existingClaim, authResult)
 	}
 
@@ -115,10 +118,10 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		return nil, err
 	}
 
-	result := &v1.AuthResult{
-		User: &v1.VDIUser{
+	result := &types.AuthResult{
+		User: &types.VDIUser{
 			Name:  username,
-			Roles: make([]*v1.VDIUserRole, 0),
+			Roles: make([]*types.VDIUserRole, 0),
 		},
 		RefreshNotSupported: true,
 	}
@@ -139,7 +142,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		// if we can't determine group membership, check if cluster configuration
 		// allows the user in anyway.
 		if a.cluster.AllowNonGroupedReadOnly() {
-			result.User.Roles = []*v1.VDIUserRole{a.cluster.GetLaunchTemplatesRole().ToUserRole()}
+			result.User.Roles = []*types.VDIUserRole{rbac.VDIRoleToUserRole(a.cluster.GetLaunchTemplatesRole())}
 			return nil, a.marshalClaimsToSecret(stateKey, result)
 		}
 		return nil, errors.New("No groups provided in claims and allow non-grouped users is set to false")
@@ -169,7 +172,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	return nil, a.marshalClaimsToSecret(stateKey, result)
 }
 
-func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *v1.AuthResult) error {
+func (a *AuthProvider) marshalClaimsToSecret(stateKey string, result *types.AuthResult) error {
 	if err := a.secrets.Lock(15); err != nil {
 		return err
 	}
@@ -215,7 +218,7 @@ func getUsernameFromClaims(claims map[string]interface{}) (string, error) {
 	return "", fmt.Errorf("Could not parse username from claims: %+v", claims)
 }
 
-func appendRoleIfBound(boundRoles, userGroups []string, role v1alpha1.VDIRole) []string {
+func appendRoleIfBound(boundRoles, userGroups []string, role rbacv1.VDIRole) []string {
 	if annotations := role.GetAnnotations(); annotations != nil {
 		if oidcGroupStr, ok := annotations[v1.OIDCGroupRoleAnnotation]; ok {
 			oidcGroups := strings.Split(oidcGroupStr, v1.AuthGroupSeparator)

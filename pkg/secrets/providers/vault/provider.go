@@ -22,7 +22,7 @@ package vault
 import (
 	"encoding/base64"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
 
 	"github.com/hashicorp/vault/api"
@@ -37,11 +37,11 @@ var vaultLogger = logf.Log.WithName("vault_secrets")
 type Provider struct {
 	common.SecretsProvider
 
-	crConfig    *v1alpha1.VaultConfig
+	crConfig    *appv1.VaultConfig
 	vaultConfig *api.Config
 	client      *api.Client
 	stopCh      chan struct{}
-	getAuth     func(*v1alpha1.VaultConfig, *api.Config) (*api.Secret, error)
+	getAuth     func(*appv1.VaultConfig, *api.Config) (*api.Secret, error)
 }
 
 // Blank assignmnt to make sure Provider satisfies the SecretsProvider
@@ -58,7 +58,7 @@ func New() *Provider {
 // Setup will set configurations then make sure we are able to read a k8s token
 // and gain vault access with it. If authentication succeeds, a loop is spawned
 // to keep the token fresh.
-func (p *Provider) Setup(client client.Client, cluster *v1alpha1.VDICluster) error {
+func (p *Provider) Setup(client client.Client, cluster *appv1.VDICluster) error {
 	var err error
 	p.crConfig = cluster.Spec.Secrets.Vault
 	p.vaultConfig, err = buildConfig(p.crConfig)
@@ -95,7 +95,7 @@ func (p *Provider) Close() error {
 }
 
 // buildConfig builds a vault API configuration.
-func buildConfig(conf *v1alpha1.VaultConfig) (*api.Config, error) {
+func buildConfig(conf *appv1.VaultConfig) (*api.Config, error) {
 	var caCert string
 	if conf.CACertBase64 != "" {
 		caCertBytes, err := base64.StdEncoding.DecodeString(conf.CACertBase64)

@@ -1,1 +1,0 @@
-kVDI has been installed to the cluster!

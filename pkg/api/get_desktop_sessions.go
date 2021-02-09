@@ -24,8 +24,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -40,7 +42,7 @@ import (
 //   400: error
 //   403: error
 func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) {
-	desktops := &v1alpha1.DesktopList{}
+	desktops := &desktopsv1.SessionList{}
 	displayLocks := &corev1.ConfigMapList{}
 	audioLocks := &corev1.ConfigMapList{}
 
@@ -73,13 +75,13 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// initialize a response
-	res := &v1.DesktopSessionsResponse{
-		Sessions: make([]*v1.DesktopSession, 0),
+	res := &types.DesktopSessionsResponse{
+		Sessions: make([]*types.DesktopSession, 0),
 	}
 
 	// iterate desktops and parse properties and connection status
 	for _, desktop := range desktops.Items {
-		sess := &v1.DesktopSession{
+		sess := &types.DesktopSession{
 			Name:           desktop.GetName(),
 			Namespace:      desktop.GetNamespace(),
 			User:           desktop.GetUser(),
@@ -96,10 +98,10 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 // getSessionStatus iterates the current locks and builds a session object for the given desktop.
 // TODO: Getters for the names of locks, sprintf calls also present in get_websockify.go. This function
 // could also be optimized to pop found locks off for future iterations.
-func getSessionStatus(cluster *v1alpha1.VDICluster, desktop v1alpha1.Desktop, displayLocks, audioLocks []corev1.ConfigMap) *v1.DesktopSessionStatus {
-	status := &v1.DesktopSessionStatus{
-		Display: &v1.ConnectionStatus{Connected: false},
-		Audio:   &v1.ConnectionStatus{Connected: false},
+func getSessionStatus(cluster *appv1.VDICluster, desktop desktopsv1.Session, displayLocks, audioLocks []corev1.ConfigMap) *types.DesktopSessionStatus {
+	status := &types.DesktopSessionStatus{
+		Display: &types.ConnectionStatus{Connected: false},
+		Audio:   &types.ConnectionStatus{Connected: false},
 	}
 	displayLockName := fmt.Sprintf("display-%s-%s", desktop.GetNamespace(), desktop.GetName())
 	audioLockName := fmt.Sprintf("audio-%s-%s", desktop.GetNamespace(), desktop.GetName())
@@ -155,5 +157,5 @@ func getSessionStatus(cluster *v1alpha1.VDICluster, desktop v1alpha1.Desktop, di
 // swagger:response desktopSessionsResponse
 type swaggerDesktopSessionsResponse struct {
 	// in:body
-	Body v1.DesktopSessionsResponse
+	Body types.DesktopSessionsResponse
 }

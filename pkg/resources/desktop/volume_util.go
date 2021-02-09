@@ -22,7 +22,8 @@ package desktop
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +47,7 @@ func (f *Reconciler) freePV(pv *corev1.PersistentVolume) (bool, error) {
 	return changed, nil
 }
 
-func (f *Reconciler) getPVCForInstance(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) (*corev1.PersistentVolumeClaim, error) {
+func (f *Reconciler) getPVCForInstance(cluster *appv1.VDICluster, instance *desktopsv1.Session) (*corev1.PersistentVolumeClaim, error) {
 	pvcNN := types.NamespacedName{
 		Name:      cluster.GetUserdataVolumeName(instance.GetUser()),
 		Namespace: instance.GetNamespace(),
@@ -60,7 +61,7 @@ func (f *Reconciler) getPV(name string) (*corev1.PersistentVolume, error) {
 	return pv, f.client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: metav1.NamespaceAll}, pv)
 }
 
-func (f *Reconciler) getVolMapForCluster(cluster *v1alpha1.VDICluster) (*corev1.ConfigMap, error) {
+func (f *Reconciler) getVolMapForCluster(cluster *appv1.VDICluster) (*corev1.ConfigMap, error) {
 	cmName := cluster.GetUserdataVolumeMapName()
 	volMapCM := &corev1.ConfigMap{}
 	if err := f.client.Get(context.TODO(), cmName, volMapCM); err != nil {

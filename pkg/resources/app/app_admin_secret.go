@@ -22,7 +22,7 @@ package app
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -35,7 +35,7 @@ import (
 
 const passwordKey = "password"
 
-func (r *Reconciler) reconcileAdminSecret(reqLogger logr.Logger, cluster *v1alpha1.VDICluster) (password string, err error) {
+func (r *Reconciler) reconcileAdminSecret(reqLogger logr.Logger, cluster *appv1.VDICluster) (password string, err error) {
 	nn := types.NamespacedName{Name: cluster.GetAdminSecret(), Namespace: cluster.GetCoreNamespace()}
 	found := &corev1.Secret{}
 	if err := r.client.Get(context.TODO(), nn, found); err != nil {

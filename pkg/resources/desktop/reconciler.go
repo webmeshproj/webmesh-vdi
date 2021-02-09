@@ -25,13 +25,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/pki"
 	"github.com/tinyzimmer/kvdi/pkg/resources"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
 	"github.com/go-logr/logr"
@@ -63,16 +65,16 @@ func New(c client.Client, s *runtime.Scheme) *Reconciler {
 }
 
 // Reconcile ensures the required resources for a desktop session.
-func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, instance *desktopsv1.Session) error {
 	if instance.GetDeletionTimestamp() != nil {
-		return f.runFinalizers(reqLogger, instance)
+		return f.runFinalizers(ctx, reqLogger, instance)
 	}
 
 	template, err := instance.GetTemplate(f.client)
 	if err != nil {
 		return err
 	}
-	cluster, err := instance.GetVDICluster(f.client)
+	cluster, err := k8sutil.GetVDIClusterForDesktop(f.client, instance)
 	if err != nil {
 		return err
 	}
@@ -81,19 +83,19 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 
 	// create a PV for the user if we need to
 	if cluster.GetUserdataVolumeSpec() != nil {
-		if err := f.reconcileVolumes(reqLogger, cluster, instance); err != nil {
+		if err := f.reconcileVolumes(ctx, reqLogger, cluster, instance); err != nil {
 			return err
 		}
 	}
 
 	// create a service in front of the desktop (so we can pre-allocate an IP that resolves to the pod)
-	if err := reconcile.Service(reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
+	if err := reconcile.Service(ctx, reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
 		return err
 	}
 
 	// get the service IP
 	desktopSvc := &corev1.Service{}
-	if err := f.client.Get(context.TODO(), resourceNamespacedName, desktopSvc); err != nil {
+	if err := f.client.Get(ctx, resourceNamespacedName, desktopSvc); err != nil {
 		return err
 	}
 
@@ -121,7 +123,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	var secretName string
 	if envTemplates := template.GetEnvTemplates(); len(envTemplates) > 0 {
 		secretList := &corev1.SecretList{}
-		if err := f.client.List(context.TODO(), secretList, client.InNamespace(instance.GetNamespace()), client.MatchingLabels{v1.DesktopNameLabel: instance.GetName()}); err != nil {
+		if err := f.client.List(ctx, secretList, client.InNamespace(instance.GetNamespace()), client.MatchingLabels{v1.DesktopNameLabel: instance.GetName()}); err != nil {
 			return err
 		}
 		if len(secretList.Items) == 0 {
@@ -139,7 +141,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 		}
 		if refs := secret.GetOwnerReferences(); len(refs) == 0 {
 			secret.OwnerReferences = instance.OwnerReferences()
-			if err := f.client.Update(context.TODO(), secret); err != nil {
+			if err := f.client.Update(ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -147,31 +149,31 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	}
 
 	// ensure the pod
-	if _, err := reconcile.Pod(reqLogger, f.client, newDesktopPodForCR(cluster, template, instance, secretName)); err != nil {
+	if _, err := reconcile.Pod(ctx, reqLogger, f.client, newDesktopPodForCR(cluster, template, instance, secretName)); err != nil {
 		return err
 	}
 
 	// Wait for the desktop to be ready
 	desktopPod := &corev1.Pod{}
 	nn := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
-	if err := f.client.Get(context.TODO(), nn, desktopPod); err != nil {
+	if err := f.client.Get(ctx, nn, desktopPod); err != nil {
 		return err
 	}
 
 	if desktopPod.Status.Phase != corev1.PodRunning {
-		return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop pod is not in running phase")
+		return f.updateNonRunningStatusAndRequeue(ctx, instance, desktopPod, "Desktop pod is not in running phase")
 	}
 	for _, status := range desktopPod.Status.ContainerStatuses {
 		if status.State.Running == nil {
-			return f.updateNonRunningStatusAndRequeue(instance, desktopPod, "Desktop instance is not yet running")
+			return f.updateNonRunningStatusAndRequeue(ctx, instance, desktopPod, "Desktop instance is not yet running")
 		}
 	}
 
 	if cluster.GetUserdataVolumeSpec() != nil {
-		if err := f.reconcileUserdataMapping(reqLogger, cluster, instance); err != nil {
+		if err := f.reconcileUserdataMapping(ctx, reqLogger, cluster, instance); err != nil {
 			return err
 		}
-		if err := f.ensureFinalizers(reqLogger, instance); err != nil {
+		if err := f.ensureFinalizers(ctx, reqLogger, instance); err != nil {
 			return err
 		}
 	}
@@ -179,7 +181,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	if !instance.Status.Running {
 		instance.Status.PodPhase = desktopPod.Status.Phase
 		instance.Status.Running = true
-		if err := f.client.Status().Update(context.TODO(), instance); err != nil {
+		if err := f.client.Status().Update(ctx, instance); err != nil {
 			return err
 		}
 	}
@@ -209,7 +211,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 				case <-sessTicker.C:
 					// the desktop session has expired
 					reqLogger.Info("Desktop session has expired, destroying instance")
-					if err := f.client.Delete(context.TODO(), instance); err != nil {
+					if err := f.client.Delete(ctx, instance); err != nil {
 						if client.IgnoreNotFound(err) != nil {
 							reqLogger.Error(err, fmt.Sprintf("Error destroying desktop instance: %s", err.Error()))
 						}
@@ -218,7 +220,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 
 				case <-pollTicker.C:
 					// return if desktop has been deleted
-					if err := f.client.Get(context.TODO(), nn, &v1alpha1.Desktop{}); err != nil {
+					if err := f.client.Get(ctx, nn, &desktopsv1.Session{}); err != nil {
 						if client.IgnoreNotFound(err) == nil {
 							reqLogger.Info("Desktop instance has been deleted, stopping session poll")
 							return
@@ -235,29 +237,29 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.Desktop
 	return nil
 }
 
-func (f *Reconciler) updateNonRunningStatusAndRequeue(instance *v1alpha1.Desktop, pod *corev1.Pod, msg string) error {
+func (f *Reconciler) updateNonRunningStatusAndRequeue(ctx context.Context, instance *desktopsv1.Session, pod *corev1.Pod, msg string) error {
 	instance.Status.Running = false
 	instance.Status.PodPhase = pod.Status.Phase
-	if err := f.client.Status().Update(context.TODO(), instance); err != nil {
+	if err := f.client.Status().Update(ctx, instance); err != nil {
 		return err
 	}
 	return errors.NewRequeueError(msg, 3)
 }
 
-func (f *Reconciler) ensureFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) ensureFinalizers(ctx context.Context, reqLogger logr.Logger, instance *desktopsv1.Session) error {
 	if !common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		instance.SetFinalizers(append(instance.GetFinalizers(), userdataReclaimFinalizer))
-		if err := f.client.Update(context.TODO(), instance); err != nil {
+		if err := f.client.Update(ctx, instance); err != nil {
 			return err
 		}
-		if err := f.client.Get(context.TODO(), types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}, instance); err != nil {
+		if err := f.client.Get(ctx, types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}, instance); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (f *Reconciler) runFinalizers(reqLogger logr.Logger, instance *v1alpha1.Desktop) error {
+func (f *Reconciler) runFinalizers(ctx context.Context, reqLogger logr.Logger, instance *desktopsv1.Session) error {
 	var updated bool
 	if common.StringSliceContains(instance.GetFinalizers(), userdataReclaimFinalizer) {
 		if err := f.reclaimVolumes(reqLogger, instance); err != nil {
@@ -267,7 +269,7 @@ func (f *Reconciler) runFinalizers(reqLogger logr.Logger, instance *v1alpha1.Des
 		updated = true
 	}
 	if updated {
-		return f.client.Update(context.TODO(), instance)
+		return f.client.Update(ctx, instance)
 	}
 	return nil
 }

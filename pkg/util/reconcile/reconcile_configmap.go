@@ -31,19 +31,19 @@ import (
 )
 
 // ConfigMap reconciles a provided configmap with the cluster.
-func ConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
+func ConfigMap(ctx context.Context, reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&cm.ObjectMeta, cm); err != nil {
 		return err
 	}
 	found := &corev1.ConfigMap{}
-	if err := c.Get(context.TODO(), types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, found); err != nil {
+	if err := c.Get(ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, found); err != nil {
 		// Return API error
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		}
 		// Create the config map
 		reqLogger.Info("Creating new ConfigMap", "ConfigMap.Name", cm.Name, "ConfigMap.Namespace", cm.Namespace)
-		if err := c.Create(context.TODO(), cm); err != nil {
+		if err := c.Create(ctx, cm); err != nil {
 			return err
 		}
 		return nil
@@ -55,7 +55,7 @@ func ConfigMap(reqLogger logr.Logger, c client.Client, cm *corev1.ConfigMap) err
 		reqLogger.Info("ConfigMap annotation spec has changed, updating", "ConfigMap.Name", cm.Name, "ConfigMap.Namespace", cm.Namespace)
 		found.Data = cm.Data
 		found.SetAnnotations(cm.GetAnnotations())
-		if err := c.Update(context.TODO(), found); err != nil {
+		if err := c.Update(ctx, found); err != nil {
 			return err
 		}
 	}

@@ -2,6 +2,89 @@ REPO ?= ghcr.io/tinyzimmer
 NAME = kvdi
 VERSION ?= latest
 
+CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
+
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
+all: manager
+
+# Run tests
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test: generate fmt vet manifests
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+
+# Build manager binary
+manager: generate fmt vet
+	go build -o bin/manager main.go
+
+# Run against the configured Kubernetes cluster in ~/.kube/config
+run: generate fmt vet manifests
+	go run ./main.go
+
+# Install CRDs into a cluster
+install: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
+# Uninstall CRDs from a cluster
+uninstall: manifests kustomize
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+
+# Create a single yaml file bundle
+bundle: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${MANAGER_IMAGE}
+	$(KUSTOMIZE) build config/crd > deploy/bundle.yaml
+	$(KUSTOMIZE) build config/default >> deploy/bundle.yaml
+
+# Generate manifests e.g. CRD, RBAC etc.
+manifests: controller-gen
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+# Run go fmt against code
+fmt:
+	go fmt ./...
+
+# Run go vet against code
+vet:
+	go vet ./...
+
+# Generate code
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+# Download controller-gen locally if necessary
+CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
+controller-gen:
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+
+# Download kustomize locally if necessary
+KUSTOMIZE = $(shell pwd)/bin/kustomize
+kustomize:
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
+
+
+## BEGIN CUSTOM TARGETS
+
 # includes
 -include hack/Makevars.mk
 -include hack/MakeDesktops.mk
@@ -10,6 +93,7 @@ VERSION ?= latest
 # uses modified shell that doesn't support pipefail
 SHELL := /bin/bash
 
+##
 ## # Building Images
 ##
 
@@ -26,11 +110,11 @@ build-base:
 	$(call build_docker,base,$(BASE_IMAGE))
 
 ## make build-manager      # Build the manager docker image.
-build-manager: build-base
+build-manager: build-base generate
 	$(call build_docker,manager,${MANAGER_IMAGE})
 
 ## make build-app          # Build the app docker image.
-build-app: build-base
+build-app: build-base generate
 	$(call build_docker,app,${APP_IMAGE})
 
 ## make build-kvdi-proxy  # Build the kvdi-proxy image.
@@ -38,10 +122,10 @@ build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
 license-headers:
-	for i in `find cmd/ -name *.go ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
-	for i in `find pkg/ -name *.go -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
-	for i in `find ui/app/src -name *.js ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
-	for i in `find ui/app/src -name *.vue ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header-vue.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find cmd/ -name '*.go'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find pkg/ -name '*.go' -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find ui/app/src -name '*.js'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find ui/app/src -name '*.vue'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.vue.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
 
 ##
 ## # Pushing images
@@ -66,37 +150,6 @@ push-kvdi-proxy: build-kvdi-proxy
 	docker push ${KVDI_PROXY_IMAGE}
 
 ##
-## # Helm Chart Functions
-##
-
-## make chart-yaml     # Generate the Chart.yaml from the template in hack/Makevars.mk.
-chart-yaml:
-	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
-
-## make package-chart  # Packages the helm chart.
-package-chart: ${HELM} chart-yaml
-	cd deploy/charts && helm package kvdi
-
-## make package-index  # Create the helm repo package index.
-package-index:
-	cd deploy/charts && helm repo index .
-
-##
-## # Codegen Functions
-##
-
-${OPERATOR_SDK}:
-	$(call download_bin,${OPERATOR_SDK},${OPERATOR_SDK_URL})
-
-## make generate            # Generates deep copy code for the k8s apis.
-generate: ${OPERATOR_SDK}
-	GOROOT=${GOROOT} ${OPERATOR_SDK} generate k8s --verbose
-
-## make manifests           # Generates CRD manifest.
-manifests: ${OPERATOR_SDK}
-	${OPERATOR_SDK} generate crds --verbose
-
-##
 ## # Linting and Testing
 ##
 
@@ -109,15 +162,35 @@ $(GOLANGCI_LINT):
 lint: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run -v --timeout 600s
 
-## make test   # Run unit tests
-GO_PACKAGES ?= $(shell go list ./... | grep -v 'pkg/apis' | xargs | sed -e 's/ /,/g')
-TEST_FLAGS ?= -v -cover -coverpkg="$(GO_PACKAGES)" -coverprofile=profile.cov 
-test:
-	@set -o pipefail && go test ${TEST_FLAGS} ./... \
-		 | sed ''/PASS/s//$$(printf "\033[32mPASS\033[0m")/'' \
-		 | sed ''/FAIL/s//$$(printf "\033[31mFAIL\033[0m")/''
-	@go tool cover -func profile.cov
-	@rm profile.cov
+test-in-docker:
+	$(MAKE) run-in-docker TEST_CMD="make test"
+
+lint-in-docker:
+	$(MAKE) run-in-docker TEST_CMD="make lint"
+
+##
+## # Helm Generation
+##
+
+## make helm-chart      # Generates the templates for the helm chart.
+helm-chart: bundle chart-yaml
+	bash hack/gen-helm-templates.sh
+
+## make chart-yaml     # Generate the Chart.yaml from the template in hack/Makevars.mk.
+chart-yaml:
+	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
+
+## make package-chart  # Packages the helm chart.
+package-chart: ${HELM} helm-chart
+	cd deploy/charts && helm package kvdi
+
+## make package-index  # Create the helm repo package index.
+package-index:
+	cd deploy/charts && helm repo index .
+
+## make helm-docs      # Generates the helm chart documentation.
+helm-docs: helm-chart
+	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 
 ##
 ## # Local Testing with k3d
@@ -233,7 +306,7 @@ example-vdi-templates: ${KUBECTL}
 ##
 ## make restart-manager    # Restart the manager pod.
 restart-manager: ${KUBECTL}
-	${KUBECTL_K3D} delete pod -l component=kvdi-manager
+	${KUBECTL_K3D} delete pod -l app.kubernetes.io/name=kvdi
 
 ## make restart-app        # Restart the app pod.
 restart-app: ${KUBECTL}
@@ -287,17 +360,6 @@ api-docs: ${REFDOCS}
 	go mod vendor
 	bash hack/update-api-docs.sh
 
-## make helm-docs           # Generates the helm chart documentation.
-helm-docs: ${HELM_DOCS} chart-yaml
-	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-
-
-check-release:
-	@if [[ "$(VERSION)" == "latest" ]] ; then \
-		echo "You must specify a VERSION for release" ; exit 1 ; \
-	fi
-
-prep-release: check-release generate manifests api-docs helm-docs package-chart package-index
 
 ##
 ## ######################################################################################
@@ -307,28 +369,9 @@ help:
 	@echo "# MAKEFILE USAGE" && echo
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sed -e 's/\\$$//' | sed -e 's/##//'
 
+check-release:
+	@if [[ "$(VERSION)" == "latest" ]] ; then \
+		echo "You must specify a VERSION for release" ; exit 1 ; \
+	fi
 
-
-TEST_DOCKER_IMAGE ?= "kvdi-tests"
-
-test-docker-build:
-	docker build . \
-	    -f .github/tests.Dockerfile \
-	    -t $(TEST_DOCKER_IMAGE)
-
-TEST_CMD ?= /bin/bash
-run-in-docker: test-docker-build
-	docker run --rm --privileged \
-	    -v /lib/modules:/lib/modules:ro \
-	    -v /sys:/sys:ro \
-	    -v /usr/src:/usr/src:ro \
-	    -v "$(PWD)":/workspace \
-		-w /workspace \
-		-e HOME=/tmp \
-	    $(TEST_DOCKER_IMAGE) $(TEST_CMD)
-
-test-in-docker:
-	$(MAKE) run-in-docker TEST_CMD="make test"
-
-lint-in-docker:
-	$(MAKE) run-in-docker TEST_CMD="make lint"
+prep-release: check-release generate manifests helm-chart api-docs helm-docs package-chart package-index

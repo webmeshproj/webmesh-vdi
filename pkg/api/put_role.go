@@ -25,13 +25,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	ktypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -61,8 +61,8 @@ import (
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	role := apiutil.GetRoleFromRequest(r)
-	nn := types.NamespacedName{Name: role, Namespace: metav1.NamespaceAll}
-	vdiRole := &v1alpha1.VDIRole{}
+	nn := ktypes.NamespacedName{Name: role, Namespace: metav1.NamespaceAll}
+	vdiRole := &rbacv1.VDIRole{}
 	if err := d.client.Get(context.TODO(), nn, vdiRole); err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(fmt.Errorf("The role '%s' doesn't exist", role), w)
@@ -71,7 +71,7 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	params := apiutil.GetRequestObject(r).(*v1.UpdateRoleRequest)
+	params := apiutil.GetRequestObject(r).(*types.UpdateRoleRequest)
 	if params == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -89,5 +89,5 @@ func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters putRoleRequest
 type swaggerUpdateRoleRequest struct {
 	// in:body
-	Body v1.UpdateRoleRequest
+	Body types.UpdateRoleRequest
 }

@@ -20,6 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package reconcile
 
 import (
+	"context"
 	"testing"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -41,13 +42,13 @@ func newFakeService() *corev1.Service {
 func TestReconcileService(t *testing.T) {
 	c := getFakeClient(t)
 	svc := newFakeService()
-	if err := Service(testLogger, c, svc); err != nil {
+	if err := Service(context.TODO(), testLogger, c, svc); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := Service(testLogger, c, newFakeService()); err != nil {
+	if err := Service(context.TODO(), testLogger, c, newFakeService()); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if err := Service(testLogger, c, svc); err == nil {
+	if err := Service(context.TODO(), testLogger, c, svc); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)

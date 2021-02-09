@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 

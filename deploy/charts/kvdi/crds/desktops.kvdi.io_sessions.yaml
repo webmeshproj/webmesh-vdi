@@ -1,0 +1,88 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: sessions.desktops.kvdi.io
+spec:
+  group: desktops.kvdi.io
+  names:
+    kind: Session
+    listKind: SessionList
+    plural: sessions
+    singular: session
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.user
+      name: User
+      type: string
+    - jsonPath: .spec.serviceAccount
+      name: ServiceAccount
+      type: string
+    - jsonPath: .spec.template
+      name: Template
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Session is the Schema for the sessions API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SessionSpec defines the desired state of Session
+            properties:
+              serviceAccount:
+                description: A service account to tie to the pod for this instance.
+                type: string
+              template:
+                description: The DesktopTemplate for booting this instance.
+                type: string
+              user:
+                description: The username to use inside the instance, defaults to
+                  `anonymous`.
+                type: string
+              vdiCluster:
+                description: The VDICluster this Desktop belongs to. This helps to
+                  determine which app instance certificates need to be created for.
+                type: string
+            required:
+            - template
+            - vdiCluster
+            type: object
+          status:
+            description: SessionStatus defines the observed state of Session
+            properties:
+              podPhase:
+                description: The current phase of the pod backing this instance.
+                type: string
+              running:
+                description: Whether the instance is running and resolvable within
+                  the cluster.
+                type: boolean
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

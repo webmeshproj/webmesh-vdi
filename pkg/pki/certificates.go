@@ -31,7 +31,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 )
 
@@ -41,7 +42,7 @@ func newKey() (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(rand.Reader, keySize)
 }
 
-func newCACertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
+func newCACertificate(cluster *appv1.VDICluster) *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
@@ -58,7 +59,7 @@ func newCACertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
 	}
 }
 
-func newAppServerCertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
+func newAppServerCertificate(cluster *appv1.VDICluster) *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(int64(mrand.Intn(9999))),
 		Subject: pkix.Name{
@@ -74,7 +75,7 @@ func newAppServerCertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
 	}
 }
 
-func newAppClientCertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
+func newAppClientCertificate(cluster *appv1.VDICluster) *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(3),
 		Subject: pkix.Name{
@@ -90,7 +91,7 @@ func newAppClientCertificate(cluster *v1alpha1.VDICluster) *x509.Certificate {
 	}
 }
 
-func newDesktopProxyCertificate(cluster *v1alpha1.VDICluster, desktop *v1alpha1.Desktop, serviceIP string) *x509.Certificate {
+func newDesktopProxyCertificate(cluster *appv1.VDICluster, desktop *desktopsv1.Session, serviceIP string) *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber: big.NewInt(4),
 		Subject: pkix.Name{

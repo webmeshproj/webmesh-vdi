@@ -4,6 +4,10 @@ issues:
     linters:
     - deadcode
     - unused
+    - staticcheck
   - path: _test\.go
     linters:
       - errcheck
+      - staticcheck
+      - deadcode
+      - unused

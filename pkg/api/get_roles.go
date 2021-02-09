@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -81,12 +81,12 @@ func (d *desktopAPI) GetRole(w http.ResponseWriter, r *http.Request) {
 // swagger:response rolesResponse
 type swaggerRolesResponse struct {
 	// in:body
-	Body []v1alpha1.VDIRole
+	Body []rbacv1.VDIRole
 }
 
 // A single role
 // swagger:response roleResponse
 type swaggerRoleResponse struct {
 	// in:body
-	Body v1alpha1.VDIRole
+	Body rbacv1.VDIRole
 }

@@ -29,29 +29,56 @@ mkdir -p "${GOPATH}/src/github.com/tinyzimmer"
 gitdir="${GOPATH}/src/github.com/tinyzimmer/kvdi"
 cp -r "${REPO_ROOT}" "${gitdir}"
 cd "$gitdir"
+echo
 
-"${REPO_ROOT}/_bin/refdocs" \
+# Generate appv1 Docs
+
+echo "+++ Generating appv1 documentation"
+
+"${REPO_ROOT}/bin/refdocs" \
   --config "${REPO_ROOT}/doc/refdocs.json" \
   --template-dir "${REPO_ROOT}/doc/template" \
-  --api-dir "github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1" \
+  --api-dir "github.com/tinyzimmer/kvdi/apis/app/v1" \
   --out-file "${GOPATH}/out.html"
 
+pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/appv1.md"
+sed -i 's/#app.kvdi\.io\/v1\./#/g' "${REPO_ROOT}/doc/appv1.md"
+sed -i 's/#%23app.kvdi\.io%2fv1\./#/g' "${REPO_ROOT}/doc/appv1.md"
+sed -i 's:#\*github\.com/tinyzimmer/kvdi/apis/app/v1\.:#:g' "${REPO_ROOT}/doc/appv1.md"
+sed -i 's:\[\]github\.com/tinyzimmer/kvdi/apis/rbac/v1\.Rule:\<a href\=\"rbacv1\.md#Rule\"\>\[\]rbacv1\.Rule\</a\>:g' "${REPO_ROOT}/doc/appv1.md"
 
-pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/crds.md"
-sed -i 's/#kvdi\.io\/v1alpha1\./#/g' "${REPO_ROOT}/doc/crds.md"
-sed -i 's/#%23kvdi\.io%2fv1alpha1\./#/g' "${REPO_ROOT}/doc/crds.md"
-sed -i 's:#\*github\.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1\.:#:g' "${REPO_ROOT}/doc/crds.md"
+echo
 
+# Generate rbacv1 Docs
 
-"${REPO_ROOT}/_bin/refdocs" \
+echo "+++ Generating rbacv1 documentation"
+
+"${REPO_ROOT}/bin/refdocs" \
   --config "${REPO_ROOT}/doc/refdocs.json" \
   --template-dir "${REPO_ROOT}/doc/template" \
-  --api-dir "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1" \
+  --api-dir "github.com/tinyzimmer/kvdi/apis/rbac/v1" \
   --out-file "${GOPATH}/out.html"
 
-pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/metav1.md"
-sed -i 's/#kvdi\.io\/v1\./#/g' "${REPO_ROOT}/doc/metav1.md"
-sed -i 's/#%23kvdi\.io%2fv1\./#/g' "${REPO_ROOT}/doc/metav1.md"
-sed -i 's:#\*github\.com/tinyzimmer/kvdi/pkg/apis/meta/v1\.:#:g' "${REPO_ROOT}/doc/metav1.md"
+pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/rbacv1.md"
+sed -i 's/#rbac.kvdi\.io\/v1\./#/g' "${REPO_ROOT}/doc/rbacv1.md"
+sed -i 's/#%rbac.kvdi\.io%2fv1\./#/g' "${REPO_ROOT}/doc/rbacv1.md"
+sed -i 's:#\*github\.com/tinyzimmer/kvdi/apis/rbac/v1\.:#:g' "${REPO_ROOT}/doc/rbacv1.md"
 
-echo "Generated reference documentation"
+echo
+
+# Generate desktopsv1 Docs
+
+echo "+++ Generating desktopsv1 documentation"
+
+"${REPO_ROOT}/bin/refdocs" \
+  --config "${REPO_ROOT}/doc/refdocs.json" \
+  --template-dir "${REPO_ROOT}/doc/template" \
+  --api-dir "github.com/tinyzimmer/kvdi/apis/desktops/v1" \
+  --out-file "${GOPATH}/out.html"
+
+pandoc --from html --to markdown_strict "${GOPATH}/out.html" -o "${REPO_ROOT}/doc/desktopsv1.md"
+sed -i 's/#desktops.kvdi\.io\/v1\./#/g' "${REPO_ROOT}/doc/desktopsv1.md"
+sed -i 's/#%desktops.kvdi\.io%2fv1\./#/g' "${REPO_ROOT}/doc/desktopsv1.md"
+sed -i 's:#\*github\.com/tinyzimmer/kvdi/apis/desktops/v1\.:#:g' "${REPO_ROOT}/doc/desktopsv1.md"
+
+echo

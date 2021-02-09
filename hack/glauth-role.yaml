@@ -1,4 +1,4 @@
-apiVersion: kvdi.io/v1alpha1
+apiVersion: rbac.kvdi.io/v1
 kind: VDIRole
 metadata:
   name: kvdi-ldap-users

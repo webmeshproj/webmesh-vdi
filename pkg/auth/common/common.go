@@ -25,7 +25,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
@@ -36,7 +36,7 @@ import (
 
 // GetAuthSecrets is a helper function for retrieving multiple secrets required for
 // authentication.
-func GetAuthSecrets(c client.Client, cluster *v1alpha1.VDICluster, secrets *secrets.SecretEngine, keys ...string) (map[string]string, error) {
+func GetAuthSecrets(c client.Client, cluster *appv1.VDICluster, secrets *secrets.SecretEngine, keys ...string) (map[string]string, error) {
 	results := make(map[string]string)
 	if cluster.AuthIsUsingSecretEngine() {
 		var res []byte

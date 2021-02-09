@@ -27,7 +27,8 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	"github.com/go-logr/logr"
@@ -50,7 +51,7 @@ func (m *Manager) Reconcile(reqLogger logr.Logger) error {
 }
 
 // ReconcileDesktop reconciles the mTLS server certificate for a desktop instance.
-func (m *Manager) ReconcileDesktop(reqLogger logr.Logger, desktop *v1alpha1.Desktop, serviceIP string) error {
+func (m *Manager) ReconcileDesktop(reqLogger logr.Logger, desktop *desktopsv1.Session, serviceIP string) error {
 	// reconcile the CA to retrieve it
 	caCert, caKey, err := m.reconcileCA(reqLogger)
 	if err != nil {
@@ -182,7 +183,7 @@ func (m *Manager) reconcileAppCertificates(reqLogger logr.Logger, caCert *x509.C
 	// desktop pods.
 	appCertificates := []struct {
 		namespacedName types.NamespacedName
-		createCertFunc func(*v1alpha1.VDICluster) *x509.Certificate
+		createCertFunc func(*appv1.VDICluster) *x509.Certificate
 	}{
 		{
 			namespacedName: m.cluster.GetAppServerTLSNamespacedName(),

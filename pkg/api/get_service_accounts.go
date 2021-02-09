@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
@@ -53,7 +54,7 @@ func (d *desktopAPI) GetServiceAccounts(w http.ResponseWriter, r *http.Request) 
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(sess.User.FilterServiceAccounts(serviceAccounts, namespace), w)
+	apiutil.WriteJSON(rbac.FilterUserServiceAccounts(sess.User, serviceAccounts, namespace), w)
 }
 
 // ListServiceAccounts returns a string slice of all the service accounts

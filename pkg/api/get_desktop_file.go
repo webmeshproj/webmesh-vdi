@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 // swagger:operation GET /api/desktops/fs/{namespace}/{name}/stat/{fpath} Desktops statDesktopFile
@@ -61,7 +61,7 @@ func (d *desktopAPI) GetStatDesktopFile(w http.ResponseWriter, r *http.Request) 
 // swagger:response statDesktopFileResponse
 type swaggerStatDesktopFileResponse struct {
 	// in:body
-	Body v1.StatDesktopFileResponse
+	Body types.StatDesktopFileResponse
 }
 
 // swagger:operation GET /api/desktops/fs/{namespace}/{name}/get/{fpath} Desktops downloadDesktopFile

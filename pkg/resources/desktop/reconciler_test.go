@@ -24,8 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -45,18 +46,19 @@ var testLogger = logf.Log.WithName("test")
 func newReconciler(t *testing.T) *Reconciler {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
+	desktopsv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
 	return New(fake.NewFakeClientWithScheme(scheme), scheme)
 }
 
-func newCluster(t *testing.T) *v1alpha1.VDICluster {
+func newCluster(t *testing.T) *appv1.VDICluster {
 	t.Helper()
-	cluster := &v1alpha1.VDICluster{}
+	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
-	cluster.Spec = v1alpha1.VDIClusterSpec{
+	cluster.Spec = appv1.VDIClusterSpec{
 		UserDataSpec: &corev1.PersistentVolumeClaimSpec{
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{"storage": resource.MustParse("10Gi")},
@@ -66,21 +68,21 @@ func newCluster(t *testing.T) *v1alpha1.VDICluster {
 	return cluster
 }
 
-func newDesktop(t *testing.T) *v1alpha1.Desktop {
+func newDesktop(t *testing.T) *desktopsv1.Session {
 	t.Helper()
-	desktop := &v1alpha1.Desktop{}
+	desktop := &desktopsv1.Session{}
 	desktop.Name = "test-desktop"
 	desktop.Namespace = "test-namespace"
-	desktop.Spec = v1alpha1.DesktopSpec{
+	desktop.Spec = desktopsv1.SessionSpec{
 		Template:   "test-template",
 		VDICluster: "test-cluster",
 	}
 	return desktop
 }
 
-func newTemplate(t *testing.T) *v1alpha1.DesktopTemplate {
+func newTemplate(t *testing.T) *desktopsv1.Template {
 	t.Helper()
-	tmpl := &v1alpha1.DesktopTemplate{}
+	tmpl := &desktopsv1.Template{}
 	tmpl.Name = "test-template"
 	return tmpl
 }
@@ -97,7 +99,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// Test missing dependent resources
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if client.IgnoreNotFound(err) != nil {
 			t.Fatal(err)
 		}
@@ -109,7 +111,7 @@ func TestReconcile(t *testing.T) {
 	r.client.Create(context.TODO(), newTemplate(t))
 
 	// cluster should now be not found
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if client.IgnoreNotFound(err) != nil {
 			t.Fatal(err)
 		}
@@ -123,7 +125,7 @@ func TestReconcile(t *testing.T) {
 	// now test actual reconciliation
 
 	// Error should be waiting for service ip
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "assigned an IP") {
@@ -144,7 +146,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// error should be waiting for pod to be in running phase
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "not in running phase") {
@@ -172,7 +174,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// error should be waiting for instance to be running
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "not yet running") {
@@ -199,7 +201,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// reconciler should be waiting for a volume
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "volume provisioned yet") {
@@ -227,7 +229,7 @@ func TestReconcile(t *testing.T) {
 
 	// Reconcile should complete successfully
 	// TODO: Check created resources, probably use envtest
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		t.Error("Expected reconcile to finish completely, got:", err)
 	}
 
@@ -236,7 +238,7 @@ func TestReconcile(t *testing.T) {
 	desktop.SetDeletionTimestamp(&now)
 
 	// should wait for pod to be gone
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "still terminating") {
@@ -254,7 +256,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// should be waiting for the pvc to be terminated
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		if qerr, ok := errors.IsRequeueError(err); !ok {
 			t.Error("Expected requeue error, got:", err)
 		} else if !strings.Contains(qerr.Error(), "PVC is still being terminated") {
@@ -273,7 +275,7 @@ func TestReconcile(t *testing.T) {
 
 	// Reconcile should complete
 	// TODO: Again should check present resources
-	if err := r.Reconcile(testLogger, desktop); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, desktop); err != nil {
 		t.Error("Expected reconcile to finish completely, got:", err)
 	}
 }

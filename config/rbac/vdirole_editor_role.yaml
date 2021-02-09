@@ -1,0 +1,24 @@
+# permissions for end users to edit vdiroles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vdirole-editor-role
+rules:
+- apiGroups:
+  - rbac.kvdi.io
+  resources:
+  - vdiroles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.kvdi.io
+  resources:
+  - vdiroles/status
+  verbs:
+  - get

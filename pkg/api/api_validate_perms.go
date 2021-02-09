@@ -24,18 +24,20 @@ import (
 	"fmt"
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
 )
 
 // OverrideFunc is a function that takes precedence over any other action evaluations.
 // If it returns false for allowed, the next rules in the chain will be considered.
 // Errors are considered forbidden.
-type OverrideFunc func(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed, owner bool, err error)
+type OverrideFunc func(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed, owner bool, err error)
 
 // ExtraCheckFunc is a function that fires after the action itself has been evaluated.
 // Allowed being false or any errors are considered forbidden.
-type ExtraCheckFunc func(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed bool, reason string, err error)
+type ExtraCheckFunc func(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed bool, reason string, err error)
 
 // ResourceValueFunc returns the name of a requested resource based off the contents
 // of a request.
@@ -51,7 +53,7 @@ type MethodPermissions struct {
 // ActionTemplate contains an action as well as functions for populating their
 // respective values during the request context.
 type ActionTemplate struct {
-	v1.APIAction
+	types.APIAction
 	ResourceNameFunc      ResourceValueFunc
 	ResourceNamespaceFunc ResourceValueFunc
 }
@@ -98,9 +100,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 				},
 			},
@@ -108,9 +110,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"POST": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbCreate,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbCreate,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 				},
 			},
@@ -121,9 +123,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -133,9 +135,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUpdate,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUpdate,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -146,9 +148,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"DELETE": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbDelete,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbDelete,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -159,9 +161,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -171,9 +173,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUpdate,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUpdate,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -185,9 +187,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUpdate,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUpdate,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 					ResourceNameFunc: apiutil.GetUserFromRequest,
 				},
@@ -199,9 +201,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceRoles,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceRoles,
 					},
 				},
 			},
@@ -209,9 +211,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"POST": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbCreate,
-						ResourceType: v1.ResourceRoles,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbCreate,
+						ResourceType: rbacv1.ResourceRoles,
 					},
 				},
 			},
@@ -222,9 +224,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceRoles,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceRoles,
 					},
 					ResourceNameFunc: apiutil.GetRoleFromRequest,
 				},
@@ -233,9 +235,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUpdate,
-						ResourceType: v1.ResourceRoles,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUpdate,
+						ResourceType: rbacv1.ResourceRoles,
 					},
 					ResourceNameFunc: apiutil.GetRoleFromRequest,
 				},
@@ -245,9 +247,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"DELETE": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbDelete,
-						ResourceType: v1.ResourceRoles,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbDelete,
+						ResourceType: rbacv1.ResourceRoles,
 					},
 					ResourceNameFunc: apiutil.GetRoleFromRequest,
 				},
@@ -258,9 +260,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 				},
 			},
@@ -268,9 +270,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"POST": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbCreate,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbCreate,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 				},
 			},
@@ -280,9 +282,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc: apiutil.GetTemplateFromRequest,
 				},
@@ -291,9 +293,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUpdate,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUpdate,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc: apiutil.GetTemplateFromRequest,
 				},
@@ -302,9 +304,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"DELETE": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbDelete,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbDelete,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc: apiutil.GetTemplateFromRequest,
 				},
@@ -315,15 +317,15 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 				},
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceUsers,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceUsers,
 					},
 				},
 			},
@@ -331,30 +333,30 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"POST": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbLaunch,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbLaunch,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc: func(r *http.Request) string {
-						req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
+						req := apiutil.GetRequestObject(r).(*types.CreateSessionRequest)
 						return req.GetTemplate()
 					},
 					ResourceNamespaceFunc: func(r *http.Request) string {
-						req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
+						req := apiutil.GetRequestObject(r).(*types.CreateSessionRequest)
 						return req.GetNamespace()
 					},
 				},
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceServiceAccounts,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceServiceAccounts,
 					},
 					ResourceNameFunc: func(r *http.Request) string {
-						req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
+						req := apiutil.GetRequestObject(r).(*types.CreateSessionRequest)
 						return req.GetServiceAccount()
 					},
 					ResourceNamespaceFunc: func(r *http.Request) string {
-						req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
+						req := apiutil.GetRequestObject(r).(*types.CreateSessionRequest)
 						return req.GetNamespace()
 					},
 				},
@@ -365,9 +367,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -378,9 +380,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"DELETE": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbDelete,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbDelete,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -393,9 +395,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -408,9 +410,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -423,9 +425,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -438,9 +440,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -453,9 +455,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbRead,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbRead,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -468,9 +470,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -483,9 +485,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"GET": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -498,9 +500,9 @@ var RouterGrantRequirements = map[string]map[string]MethodPermissions{
 		"PUT": {
 			Actions: []ActionTemplate{
 				{
-					APIAction: v1.APIAction{
-						Verb:         v1.VerbUse,
-						ResourceType: v1.ResourceTemplates,
+					APIAction: types.APIAction{
+						Verb:         rbacv1.VerbUse,
+						ResourceType: rbacv1.ResourceTemplates,
 					},
 					ResourceNameFunc:      apiutil.GetNameFromRequest,
 					ResourceNamespaceFunc: apiutil.GetNamespaceFromRequest,
@@ -557,7 +559,7 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 		for _, action := range methodGrant.Actions {
 			apiAction := buildActionFromTemplate(action, r)
 			result.Actions = append(result.Actions, apiAction)
-			if !userSession.User.Evaluate(apiAction) {
+			if !rbac.EvaluateUser(userSession.User, apiAction) {
 				msg := fmt.Sprintf("%s does not have the ability to %s", userSession.User.Name, apiAction.String())
 				apiutil.ReturnAPIForbidden(nil, msg, w)
 				result.Allowed = false
@@ -591,9 +593,9 @@ func (d *desktopAPI) ValidateUserGrants(next http.Handler) http.Handler {
 
 // buildActionFromTemplate will create an APIAction to evaluate based off the
 // parameters in the MethodPermissions.
-func buildActionFromTemplate(tmpl ActionTemplate, r *http.Request) *v1.APIAction {
+func buildActionFromTemplate(tmpl ActionTemplate, r *http.Request) *types.APIAction {
 	// build a new action object
-	tmplAction := &v1.APIAction{
+	tmplAction := &types.APIAction{
 		Verb:         tmpl.APIAction.Verb,
 		ResourceType: tmpl.APIAction.ResourceType,
 	}

@@ -24,14 +24,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
-	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+	krbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -43,23 +43,24 @@ var testLogger = logf.Log.WithName("test")
 func newReconciler(t *testing.T) *Reconciler {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
+	rbacv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
-	rbacv1.AddToScheme(scheme)
+	krbacv1.AddToScheme(scheme)
 	promv1.AddToScheme(scheme)
 	return New(fake.NewFakeClientWithScheme(scheme), scheme)
 }
 
-func newCluster(t *testing.T) *v1alpha1.VDICluster {
+func newCluster(t *testing.T) *appv1.VDICluster {
 	t.Helper()
-	cluster := &v1alpha1.VDICluster{}
+	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
-	cluster.Spec = v1alpha1.VDIClusterSpec{
-		Metrics: &v1alpha1.MetricsConfig{
-			ServiceMonitor: &v1alpha1.ServiceMonitorConfig{Create: true},
-			Prometheus:     &v1alpha1.PrometheusConfig{Create: true},
-			Grafana:        &v1alpha1.GrafanaConfig{Enabled: true},
+	cluster.Spec = appv1.VDIClusterSpec{
+		Metrics: &appv1.MetricsConfig{
+			ServiceMonitor: &appv1.ServiceMonitorConfig{Create: true},
+			Prometheus:     &appv1.PrometheusConfig{Create: true},
+			Grafana:        &appv1.GrafanaConfig{Enabled: true},
 		},
 	}
 	return cluster
@@ -73,7 +74,7 @@ func TestReconcile(t *testing.T) {
 	cluster := newCluster(t)
 
 	// expect everything to be created except for a deployment requeue
-	if err := r.Reconcile(testLogger, cluster); err == nil {
+	if err := r.Reconcile(context.TODO(), testLogger, cluster); err == nil {
 		t.Fatal("Expected error got nil")
 	} else if qerr, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
@@ -82,7 +83,7 @@ func TestReconcile(t *testing.T) {
 	}
 
 	// should keep happening until the deployment is ready
-	if err := r.Reconcile(testLogger, cluster); err == nil {
+	if err := r.Reconcile(context.TODO(), testLogger, cluster); err == nil {
 		t.Fatal("Expected error got nil")
 	} else if qerr, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
@@ -103,7 +104,7 @@ func TestReconcile(t *testing.T) {
 
 	// should finish
 	// TODO: check created resources
-	if err := r.Reconcile(testLogger, cluster); err != nil {
+	if err := r.Reconcile(context.TODO(), testLogger, cluster); err != nil {
 		t.Error("Expected reconcile to complete successfully")
 	}
 }

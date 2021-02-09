@@ -18,13 +18,13 @@ ARG GIT_COMMIT
 ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Copy go code
-COPY version/     /build/version
+COPY apis/        /build/apis
 COPY pkg/         /build/pkg
 COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
 RUN go build -o /tmp/app \
-    -ldflags="-X 'github.com/tinyzimmer/kvdi/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/version.GitCommit=${GIT_COMMIT}'" \
+    -ldflags="-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
     ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \

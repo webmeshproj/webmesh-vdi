@@ -49,7 +49,7 @@ func TestReconcileDeployment(t *testing.T) {
 	deployment := newFakeDeployment()
 	nn := types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}
 
-	if err := Deployment(testLogger, c, deployment, true); err == nil {
+	if err := Deployment(context.TODO(), testLogger, c, deployment, true); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
@@ -59,7 +59,7 @@ func TestReconcileDeployment(t *testing.T) {
 		t.Error("Expected deployment to exist, got:", err)
 	}
 
-	if err := Deployment(testLogger, c, deployment, false); err != nil {
+	if err := Deployment(context.TODO(), testLogger, c, deployment, false); err != nil {
 		t.Error("Expected no error, got", err)
 	}
 
@@ -68,7 +68,7 @@ func TestReconcileDeployment(t *testing.T) {
 	}
 	c.Status().Update(context.TODO(), deployment)
 
-	if err := Deployment(testLogger, c, deployment, true); err == nil {
+	if err := Deployment(context.TODO(), testLogger, c, deployment, true); err == nil {
 		t.Error("Expected requeue error, got nil")
 	} else if _, ok := errors.IsRequeueError(err); !ok {
 		t.Error("Expected requeue error, got:", err)
@@ -81,7 +81,7 @@ func TestReconcileDeployment(t *testing.T) {
 	if err := c.Status().Update(context.TODO(), deployment); err != nil {
 		t.Fatal(err)
 	}
-	if err := Deployment(testLogger, c, deployment, true); err != nil {
+	if err := Deployment(context.TODO(), testLogger, c, deployment, true); err != nil {
 		t.Error("Expected no error, got", err)
 	}
 }

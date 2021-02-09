@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +43,7 @@ import (
 func getFakeClient(t *testing.T) client.Client {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	return fake.NewFakeClientWithScheme(scheme)
 }

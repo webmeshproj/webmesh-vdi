@@ -27,22 +27,22 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	ktypes "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Request for a new desktop session
 // swagger:parameters postSessionRequest
 type swaggerCreateSessionRequest struct {
 	// in:body
-	Body v1.CreateSessionRequest
+	Body types.CreateSessionRequest
 }
 
 // CreateSessionResponse returns the name of the Desktop and what namespace
@@ -67,14 +67,14 @@ type swaggerCreateSessionResponse struct {
 //   403: error
 func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request) {
 	sess := apiutil.GetRequestUserSession(r)
-	req := apiutil.GetRequestObject(r).(*v1.CreateSessionRequest)
+	req := apiutil.GetRequestObject(r).(*types.CreateSessionRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
 	}
 
 	if max := d.vdiCluster.GetMaxSessionsPerUser(); max > 0 {
-		desktops := &v1alpha1.DesktopList{}
+		desktops := &desktopsv1.SessionList{}
 		if err := d.client.List(context.TODO(), desktops, client.InNamespace(metav1.NamespaceAll), client.MatchingLabels(d.vdiCluster.GetUserDesktopSelector(sess.User.Name))); err != nil {
 			apiutil.ReturnAPIError(err, w)
 			return
@@ -85,8 +85,8 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	tmplnn := types.NamespacedName{Name: req.GetTemplate(), Namespace: metav1.NamespaceAll}
-	tmpl := &v1alpha1.DesktopTemplate{}
+	tmplnn := ktypes.NamespacedName{Name: req.GetTemplate(), Namespace: metav1.NamespaceAll}
+	tmpl := &desktopsv1.Template{}
 	if err := d.client.Get(context.TODO(), tmplnn, tmpl); err != nil {
 		apiutil.ReturnAPIError(err, w)
 		return
@@ -127,14 +127,14 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 	}, w)
 }
 
-func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username string) *v1alpha1.Desktop {
-	return &v1alpha1.Desktop{
+func (d *desktopAPI) newDesktopForRequest(req *types.CreateSessionRequest, username string) *desktopsv1.Session {
+	return &desktopsv1.Session{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", req.GetTemplate()),
 			Namespace:    req.GetNamespace(),
 			Labels:       d.vdiCluster.GetUserDesktopSelector(username),
 		},
-		Spec: v1alpha1.DesktopSpec{
+		Spec: desktopsv1.SessionSpec{
 			VDICluster:     d.vdiCluster.GetName(),
 			Template:       req.GetTemplate(),
 			User:           username,
@@ -143,7 +143,7 @@ func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username
 	}
 }
 
-func (d *desktopAPI) newEnvSecretForRequest(req *v1.CreateSessionRequest, desktop *v1alpha1.Desktop, username string, data map[string][]byte) *corev1.Secret {
+func (d *desktopAPI) newEnvSecretForRequest(req *types.CreateSessionRequest, desktop *desktopsv1.Session, username string, data map[string][]byte) *corev1.Secret {
 	labels := desktop.GetLabels()
 	labels[v1.DesktopNameLabel] = desktop.GetName()
 	return &corev1.Secret{
@@ -156,7 +156,7 @@ func (d *desktopAPI) newEnvSecretForRequest(req *v1.CreateSessionRequest, deskto
 	}
 }
 
-func executeEnvTemplates(sess *v1.JWTClaims, envTemplates map[string]string) (map[string][]byte, error) {
+func executeEnvTemplates(sess *types.JWTClaims, envTemplates map[string]string) (map[string][]byte, error) {
 	data := make(map[string][]byte)
 	for envVar, envVarTmpl := range envTemplates {
 		t, err := template.New("").Parse(envVarTmpl)

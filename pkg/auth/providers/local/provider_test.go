@@ -23,8 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -40,7 +39,7 @@ import (
 func getFakeClient(t *testing.T) client.Client {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
@@ -54,7 +53,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestSetup(t *testing.T) {
-	cluster := &v1alpha1.VDICluster{}
+	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
 	cluster.Namespace = "test-namespace"
 	provider := New(nil)

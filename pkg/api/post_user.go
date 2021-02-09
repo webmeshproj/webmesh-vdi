@@ -23,8 +23,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -35,7 +34,7 @@ import (
 //   400: error
 //   403: error
 func (d *desktopAPI) PostUsers(w http.ResponseWriter, r *http.Request) {
-	req := apiutil.GetRequestObject(r).(*v1.CreateUserRequest)
+	req := apiutil.GetRequestObject(r).(*types.CreateUserRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -51,5 +50,5 @@ func (d *desktopAPI) PostUsers(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters postUserRequest
 type swaggerCreateUserRequest struct {
 	// in:body
-	Body v1.CreateUserRequest
+	Body types.CreateUserRequest
 }

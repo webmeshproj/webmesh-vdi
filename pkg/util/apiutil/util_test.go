@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -178,7 +178,7 @@ func TestWriteOK(t *testing.T) {
 }
 
 func TestFilterUserRolesByName(t *testing.T) {
-	roles := []v1alpha1.VDIRole{
+	roles := []rbacv1.VDIRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test-role-one",

@@ -23,8 +23,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -34,7 +36,7 @@ import (
 
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
-func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error) {
+func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult, error) {
 	conn, err := a.connect()
 	if err != nil {
 		return nil, err
@@ -81,9 +83,9 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	}
 
 	// make a new user object
-	vdiUser := &v1.VDIUser{
+	vdiUser := &types.VDIUser{
 		Name:  req.Username,
-		Roles: make([]*v1.VDIUserRole, 0),
+		Roles: make([]*types.VDIUserRole, 0),
 	}
 
 	// we'll have to iterate our available roles and check if any have an annotation
@@ -98,10 +100,10 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 	vdiUser.Roles = apiutil.FilterUserRolesByNames(roles, boundRoles)
 
 	// user is a regular user, check their ldap groups against any bound VDIRoles.
-	return &v1.AuthResult{User: vdiUser}, nil
+	return &types.AuthResult{User: vdiUser}, nil
 }
 
-func appendRoleIfBound(boundRoles, userGroups []string, role v1alpha1.VDIRole) []string {
+func appendRoleIfBound(boundRoles, userGroups []string, role rbacv1.VDIRole) []string {
 	if annotations := role.GetAnnotations(); annotations != nil {
 		if ldapGroups, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
 			boundGroups := strings.Split(ldapGroups, v1.AuthGroupSeparator)

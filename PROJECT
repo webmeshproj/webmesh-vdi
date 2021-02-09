@@ -1,0 +1,22 @@
+domain: kvdi.io
+layout: go.kubebuilder.io/v3
+multigroup: true
+projectName: kvdi
+repo: github.com/tinyzimmer/kvdi
+resources:
+- api:
+    crdVersion: v1
+  group: app
+  kind: VDICluster
+  version: v1
+- api:
+    crdVersion: v1
+  group: desktops
+  kind: Template
+  version: v1
+- api:
+    crdVersion: v1
+  group: desktops
+  kind: Session
+  version: v1
+version: 3-alpha

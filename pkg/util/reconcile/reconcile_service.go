@@ -32,19 +32,19 @@ import (
 )
 
 // Service will reconcile a provided service spec with the cluster.
-func Service(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
+func Service(ctx context.Context, reqLogger logr.Logger, c client.Client, svc *corev1.Service) error {
 	if err := k8sutil.SetCreationSpecAnnotation(&svc.ObjectMeta, svc); err != nil {
 		return err
 	}
 	found := &corev1.Service{}
-	if err := c.Get(context.TODO(), types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found); err != nil {
+	if err := c.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, found); err != nil {
 		// Return API error
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		}
 		// Create the service
 		reqLogger.Info("Creating new service", "Service.Name", svc.Name, "Service.Namespace", svc.Namespace)
-		if err := c.Create(context.TODO(), svc); err != nil {
+		if err := c.Create(ctx, svc); err != nil {
 			return err
 		}
 		return nil
@@ -54,7 +54,7 @@ func Service(reqLogger logr.Logger, c client.Client, svc *corev1.Service) error 
 	if !k8sutil.CreationSpecsEqual(svc.ObjectMeta, found.ObjectMeta) {
 		// We need to update the service
 		reqLogger.Info("Service annotation spec has changed, deleting and requeing", "Service.Name", svc.Name, "Service.Namespace", svc.Namespace)
-		if err := c.Delete(context.TODO(), found); err != nil {
+		if err := c.Delete(ctx, found); err != nil {
 			return err
 		}
 		return errors.NewRequeueError("Deleted service definition, requeueing", 2)

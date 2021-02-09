@@ -25,9 +25,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	rbacutil "github.com/tinyzimmer/kvdi/pkg/util/rbac"
 )
 
 // WriteOrLogError will write the provided content to the response writer, or
@@ -109,12 +110,12 @@ func WriteOK(w http.ResponseWriter) {
 
 // FilterUserRolesByNames returns a list of UserRoles matching the provided names
 // and clusterw
-func FilterUserRolesByNames(roles []v1alpha1.VDIRole, names []string) []*v1.VDIUserRole {
-	userRoles := make([]*v1.VDIUserRole, 0)
+func FilterUserRolesByNames(roles []rbacv1.VDIRole, names []string) []*types.VDIUserRole {
+	userRoles := make([]*types.VDIUserRole, 0)
 	for _, name := range names {
 		for _, role := range roles {
 			if role.GetName() == name {
-				userRoles = append(userRoles, role.ToUserRole())
+				userRoles = append(userRoles, rbacutil.VDIRoleToUserRole(&role))
 			}
 		}
 	}

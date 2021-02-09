@@ -22,8 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -70,7 +69,7 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	req := apiutil.GetRequestObject(r).(*v1.UpdateMFARequest)
+	req := apiutil.GetRequestObject(r).(*types.UpdateMFARequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -85,7 +84,7 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}
-		apiutil.WriteJSON(&v1.MFAResponse{
+		apiutil.WriteJSON(&types.MFAResponse{
 			Enabled:         true,
 			Verified:        false,
 			ProvisioningURI: gotp.NewDefaultTOTP(newSecret).ProvisioningUri(username, "kVDI"),
@@ -99,7 +98,7 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiutil.WriteJSON(&v1.MFAResponse{
+	apiutil.WriteJSON(&types.MFAResponse{
 		Enabled: false,
 	}, w)
 }
@@ -108,12 +107,12 @@ func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 // swagger:parameters putUserMFARequest
 type swaggerUpdateMFARequest struct {
 	// in:body
-	Body v1.UpdateMFARequest
+	Body types.UpdateMFARequest
 }
 
 // Session response
 // swagger:response updateMFAResponse
 type swaggerUpdateMFAResponse struct {
 	// in:body
-	Body v1.MFAResponse
+	Body types.MFAResponse
 }

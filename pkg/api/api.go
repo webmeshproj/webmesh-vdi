@@ -27,9 +27,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/auth/mfa"
@@ -66,7 +68,7 @@ type desktopAPI struct {
 	// the router interface
 	router *mux.Router
 	// our parent vdi cluster
-	vdiCluster *v1alpha1.VDICluster
+	vdiCluster *appv1.VDICluster
 	// the user auth provider
 	auth common.AuthProvider
 	// the secrets backend
@@ -91,7 +93,7 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) error {
 
 	var err error
 	// overwrite the api vdicluster object with the remote state
-	changed := &v1alpha1.VDICluster{}
+	changed := &appv1.VDICluster{}
 	if err = d.client.Get(context.TODO(), req.NamespacedName, changed); err != nil {
 		return err
 	}
@@ -122,7 +124,13 @@ func (d *desktopAPI) handleClusterUpdate(req reconcile.Request) error {
 
 func buildScheme() (*runtime.Scheme, error) {
 	scheme := runtime.NewScheme()
-	if err := apis.AddToScheme(scheme); err != nil {
+	if err := appv1.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	if err := rbacv1.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	if err := desktopsv1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
 	if err := corev1.AddToScheme(scheme); err != nil {
@@ -166,7 +174,7 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	// of auth and secrets.
 	var c controller.Controller
 	if c, err = controller.New("cluster-watcher", mgr, controller.Options{
-		Reconciler: reconcile.Func(func(req reconcile.Request) (reconcile.Result, error) {
+		Reconciler: reconcile.Func(func(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, util.Retry(5, time.Second*2, func() error { return api.handleClusterUpdate(req) })
 		}),
 	}); err != nil {
@@ -174,17 +182,15 @@ func NewFromConfig(cfg *rest.Config, vdiCluster string) (DesktopAPI, error) {
 	}
 
 	// set a watch on VDICluster objects
-	if err = c.Watch(&source.Kind{Type: &v1alpha1.VDICluster{}}, &handler.EnqueueRequestForObject{}); err != nil {
+	if err = c.Watch(&source.Kind{Type: &appv1.VDICluster{}}, &handler.EnqueueRequestForObject{}); err != nil {
 		return nil, err
 	}
 
 	// start the mgr
 	go func() {
-		// we run this manager for life so no need to actually use this
-		stop := make(chan struct{})
 		// Start the manager. This will block until the stop channel is
 		// closed, or the manager returns an error.
-		if err := mgr.Start(stop); err != nil {
+		if err := mgr.Start(context.Background()); err != nil {
 			apiLogger.Error(err, "VDICluster watcher died")
 		}
 	}()
@@ -211,7 +217,7 @@ func NewTestAPI() (srvr *http.Server, addr, adminPass string, err error) {
 	api.client = fake.NewFakeClientWithScheme(scheme)
 
 	// create a cluster object
-	api.vdiCluster = &v1alpha1.VDICluster{}
+	api.vdiCluster = &appv1.VDICluster{}
 	api.vdiCluster.Name = "test-cluster"
 	if err = api.client.Create(context.TODO(), api.vdiCluster); err != nil {
 		return
@@ -265,7 +271,7 @@ func NewTestAPI() (srvr *http.Server, addr, adminPass string, err error) {
 
 	// reconcile initial credentials for auth
 	// will be admin:testing
-	if err = api.auth.Reconcile(apiLogger, api.client, api.vdiCluster, adminPass); err != nil {
+	if err = api.auth.Reconcile(context.Background(), apiLogger, api.client, api.vdiCluster, adminPass); err != nil {
 		return
 	}
 

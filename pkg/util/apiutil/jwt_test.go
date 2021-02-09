@@ -23,14 +23,14 @@ import (
 	"testing"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 var secret = []byte("test-secret")
 
 func TestGenerateJWT(t *testing.T) {
-	authResult := &v1.AuthResult{
-		User: &v1.VDIUser{
+	authResult := &types.AuthResult{
+		User: &types.VDIUser{
 			Name: "test-user",
 		},
 	}
@@ -50,8 +50,8 @@ func TestGenerateJWT(t *testing.T) {
 
 func mustGenerateJWT(t *testing.T, authorized bool, duration time.Duration) string {
 	t.Helper()
-	_, token, err := GenerateJWT(secret, &v1.AuthResult{
-		User: &v1.VDIUser{
+	_, token, err := GenerateJWT(secret, &types.AuthResult{
+		User: &types.VDIUser{
 			Name: "test-user",
 		},
 	}, authorized, duration)
@@ -61,7 +61,7 @@ func mustGenerateJWT(t *testing.T, authorized bool, duration time.Duration) stri
 	return token
 }
 
-func mustDecodeAndVerifyJWT(t *testing.T, token string) *v1.JWTClaims {
+func mustDecodeAndVerifyJWT(t *testing.T, token string) *types.JWTClaims {
 	t.Helper()
 	claims, err := DecodeAndVerifyJWT(secret, token)
 	if err != nil {
@@ -72,7 +72,7 @@ func mustDecodeAndVerifyJWT(t *testing.T, token string) *v1.JWTClaims {
 
 func TestDecodeAndVerifyJWT(t *testing.T) {
 	var token string
-	var claims *v1.JWTClaims
+	var claims *types.JWTClaims
 	var err error
 
 	// valid token test cases

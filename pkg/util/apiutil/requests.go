@@ -22,11 +22,10 @@ package apiutil
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/tinyzimmer/kvdi/pkg/types"
+	ktypes "k8s.io/apimachinery/pkg/types"
 )
 
 // ContextUserKey is the key where user sessions are stored in the request context
@@ -37,13 +36,13 @@ const ContextUserKey = 0
 const ContextRequestObjectKey = 1
 
 // SetRequestUserSession writes the user session to the request context
-func SetRequestUserSession(r *http.Request, sess *v1.JWTClaims) {
+func SetRequestUserSession(r *http.Request, sess *types.JWTClaims) {
 	context.Set(r, ContextUserKey, sess)
 }
 
 // GetRequestUserSession retrieves the user session from the request context.
-func GetRequestUserSession(r *http.Request) *v1.JWTClaims {
-	return context.Get(r, ContextUserKey).(*v1.JWTClaims)
+func GetRequestUserSession(r *http.Request) *types.JWTClaims {
+	return context.Get(r, ContextUserKey).(*types.JWTClaims)
 }
 
 // SetRequestObject sets the given interface to the decoded request object in the context.
@@ -80,8 +79,8 @@ func GetContainerFromRequest(r *http.Request) string {
 
 // GetNamespacedNameFromRequest returns the namespaced name of the Desktop instance
 // for the given request.
-func GetNamespacedNameFromRequest(r *http.Request) types.NamespacedName {
-	return types.NamespacedName{
+func GetNamespacedNameFromRequest(r *http.Request) ktypes.NamespacedName {
+	return ktypes.NamespacedName{
 		Name:      GetNameFromRequest(r),
 		Namespace: GetNamespaceFromRequest(r),
 	}

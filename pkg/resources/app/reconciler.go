@@ -20,10 +20,11 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package app
 
 import (
+	"context"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/auth"
 	"github.com/tinyzimmer/kvdi/pkg/pki"
@@ -54,7 +55,7 @@ func New(c client.Client, s *runtime.Scheme) *Reconciler {
 }
 
 // Reconcile reconciles all the core-components of a kVDI cluster.
-func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDICluster) error {
+func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, instance *appv1.VDICluster) error {
 	// Generate the admin secret
 	reqLogger.Info("Reconciling admin password secret")
 	adminPass, err := f.reconcileAdminSecret(reqLogger, instance)
@@ -88,18 +89,18 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 
 	reqLogger.Info("Reconciling built-in VDIRoles")
 	// Reconcile the built-in roles.
-	if err := reconcile.VDIRole(reqLogger, f.client, instance.GetAdminRole()); err != nil {
+	if err := reconcile.VDIRole(ctx, reqLogger, f.client, instance.GetAdminRole()); err != nil {
 		return err
 	}
 
-	if err := reconcile.VDIRole(reqLogger, f.client, instance.GetLaunchTemplatesRole()); err != nil {
+	if err := reconcile.VDIRole(ctx, reqLogger, f.client, instance.GetLaunchTemplatesRole()); err != nil {
 		return err
 	}
 
 	// reconcile any resources needed for the auth provider
 	reqLogger.Info("Reconciling required resources for the configured authentication provider")
 	authProvider := auth.GetAuthProvider(instance, secretsEngine)
-	if err := authProvider.Reconcile(reqLogger, f.client, instance, adminPass); err != nil {
+	if err := authProvider.Reconcile(ctx, reqLogger, f.client, instance, adminPass); err != nil {
 		return err
 	}
 	if err := authProvider.Close(); err != nil {
@@ -108,13 +109,13 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 
 	// Service account and cluster role/binding
 	reqLogger.Info("Reconciling RBAC resources for the app servers")
-	if err := reconcile.ServiceAccount(reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
+	if err := reconcile.ServiceAccount(ctx, reqLogger, f.client, newAppServiceAccountForCR(instance)); err != nil {
 		return err
 	}
-	if err := reconcile.ClusterRole(reqLogger, f.client, newAppClusterRoleForCR(instance)); err != nil {
+	if err := reconcile.ClusterRole(ctx, reqLogger, f.client, newAppClusterRoleForCR(instance)); err != nil {
 		return err
 	}
-	if err := reconcile.ClusterRoleBinding(reqLogger, f.client, newRoleBindingsForCR(instance)); err != nil {
+	if err := reconcile.ClusterRoleBinding(ctx, reqLogger, f.client, newRoleBindingsForCR(instance)); err != nil {
 		return err
 	}
 
@@ -128,29 +129,29 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	if instance.RunAppGrafanaSidecar() {
 		// we need a configmap for grafana first
 		reqLogger.Info("Reconciling grafana configuration")
-		if err := reconcile.ConfigMap(reqLogger, f.client, newGrafanaConfigForCR(instance)); err != nil {
+		if err := reconcile.ConfigMap(ctx, reqLogger, f.client, newGrafanaConfigForCR(instance)); err != nil {
 			return err
 		}
 	}
 
 	// App deployment and service
 	reqLogger.Info("Reconciling app deployment and services")
-	if err := reconcile.Deployment(reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
+	if err := reconcile.Deployment(ctx, reqLogger, f.client, newAppDeploymentForCR(instance), true); err != nil {
 		return err
 	}
-	if err := reconcile.Service(reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
+	if err := reconcile.Service(ctx, reqLogger, f.client, newAppServiceForCR(instance)); err != nil {
 		return err
 	}
 
 	// Prometheus instance for aggregating metrics
 	if instance.CreatePrometheusCR() {
 		reqLogger.Info("Reconciling Prometheus deployment")
-		if err := reconcile.Prometheus(reqLogger, f.client, newPrometheusForCR(instance)); err != nil {
+		if err := reconcile.Prometheus(ctx, reqLogger, f.client, newPrometheusForCR(instance)); err != nil {
 			if ignoreNoPromOperator(reqLogger, err) != nil {
 				return err
 			}
 		}
-		if err := reconcile.Service(reqLogger, f.client, newPrometheusServiceForCR(instance)); err != nil {
+		if err := reconcile.Service(ctx, reqLogger, f.client, newPrometheusServiceForCR(instance)); err != nil {
 			if ignoreNoPromOperator(reqLogger, err) != nil {
 				return err
 			}
@@ -160,7 +161,7 @@ func (f *Reconciler) Reconcile(reqLogger logr.Logger, instance *v1alpha1.VDIClus
 	// ServiceMonitor for metrics scraping
 	if instance.CreateAppServiceMonitor() {
 		reqLogger.Info("Reconciling ServiceMonitor for app metrics")
-		err = reconcile.ServiceMonitor(reqLogger, f.client, newAppServiceMonitorForCR(instance))
+		err = reconcile.ServiceMonitor(ctx, reqLogger, f.client, newAppServiceMonitorForCR(instance))
 		return ignoreNoPromOperator(reqLogger, err)
 	}
 

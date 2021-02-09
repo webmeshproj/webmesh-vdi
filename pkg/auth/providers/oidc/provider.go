@@ -27,7 +27,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/auth/common"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 
@@ -46,7 +46,7 @@ type AuthProvider struct {
 	// k8s client
 	client client.Client
 	// our cluster instance
-	cluster *v1alpha1.VDICluster
+	cluster *appv1.VDICluster
 	// the secrets engine where we store our passwd
 	secrets *secrets.SecretEngine
 	// the oauth2 configuration
@@ -74,7 +74,7 @@ func New(s *secrets.SecretEngine) common.AuthProvider {
 // Setup implements the AuthProvider interface and sets a local reference to the
 // k8s client and vdi cluster. It then configures oauth2/oidc for serving authentication
 // requests.
-func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
+func (a *AuthProvider) Setup(c client.Client, cluster *appv1.VDICluster) error {
 	a.client = c
 	a.cluster = cluster
 
@@ -129,7 +129,7 @@ func (a *AuthProvider) Setup(c client.Client, cluster *v1alpha1.VDICluster) erro
 
 // Reconcile just makes sure that we have everything needed to perform an OIDC flow.
 // The generated admin password is ignored for now in place of configuring admin groups.
-func (a *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
+func (a *AuthProvider) Reconcile(ctx context.Context, reqLogger logr.Logger, c client.Client, cluster *appv1.VDICluster, adminPass string) error {
 	return a.Setup(c, cluster)
 }
 

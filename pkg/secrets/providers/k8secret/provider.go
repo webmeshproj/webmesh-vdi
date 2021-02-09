@@ -24,7 +24,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -56,14 +56,14 @@ func New() *Provider {
 
 // Setup will set the client inteface and secret name, and then ensure the presence
 // of the secret in the cluster.
-func (k *Provider) Setup(client client.Client, cluster *v1alpha1.VDICluster) error {
+func (k *Provider) Setup(client client.Client, cluster *appv1.VDICluster) error {
 	k.secretName = types.NamespacedName{Name: cluster.GetAppSecretsName(), Namespace: cluster.GetCoreNamespace()}
 	k.client = client
 	return k.ensureSecret(cluster)
 }
 
 // ensureSecret makes sure the configured secret exists in the cluster.
-func (k *Provider) ensureSecret(cluster *v1alpha1.VDICluster) error {
+func (k *Provider) ensureSecret(cluster *appv1.VDICluster) error {
 	if _, err := k.getSecret(); err != nil {
 		if client.IgnoreNotFound(err) != nil {
 			return err

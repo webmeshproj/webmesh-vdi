@@ -1,5 +1,5 @@
-apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
+apiVersion: desktops.kvdi.io/v1
+kind: Template
 metadata:
   name: ubuntu-xfce
 spec:
@@ -14,8 +14,8 @@ spec:
     applications: minimal
 
 ---
-apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
+apiVersion: desktops.kvdi.io/v1
+kind: Template
 metadata:
   name: arch-xfce
 spec:
@@ -29,8 +29,8 @@ spec:
     applications: minimal
 
 # ---
-# apiVersion: kvdi.io/v1alpha1
-# kind: DesktopTemplate
+# apiVersion: desktops.kvdi.io/v1
+# kind: Template
 # metadata:
 #   name: dosbox
 # spec:
@@ -44,8 +44,8 @@ spec:
 #     desktop: dosbox
 
 # ---
-# apiVersion: kvdi.io/v1alpha1
-# kind: DesktopTemplate
+# apiVersion: desktops.kvdi.io/v1
+# kind: Template
 # metadata:
 #   name: lens-ide
 # spec:
@@ -57,8 +57,8 @@ spec:
 #   tags:
 #     app-profile: Lens
 # ---
-# apiVersion: kvdi.io/v1alpha1
-# kind: DesktopTemplate
+# apiVersion: desktops.kvdi.io/v1
+# kind: Template
 # metadata:
 #   name: postman
 # spec:

@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -66,5 +66,5 @@ func (d *desktopAPI) GetRefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// return a new access and refresh token for the user
 	// TODO: Use state during a refresh?
-	d.returnNewJWT(w, &v1.AuthResult{User: user}, true, "")
+	d.returnNewJWT(w, &types.AuthResult{User: user}, true, "")
 }

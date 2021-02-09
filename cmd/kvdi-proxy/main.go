@@ -21,19 +21,19 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/spf13/pflag"
 	"golang.org/x/net/websocket"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -54,9 +54,9 @@ var vncConnectProto, vncConnectAddr string
 func main() {
 
 	// parse flags and setup logging
-	pflag.CommandLine.StringVar(&vncAddr, "vnc-addr", "unix:///var/run/kvdi/display.sock", "The tcp or unix-socket address of the vnc server")
-	pflag.CommandLine.IntVar(&userID, "user-id", 9000, "The ID of the main user in the desktop container, used for chown operations")
-	pflag.CommandLine.StringVar(&pulseServer, "pulse-server", "", "The socket where pulseaudio is accepting connections. Defaults to /run/user/<userID>/pulse/native")
+	flag.StringVar(&vncAddr, "vnc-addr", "unix:///var/run/kvdi/display.sock", "The tcp or unix-socket address of the vnc server")
+	flag.IntVar(&userID, "user-id", 9000, "The ID of the main user in the desktop container, used for chown operations")
+	flag.StringVar(&pulseServer, "pulse-server", "", "The socket where pulseaudio is accepting connections. Defaults to /run/user/<userID>/pulse/native")
 
 	common.ParseFlagsAndSetupLogging()
 	common.PrintVersion(log)

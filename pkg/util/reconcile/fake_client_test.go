@@ -22,11 +22,13 @@ package reconcile
 import (
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 
-	appsv1 "k8s.io/api/apps/v1"
+	kappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+	krbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -41,9 +43,11 @@ var testLogger = logf.Log.WithName("test")
 func getFakeClient(t *testing.T) client.Client {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
-	appsv1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
+	desktopsv1.AddToScheme(scheme)
+	corev1.AddToScheme(scheme)
+	kappsv1.AddToScheme(scheme)
+	krbacv1.AddToScheme(scheme)
 	return fake.NewFakeClientWithScheme(scheme)
 }

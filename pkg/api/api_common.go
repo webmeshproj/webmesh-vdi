@@ -27,9 +27,10 @@ import (
 	"net/url"
 
 	"github.com/google/uuid"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
@@ -44,7 +45,7 @@ const TokenHeader = "X-Session-Token"
 const RefreshTokenCookie = "refreshToken"
 
 // returnNewJWT will return a new JSON web token to the requestor.
-func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *v1.AuthResult, authorized bool, state string) {
+func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *types.AuthResult, authorized bool, state string) {
 	// fetch the JWT signing secret
 	secret, err := d.secrets.ReadSecret(v1.JWTSecretKey, true)
 	if err != nil {
@@ -77,7 +78,7 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *v1.AuthResult, 
 	}
 
 	// return the token to the user
-	apiutil.WriteJSON(&v1.SessionResponse{
+	apiutil.WriteJSON(&types.SessionResponse{
 		Token:      newToken,
 		ExpiresAt:  claims.ExpiresAt,
 		Renewable:  !result.RefreshNotSupported,
@@ -87,7 +88,7 @@ func (d *desktopAPI) returnNewJWT(w http.ResponseWriter, result *v1.AuthResult, 
 	}, w)
 }
 
-func (d *desktopAPI) generateRefreshToken(user *v1.VDIUser) (string, error) {
+func (d *desktopAPI) generateRefreshToken(user *types.VDIUser) (string, error) {
 	refreshToken := uuid.New().String()
 	if err := d.secrets.Lock(10); err != nil {
 		return "", err
@@ -171,7 +172,7 @@ func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
 // swagger:response sessionResponse
 type swaggerSessionResponse struct {
 	// in:body
-	Body v1.SessionResponse
+	Body types.SessionResponse
 }
 
 // Success response

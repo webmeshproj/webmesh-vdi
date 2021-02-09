@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -32,8 +32,8 @@ import (
 
 // GenerateJWT will create a new JWT with the given user object's fields
 // embedded in the claims.
-func GenerateJWT(secret []byte, authResult *v1.AuthResult, authorized bool, sessionLength time.Duration) (v1.JWTClaims, string, error) {
-	claims := v1.JWTClaims{
+func GenerateJWT(secret []byte, authResult *types.AuthResult, authorized bool, sessionLength time.Duration) (types.JWTClaims, string, error) {
+	claims := types.JWTClaims{
 		User:       authResult.User,
 		Data:       authResult.Data,
 		Authorized: authorized,
@@ -57,7 +57,7 @@ var errTokenSigInvalidError = errors.New("Token provided in the request has an i
 // DecodeAndVerifyJWT will decode the provided JWT and verify the validity of its claims.
 // If the claims are valid, they are returned, otherwise an error with the reason why
 // they are invalid.
-func DecodeAndVerifyJWT(secret []byte, authToken string) (*v1.JWTClaims, error) {
+func DecodeAndVerifyJWT(secret []byte, authToken string) (*types.JWTClaims, error) {
 	// parse the token
 	parser := &jwt.Parser{UseJSONNumber: true}
 	token, err := parser.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
@@ -102,7 +102,7 @@ func DecodeAndVerifyJWT(secret []byte, authToken string) (*v1.JWTClaims, error) 
 	}
 
 	// decode the claims into a session object
-	session := &v1.JWTClaims{}
+	session := &types.JWTClaims{}
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		TagName: "json",
 		Result:  session,

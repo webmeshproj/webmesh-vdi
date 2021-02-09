@@ -21,24 +21,21 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package resources
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	"context"
+
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 
 	"github.com/go-logr/logr"
 )
 
 // VDIReconciler represents an interface for ensuring resources for a VDI cluster
 type VDIReconciler interface {
-	Reconcile(logr.Logger, *v1alpha1.VDICluster) error
+	Reconcile(context.Context, logr.Logger, *appv1.VDICluster) error
 }
-
-// VDIClusterReconcileFunc is a function for reconciling vdi cluster resources
-type VDIClusterReconcileFunc func(logr.Logger, *v1alpha1.VDICluster) error
 
 // DesktopReconciler represents an interface for ensuring resources for a
 // single desktop instance.
 type DesktopReconciler interface {
-	Reconcile(logr.Logger, *v1alpha1.Desktop) error
+	Reconcile(context.Context, logr.Logger, *desktopsv1.Session) error
 }
-
-// DesktopClusterReconcileFunc is a function for reconciling desktop resources.
-type DesktopClusterReconcileFunc func(logr.Logger, *v1alpha1.Desktop) error

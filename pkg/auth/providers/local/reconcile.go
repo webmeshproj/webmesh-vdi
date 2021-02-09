@@ -20,9 +20,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package local
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -33,7 +34,7 @@ import (
 const passwdKey = "passwd"
 
 // Reconcile prepares the resources required to use the local authentication driver.
-func (l *AuthProvider) Reconcile(reqLogger logr.Logger, c client.Client, cluster *v1alpha1.VDICluster, adminPass string) error {
+func (l *AuthProvider) Reconcile(ctx context.Context, reqLogger logr.Logger, c client.Client, cluster *appv1.VDICluster, adminPass string) error {
 	if _, err := l.secrets.ReadSecret(passwdKey, false); err != nil {
 		if !errors.IsSecretNotFoundError(err) {
 			return err

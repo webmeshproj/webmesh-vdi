@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,7 +55,7 @@ import (
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) DeleteDesktopSession(w http.ResponseWriter, r *http.Request) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
-	found := &v1alpha1.Desktop{}
+	found := &desktopsv1.Session{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(fmt.Errorf("No desktop session %s found", nn.String()), w)

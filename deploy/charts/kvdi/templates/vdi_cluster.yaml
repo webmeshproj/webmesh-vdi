@@ -1,4 +1,4 @@
-apiVersion: kvdi.io/v1alpha1
+apiVersion: app.kvdi.io/v1
 kind: VDICluster
 metadata:
   name: kvdi
@@ -9,8 +9,8 @@ spec:
 
 {{ range $idx, $tmpl := .Values.vdi.templates }}
 ---
-apiVersion: kvdi.io/v1alpha1
-kind: DesktopTemplate
+apiVersion: desktops.kvdi.io/v1
+kind: Template
 metadata:
   {{ toYaml $tmpl.metadata | nindent 2 }}
 spec:

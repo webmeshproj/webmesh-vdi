@@ -1,0 +1,20 @@
+# permissions for end users to view vdiroles.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vdirole-viewer-role
+rules:
+- apiGroups:
+  - rbac.kvdi.io
+  resources:
+  - vdiroles
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.kvdi.io
+  resources:
+  - vdiroles/status
+  verbs:
+  - get

@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 func mustNewRequest(t *testing.T, path string) *http.Request {
@@ -38,7 +38,7 @@ func mustNewRequest(t *testing.T, path string) *http.Request {
 }
 
 func TestRequestUserSession(t *testing.T) {
-	claims := &v1.JWTClaims{User: &v1.VDIUser{Name: "test-user"}}
+	claims := &types.JWTClaims{User: &types.VDIUser{Name: "test-user"}}
 	req := mustNewRequest(t, "/test")
 
 	SetRequestUserSession(req, claims)

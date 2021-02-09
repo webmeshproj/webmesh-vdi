@@ -20,6 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package reconcile
 
 import (
+	"context"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -39,17 +40,17 @@ func newFakeConfigMap() *corev1.ConfigMap {
 func TestReconcileConfigMap(t *testing.T) {
 	c := getFakeClient(t)
 	cm := newFakeConfigMap()
-	if err := ConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(context.TODO(), testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 	// should be idempotent
 	cm = newFakeConfigMap()
-	if err := ConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(context.TODO(), testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 
 	// another would trigger update (object metadata has changed)
-	if err := ConfigMap(testLogger, c, cm); err != nil {
+	if err := ConfigMap(context.TODO(), testLogger, c, cm); err != nil {
 		t.Error("Expected no error, got:", err)
 	}
 

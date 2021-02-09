@@ -21,15 +21,14 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 
-	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -39,8 +38,8 @@ var applogger = logf.Log.WithName("app")
 func main() {
 	var vdiCluster string
 	var enableCORS bool
-	pflag.CommandLine.StringVar(&vdiCluster, "vdi-cluster", "", "The VDICluster this application is serving")
-	pflag.CommandLine.BoolVar(&enableCORS, "enable-cors", false, "Add CORS headers to requests")
+	flag.StringVar(&vdiCluster, "vdi-cluster", "", "The VDICluster this application is serving")
+	flag.BoolVar(&enableCORS, "enable-cors", false, "Add CORS headers to requests")
 	common.ParseFlagsAndSetupLogging()
 
 	common.PrintVersion(applogger)

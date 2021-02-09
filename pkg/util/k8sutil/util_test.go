@@ -23,9 +23,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,13 +35,13 @@ import (
 func getFakeClient(t *testing.T) client.Client {
 	t.Helper()
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
 	return fake.NewFakeClientWithScheme(scheme)
 }
 
 func TestLookupClusterByName(t *testing.T) {
 	c := getFakeClient(t)
-	c.Create(context.TODO(), &v1alpha1.VDICluster{
+	c.Create(context.TODO(), &appv1.VDICluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "fake-cluster",
 		},
@@ -56,7 +55,7 @@ func TestLookupClusterByName(t *testing.T) {
 }
 
 func TestIsMarkedForDeletion(t *testing.T) {
-	cr := &v1alpha1.VDICluster{}
+	cr := &appv1.VDICluster{}
 	now := metav1.Now()
 	cr.SetDeletionTimestamp(&now)
 	if !IsMarkedForDeletion(cr) {
@@ -65,7 +64,7 @@ func TestIsMarkedForDeletion(t *testing.T) {
 }
 
 func TestCreationSpecAnnotations(t *testing.T) {
-	cr := &v1alpha1.VDICluster{}
+	cr := &appv1.VDICluster{}
 	cr.Name = "test-cluster"
 	cr.Namespace = "test-namespace"
 	if err := SetCreationSpecAnnotation(&cr.ObjectMeta, cr); err != nil {
@@ -78,7 +77,7 @@ func TestCreationSpecAnnotations(t *testing.T) {
 		t.Error("Expected creation spec annotation to be set")
 	}
 
-	newCR := &v1alpha1.VDICluster{}
+	newCR := &appv1.VDICluster{}
 	newCR.Name = "test-cluster"
 	newCR.Namespace = "test-namespace"
 

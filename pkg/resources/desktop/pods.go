@@ -20,15 +20,17 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package desktop
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemplate, instance *v1alpha1.Desktop, envSecret string) *corev1.Pod {
+func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, instance *desktopsv1.Session, envSecret string) *corev1.Pod {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
@@ -42,7 +44,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 			Subdomain:          instance.GetName(),
 			ServiceAccountName: instance.GetServiceAccount(),
 			SecurityContext:    tmpl.GetDesktopPodSecurityContext(),
-			Volumes:            tmpl.GetDesktopVolumes(cluster, instance),
+			Volumes:            k8sutil.GetDesktopVolumesFromTemplate(tmpl, cluster, instance),
 			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),
 			Containers: []corev1.Container{
 				tmpl.GetDesktopProxyContainer(),
@@ -50,7 +52,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 					Name:            "desktop",
 					Image:           tmpl.GetDesktopImage(),
 					ImagePullPolicy: tmpl.GetDesktopPullPolicy(),
-					VolumeMounts:    tmpl.GetDesktopVolumeMounts(cluster, instance),
+					VolumeMounts:    k8sutil.GetDesktopVolumeMountsFromTemplate(tmpl, cluster, instance),
 					VolumeDevices:   tmpl.GetVolumeDevices(),
 					SecurityContext: tmpl.GetDesktopContainerSecurityContext(),
 					Env:             tmpl.GetDesktopEnvVars(instance),
@@ -74,7 +76,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 	return pod
 }
 
-func newServiceForCR(cluster *v1alpha1.VDICluster, instance *v1alpha1.Desktop) *corev1.Service {
+func newServiceForCR(cluster *appv1.VDICluster, instance *desktopsv1.Session) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),

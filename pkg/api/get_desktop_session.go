@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
@@ -134,9 +134,9 @@ func (d *desktopAPI) GetDesktopSessionStatusWebsocket(conn *websocket.Conn) {
 	}
 }
 
-func (d *desktopAPI) getDesktopForRequest(r *http.Request) (*v1alpha1.Desktop, error) {
+func (d *desktopAPI) getDesktopForRequest(r *http.Request) (*desktopsv1.Session, error) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
-	found := &v1alpha1.Desktop{}
+	found := &desktopsv1.Session{}
 	return found, d.client.Get(context.TODO(), nn, found)
 }
 
@@ -145,7 +145,7 @@ type desktopStatus struct {
 	PodPhase corev1.PodPhase `json:"podPhase"`
 }
 
-func toReturnStatus(desktop *v1alpha1.Desktop) *desktopStatus {
+func toReturnStatus(desktop *desktopsv1.Session) *desktopStatus {
 	return &desktopStatus{
 		Running:  desktop.Status.Running,
 		PodPhase: desktop.Status.PodPhase,

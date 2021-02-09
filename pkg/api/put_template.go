@@ -23,7 +23,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,7 +58,7 @@ import (
 func (d *desktopAPI) PutDesktopTemplate(w http.ResponseWriter, r *http.Request) {
 	tmplName := apiutil.GetTemplateFromRequest(r)
 	nn := types.NamespacedName{Name: tmplName, Namespace: metav1.NamespaceAll}
-	tmpl := &v1alpha1.DesktopTemplate{}
+	tmpl := &desktopsv1.Template{}
 	if err := d.client.Get(context.TODO(), nn, tmpl); err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(err, w)
@@ -86,5 +86,5 @@ func (d *desktopAPI) PutDesktopTemplate(w http.ResponseWriter, r *http.Request) 
 // swagger:parameters putTemplateRequest
 type swaggerUpdateTemplateRequest struct {
 	// in:body
-	Body v1alpha1.DesktopTemplate
+	Body desktopsv1.Template
 }

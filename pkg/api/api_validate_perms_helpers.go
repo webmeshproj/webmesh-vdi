@@ -23,12 +23,12 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
-func allowSameUser(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
+func allowSameUser(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed, owner bool, err error) {
 	pathUser := apiutil.GetUserFromRequest(r)
 	if reqUser.Name != pathUser {
 		return false, false, nil
@@ -38,9 +38,9 @@ func allowSameUser(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed
 	return allowed, true, err
 }
 
-func allowSessionOwner(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
+func allowSessionOwner(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed, owner bool, err error) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
-	found := &v1alpha1.Desktop{}
+	found := &desktopsv1.Session{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
 		return false, false, err
 	}
@@ -59,6 +59,6 @@ func allowSessionOwner(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (all
 	return true, true, nil
 }
 
-func allowAll(d *desktopAPI, reqUser *v1.VDIUser, r *http.Request) (allowed, owner bool, err error) {
+func allowAll(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed, owner bool, err error) {
 	return true, false, nil
 }

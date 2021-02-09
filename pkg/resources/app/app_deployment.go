@@ -22,8 +22,8 @@ package app
 import (
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
+func newAppDeploymentForCR(instance *appv1.VDICluster) *appsv1.Deployment {
 	containers := []corev1.Container{newAppContainerForCR(instance)}
 	volumes := newAppVolumesForCR(instance)
 	if instance.RunAppGrafanaSidecar() {
@@ -77,7 +77,7 @@ func newAppDeploymentForCR(instance *v1alpha1.VDICluster) *appsv1.Deployment {
 	}
 }
 
-func newAppVolumesForCR(instance *v1alpha1.VDICluster) []corev1.Volume {
+func newAppVolumesForCR(instance *appv1.VDICluster) []corev1.Volume {
 	return []corev1.Volume{
 		{
 			Name: "tls-server",
@@ -98,7 +98,7 @@ func newAppVolumesForCR(instance *v1alpha1.VDICluster) []corev1.Volume {
 	}
 }
 
-func newAppContainerForCR(instance *v1alpha1.VDICluster) corev1.Container {
+func newAppContainerForCR(instance *appv1.VDICluster) corev1.Container {
 	args := []string{"--vdi-cluster", instance.GetName()}
 	if instance.EnableCORS() {
 		args = append(args, "--enable-cors")
@@ -157,7 +157,7 @@ func newAppContainerForCR(instance *v1alpha1.VDICluster) corev1.Container {
 	}
 }
 
-func newGrafanaContainerForCR(instance *v1alpha1.VDICluster) corev1.Container {
+func newGrafanaContainerForCR(instance *appv1.VDICluster) corev1.Container {
 	return corev1.Container{
 		Name:            "grafana",
 		Image:           "grafana/grafana",

@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/tinyzimmer/kvdi/pkg/api/client"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 // mustNewTestAPI creates and starts a new HTTP server connected to the
@@ -80,7 +80,7 @@ func TestUsers(t *testing.T) {
 	}
 
 	// Check that we can't create a user without a password
-	if err := cl.CreateVDIUser(&v1.CreateUserRequest{
+	if err := cl.CreateVDIUser(&types.CreateUserRequest{
 		Username: "test-user",
 		Roles:    []string{"test-cluster-admin"},
 	}); err == nil {
@@ -90,7 +90,7 @@ func TestUsers(t *testing.T) {
 	}
 
 	// Check that we can't create a user without roles
-	if err := cl.CreateVDIUser(&v1.CreateUserRequest{
+	if err := cl.CreateVDIUser(&types.CreateUserRequest{
 		Username: "test-user",
 		Password: "test-password",
 	}); err == nil {
@@ -100,7 +100,7 @@ func TestUsers(t *testing.T) {
 	}
 
 	// Check that we can create a user
-	if err := cl.CreateVDIUser(&v1.CreateUserRequest{
+	if err := cl.CreateVDIUser(&types.CreateUserRequest{
 		Username: "test-user",
 		Password: "test-password",
 		Roles:    []string{"test-cluster-admin"},
@@ -131,14 +131,14 @@ func TestUsers(t *testing.T) {
 	}
 
 	// change the users password, authentication tests will verify efficacy of this
-	if err := cl.UpdateVDIUser("test-user", &v1.UpdateUserRequest{
+	if err := cl.UpdateVDIUser("test-user", &types.UpdateUserRequest{
 		Password: "new-password",
 	}); err != nil {
 		t.Fatal(err)
 	}
 
 	// change the users role
-	if err := cl.UpdateVDIUser("test-user", &v1.UpdateUserRequest{
+	if err := cl.UpdateVDIUser("test-user", &types.UpdateUserRequest{
 		Roles: []string{"test-cluster-launch-templates"},
 	}); err != nil {
 		t.Fatal(err)
@@ -177,7 +177,7 @@ func TestUsers(t *testing.T) {
 	}
 
 	// same for update
-	if err = cl.UpdateVDIUser("test-user", &v1.UpdateUserRequest{Password: "blah"}); err == nil {
+	if err = cl.UpdateVDIUser("test-user", &types.UpdateUserRequest{Password: "blah"}); err == nil {
 		t.Error("Expected error for retrieving deleted user, got nil")
 	} else if !strings.Contains(err.Error(), "not found") {
 		t.Error("Expected user not found error, got:", err)

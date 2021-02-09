@@ -31,9 +31,10 @@ import (
 	"strconv"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 	"github.com/tinyzimmer/kvdi/pkg/audio"
 	"github.com/tinyzimmer/kvdi/pkg/audio/pa"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -222,21 +223,21 @@ func statFileHandler(w http.ResponseWriter, r *http.Request) {
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	resp := &v1.StatDesktopFileResponse{
-		Stat: &v1.FileStat{
+	resp := &types.StatDesktopFileResponse{
+		Stat: &types.FileStat{
 			Name:        finfo.Name(),
 			IsDirectory: finfo.IsDir(),
 		},
 	}
 	if finfo.IsDir() {
-		resp.Stat.Contents = make([]*v1.FileStat, 0)
+		resp.Stat.Contents = make([]*types.FileStat, 0)
 		files, err := ioutil.ReadDir(path)
 		if err != nil {
 			apiutil.ReturnAPIError(err, w)
 			return
 		}
 		for _, file := range files {
-			resp.Stat.Contents = append(resp.Stat.Contents, &v1.FileStat{
+			resp.Stat.Contents = append(resp.Stat.Contents, &types.FileStat{
 				Name:        file.Name(),
 				IsDirectory: file.IsDir(),
 				Size:        file.Size(),

@@ -23,7 +23,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,7 +61,7 @@ func (d *desktopAPI) PostLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (d *desktopAPI) CleanupUserDesktops(username string) error {
-	desktops := &v1alpha1.DesktopList{}
+	desktops := &desktopsv1.SessionList{}
 	if err := d.client.List(context.TODO(), desktops, client.InNamespace(metav1.NamespaceAll), d.vdiCluster.GetUserDesktopsSelector(username)); err != nil {
 		return err
 	}

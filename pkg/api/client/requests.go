@@ -23,15 +23,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 // Miscellaneous functions
 
 // GetServerConfig returns the VDICluster configuration of the server.
-func (c *Client) GetServerConfig() (*v1alpha1.VDIClusterSpec, error) {
-	spec := &v1alpha1.VDIClusterSpec{}
+func (c *Client) GetServerConfig() (*appv1.VDIClusterSpec, error) {
+	spec := &appv1.VDIClusterSpec{}
 	return spec, c.do(http.MethodGet, "config", nil, spec)
 }
 
@@ -42,8 +44,8 @@ func (c *Client) GetNamespaces() ([]string, error) {
 }
 
 // WhoAmI retrieves the user details for the currently authenticated account.
-func (c *Client) WhoAmI() (*v1.VDIUser, error) {
-	user := &v1.VDIUser{}
+func (c *Client) WhoAmI() (*types.VDIUser, error) {
+	user := &types.VDIUser{}
 	return user, c.do(http.MethodGet, "whoami", nil, user)
 }
 
@@ -51,8 +53,8 @@ func (c *Client) WhoAmI() (*v1.VDIUser, error) {
 
 // GetDesktopSessions retrieves the status of currently running desktop sessions in
 // kVDI.
-func (c *Client) GetDesktopSessions() (*v1.DesktopSessionsResponse, error) {
-	resp := &v1.DesktopSessionsResponse{}
+func (c *Client) GetDesktopSessions() (*types.DesktopSessionsResponse, error) {
+	resp := &types.DesktopSessionsResponse{}
 	return resp, c.do(http.MethodGet, "sessions", nil, resp)
 }
 
@@ -62,25 +64,25 @@ func (c *Client) GetDesktopSessions() (*v1.DesktopSessionsResponse, error) {
 
 // GetVDIRoles retrieves the available VDIRoles for kVDI. This is the same as doing
 // `kubectl get vdiroles -l "kvdi.io/cluster-ref=kvdi" -o json`.
-func (c *Client) GetVDIRoles() ([]*v1alpha1.VDIRole, error) {
-	resp := make([]*v1alpha1.VDIRole, 0)
+func (c *Client) GetVDIRoles() ([]*rbacv1.VDIRole, error) {
+	resp := make([]*rbacv1.VDIRole, 0)
 	return resp, c.do(http.MethodGet, "roles", nil, &resp)
 }
 
 // CreateVDIRole creates  a new VDIRole for this cluster.
-func (c *Client) CreateVDIRole(req *v1.CreateRoleRequest) error {
+func (c *Client) CreateVDIRole(req *types.CreateRoleRequest) error {
 	return c.do(http.MethodPost, "roles", req, nil)
 }
 
 // GetVDIRole retrieves a single VDIRole in kVDI by its name.
-func (c *Client) GetVDIRole(name string) (*v1alpha1.VDIRole, error) {
-	role := &v1alpha1.VDIRole{}
+func (c *Client) GetVDIRole(name string) (*rbacv1.VDIRole, error) {
+	role := &rbacv1.VDIRole{}
 	return role, c.do(http.MethodGet, fmt.Sprintf("roles/%s", name), nil, role)
 }
 
 // UpdateVDIRole will update a VDIRole. All existing properties are overwritten by those
 // in the request, even if nil or unset.
-func (c *Client) UpdateVDIRole(name string, req *v1.UpdateRoleRequest) error {
+func (c *Client) UpdateVDIRole(name string, req *types.UpdateRoleRequest) error {
 	return c.do(http.MethodPut, fmt.Sprintf("roles/%s", name), req, nil)
 }
 
@@ -93,26 +95,26 @@ func (c *Client) DeleteVDIRole(name string) error {
 
 // GetDesktopTemplates returns a list of available DesktopTemplates. This is the same as doing
 // `kubectl get desktoptemplates -o json`.
-func (c *Client) GetDesktopTemplates() ([]*v1alpha1.DesktopTemplate, error) {
-	resp := make([]*v1alpha1.DesktopTemplate, 0)
+func (c *Client) GetDesktopTemplates() ([]*desktopsv1.Template, error) {
+	resp := make([]*desktopsv1.Template, 0)
 	return resp, c.do(http.MethodGet, "templates", nil, &resp)
 }
 
 // CreateDesktopTemplate creates a new DesktopTemplate for this cluster.
-func (c *Client) CreateDesktopTemplate(req *v1alpha1.DesktopTemplate) error {
+func (c *Client) CreateDesktopTemplate(req *desktopsv1.Template) error {
 	return c.do(http.MethodPost, "templates", req, nil)
 }
 
 // GetDesktopTemplate retrieves a single DesktopTemplate in kVDI by its name.
-func (c *Client) GetDesktopTemplate(name string) (*v1alpha1.DesktopTemplate, error) {
-	tmpl := &v1alpha1.DesktopTemplate{}
+func (c *Client) GetDesktopTemplate(name string) (*desktopsv1.Template, error) {
+	tmpl := &desktopsv1.Template{}
 	return tmpl, c.do(http.MethodGet, fmt.Sprintf("templates/%s", name), nil, tmpl)
 }
 
 // UpdateDesktopTemplate will update a DesktopTemplate. Unlike CreateRoleRequest, the
 // properties provided in the request are merged into the remote state. So only attributes
 // defined in the payload are applied to the remote object.
-func (c *Client) UpdateDesktopTemplate(name string, req *v1alpha1.DesktopTemplate) error {
+func (c *Client) UpdateDesktopTemplate(name string, req *desktopsv1.Template) error {
 	return c.do(http.MethodPut, fmt.Sprintf("templates/%s", name), req, nil)
 }
 
@@ -126,28 +128,28 @@ func (c *Client) DeleteDesktopTemplate(name string) error {
 // GetVDIUsers returns a list of available VDIUsers, if possible. VDIUsers are not
 // like DesktopTemplates and VDIRoles in that they are not CRDs, and are just used
 // as an internal abstraction on the concept of a user.
-func (c *Client) GetVDIUsers() ([]*v1.VDIUser, error) {
-	resp := make([]*v1.VDIUser, 0)
+func (c *Client) GetVDIUsers() ([]*types.VDIUser, error) {
+	resp := make([]*types.VDIUser, 0)
 	return resp, c.do(http.MethodGet, "users", nil, &resp)
 }
 
 // CreateVDIUser creates a new VDIUser for this cluster, if possible.
-func (c *Client) CreateVDIUser(req *v1.CreateUserRequest) error {
+func (c *Client) CreateVDIUser(req *types.CreateUserRequest) error {
 	return c.do(http.MethodPost, "users", req, nil)
 }
 
 // GetVDIUser returns a single VDIUser by name, if possible. VDIUsers are not
 // like DesktopTemplates and VDIRoles in that they are not CRDs, and are just used
 // as an internal abstraction on the concept of a user.
-func (c *Client) GetVDIUser(name string) (*v1.VDIUser, error) {
-	user := &v1.VDIUser{}
+func (c *Client) GetVDIUser(name string) (*types.VDIUser, error) {
+	user := &types.VDIUser{}
 	return user, c.do(http.MethodGet, fmt.Sprintf("users/%s", name), nil, user)
 }
 
 // UpdateVDIUser will update a VDIUser, if possible. If a password is provided, the
 // password is changed for the user. If a list of role names are provided, the user's
 // roles are updated to match those provided in the payload.
-func (c *Client) UpdateVDIUser(name string, req *v1.UpdateUserRequest) error {
+func (c *Client) UpdateVDIUser(name string, req *types.UpdateUserRequest) error {
 	return c.do(http.MethodPut, fmt.Sprintf("users/%s", name), req, nil)
 }
 

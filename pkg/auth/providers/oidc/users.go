@@ -20,27 +20,27 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package oidc
 
 import (
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // GetUsers should return a list of VDIUsers.
-func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
+func (a *AuthProvider) GetUsers() ([]*types.VDIUser, error) {
 	return nil, errors.New("Listing users is not supported when using OIDC authentication")
 }
 
 // GetUser should retrieve a single VDIUser.
-func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
+func (a *AuthProvider) GetUser(username string) (*types.VDIUser, error) {
 	return nil, errors.New("Retrieving user information is not supported when using OIDC authentication")
 }
 
 // CreateUser should handle any logic required to register a new user in kVDI.
-func (a *AuthProvider) CreateUser(*v1.CreateUserRequest) error {
+func (a *AuthProvider) CreateUser(*types.CreateUserRequest) error {
 	return errors.New("Creating users is not supported when using OIDC authentication")
 }
 
 // UpdateUser should update a VDIUser.
-func (a *AuthProvider) UpdateUser(string, *v1.UpdateUserRequest) error {
+func (a *AuthProvider) UpdateUser(string, *types.UpdateUserRequest) error {
 	return errors.New("Updating users is not supported when using OIDC authentication")
 }
 

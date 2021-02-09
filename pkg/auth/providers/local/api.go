@@ -20,13 +20,13 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package local
 
 import (
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 // GetUsers implements AuthProvider and serves a GET /api/users request
-func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
+func (a *AuthProvider) GetUsers() ([]*types.VDIUser, error) {
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
 		return nil, err
@@ -35,9 +35,9 @@ func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 	if err != nil {
 		return nil, err
 	}
-	res := make([]*v1.VDIUser, 0)
+	res := make([]*types.VDIUser, 0)
 	for _, user := range users {
-		res = append(res, &v1.VDIUser{
+		res = append(res, &types.VDIUser{
 			Name:  user.Username,
 			Roles: apiutil.FilterUserRolesByNames(roles, user.Groups),
 		})
@@ -47,7 +47,7 @@ func (a *AuthProvider) GetUsers() ([]*v1.VDIUser, error) {
 }
 
 // CreateUser implements AuthProvider and serves a POST /api/users request
-func (a *AuthProvider) CreateUser(req *v1.CreateUserRequest) error {
+func (a *AuthProvider) CreateUser(req *types.CreateUserRequest) error {
 	passwdHash, err := common.HashPassword(req.Password)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (a *AuthProvider) CreateUser(req *v1.CreateUserRequest) error {
 }
 
 // GetUser implements AuthProvider and serves a GET /api/users/{user} request
-func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
+func (a *AuthProvider) GetUser(username string) (*types.VDIUser, error) {
 	user, err := a.getUser(username)
 	if err != nil {
 		return nil, err
@@ -72,14 +72,14 @@ func (a *AuthProvider) GetUser(username string) (*v1.VDIUser, error) {
 		return nil, err
 	}
 
-	return &v1.VDIUser{
+	return &types.VDIUser{
 		Name:  user.Username,
 		Roles: apiutil.FilterUserRolesByNames(roles, user.Groups),
 	}, nil
 }
 
 // UpdateUser implements AuthProvider and serves a PUT /api/users/{user} request
-func (a *AuthProvider) UpdateUser(username string, req *v1.UpdateUserRequest) error {
+func (a *AuthProvider) UpdateUser(username string, req *types.UpdateUserRequest) error {
 	user := &User{Username: username}
 	if len(req.Roles) != 0 {
 		user.Groups = req.Roles

@@ -28,14 +28,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // authenticate retrieves an access token for the API and starts a goroutine
 // to refresh the token as needed.
 func (c *Client) authenticate() error {
-	loginRequest := &v1.LoginRequest{
+	loginRequest := &types.LoginRequest{
 		Username: c.opts.Username,
 		Password: c.opts.Password,
 		State:    uuid.New().String(),
@@ -59,7 +59,7 @@ func (c *Client) authenticate() error {
 		return c.returnAPIError(body)
 	}
 
-	sessionResponse := &v1.SessionResponse{}
+	sessionResponse := &types.SessionResponse{}
 
 	if err := json.Unmarshal(body, sessionResponse); err != nil {
 		return err
@@ -81,7 +81,7 @@ func (c *Client) authenticate() error {
 
 // runTokenRefreshLoop is used as a goroutine to request a new access token when the
 // current one is about to expire.
-func (c *Client) runTokenRefreshLoop(session *v1.SessionResponse) {
+func (c *Client) runTokenRefreshLoop(session *types.SessionResponse) {
 	runIn := session.ExpiresAt - time.Now().Unix() - 10
 	ticker := time.NewTicker(time.Duration(runIn) * time.Second)
 	var err error
@@ -105,7 +105,7 @@ func (c *Client) runTokenRefreshLoop(session *v1.SessionResponse) {
 }
 
 // refreshToken performs a refresh_token request and returns the response or any error.
-func (c *Client) refreshToken() (*v1.SessionResponse, error) {
+func (c *Client) refreshToken() (*types.SessionResponse, error) {
 	res, err := c.httpClient.Get(c.getEndpoint("refresh_token"))
 	if err != nil {
 		return nil, err
@@ -121,6 +121,6 @@ func (c *Client) refreshToken() (*v1.SessionResponse, error) {
 		return nil, c.returnAPIError(body)
 	}
 
-	sessionResponse := &v1.SessionResponse{}
+	sessionResponse := &types.SessionResponse{}
 	return sessionResponse, json.Unmarshal(body, sessionResponse)
 }

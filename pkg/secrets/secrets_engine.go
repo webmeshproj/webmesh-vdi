@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 	"github.com/tinyzimmer/kvdi/pkg/util/lock"
@@ -52,7 +52,7 @@ type SecretEngine struct {
 	// the provider backend
 	backend common.SecretsProvider
 	// the cluster configuration
-	cluster *v1alpha1.VDICluster
+	cluster *appv1.VDICluster
 	// the k8s client
 	client client.Client
 	// the local value cache
@@ -76,10 +76,10 @@ type cacheItem struct {
 }
 
 // GetSecretEngine returns a new secret engine for the given cluster.
-func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
+func GetSecretEngine(cluster *appv1.VDICluster) *SecretEngine {
 	var backend common.SecretsProvider
 	switch cluster.GetSecretsBackend() {
-	case v1alpha1.SecretsBackendVault:
+	case appv1.SecretsBackendVault:
 		backend = vault.New()
 	default:
 		backend = k8secret.New()
@@ -97,7 +97,7 @@ func GetSecretEngine(cluster *v1alpha1.VDICluster) *SecretEngine {
 func (s *SecretEngine) setClient(c client.Client) { s.client = c }
 
 // Setup sets the local client inteface and calls Setup on the backend.
-func (s *SecretEngine) Setup(c client.Client, cluster *v1alpha1.VDICluster) error {
+func (s *SecretEngine) Setup(c client.Client, cluster *appv1.VDICluster) error {
 	s.setClient(c)
 	// This lock causes serious thundering herd problems. At the moment both backend providers
 	// Setup operations are read-only for the most part. So leaving this commented out until

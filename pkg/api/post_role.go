@@ -24,9 +24,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
-	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 
+	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,7 +37,7 @@ import (
 // swagger:parameters postRoleRequest
 type swaggerCreateRoleRequest struct {
 	// in:body
-	Body v1.CreateRoleRequest
+	Body types.CreateRoleRequest
 }
 
 // swagger:route POST /api/roles Roles postRoleRequest
@@ -46,7 +47,7 @@ type swaggerCreateRoleRequest struct {
 //   400: error
 //   403: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
-	req := apiutil.GetRequestObject(r).(*v1.CreateRoleRequest)
+	req := apiutil.GetRequestObject(r).(*types.CreateRoleRequest)
 	if req == nil {
 		apiutil.ReturnAPIError(errors.New("Malformed request"), w)
 		return
@@ -59,8 +60,8 @@ func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 	apiutil.WriteOK(w)
 }
 
-func (d *desktopAPI) newRoleFromRequest(req *v1.CreateRoleRequest) *v1alpha1.VDIRole {
-	return &v1alpha1.VDIRole{
+func (d *desktopAPI) newRoleFromRequest(req *types.CreateRoleRequest) *rbacv1.VDIRole {
+	return &rbacv1.VDIRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        req.GetName(),
 			Annotations: req.GetAnnotations(),

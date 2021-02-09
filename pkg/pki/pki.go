@@ -20,7 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package pki
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,13 +29,13 @@ import (
 // Manager provides certificate generation, signing, and storage for
 // mTLS communication in a VDICluster.
 type Manager struct {
-	cluster *v1alpha1.VDICluster
+	cluster *appv1.VDICluster
 	client  client.Client
 	secrets *secrets.SecretEngine
 }
 
 // New returns a new PKI manager for the provided VDICluster.
-func New(c client.Client, cluster *v1alpha1.VDICluster, s *secrets.SecretEngine) *Manager {
+func New(c client.Client, cluster *appv1.VDICluster, s *secrets.SecretEngine) *Manager {
 	return &Manager{
 		cluster: cluster,
 		client:  c,

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 )
 
 // DefaultTokenPath is where the k8s serviceaccount token is mounted inside the
@@ -45,7 +45,7 @@ type AuthRequest struct {
 
 // getClientToken will read the k8s serviceaccount token and use it to request
 // a vault login token.
-func getK8sAuth(crConfig *v1alpha1.VaultConfig, vaultConfig *api.Config) (*api.Secret, error) {
+func getK8sAuth(crConfig *appv1.VaultConfig, vaultConfig *api.Config) (*api.Secret, error) {
 	tokenBytes, err := ioutil.ReadFile(DefaultTokenPath)
 	if err != nil {
 		return nil, err

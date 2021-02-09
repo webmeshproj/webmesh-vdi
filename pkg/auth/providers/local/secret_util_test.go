@@ -26,7 +26,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 )
 
@@ -46,9 +46,9 @@ func getTestUser(t *testing.T, name string) *User {
 func providerSetUp(t *testing.T) *AuthProvider {
 	t.Helper()
 	client := getFakeClient(t)
-	cluster := &v1alpha1.VDICluster{}
+	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
-	cluster.Spec = v1alpha1.VDIClusterSpec{}
+	cluster.Spec = appv1.VDIClusterSpec{}
 	provider := &AuthProvider{
 		client:  client,
 		cluster: cluster,

@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis"
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+
 	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
 	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/vault"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
@@ -37,12 +37,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func newTestCluster(t *testing.T) *v1alpha1.VDICluster {
+func newTestCluster(t *testing.T) *appv1.VDICluster {
 	t.Helper()
-	cluster := &v1alpha1.VDICluster{}
+	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
-	cluster.Spec = v1alpha1.VDIClusterSpec{
-		App: &v1alpha1.AppConfig{
+	cluster.Spec = appv1.VDIClusterSpec{
+		App: &appv1.AppConfig{
 			Replicas: 2,
 		},
 	}
@@ -51,7 +51,7 @@ func newTestCluster(t *testing.T) *v1alpha1.VDICluster {
 
 func mustSetupSecretEngine(t *testing.T) *SecretEngine {
 	scheme := runtime.NewScheme()
-	apis.AddToScheme(scheme)
+	appv1.AddToScheme(scheme)
 	corev1.AddToScheme(scheme)
 	os.Setenv("POD_NAME", "test-pod")
 	os.Setenv("POD_NAMESPACE", "test-namespace")
@@ -76,9 +76,9 @@ func TestGetSecretEngine(t *testing.T) {
 		t.Error("Expected secret engine with k8secret backend, got:", reflect.TypeOf(se.backend))
 	}
 
-	cluster.Spec = v1alpha1.VDIClusterSpec{
-		Secrets: &v1alpha1.SecretsConfig{
-			Vault: &v1alpha1.VaultConfig{
+	cluster.Spec = appv1.VDIClusterSpec{
+		Secrets: &appv1.SecretsConfig{
+			Vault: &appv1.VaultConfig{
 				Address: "fake-vault",
 			},
 		},

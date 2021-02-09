@@ -20,7 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package app
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -28,12 +28,23 @@ import (
 )
 
 var verbsReadOnly = []string{"get", "list", "watch"}
+var verbsAll = []string{"create", "delete", "get", "list", "patch", "update", "watch"}
 
 var appRules = []rbacv1.PolicyRule{
 	{
-		APIGroups: []string{"kvdi.io"},
-		Resources: []string{rbacv1.ResourceAll},
-		Verbs:     []string{rbacv1.VerbAll},
+		APIGroups: []string{"app.kvdi.io"},
+		Resources: []string{"vdiclusters"},
+		Verbs:     verbsReadOnly,
+	},
+	{
+		APIGroups: []string{"rbac.kvdi.io"},
+		Resources: []string{"vdiroles"},
+		Verbs:     verbsAll,
+	},
+	{
+		APIGroups: []string{"desktops.kvdi.io"},
+		Resources: []string{"sessions", "templates"},
+		Verbs:     verbsAll,
 	},
 	{
 		APIGroups: []string{""},
@@ -43,11 +54,11 @@ var appRules = []rbacv1.PolicyRule{
 	{
 		APIGroups: []string{""},
 		Resources: []string{"configmaps", "secrets"},
-		Verbs:     []string{rbacv1.VerbAll},
+		Verbs:     verbsAll,
 	},
 }
 
-func newAppClusterRoleForCR(instance *v1alpha1.VDICluster) *rbacv1.ClusterRole {
+func newAppClusterRoleForCR(instance *appv1.VDICluster) *rbacv1.ClusterRole {
 	return &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetAppName(),
@@ -60,7 +71,7 @@ func newAppClusterRoleForCR(instance *v1alpha1.VDICluster) *rbacv1.ClusterRole {
 	}
 }
 
-func newAppServiceAccountForCR(instance *v1alpha1.VDICluster) *corev1.ServiceAccount {
+func newAppServiceAccountForCR(instance *appv1.VDICluster) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetAppName(),
@@ -72,7 +83,7 @@ func newAppServiceAccountForCR(instance *v1alpha1.VDICluster) *corev1.ServiceAcc
 	}
 }
 
-func newRoleBindingsForCR(instance *v1alpha1.VDICluster) *rbacv1.ClusterRoleBinding {
+func newRoleBindingsForCR(instance *appv1.VDICluster) *rbacv1.ClusterRoleBinding {
 	return &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetAppName(),

@@ -22,7 +22,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/kvdi/v1alpha1"
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
@@ -41,6 +41,6 @@ func (d *desktopAPI) GetConfig(w http.ResponseWriter, r *http.Request) {
 type swaggerConfigResponse struct {
 	// in:body
 	Body struct {
-		v1alpha1.VDIClusterSpec
+		appv1.VDIClusterSpec
 	}
 }
