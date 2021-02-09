@@ -228,7 +228,7 @@ booted from it.
 </tr>
 <tr class="odd">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
-<td><p>The type of init system inside the image, currently only <code>supervisord</code> and <code>systemd</code> are supported. Defaults to <code>systemd</code>. <code>systemd</code> containers are run privileged and downgrading to the desktop user must be done with the image’s init process. <code>supervisord</code> are run with minimal capabilities and directly as the desktop user.</p></td>
+<td><p>The type of init system inside the image, currently only <code>supervisord</code> and <code>systemd</code> are supported. Defaults to <code>systemd</code>. <code>systemd</code> containers are run privileged and downgrading to the desktop user must be done within the image’s init process. <code>supervisord</code> containers are run with minimal capabilities and directly as the desktop user.</p></td>
 </tr>
 </tbody>
 </table>
@@ -962,4 +962,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `3a52ef0`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `7abb113`.*

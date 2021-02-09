@@ -21,7 +21,7 @@ type Rule struct {
 	//
 	// **NOTE**: The `kvdi-manager` is responsible for launching pods with a service account
 	// requested for a given Desktop. If the service account itself contains more permissions
-	// than the manager itself, the Kubernetes API will deny the request. The way to rememdy this
+	// than the manager itself, the Kubernetes API will deny the request. The way to remedy this
 	// would be to either mirror permissions to that ClusterRole, or make the `kvdi-manager` itself a
 	// cluster admin, both of which come with inherent risks. In the end, you can decide the best
 	// approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.

@@ -417,7 +417,7 @@ addition of a namespace selector.
 <tr class="odd">
 <td><code>resourcePatterns</code> <em>[]string</em></td>
 <td><p>Resource regexes that match this rule. This can be template patterns, role names or user names. There is no All representation because * will have that effect on its own when the regex is evaluated. When referring to “serviceaccounts”, only the “use” verb is evaluated in the context of assuming those accounts in desktop sessions.</p>
-<p><strong>NOTE</strong>: The <code>kvdi-manager</code> is responsible for launching pods with a service account requested for a given Desktop. If the service account itself contains more permissions than the manager itself, the Kubernetes API will deny the request. The way to rememdy this would be to either mirror permissions to that ClusterRole, or make the <code>kvdi-manager</code> itself a cluster admin, both of which come with inherent risks. In the end, you can decide the best approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.</p></td>
+<p><strong>NOTE</strong>: The <code>kvdi-manager</code> is responsible for launching pods with a service account requested for a given Desktop. If the service account itself contains more permissions than the manager itself, the Kubernetes API will deny the request. The way to remedy this would be to either mirror permissions to that ClusterRole, or make the <code>kvdi-manager</code> itself a cluster admin, both of which come with inherent risks. In the end, you can decide the best approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.</p></td>
 </tr>
 <tr class="even">
 <td><code>namespaces</code> <em>[]string</em></td>
@@ -634,4 +634,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `3a52ef0`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `7abb113`.*
