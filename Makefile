@@ -162,6 +162,23 @@ $(GOLANGCI_LINT):
 lint: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run -v --timeout 600s
 
+TEST_DOCKER_IMAGE ?= "kvdi-tests"
+test-docker-build:
+        docker build . \
+            -f .github/tests.Dockerfile \
+            -t $(TEST_DOCKER_IMAGE)
+
+TEST_CMD ?= /bin/bash
+run-in-docker: test-docker-build
+        docker run --rm --privileged \
+            -v /lib/modules:/lib/modules:ro \
+            -v /sys:/sys:ro \
+            -v /usr/src:/usr/src:ro \
+            -v "$(PWD)":/workspace \
+                -w /workspace \
+                -e HOME=/tmp \
+            $(TEST_DOCKER_IMAGE) $(TEST_CMD)
+
 test-in-docker:
 	$(MAKE) run-in-docker TEST_CMD="make test"
 
