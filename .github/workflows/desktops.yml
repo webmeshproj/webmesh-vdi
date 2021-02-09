@@ -25,8 +25,8 @@ jobs:
     - name: Build and push the ubuntu base image
       run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-base push-ubuntu-base
 
-    - name: Build and push the archlinux base image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-arch-base push-arch-base
+    # - name: Build and push the archlinux base image
+    #   run: VERSION=${{ steps.version.outputs.tag }} make build-arch-base push-arch-base
 
     - name: Build and push the app-profile base image
       run: VERSION=${{ steps.version.outputs.tag }} make build-app-base push-app-base
@@ -34,12 +34,5 @@ jobs:
     - name: Build and push the ubuntu xfce4 image
       run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-xfce4 push-ubuntu-xfce4
 
-    - name: Build and push the archlinux xfce4 image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-arch-xfce push-arch-xfce
-
-    - name: Build and push the app-profile Lens image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-app-lens push-app-lens
-
-    - name: Build and push the app-profile Postman image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-app-postman push-app-postman
-
+    # - name: Build and push the archlinux xfce4 image
+    #   run: VERSION=${{ steps.version.outputs.tag }} make build-arch-xfce push-arch-xfce
