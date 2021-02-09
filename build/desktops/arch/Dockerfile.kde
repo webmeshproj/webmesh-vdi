@@ -1,9 +1,0 @@
-ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:arch-base-latest
-FROM ${BASE_IMAGE}
-
-RUN pacman -Sy --noconfirm plasma konsole \
-  && yes | pacman -Scc --noconfirm
-
-COPY systemd/plasma.service /etc/systemd/user/desktop.service
-
-RUN systemctl --user --global enable desktop.service
