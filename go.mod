@@ -25,7 +25,6 @@ require (
 	github.com/onsi/gomega v1.10.2
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.45.0
 	github.com/prometheus/client_golang v1.7.1
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tinyzimmer/go-glib v0.0.20
 	github.com/tinyzimmer/go-gst v0.2.13
 	github.com/xlzd/gotp v0.0.0-20181030022105-c8557ba2c119

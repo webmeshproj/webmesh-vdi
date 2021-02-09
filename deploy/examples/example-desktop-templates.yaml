@@ -28,20 +28,20 @@ spec:
     desktop: xfce4
     applications: minimal
 
-# ---
-# apiVersion: desktops.kvdi.io/v1
-# kind: Template
-# metadata:
-#   name: dosbox
-# spec:
-#   image: ghcr.io/tinyzimmer/kvdi:dosbox-latest
-#   imagePullPolicy: IfNotPresent
-#   config:
-#     init: supervisord
-#     pulseServer: unix:///var/run/kvdi/pulse-server
-#   tags:
-#     os: ubuntu
-#     desktop: dosbox
+---
+apiVersion: desktops.kvdi.io/v1
+kind: Template
+metadata:
+  name: dosbox
+spec:
+  image: ghcr.io/tinyzimmer/kvdi:dosbox-latest
+  imagePullPolicy: IfNotPresent
+  config:
+    init: supervisord
+    pulseServer: unix:///var/run/kvdi/pulse-server
+  tags:
+    os: ubuntu
+    desktop: dosbox
 
 # ---
 # apiVersion: desktops.kvdi.io/v1
