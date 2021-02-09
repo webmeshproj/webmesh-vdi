@@ -1,4 +1,4 @@
-/*
+<!--
 Copyright 2020,2021 Avi Zimmerman
 
 This file is part of kvdi.
@@ -15,15 +15,5 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
-*/
+-->
 
-package apis
-
-import (
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-)
-
-func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, v1.SchemeBuilder.AddToScheme)
-}

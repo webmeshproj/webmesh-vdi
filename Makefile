@@ -37,6 +37,12 @@ build-app: build-base
 build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
+license-headers:
+	for i in `find cmd/ -name *.go ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find pkg/ -name *.go -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find ui/app/src -name *.js ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find ui/app/src -name *.vue ` ; do if ! grep -q Copyright $$i ; then cat hack/license-header-vue.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+
 ##
 ## # Pushing images
 ##
