@@ -110,11 +110,11 @@ build-base:
 	$(call build_docker,base,$(BASE_IMAGE))
 
 ## make build-manager      # Build the manager docker image.
-build-manager: build-base generate
+build-manager: build-base
 	$(call build_docker,manager,${MANAGER_IMAGE})
 
 ## make build-app          # Build the app docker image.
-build-app: build-base generate
+build-app: build-base
 	$(call build_docker,app,${APP_IMAGE})
 
 ## make build-kvdi-proxy  # Build the kvdi-proxy image.
