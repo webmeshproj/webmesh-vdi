@@ -20,14 +20,14 @@ build-dosbox:
 		-f Dockerfile.base \
 		-t dosbox:latest
 
-build-ubuntu-%:
+build-ubuntu-%: build-ubuntu-base
 	cd build/desktops/ubuntu && docker build . \
 		-f Dockerfile.desktop \
 		--build-arg BASE_IMAGE=${UBUNTU_BASE_IMAGE} \
 		--build-arg DESKTOP_PACKAGE=$* \
 		-t ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
-build-arch-%:
+build-arch-%: build-arch-base
 	cd build/desktops/arch && docker build . \
 		-f Dockerfile.$* \
 		--build-arg BASE_IMAGE=${ARCH_BASE_IMAGE} \
@@ -66,6 +66,9 @@ load-arch-%: $(K3D) build-arch-%
 
 load-app-%: $(K3D) build-app-%
 	$(call load_image,${REPO}/${NAME}:app-$*-${VERSION})
+
+load-dosbox: $(K3D) build-dosbox
+	$(call load_image,dosbox:latest)
 
 #
 # For building demo environment

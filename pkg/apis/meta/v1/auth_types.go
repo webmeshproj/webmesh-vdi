@@ -116,7 +116,7 @@ func (u *VDIUser) IncludesRule(ruleToCheck Rule, resourceGetter ResourceGetter) 
 	return false
 }
 
-// FilterNamespaces will take a list of namespaces, and filter them based off
+// FilterNamespaces will take a list of namespaces and filter them based off
 // the ones this user can provision desktops in.
 func (u *VDIUser) FilterNamespaces(nss []string) []string {
 	filtered := make([]string, 0)
@@ -128,6 +128,24 @@ func (u *VDIUser) FilterNamespaces(nss []string) []string {
 		}
 		if u.Evaluate(action) {
 			filtered = append(filtered, ns)
+		}
+	}
+	return filtered
+}
+
+// FilterServiceAccounts will take a list of service accounts and a given namespace,
+// and filter them based off the ones this user can assume with desktops.
+func (u *VDIUser) FilterServiceAccounts(sas []string, ns string) []string {
+	filtered := make([]string, 0)
+	for _, sa := range sas {
+		action := &APIAction{
+			Verb:              VerbUse,
+			ResourceType:      ResourceServiceAccounts,
+			ResourceName:      sa,
+			ResourceNamespace: ns,
+		}
+		if u.Evaluate(action) {
+			filtered = append(filtered, sa)
 		}
 	}
 	return filtered

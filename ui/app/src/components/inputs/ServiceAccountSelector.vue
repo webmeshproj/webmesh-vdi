@@ -3,8 +3,6 @@
     v-model="selection"
     :label="label"
     use-input clearable dense
-    :use-chips="multiSelect"
-    :multiple="multiSelect"
     :loading="loading"
     transition-show="scale"
     transition-hide="scale"
@@ -24,23 +22,23 @@
 
 <script>
 export default {
-  name: 'NamespaceSelector',
+  name: 'ServiceAccountSelector',
   props: {
-    showAllOption: {
-      type: Boolean
+    idx: {
+      type: Number
     },
-    multiSelect: {
-      type: Boolean
+    parentRefs: {
+      type: Object
     },
     label: {
       type: String,
-      default: 'Namespaces'
+      default: 'ServiceAccounts'
     }
   },
   data () {
     return {
       loading: false,
-      selection: [],
+      selection: '',
       options: []
     }
   },
@@ -48,17 +46,21 @@ export default {
     async filterFn (val, update) {
       this.loading = true
       try {
-        const res = await this.$axios.get('/api/namespaces')
+        let namespace
+        console.log(this.parentRefs)
+        const nsRef = this.parentRefs[`ns-${this.idx}`]
+        if (!nsRef.selection || typeof (nsRef.selection) === 'object' || nsRef.selection === '' || nsRef.selection === []) {
+          namespace = this.$configStore.getters.serverConfig.appNamespace || 'default'
+        } else {
+          namespace = nsRef.selection
+        }
+        const res = await this.$axios.get(`/api/serviceaccounts/${namespace}`)
         if (res.data.length === 1) {
           this.options = [res.data[0]]
         }
         if (val === '') {
           update(() => {
-            if (this.showAllOption) {
-              this.options = res.data.unshift('*')
-            } else {
-              this.options = res.data
-            }
+            this.options = res.data
           })
         }
         update(() => {

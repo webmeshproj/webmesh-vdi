@@ -257,14 +257,8 @@ export default class DisplayManager {
         this._statusSocket = socket
     }
 
-    // _createConnection will create a new RFB connection if the socketType
-    // is xvnc. xpra sockets use the official client embedded in an iframe.
+    // _createConnection will create a new RFB connection
     async _createConnection () {
-        if (this._currentSession.socketType !== 'xvnc') {
-            // xpra sockets are handled via an iframe currently
-            this._callConnect()
-            return
-        }
         // get the websocket display address
         const urls = this._getSessionURLs()
         const displayURL = urls.displayURL()
@@ -321,6 +315,14 @@ export default class DisplayManager {
     _connectedToRFBServer () {
         console.log('Connected to display server!')
         this._currentSession = this._getActiveSession()
+        
+        const canvas = document.querySelector('canvas')
+        canvas.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.location === 2) { // secondary ctrl locks pointer
+                console.log('Locking pointer to view dom')
+                // canvas.requestPointerLock() // https://github.com/novnc/noVNC/pull/1520
+            }
+        })
     }
 
     // _disconnectedFromRFBServer is called when the connection is dropped to a
@@ -430,18 +432,9 @@ export default class DisplayManager {
         if (!this._rfbClient) {
             return
         }
-        const session = this._getActiveSession()
-        if (session.socketType !== 'xvnc') {
-            return
-        }
         this._rfbClient.clipboardPasteFrom(data)
     }
 
-    // xpraArgs returns the xpra args for the given desktop session
-    xpraArgs () {
-        const urls = this._getSessionURLs()
-        return urls.xpraArgs()
-    }
 }
 
 // DesktopAddressGetter is a convenience wrapper around retrieving connection
@@ -488,26 +481,4 @@ export class DesktopAddressGetter {
         return `/api/desktops/${this.namespace}/${this.name}/logs/${container}`
     }
 
-    // xpraArgs returns the arguments to pass to the xpra iframe for app-profile
-    // desktop sessions.
-    xpraArgs () {
-      const host = window.location.hostname
-      const path = `/api/desktops/ws/${this.namespace}/${this.name}/display?token=${this._getToken()}`
-    
-      let port = window.location.port
-      let secure = false
-    
-      if (window.location.protocol.replace(/:$/g, '') === 'https') {
-        secure = true
-        if (port === '') {
-          port = 443
-        }
-      } else {
-        if (port === '') {
-          port = 80
-        }
-      }
-    
-      return { host: host, path: path, port: port, secure: secure }
-    }
   }

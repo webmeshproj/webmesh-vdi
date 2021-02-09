@@ -116,9 +116,10 @@ func (d *desktopAPI) newDesktopForRequest(req *v1.CreateSessionRequest, username
 			Labels:       d.vdiCluster.GetUserDesktopSelector(username),
 		},
 		Spec: v1alpha1.DesktopSpec{
-			VDICluster: d.vdiCluster.GetName(),
-			Template:   req.GetTemplate(),
-			User:       username,
+			VDICluster:     d.vdiCluster.GetName(),
+			Template:       req.GetTemplate(),
+			User:           username,
+			ServiceAccount: req.GetServiceAccount(),
 		},
 	}
 }

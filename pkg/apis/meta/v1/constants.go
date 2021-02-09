@@ -82,8 +82,15 @@ const (
 	// to manipulate policies via the app API.
 	ResourceRoles Resource = "roles"
 	// ResourceTeemplates represents desktop templates in kVDI. Mainly the ability
-	// to launch seessions from them and connect to them.
+	// to launch seessions from them and connect to them. The "launch" verb can used
+	// in this context when referring to launching templates, and the "use" verb for
+	// connecting to them via the UI.
 	ResourceTemplates Resource = "templates"
+	// ResourceServiceAccounts represents kubernetes service accounts. Specifically,
+	// the ability to launch desktops that assume them. The API does not expose any
+	// CRUD operations on these, but the "use" verb can be used to signal that a user
+	// is allowed to assume the given service accounts.
+	ResourceServiceAccounts Resource = "serviceaccounts"
 	// ResourceAll matches all resources
 	ResourceAll Resource = "*"
 )

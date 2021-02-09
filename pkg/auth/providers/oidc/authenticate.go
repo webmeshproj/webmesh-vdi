@@ -104,6 +104,7 @@ func (a *AuthProvider) Authenticate(req *v1.LoginRequest) (*v1.AuthResult, error
 		RefreshNotSupported: true,
 	}
 
+	// BADDDDD
 	if a.cluster.PreserveOIDCTokens() {
 		result.Data = map[string]string{
 			"access_token":  oauth2Token.AccessToken,

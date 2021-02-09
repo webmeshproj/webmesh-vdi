@@ -29,18 +29,6 @@ const (
 	InitSystemd = "systemd"
 )
 
-// SocketType represents the type of service listening on the display socket
-// in the container image.
-// +kubebuilder:validation:Enum=xvnc;xpra
-type SocketType string
-
-const (
-	// SocketXVNC signals that Xvnc is used for the display server.
-	SocketXVNC SocketType = "xvnc"
-	// SocketXPRA signals that Xpra is used for the display server.
-	SocketXPRA SocketType = "xpra"
-)
-
 // DesktopTemplateSpec defines the desired state of DesktopTemplate
 type DesktopTemplateSpec struct {
 	// The docker repository and tag to use for desktops booted from this template.
@@ -73,9 +61,6 @@ type DesktopTemplateSpec struct {
 // DesktopConfig represents configurations for the template and desktops booted
 // from it.
 type DesktopConfig struct {
-	// A service account to tie to desktops booted from this template.
-	// TODO: This should really be per-desktop and by user-grants.
-	ServiceAccount string `json:"serviceAccount,omitempty"`
 	// Extra system capabilities to add to desktops booted from this template.
 	Capabilities []corev1.Capability `json:"capabilities,omitempty"`
 	// AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles
@@ -89,12 +74,8 @@ type DesktopConfig struct {
 	SocketAddr string `json:"socketAddr,omitempty"`
 	// Override the address of the PulseAudio server that the proxy will try to connect to
 	// when serving audio. This defaults to what the ubuntu/arch desktop images are configured
-	// to do during init.
+	// to do during init. The value is assumed to be a unix socket.
 	PulseServer string `json:"pulseServer,omitempty"`
-	// The type of service listening on the configured socket. Can either be `xpra` or
-	// `xvnc`. Currently `xpra` is used to serve "app profiles" and `xvnc` to serve full
-	// desktops. Defaults to `xvnc`.
-	SocketType SocketType `json:"socketType,omitempty"`
 	// AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image.
 	// This enables the API endpoint for exploring, downloading, and uploading files to
 	// desktop sessions booted from this template.

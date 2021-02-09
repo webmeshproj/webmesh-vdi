@@ -58,6 +58,10 @@
               </div>
             </q-td>
 
+            <q-td key="serviceaccount" :props="props">
+              <ServiceAccountSelector :ref="`sa-${props.row.idx}`" :parentRefs="$refs" :idx="props.row.idx" :label="`Service Account (default)`" />
+            </q-td>
+
             <q-td key="namespace" :props="props">
               <NamespaceSelector :ref="`ns-${props.row.idx}`" :multiSelect="false" :showAllOption="false" :label="`Launch Namespace (${defaultNamespace})`" />
             </q-td>
@@ -85,6 +89,7 @@
 <script>
 import SkeletonTable from 'components/SkeletonTable.vue'
 import NamespaceSelector from 'components/inputs/NamespaceSelector.vue'
+import ServiceAccountSelector from 'components/inputs/ServiceAccountSelector.vue'
 import TemplateEditor from 'components/dialogs/TemplateEditor.vue'
 import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
 
@@ -121,6 +126,11 @@ const templateColums = [
     label: 'Tags'
   },
   {
+    name: 'serviceaccount',
+    align: 'center',
+    label: 'ServiceAccount'
+  },
+  {
     name: 'namespace',
     align: 'center',
     label: 'Namespace'
@@ -133,7 +143,7 @@ const templateColums = [
 
 export default {
   name: 'DesktopTemplates',
-  components: { SkeletonTable, NamespaceSelector },
+  components: { SkeletonTable, NamespaceSelector, ServiceAccountSelector },
 
   data () {
     return {
@@ -163,6 +173,7 @@ export default {
 
     onLaunchTemplate (template) {
       const ns = this.$refs[`ns-${template.idx}`].selection
+      const sa = this.$refs[`sa-${template.idx}`].selection
       const payload = { template: template }
       // When the attribute comes back as an object, it actually means
       // no selection
@@ -172,6 +183,9 @@ export default {
         // default to the app namespace for now.
         // this is so read-only users select the correct namespace by default.
         payload.namespace = this.$configStore.getters.serverConfig.appNamespace
+      }
+      if (typeof sa !== 'object') {
+        payload.serviceAccount = sa
       }
       this.doLaunchTemplate(payload)
     },

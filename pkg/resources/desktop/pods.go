@@ -21,7 +21,7 @@ func newDesktopPodForCR(cluster *v1alpha1.VDICluster, tmpl *v1alpha1.DesktopTemp
 		Spec: corev1.PodSpec{
 			Hostname:           instance.GetName(),
 			Subdomain:          instance.GetName(),
-			ServiceAccountName: tmpl.GetDesktopServiceAccount(),
+			ServiceAccountName: instance.GetServiceAccount(),
 			SecurityContext:    tmpl.GetDesktopPodSecurityContext(),
 			Volumes:            tmpl.GetDesktopVolumes(cluster, instance),
 			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),

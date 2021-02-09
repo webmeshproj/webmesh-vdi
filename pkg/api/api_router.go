@@ -64,10 +64,11 @@ func (d *desktopAPI) buildRouter() error {
 	protected.HandleFunc("/authorize", d.PostAuthorize).Methods("POST") // Verify a user's MFA token
 
 	// Misc routes
-	protected.HandleFunc("/logout", d.PostLogout).Methods("POST")       // Cleans up user's desktops
-	protected.HandleFunc("/whoami", d.GetWhoAmI).Methods("GET")         // Convenience route for decoding JWTs
-	protected.HandleFunc("/config", d.GetConfig).Methods("GET")         // Retrieve server configuration
-	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET") // Retrieve a list of available namespaces for the requesting user
+	protected.HandleFunc("/logout", d.PostLogout).Methods("POST")                             // Cleans up user's desktops
+	protected.HandleFunc("/whoami", d.GetWhoAmI).Methods("GET")                               // Convenience route for decoding JWTs
+	protected.HandleFunc("/config", d.GetConfig).Methods("GET")                               // Retrieve server configuration
+	protected.HandleFunc("/namespaces", d.GetNamespaces).Methods("GET")                       // Retrieve a list of available namespaces for the requesting user
+	protected.HandleFunc("/serviceaccounts/{namespace}", d.GetServiceAccounts).Methods("GET") // Retrieve a list of available service accounts for the requesting user
 
 	// User operations
 	protected.HandleFunc("/users", d.GetUsers).Methods("GET")                           // Retrieve a list of all users

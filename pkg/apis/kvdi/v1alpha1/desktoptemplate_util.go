@@ -26,7 +26,7 @@ func (t *DesktopTemplate) GetEnvTemplates() map[string]string { return t.Spec.En
 // GetPulseServer returns the pulse server to give to the proxy for handling audio streams.
 func (t *DesktopTemplate) GetPulseServer() string {
 	if t.Spec.Config != nil && t.Spec.Config.PulseServer != "" {
-		return t.Spec.Config.PulseServer
+		return strings.TrimPrefix(t.Spec.Config.PulseServer, "unix://")
 	}
 	return fmt.Sprintf("/run/user/%d/pulse/native", desktopUserID)
 }
@@ -113,15 +113,6 @@ func (t *DesktopTemplate) GetDesktopResources() corev1.ResourceRequirements {
 	return t.Spec.Resources
 }
 
-// GetDesktopServiceAccount returns the service account for this instance.
-// TODO: Should there be a default one?
-func (t *DesktopTemplate) GetDesktopServiceAccount() string {
-	if t.Spec.Config != nil {
-		return t.Spec.Config.ServiceAccount
-	}
-	return ""
-}
-
 // IsTCPDisplaySocket returns true if the VNC server is listening on a TCP socket.
 func (t *DesktopTemplate) IsTCPDisplaySocket() bool {
 	return strings.HasPrefix(t.GetDisplaySocketURI(), "tcp://")
@@ -143,14 +134,6 @@ func (t *DesktopTemplate) GetDisplaySocketURI() string {
 		return t.Spec.Config.SocketAddr
 	}
 	return v1.DefaultDisplaySocketAddr
-}
-
-// GetDisplaySocketType retrieves the service listening on the configured socket.
-func (t *DesktopTemplate) GetDisplaySocketType() SocketType {
-	if t.Spec.Config != nil && t.Spec.Config.SocketType != "" {
-		return t.Spec.Config.SocketType
-	}
-	return SocketXVNC
 }
 
 // GetDesktopEnvVars returns the environment variables for a desktop pod.
@@ -221,15 +204,30 @@ func (t *DesktopTemplate) GetDesktopContainerSecurityContext() *corev1.SecurityC
 }
 
 var (
-	tmpVolume     = "tmp"
-	runVolume     = "run"
-	shmVolume     = "shm"
-	tlsVolume     = "tls"
-	homeVolume    = "home"
-	cgroupsVolume = "cgroups"
-	runLockVolume = "run-lock"
-	vncSockVolume = "vnc-sock"
+	tmpVolume       = "tmp"
+	runVolume       = "run"
+	shmVolume       = "shm"
+	tlsVolume       = "tls"
+	homeVolume      = "home"
+	cgroupsVolume   = "cgroups"
+	runLockVolume   = "run-lock"
+	vncSockVolume   = "vnc-sock"
+	pulseSockVolume = "pulse-sock"
 )
+
+func (t *DesktopTemplate) needsDedicatedPulseVolume() bool {
+	if t.IsUNIXDisplaySocket() {
+		if filepath.Dir(t.GetDisplaySocketAddress()) == filepath.Dir(t.GetPulseServer()) {
+			return false
+		}
+	}
+	for _, path := range []string{v1.DesktopTmpPath, v1.DesktopRunPath, "/home"} {
+		if strings.HasPrefix(t.GetPulseServer(), path) {
+			return false
+		}
+	}
+	return true
+}
 
 // GetDesktopVolumes returns the volumes to mount to desktop pods.
 func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Desktop) []corev1.Volume {
@@ -274,6 +272,15 @@ func (t *DesktopTemplate) GetDesktopVolumes(cluster *VDICluster, desktop *Deskto
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		volumes = append(volumes, corev1.Volume{
 			Name: vncSockVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+	}
+
+	if t.needsDedicatedPulseVolume() {
+		volumes = append(volumes, corev1.Volume{
+			Name: pulseSockVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -351,6 +358,12 @@ func (t *DesktopTemplate) GetDesktopVolumeMounts(cluster *VDICluster, desktop *D
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
 		})
 	}
+	if t.needsDedicatedPulseVolume() {
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      pulseSockVolume,
+			MountPath: filepath.Dir(t.GetPulseServer()),
+		})
+	}
 	if t.GetInitSystem() == InitSystemd {
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      cgroupsVolume,
@@ -388,6 +401,12 @@ func (t *DesktopTemplate) GetDesktopProxyContainer() corev1.Container {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
 			Name:      vncSockVolume,
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
+		})
+	}
+	if t.needsDedicatedPulseVolume() {
+		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
+			Name:      pulseSockVolume,
+			MountPath: filepath.Dir(t.GetPulseServer()),
 		})
 	}
 	if t.FileTransferEnabled() {

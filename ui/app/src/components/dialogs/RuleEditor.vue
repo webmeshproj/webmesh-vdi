@@ -4,12 +4,12 @@
       <!-- Verbs -->
       <q-card-section>
         <div class="text-h6">Actions</div>
-        <q-checkbox v-for="opt in verbOptions" v-model="verbSelections[opt.name]" :key="opt.name" :label="toTitleCase(opt.name)" :color="opt.color" />
+        <q-checkbox v-for="opt in verbOptions" v-model="verbSelections[opt.name]" :key="opt.name" :label="opt.display" :color="opt.color" />
       </q-card-section>
       <!-- Resources -->
       <q-card-section>
         <div class="text-h6">Resources</div>
-        <q-checkbox v-for="opt in resourceOptions" v-model="resourceSelections[opt.name]" :key="opt.name" :label="toTitleCase(opt.name)" :color="opt.color" />
+        <q-checkbox v-for="opt in resourceOptions" v-model="resourceSelections[opt.name]" :key="opt.name" :label="opt.display" :color="opt.color" />
       </q-card-section>
       <!-- Resource Patterns -->
       <q-card-section>
@@ -58,17 +58,18 @@ export default {
     return {
       loading: false,
       verbOptions: [
-        { name: 'create', color: 'green' },
-        { name: 'read', color: 'blue' },
-        { name: 'update', color: 'orange' },
-        { name: 'delete', color: 'red' },
-        { name: 'use', color: 'teal' },
-        { name: 'launch', color: 'purple' }
+        { name: 'create', color: 'green', display: 'Create' },
+        { name: 'read', color: 'blue', display: 'Read' },
+        { name: 'update', color: 'orange', display: 'Update' },
+        { name: 'delete', color: 'red', display: 'Delete' },
+        { name: 'use', color: 'teal', display: 'Use' },
+        { name: 'launch', color: 'purple', display: 'Launch' }
       ],
       resourceOptions: [
-        { name: 'users', color: 'green' },
-        { name: 'roles', color: 'blue' },
-        { name: 'templates', color: 'teal' }
+        { name: 'users', color: 'green', display: 'Users' },
+        { name: 'roles', color: 'blue', display: 'Roles' },
+        { name: 'templates', color: 'teal', display: 'Templates' },
+        { name: 'serviceaccounts', color: 'purple', display: 'ServiceAccounts' }
       ],
       verbSelections: {
         create: false,
@@ -81,19 +82,14 @@ export default {
       resourceSelections: {
         users: false,
         roles: false,
-        templates: false
+        templates: false,
+        serviceaccounts: false
       },
       resourcePatternSelections: []
     }
   },
 
   methods: {
-
-    toTitleCase (str) {
-      return str.replace(/\w\S*/g, (txt) => {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-      })
-    },
 
     buildPayload () {
       return {
@@ -189,7 +185,8 @@ export default {
           this.resourceSelections = {
             users: true,
             roles: true,
-            templates: true
+            templates: true,
+            serviceaccounts: true
           }
           return
         }

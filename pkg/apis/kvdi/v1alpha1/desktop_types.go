@@ -14,6 +14,8 @@ type DesktopSpec struct {
 	Template string `json:"template"`
 	// The username to use inside the instance, defaults to `anonymous`.
 	User string `json:"user,omitempty"`
+	// A service account to tie to the pod for this instance.
+	ServiceAccount string `json:"serviceAccount,omitempty"`
 }
 
 // DesktopStatus defines the observed state of Desktop
@@ -28,6 +30,9 @@ type DesktopStatus struct {
 // Desktop is the Schema for the desktops API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=desktops,scope=Namespaced
+// +kubebuilder:printcolumn:name="User",type="string",JSONPath=".spec.user"
+// +kubebuilder:printcolumn:name="ServiceAccount",type="string",JSONPath=".spec.serviceAccount"
+// +kubebuilder:printcolumn:name="Template",type="string",JSONPath=".spec.template"
 type Desktop struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

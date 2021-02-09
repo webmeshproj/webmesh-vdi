@@ -65,9 +65,12 @@ export const DesktopSessions = new Vuex.Store({
       commit('new_session', data)
     },
 
-    async newSession ({ commit }, { template, namespace }) {
+    async newSession ({ commit }, { template, namespace, serviceAccount }) {
       try {
         const data = { template: template.metadata.name, namespace: namespace }
+        if (serviceAccount) {
+          data.serviceAccount = serviceAccount
+        }
         const session = await Vue.prototype.$axios.post('/api/sessions', data)
         // add the socket type from the template config so we know how to connect
         // to the display

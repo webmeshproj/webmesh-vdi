@@ -3,8 +3,7 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
-
+	v1 "github.com/tinyzimmer/kvdi/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,6 +22,9 @@ func (d *Desktop) GetVDICluster(c client.Client) (*VDICluster, error) {
 	found := &VDICluster{}
 	return found, c.Get(context.TODO(), nn, found)
 }
+
+// GetServiceAccount returns the service account for this instance.
+func (d *Desktop) GetServiceAccount() string { return d.Spec.ServiceAccount }
 
 // GetUser returns the username that should be used inside the instance.
 func (d *Desktop) GetUser() string {

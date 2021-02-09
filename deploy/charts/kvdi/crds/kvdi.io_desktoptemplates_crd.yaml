@@ -73,12 +73,7 @@ spec:
                     description: Override the address of the PulseAudio server that
                       the proxy will try to connect to when serving audio. This defaults
                       to what the ubuntu/arch desktop images are configured to do
-                      during init.
-                    type: string
-                  serviceAccount:
-                    description: 'A service account to tie to desktops booted from
-                      this template. TODO: This should really be per-desktop and by
-                      user-grants.'
+                      during init. The value is assumed to be a unix socket.
                     type: string
                   socketAddr:
                     description: The address the VNC server listens on inside the
@@ -86,15 +81,6 @@ spec:
                       The kvdi-proxy sidecar will forward websockify requests validated
                       by mTLS to this socket. Must be in the format of `tcp://{host}:{port}`
                       or `unix://{path}`.
-                    type: string
-                  socketType:
-                    description: The type of service listening on the configured socket.
-                      Can either be `xpra` or `xvnc`. Currently `xpra` is used to
-                      serve "app profiles" and `xvnc` to serve full desktops. Defaults
-                      to `xvnc`.
-                    enum:
-                    - xvnc
-                    - xpra
                     type: string
                 type: object
               env:

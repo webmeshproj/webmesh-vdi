@@ -15,7 +15,16 @@ type Rule struct {
 	Resources []Resource `json:"resources,omitempty"`
 	// Resource regexes that match this rule. This can be template patterns, role
 	// names or user names. There is no All representation because * will have
-	// that effect on its own when the regex is evaluated.
+	// that effect on its own when the regex is evaluated. When referring to "serviceaccounts",
+	// only the "use" verb is evaluated in the context of assuming those accounts in
+	// desktop sessions.
+	//
+	// **NOTE**: The `kvdi-manager` is responsible for launching pods with a service account
+	// requested for a given Desktop. If the service account itself contains more permissions
+	// than the manager itself, the Kubernetes API will deny the request. The way to rememdy this
+	// would be to either mirror permissions to that ClusterRole, or make the `kvdi-manager` itself a
+	// cluster admin, both of which come with inherent risks. In the end, you can decide the best
+	// approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.
 	ResourcePatterns []string `json:"resourcePatterns,omitempty"`
 	// Namespaces this rule applies to. Only evaluated for template launching
 	// permissions. NamespaceAll matches all namespaces.
@@ -25,6 +34,12 @@ type Rule struct {
 // Evaluate checks if this rule allows the given action. First the verb is matched,
 // then the resource type, and then optionally a name and namespace.
 func (r *Rule) Evaluate(action *APIAction) bool {
+	if action.ResourceType == ResourceServiceAccounts && action.ResourceName == "default" {
+		// Treat default service accounts as just checking the ability to launch templates
+		// in the given namespace
+		action.ResourceName = ""
+		action.ResourceType = ResourceTemplates
+	}
 	if !r.HasVerb(action.Verb) {
 		return false
 	}

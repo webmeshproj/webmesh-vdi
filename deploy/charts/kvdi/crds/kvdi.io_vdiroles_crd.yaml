@@ -42,9 +42,20 @@ spec:
                     type: string
                   type: array
                 resourcePatterns:
-                  description: Resource regexes that match this rule. This can be
+                  description: "Resource regexes that match this rule. This can be
                     template patterns, role names or user names. There is no All representation
                     because * will have that effect on its own when the regex is evaluated.
+                    When referring to \"serviceaccounts\", only the \"use\" verb is
+                    evaluated in the context of assuming those accounts in desktop
+                    sessions. \n **NOTE**: The `kvdi-manager` is responsible for launching
+                    pods with a service account requested for a given Desktop. If
+                    the service account itself contains more permissions than the
+                    manager itself, the Kubernetes API will deny the request. The
+                    way to rememdy this would be to either mirror permissions to that
+                    ClusterRole, or make the `kvdi-manager` itself a cluster admin,
+                    both of which come with inherent risks. In the end, you can decide
+                    the best approach for your use case with regards to exposing access
+                    to the Kubernetes APIs via kvdi sessions."
                   items:
                     type: string
                   type: array

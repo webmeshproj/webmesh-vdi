@@ -85,3 +85,4 @@ deploy/charts/kvdi/charts
 profile.cov
 **/.terraform
 *tfstate*
+*.ZIP

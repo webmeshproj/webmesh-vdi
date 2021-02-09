@@ -234,6 +234,8 @@ type CreateSessionRequest struct {
 	Template string `json:"template"`
 	// The namespace to launch the template in. Defaults to default.
 	Namespace string `json:"namespace,omitempty"`
+	// A service account to tie to the desktop session. Defaults to none.
+	ServiceAccount string `json:"serviceAccount,omitempty"`
 }
 
 // Validate the CreateSessionRequest
@@ -245,9 +247,7 @@ func (r *CreateSessionRequest) Validate() error {
 }
 
 // GetTemplate returns the template for this request
-func (r *CreateSessionRequest) GetTemplate() string {
-	return r.Template
-}
+func (r *CreateSessionRequest) GetTemplate() string { return r.Template }
 
 // GetNamespace returns the namspace for this request, or the default namespace
 // if not provided.
@@ -257,6 +257,9 @@ func (r *CreateSessionRequest) GetNamespace() string {
 	}
 	return DefaultNamespace
 }
+
+// GetServiceAccount returns the service account for this request.
+func (r *CreateSessionRequest) GetServiceAccount() string { return r.ServiceAccount }
 
 // DesktopSessionsResponse contains a list of desktop sessions and information
 // about their statuses.
@@ -273,8 +276,8 @@ type DesktopSession struct {
 	Namespace string `json:"namespace"`
 	// The username of the user who owns this session.
 	User string `json:"user"`
-	// The type of display socket the desktop is using
-	SocketType string `json:"socketType"` // This is technically an enum from v1alpha1 - should probably be moved to this package
+	// The service account being used by this session.
+	ServiceAccount string `json:"serviceAccount"`
 	// Connection status for the session.
 	Status *DesktopSessionStatus `json:"status"`
 }

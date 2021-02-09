@@ -38,7 +38,7 @@ spec:
 #   imagePullPolicy: IfNotPresent
 #   config:
 #     init: supervisord
-#     pulseServer: /var/run/kvdi/pulse-server
+#     pulseServer: unix:///var/run/kvdi/pulse-server
 #   tags:
 #     os: ubuntu
 #     desktop: dosbox
@@ -49,12 +49,11 @@ spec:
 # metadata:
 #   name: lens-ide
 # spec:
-#   image: quay.io/tinyzimmer/kvdi:app-lens-latest
+#   image: ghcr.io/tinyzimmer/kvdi:app-lens-latest
 #   imagePullPolicy: IfNotPresent
 #   config:
-#     allowRoot: true
-#     init: systemd
-#     socketType: xpra
+#     init: supervisord
+#     pulseServer: unix:///var/run/kvdi/pulse-server
 #   tags:
 #     app-profile: Lens
 # ---
@@ -63,7 +62,7 @@ spec:
 # metadata:
 #   name: postman
 # spec:
-#   image: quay.io/tinyzimmer/kvdi:app-postman-latest
+#   image: ghcr.io/tinyzimmer/kvdi:app-lens-latest
 #   imagePullPolicy: IfNotPresent
 #   config:
 #     allowRoot: true

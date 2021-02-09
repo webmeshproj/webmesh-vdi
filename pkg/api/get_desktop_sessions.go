@@ -60,17 +60,12 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 
 	// iterate desktops and parse properties and connection status
 	for _, desktop := range desktops.Items {
-		socketType := "unknown" // let's not fail on any errors here for now - enough is changing to satisfy session persistence
-		tmpl, err := desktop.GetTemplate(d.client)
-		if err == nil {
-			socketType = string(tmpl.GetDisplaySocketType())
-		}
 		sess := &v1.DesktopSession{
-			Name:       desktop.GetName(),
-			Namespace:  desktop.GetNamespace(),
-			User:       desktop.GetUser(),
-			Status:     getSessionStatus(d.vdiCluster, desktop, displayLocks.Items, audioLocks.Items),
-			SocketType: socketType,
+			Name:           desktop.GetName(),
+			Namespace:      desktop.GetNamespace(),
+			User:           desktop.GetUser(),
+			ServiceAccount: desktop.GetServiceAccount(),
+			Status:         getSessionStatus(d.vdiCluster, desktop, displayLocks.Items, audioLocks.Items),
 		}
 		res.Sessions = append(res.Sessions, sess)
 	}
@@ -81,7 +76,7 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 
 // getSessionStatus iterates the current locks and builds a session object for the given desktop.
 // TODO: Getters for the names of locks, sprintf calls also present in get_websockify.go. This function
-// could also be optimized to work on pointers to slices and pop found locks off for future iterations.
+// could also be optimized to pop found locks off for future iterations.
 func getSessionStatus(cluster *v1alpha1.VDICluster, desktop v1alpha1.Desktop, displayLocks, audioLocks []corev1.ConfigMap) *v1.DesktopSessionStatus {
 	status := &v1.DesktopSessionStatus{
 		Display: &v1.ConnectionStatus{Connected: false},

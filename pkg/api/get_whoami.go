@@ -30,16 +30,10 @@ func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
 	if len(desktops.Items) > 0 {
 		session.User.Sessions = make([]*v1.DesktopSession, len(desktops.Items))
 		for idx, desktop := range desktops.Items {
-			socketType := "unknown" // let's not fail on any errors here for now - enough is changing to satisfy session persistence
-			tmpl, err := desktop.GetTemplate(d.client)
-			if err == nil {
-				socketType = string(tmpl.GetDisplaySocketType())
-			}
 			session.User.Sessions[idx] = &v1.DesktopSession{
-				Name:       desktop.GetName(),
-				Namespace:  desktop.GetNamespace(),
-				User:       desktop.GetUser(),
-				SocketType: socketType,
+				Name:      desktop.GetName(),
+				Namespace: desktop.GetNamespace(),
+				User:      desktop.GetUser(),
 			}
 		}
 	}

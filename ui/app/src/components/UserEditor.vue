@@ -115,12 +115,8 @@ export default {
         password: this.$refs.password.password,
         roles: this.roleSelection
       }
-      const mfaEnabled = this.$refs.mfaconfig.enabled
       try {
         await this.$axios.post('/api/users', payload)
-        if (mfaEnabled) {
-          await this.$axios.put(`/api/users/${this.username}/mfa`, { enabled: true })
-        }
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',

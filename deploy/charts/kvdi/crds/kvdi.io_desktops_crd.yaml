@@ -11,7 +11,17 @@ spec:
     singular: desktop
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.user
+      name: User
+      type: string
+    - jsonPath: .spec.serviceAccount
+      name: ServiceAccount
+      type: string
+    - jsonPath: .spec.template
+      name: Template
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Desktop is the Schema for the desktops API
@@ -31,6 +41,9 @@ spec:
           spec:
             description: DesktopSpec defines the desired state of Desktop
             properties:
+              serviceAccount:
+                description: A service account to tie to the pod for this instance.
+                type: string
               template:
                 description: The DesktopTemplate for booting this instance.
                 type: string
