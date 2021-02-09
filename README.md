@@ -37,9 +37,7 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
 ## Features
 
-  - Containerized user desktops running on Kubernetes with no virtualization required (`libvirt` options may come in the future).
-
-    - All traffic between the end user and the "desktop" is encrypted.
+  - Containerized user desktops running on Kubernetes with no virtualization required (`libvirt` options may come in the future). All traffic between the end user and the "desktop" is encrypted.
 
   - Persistent user data
 
@@ -47,17 +45,13 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
   - File transfer to/from "desktop" sessions. Directories get archived into a gzipped tarball prior to download.
 
-  - Customizable RBAC system for managing user access
-
-    - For example, desktops can be launched in specific namespaces, and users can be limited to specific templates and namespaces.
+  - RBAC system for managing user access to templates, roles, users, namespaces, serviceaccounts, etc.
 
   - MFA Support
 
   - Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
 
   - Use built-in local authentication, LDAP, or OpenID.
-
-      - For now see the API docs, the [example `helm` values](deploy/examples/example-ldap-helm-values.yaml), and the example [`VDIRole`](hack/glauth-role.yaml). There are corresponding examples for the `oidc` auth as well.
 
   - App metrics to either scrape externally or view in the UI. More details in the `helm` doc.
 
