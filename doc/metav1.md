@@ -143,6 +143,10 @@ parameters.
 <td><code>namespace</code> <em>string</em></td>
 <td><p>The namespace to launch the template in. Defaults to default.</p></td>
 </tr>
+<tr class="odd">
+<td><code>serviceAccount</code> <em>string</em></td>
+<td><p>A service account to tie to the desktop session. Defaults to none.</p></td>
+</tr>
 </tbody>
 </table>
 
@@ -200,8 +204,8 @@ DesktopSession describes the properties and status of a desktop session.
 <td><p>The username of the user who owns this session.</p></td>
 </tr>
 <tr class="even">
-<td><code>socketType</code> <em>string</em></td>
-<td><p>The type of display socket the desktop is using</p></td>
+<td><code>serviceAccount</code> <em>string</em></td>
+<td><p>The service account being used by this session.</p></td>
 </tr>
 <tr class="odd">
 <td><code>status</code> <em><a href="#DesktopSessionStatus">DesktopSessionStatus</a></em></td>
@@ -391,6 +395,10 @@ resembles an rbacv1.PolicyRule, with resources being a regex and the
 addition of a namespace selector.
 
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Field</th>
@@ -408,7 +416,8 @@ addition of a namespace selector.
 </tr>
 <tr class="odd">
 <td><code>resourcePatterns</code> <em>[]string</em></td>
-<td><p>Resource regexes that match this rule. This can be template patterns, role names or user names. There is no All representation because * will have that effect on its own when the regex is evaluated.</p></td>
+<td><p>Resource regexes that match this rule. This can be template patterns, role names or user names. There is no All representation because * will have that effect on its own when the regex is evaluated. When referring to “serviceaccounts”, only the “use” verb is evaluated in the context of assuming those accounts in desktop sessions.</p>
+<p><strong>NOTE</strong>: The <code>kvdi-manager</code> is responsible for launching pods with a service account requested for a given Desktop. If the service account itself contains more permissions than the manager itself, the Kubernetes API will deny the request. The way to rememdy this would be to either mirror permissions to that ClusterRole, or make the <code>kvdi-manager</code> itself a cluster admin, both of which come with inherent risks. In the end, you can decide the best approach for your use case with regards to exposing access to the Kubernetes APIs via kvdi sessions.</p></td>
 </tr>
 <tr class="even">
 <td><code>namespaces</code> <em>[]string</em></td>
@@ -625,4 +634,4 @@ Verb represents an API action
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `104322f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `3a52ef0`.*

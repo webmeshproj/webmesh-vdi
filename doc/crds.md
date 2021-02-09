@@ -25,7 +25,6 @@ Types
 -   [PrometheusConfig](#PrometheusConfig)
 -   [SecretsConfig](#SecretsConfig)
 -   [ServiceMonitorConfig](#ServiceMonitorConfig)
--   [SocketType](#SocketType)
 -   [TLSConfig](#TLSConfig)
 -   [VDICluster](#VDICluster)
 -   [VDIClusterSpec](#VDIClusterSpec)
@@ -173,6 +172,10 @@ Desktop is the Schema for the desktops API
 <td><code>user</code> <em>string</em></td>
 <td><p>The username to use inside the instance, defaults to <code>anonymous</code>.</p></td>
 </tr>
+<tr class="even">
+<td><code>serviceAccount</code> <em>string</em></td>
+<td><p>A service account to tie to the pod for this instance.</p></td>
+</tr>
 </tbody>
 </table></td>
 </tr>
@@ -200,36 +203,32 @@ booted from it.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>serviceAccount</code> <em>string</em></td>
-<td><p>A service account to tie to desktops booted from this template. TODO: This should really be per-desktop and by user-grants.</p></td>
-</tr>
-<tr class="even">
 <td><code>capabilities</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#capability-v1-core">[]Kubernetes core/v1.Capability</a></em></td>
 <td><p>Extra system capabilities to add to desktops booted from this template.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>allowRoot</code> <em>bool</em></td>
 <td><p>AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles in this repository, this will add the user to the sudo group and ability to sudo with no password.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>socketAddr</code> <em>string</em></td>
 <td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
 </tr>
-<tr class="odd">
-<td><code>socketType</code> <em><a href="#SocketType">SocketType</a></em></td>
-<td><p>The type of service listening on the configured socket. Can either be <code>xpra</code> or <code>xvnc</code>. Currently <code>xpra</code> is used to serve “app profiles” and <code>xvnc</code> to serve full desktops. Defaults to <code>xvnc</code>.</p></td>
-</tr>
 <tr class="even">
+<td><code>pulseServer</code> <em>string</em></td>
+<td><p>Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.</p></td>
+</tr>
+<tr class="odd">
 <td><code>allowFileTransfer</code> <em>bool</em></td>
 <td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>proxyImage</code> <em>string</em></td>
 <td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
-<td><p>The type of init system inside the image, currently only supervisord and systemd are supported. Defaults to <code>supervisord</code> (but depending on how much I like systemd in this use case, that could change).</p></td>
+<td><p>The type of init system inside the image, currently only <code>supervisord</code> and <code>systemd</code> are supported. Defaults to <code>systemd</code>. <code>systemd</code> containers are run privileged and downgrading to the desktop user must be done with the image’s init process. <code>supervisord</code> are run with minimal capabilities and directly as the desktop user.</p></td>
 </tr>
 </tbody>
 </table>
@@ -265,6 +264,10 @@ DesktopSpec defines the desired state of Desktop
 <tr class="odd">
 <td><code>user</code> <em>string</em></td>
 <td><p>The username to use inside the instance, defaults to <code>anonymous</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>serviceAccount</code> <em>string</em></td>
+<td><p>A service account to tie to the pod for this instance.</p></td>
 </tr>
 </tbody>
 </table>
@@ -443,6 +446,10 @@ DesktopsConfig represents global configurations for desktop sessions.
 <tr class="odd">
 <td><code>maxSessionLength</code> <em>string</em></td>
 <td><p>When configured, desktop sessions will be forcefully terminated when the time limit is reached.</p></td>
+</tr>
+<tr class="even">
+<td><code>sessionsPerUser</code> <em>int</em></td>
+<td><p>The maximum number of sessions a user can run at a time. A zero value (or undefined) means no limit. When using a <code>userdataSpec</code>, you might want to set this value to 1 if you aren’t using ReadWriteMany volumes. The storage controller would inevitably enforce this behavior anyway, but you would save the <code>kvdi-manager</code> some extra work.</p></td>
 </tr>
 </tbody>
 </table>
@@ -749,13 +756,6 @@ ServiceMonitor.
 </tbody>
 </table>
 
-SocketType (`string` alias)
-
-(*Appears on:* [DesktopConfig](#DesktopConfig))
-
-SocketType represents the type of service listening on the display
-socket in the container image.
-
 ### TLSConfig
 
 (*Appears on:* [AppConfig](#AppConfig))
@@ -962,4 +962,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `104322f`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `3a52ef0`.*

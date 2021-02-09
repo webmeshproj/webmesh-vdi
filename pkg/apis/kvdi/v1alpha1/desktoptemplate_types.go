@@ -84,9 +84,10 @@ type DesktopConfig struct {
 	// VNC server inside the Desktop. Defaults to the public kvdi-proxy image
 	// matching the version of the currrently running manager.
 	ProxyImage string `json:"proxyImage,omitempty"`
-	// The type of init system inside the image, currently only supervisord and systemd
-	// are supported. Defaults to `supervisord` (but depending on how much I like systemd
-	// in this use case, that could change).
+	// The type of init system inside the image, currently only `supervisord` and `systemd`
+	// are supported. Defaults to `systemd`. `systemd` containers are run privileged and
+	// downgrading to the desktop user must be done with the image's init process. `supervisord`
+	// are run with minimal capabilities and directly as the desktop user.
 	Init DesktopInit `json:"init,omitempty"`
 }
 
