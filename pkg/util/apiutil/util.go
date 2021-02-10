@@ -79,6 +79,15 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w, http.StatusForbidden)
 }
 
+// ReturnAPIUnauthorized returns an Unauthorized status with a json encoded error message.
+// If the denial happened due to an error, it is logged server side.
+func ReturnAPIUnauthorized(err error, msg string, w http.ResponseWriter) {
+	if err != nil {
+		fmt.Println("Forbidden request due to:", err.Error())
+	}
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Unauthorized: %s", msg)).JSON(), w, http.StatusUnauthorized)
+}
+
 // WriteJSON encodes the provided interface to JSON and writes it to the response
 // stream.
 func WriteJSON(i interface{}, w http.ResponseWriter) {

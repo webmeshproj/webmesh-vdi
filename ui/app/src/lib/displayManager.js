@@ -155,12 +155,11 @@ export default class DisplayManager {
 
     // _createAudioManager creates a new AudioManager object for this DisplayManager
     _createAudioManager () {
-        const urls = this._getSessionURLs()
-        const audioUrl = urls.audioURL()
         const playerCfg = {
-            server: { url: audioUrl },
+            addressGetter: this._getSessionURLs(),
+            userStore: this._userStore,
             onDisconnect: () => { this._resetAudioStatus() },
-            onError: (err) => { this._callError(err) }
+            onError: (err) => {  this._callError(err) }
         }
         this._audioManager = new AudioManager(playerCfg)
     }
@@ -213,7 +212,7 @@ export default class DisplayManager {
     // _doStatusWebsocket opens a websocket connection to the status endpoint for the
     // current desktop session. Once a message is received signaling the desktop is ready,
     // the socket is closed and a display connection is created.
-    _doStatusWebsocket () {
+    _doStatusWebsocket (retry) {
 
         const urls = this._getSessionURLs()
         const activeSession = this._getActiveSession()
@@ -243,6 +242,19 @@ export default class DisplayManager {
             if (this._statusIsReady(st)) {
                 console.log(`Desktop is ready, connecting`)
                 this._createConnection()
+                    .catch((err) => {
+                        console.error(err)
+                        console.log('Retrying connection with new token')
+                        return this._userStore.dispatch('refreshToken')
+                            .then(() => {
+                                // only retry once
+                                return this._createConnection()
+                                    .catch((err) => { 
+                                        this._callError(err)
+                                        this._callDisconnect()
+                                     })
+                            })
+                    })
                 if (socket.readyState === 1) {
                     socket.close()
                 }
@@ -264,13 +276,25 @@ export default class DisplayManager {
             if (event.wasClean || event.code === 1000) {
                 console.log(`[status] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
             } else {
+                if (event.code === 1006 && !retry) {
+                    this._userStore.dispatch('refreshToken')
+                        .then(() => {
+                            this._doStatusWebsocket(true)
+                        })
+                        .catch((err) => {
+                            throw err
+                        })
+                    return
+                }
                 this._callError(new Error(`Error getting session status: ${event.code} ${event.reason}`))
             }
         }
           
         socket.onerror = (err) => {
-            this._callError(err)
-            this._callDisconnect()
+            if (retry) {
+                this._callError(err)
+                this._callDisconnect()
+            }
         }
 
         this._statusSocket = socket

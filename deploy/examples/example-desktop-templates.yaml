@@ -17,21 +17,6 @@ spec:
 apiVersion: desktops.kvdi.io/v1
 kind: Template
 metadata:
-  name: arch-xfce
-spec:
-  image: ghcr.io/tinyzimmer/kvdi:arch-xfce-latest
-  imagePullPolicy: IfNotPresent
-  config:
-    allowRoot: true
-  tags:
-    os: archlinux
-    desktop: xfce4
-    applications: minimal
-
----
-apiVersion: desktops.kvdi.io/v1
-kind: Template
-metadata:
   name: dosbox
 spec:
   image: ghcr.io/tinyzimmer/kvdi:dosbox-latest

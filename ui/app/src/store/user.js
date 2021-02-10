@@ -28,10 +28,7 @@ function uuidv4 () {
   })
 }
 
-function getMsUntilExpire (expiresAt) {
-  const now = Math.round((new Date()).getTime() / 1000)
-  return (expiresAt - now) * 1000
-}
+var broadcastNewToken = new BroadcastChannel('kvdi_new_token')
 
 export const UserStore = new Vuex.Store({
 
@@ -41,8 +38,7 @@ export const UserStore = new Vuex.Store({
     renewable: localStorage.getItem('renewable') === 'true' || false,
     requiresMFA: false,
     user: {},
-    stateToken: '',
-    timeout: null
+    stateToken: ''
   },
 
   mutations: {
@@ -65,11 +61,12 @@ export const UserStore = new Vuex.Store({
     auth_success (state, { token, renewable }) {
       state.status = 'success'
       state.token = token
-      state.stateToken = ''
-      state.requiresMFA = false
       state.renewable = renewable
       localStorage.setItem('token', token)
       localStorage.setItem('renewable', String(renewable))
+
+      state.stateToken = ''
+      state.requiresMFA = false
       localStorage.removeItem('state')
     },
 
@@ -94,10 +91,6 @@ export const UserStore = new Vuex.Store({
       state.token = ''
       state.stateToken = ''
       state.renewable = false
-      if (state.timeout !== null) {
-        clearTimeout(state.timeout)
-        state.timeout = null
-      }
       localStorage.removeItem('token')
       localStorage.removeItem('state')
       localStorage.removeItem('renewable')
@@ -108,6 +101,25 @@ export const UserStore = new Vuex.Store({
   actions: {
 
     async initStore ({ commit }) {
+      Vue.prototype.$axios.interceptors.response.use(null, (error) => {
+        if (error.config && error.response) {
+          const { config, response: { status } } = error
+          const originalRequest = config
+          if (status === 401) {
+            return this.dispatch('refreshToken').then((token) => {
+              originalRequest.headers['X-Session-Token'] = token
+              return Vue.prototype.$axios.request(originalRequest)
+            })
+          }
+          return Promise.reject(error)
+        }
+        return Promise.reject(error)
+      })
+      broadcastNewToken.addEventListener('message', (ev) => {
+        console.log('Got new token from other browser session')
+        commit('auth_success', { token: ev.data.token, renewable: ev.data.renewable })
+        Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = ev.data.token
+      })
       if (!this.getters.isLoggedIn) {
         console.log('Attempting anonymous/state login')
         try {
@@ -119,9 +131,6 @@ export const UserStore = new Vuex.Store({
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = this.state.token
         try {
           console.log('Retrieving user information')
-          if (this.getters.renewable) {
-            await this.dispatch('refreshToken')
-          }
           const res = await Vue.prototype.$axios.get('/api/whoami')
           commit('auth_got_user', res.data)
           if (res.data.sessions) {
@@ -134,8 +143,7 @@ export const UserStore = new Vuex.Store({
         } catch (err) {
           console.log('Could not fetch user information')
           console.log(err)
-          commit('logout')
-          this.dispatch('initStore')
+          this.dispatch('logout')
         }
       }
     },
@@ -161,16 +169,12 @@ export const UserStore = new Vuex.Store({
         const token = res.data.token
         const user = res.data.user
         const authorized = res.data.authorized
-        const expiresAt = res.data.expiresAt
         const renewable = res.data.renewable
 
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
         commit('auth_got_user', user)
         if (authorized) {
           commit('auth_success', { token, renewable })
-          if (renewable) {
-            state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
-          }
           return
         }
         commit('auth_need_mfa')
@@ -180,20 +184,18 @@ export const UserStore = new Vuex.Store({
       }
     },
 
-    async refreshToken ({ commit, state }) {
+    async refreshToken ({ commit }) {
       console.log('Refreshing access token')
       try {
         const res = await axios({ url: '/api/refresh_token', method: 'GET' })
 
         const token = res.data.token
-        const expiresAt = res.data.expiresAt
         const renewable = res.data.renewable
 
         Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
-        if (renewable) {
-          state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
-        }
         commit('auth_success', { token, renewable })
+        broadcastNewToken.postMessage({ token, renewable })
+        return token
       } catch (err) {
         commit('auth_error')
         let error
@@ -208,6 +210,7 @@ export const UserStore = new Vuex.Store({
           icon: 'error',
           message: error
         })
+        throw err
       }
     },
 
@@ -221,14 +224,10 @@ export const UserStore = new Vuex.Store({
       }
       const token = res.data.token
       const authorized = res.data.authorized
-      const expiresAt = res.data.expiresAt
       const renewable = res.data.renewable
       Vue.prototype.$axios.defaults.headers.common['X-Session-Token'] = token
       if (authorized) {
         commit('auth_success', { token, renewable })
-        if (renewable) {
-          state.timeout = setTimeout(() => { this.dispatch('refreshToken') }, getMsUntilExpire(expiresAt))
-        }
       }
     },
 
@@ -236,12 +235,23 @@ export const UserStore = new Vuex.Store({
       commit('logout')
       try {
         await Vue.prototype.$axios.post('/api/logout')
-        delete Vue.prototype.$axios.defaults.headers.common['X-Session-Token']
-        this.dispatch('initStore')
       } catch (err) {
-        console.error(err)
-        throw err
+        console.log(err)
+        let error
+        if (err.response !== undefined && err.response.data !== undefined) {
+          error = err.response.data.error
+        } else {
+          error = err.message
+        }
+        Vue.prototype.$q.notify({
+          color: 'red-4',
+          textColor: 'black',
+          icon: 'error',
+          message: error
+        })
       }
+      delete Vue.prototype.$axios.defaults.headers.common['X-Session-Token']
+      window.location.href = '/#/login'
     }
 
   },

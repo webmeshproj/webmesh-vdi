@@ -25,23 +25,41 @@ import encoderPath from 'opus-recorder/dist/encoderWorker.min.js'
 // to/from a desktop session.
 export default class AudioManager {
 
-  constructor (config) {
-    this._config = config
+  constructor ({ addressGetter, userStore, onDisconnect, onError }) {
+    this._addressGetter = addressGetter
+    this._userStore = userStore
+    this._onDisconnect = onDisconnect
+    this._onError = onError
+
     this._socket = null
     this._mediaRecorder = null
   }
 
   // _connect will create a new Websocket connection. Use novnc/websockify-js 
   // for more control over the recv and send queues.
-  _connect () {
+  _connect (retry) {
     this._socket = new Websock()
-    this._socket.open(this._config.server.url)
+    this._socket.open(this._addressGetter.audioURL())
     this._socket.binaryType = 'arraybuffer'
-    this._socket.on('close', () => { 
-      this.stopRecording()
-      if (this._config.onDisconnect) {
-        this._config.onDisconnect()
+    this._socket.on('close', (event) => {
+      if (!event.wasClean && (event.code === 1006 && !retry)) {
+        this._userStore.dispatch('refreshToken')
+          .then(() => {
+            this._connect(true)
+          })
+          .catch((err) => {
+            if (this._onError) { this._onError(err) }
+          })
+        return
       }
+      this.stopRecording()
+      if (!event.wasClean || (event.code !== 1000 && event.code !== 1005)) {
+        this._onError(new Error(`Unexpected message from websocket: ${event.code} ${event.reason}`))
+      }
+      if (this._onDisconnect) {
+        this._onDisconnect()
+      }
+      this._socket = null
     })
   }
 
@@ -83,8 +101,8 @@ export default class AudioManager {
       .then(() => { console.log('Started audio recorder')})
       .catch((err) => {
         const serr = new Error(`Failed to start audio recording: ${err}`)
-        if (this._config.onError) {
-          this._config.onError(serr)
+        if (this._onError) {
+          this._onError(serr)
         }
       })
   }

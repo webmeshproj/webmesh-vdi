@@ -62,6 +62,22 @@ export default {
         dom_id: '#swagger-ui',
         deepLinking: false,
         displayRequestDuration: true,
+        responseInterceptor: (response) => {
+          if (response.status === 401) {
+            return this.$userStore.dispatch('refreshToken')
+              .then(() => {
+                response.text = '{"internal": "KVDI: Your access token has been refreshed, please try again"}'
+                response.ok = true
+                return response
+              })
+              .catch((err) => {
+                console.error(err)
+                response.text = `{"internal": "KVDI: Failure while trying to refresh access token: ${err}"}`
+                return response
+              })
+          }
+          return response
+        },
         presets: [
           SwaggerUIBundle.presets.apis
         ],

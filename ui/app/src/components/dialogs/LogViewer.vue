@@ -116,7 +116,7 @@ export default {
       fileLink.click()
     },
 
-    streamLogData () {
+    streamLogData (retry) {
       if (this.socket) {
         return
       }
@@ -132,6 +132,20 @@ export default {
         this.logData = this.logData + ev.data
         const logDiv = document.getElementById('logs')
         logDiv.scrollTop = logDiv.scrollHeight
+      })
+      this.socket.addEventListener('close', (ev) => {
+        if (!ev.wasClean && ev.code === 1006 && !retry) {
+          this.$userStore.dispatch('refreshToken')
+            .then(() => {
+              this.socket = null
+              this.streamLogData(true)
+            })
+            .catch((err) => {
+              throw err
+            })
+          return
+        }
+        this.socket = null
       })
     },
 

@@ -57,7 +57,7 @@ func (d *desktopAPI) ValidateUserSession(next http.Handler) http.Handler {
 		// verify the token and retrieve the claims
 		session, err := apiutil.DecodeAndVerifyJWT(jwtSecret, authToken)
 		if err != nil {
-			apiutil.ReturnAPIForbidden(nil, err.Error(), w)
+			apiutil.ReturnAPIUnauthorized(nil, err.Error(), w)
 			return
 		}
 
