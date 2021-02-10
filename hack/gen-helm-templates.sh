@@ -73,7 +73,7 @@ cat deploy/bundle.yaml | \
     sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.labels" . | nindent 8 }}/g' | \
     sed 's/kvdi-controller/{{ include "kvdi.fullname" . }}/' | \
     sed 's/replicas: 1/replicas: {{ .Values.manager.replicaCount }}/' | \
-    sed 's,image: ghcr.io/tinyzimmer/kvdi:manager-latest,image: {{ .Values.manager.image.repository }}/{{ .Values.manager.image.name  }}:{{ include "kvdi.managerTag" . }}\n          imagePullPolicy: {{ .Values.manager.image.pullPolicy }},' | \
+    sed "s,image: ghcr.io/tinyzimmer/kvdi:manager-${VERSION},image: {{ .Values.manager.image.repository }}/{{ .Values.manager.image.name  }}:{{ include \"kvdi.managerTag\" . }}\n          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}," | \
     sed -n '1h;1!H;${g;s/resources.*PeriodSeconds: 10//;p;}' | sed '$ d' \
     > deploy/charts/kvdi/templates/deployments.yaml
 

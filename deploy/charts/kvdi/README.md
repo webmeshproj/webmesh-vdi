@@ -26,8 +26,9 @@ Then visit https://localhost:8443 to use `kVDI`.
 
 If you'd like to see an example of the `helm` values for using vault as the secrets backend,
 you can find documentation in the [examples](../../examples/example-vault-helm-values.yaml) folder.
-
 There are examples for LDAP and OIDC authentication in the same folder.
+
+For an up-to-date and complete list of all available options see the [API Reference](../../doc/appv1.md).
 
 ### Enabling Metrics
 
