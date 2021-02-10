@@ -120,7 +120,7 @@ To install the manifest:
 ```bash
 export KVDI_VERSION=v0.2.0
 
-kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/bundle.yaml
+kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/bundle.yaml --validate=false
 ```
 
 #### Kustomize
