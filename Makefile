@@ -1,5 +1,5 @@
-REPO ?= ghcr.io/tinyzimmer
-NAME = kvdi
+REPO    ?= ghcr.io/tinyzimmer
+NAME     = kvdi
 VERSION ?= latest
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"

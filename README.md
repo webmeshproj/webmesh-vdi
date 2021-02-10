@@ -113,7 +113,7 @@ By default there are no desktop templates configured. If you'd like, you can app
 #### Bundle Manifest
 
 There is a manifest in this repository that will **just** lay down the manager instance, its dependencies, and all of the CRDs. 
-You can then create a [VDICluster](doc/appv1.md) object manually to spin up an actual application instance.
+You can then create a [VDICluster](doc/appv1.md#VDIClusterSpec) object manually to spin up an actual application instance.
 
 To install the manifest:
 
