@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: ghcr.io/tinyzimmer/kvdi
-  newTag: manager-v0.2.1
+  newTag: manager-v0.2.0

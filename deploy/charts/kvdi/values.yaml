@@ -33,13 +33,7 @@ manager:
   # manager.securityContext -- The container security context for the manager pod.
   securityContext: {}
   # manager.resources -- Resource limits for the manager pod.
-  resources:
-    limits:
-      cpu: 100m
-      memory: 30Mi
-    requests:
-      cpu: 100m
-      memory: 20Mi
+  resources: {}
   # manager.nodeSelector -- Node selectors for the manager pod.
   nodeSelector: {}
   # manager.tolerations -- Node tolerations for the manager pod.

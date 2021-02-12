@@ -66,7 +66,7 @@ helm install kvdi tinyzimmer/kvdi \
 | manager.nodeSelector | object | `{}` | Node selectors for the manager pod. |
 | manager.podSecurityContext | object | `{}` | The `PodSecurityContext` for the manager pod. |
 | manager.replicaCount | int | `1` | The number of manager replicas to run. If more than one is set, they will run in active/standby mode. |
-| manager.resources | object | `{"limits":{"cpu":"100m","memory":"30Mi"},"requests":{"cpu":"100m","memory":"20Mi"}}` | Resource limits for the manager pod. |
+| manager.resources | object | `{}` | Resource limits for the manager pod. |
 | manager.securityContext | object | `{}` | The container security context for the manager pod. |
 | manager.tolerations | list | `[]` | Node tolerations for the manager pod. |
 | nameOverride | string | `""` | A name override for resources created by the chart. |
