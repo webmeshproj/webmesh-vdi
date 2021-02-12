@@ -46,6 +46,7 @@ func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, in
 			SecurityContext:    tmpl.GetDesktopPodSecurityContext(),
 			Volumes:            k8sutil.GetDesktopVolumesFromTemplate(tmpl, cluster, instance),
 			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),
+			InitContainers:     tmpl.GetInitContainers(),
 			Containers: []corev1.Container{
 				tmpl.GetDesktopProxyContainer(),
 				{
@@ -72,6 +73,9 @@ func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, in
 				},
 			},
 		}
+	}
+	if tmpl.DindIsEnabled() {
+		pod.Spec.Containers = append(pod.Spec.Containers, tmpl.GetDindContainer())
 	}
 	return pod
 }

@@ -88,6 +88,21 @@ const (
 	VNCSockEnvVar = "VNC_SOCK_ADDR"
 )
 
+// Desktop runtime volume names
+var (
+	TmpVolume        = "tmp"
+	RunVolume        = "run"
+	ShmVolume        = "shm"
+	TLSVolume        = "tls"
+	HomeVolume       = "home"
+	CgroupsVolume    = "cgroups"
+	RunLockVolume    = "run-lock"
+	VNCSockVolume    = "vnc-sock"
+	PulseSockVolume  = "pulse-sock"
+	DockerDataVolume = "docker-data"
+	DockerBinVolume  = "docker-bin"
+)
+
 // Desktop runtime mount paths
 const (
 	HostShmPath    = "/dev/shm"
@@ -100,6 +115,8 @@ const (
 	DesktopCgroupPath  = "/sys/fs/cgroup"
 	DesktopHomeFmt     = "/home/%s"
 	DesktopHomeMntPath = "/mnt/home"
+	DockerDataPath     = "/var/lib/docker"
+	DockerBinPath      = "/usr/local/docker/bin"
 )
 
 // Other defaults that we need to take the address of occasionally

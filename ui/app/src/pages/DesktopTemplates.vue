@@ -58,15 +58,15 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
             </q-td>
 
             <q-td key="image" :props="props">
-              <strong>{{ props.row.spec.image }}</strong>
+              <strong>{{ props.row.spec.desktop.image }}</strong>
             </q-td>
 
             <q-td key="root" :props="props">
-              <q-avatar v-if="props.row.spec.config.allowRoot" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
+              <q-avatar v-if="props.row.spec.desktop.allowRoot" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
 
             <q-td key="fileXfer" :props="props">
-              <q-avatar v-if="props.row.spec.config.allowFileTransfer" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
+              <q-avatar v-if="props.row.spec.proxy.allowFileTransfer" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
 
             <q-td key="tags" :props="props">

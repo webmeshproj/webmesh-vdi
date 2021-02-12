@@ -228,7 +228,7 @@ ${HELM}:
 ## make test-cluster           # Make a local k3d cluster for testing.
 test-cluster: $(K3D)
 	$(K3D) cluster create $(CLUSTER_NAME) \
-		--update-default-kubeconfig=false \
+		--kubeconfig-update-default=false \
 		--k3s-server-arg="--disable=traefik" \
 		--volume="/dev/shm:/dev/shm@server[0]" \
 		-p 443:443@loadbalancer -p 5556:5556@loadbalancer

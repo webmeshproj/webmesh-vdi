@@ -8,7 +8,8 @@ Types
 
 -   [DesktopConfig](#%23desktops.kvdi.io%2fv1.DesktopConfig)
 -   [DesktopInit](#%23desktops.kvdi.io%2fv1.DesktopInit)
--   [DesktopVolumeConfig](#%23desktops.kvdi.io%2fv1.DesktopVolumeConfig)
+-   [DockerInDockerConfig](#%23desktops.kvdi.io%2fv1.DockerInDockerConfig)
+-   [ProxyConfig](#%23desktops.kvdi.io%2fv1.ProxyConfig)
 -   [Session](#%23desktops.kvdi.io%2fv1.Session)
 -   [SessionSpec](#%23desktops.kvdi.io%2fv1.SessionSpec)
 -   [Template](#%23desktops.kvdi.io%2fv1.Template)
@@ -36,30 +37,42 @@ booted from it.
 </thead>
 <tbody>
 <tr class="odd">
+<td><code>image</code> <em>string</em></td>
+<td><p>The docker repository and tag to use for desktops booted from this template.</p></td>
+</tr>
+<tr class="even">
+<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><p>The pull policy to use when pulling the container image.</p></td>
+</tr>
+<tr class="odd">
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><p>Resource requirements to apply to desktops booted from this template.</p></td>
+</tr>
+<tr class="even">
+<td><code>env</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core">[]Kubernetes core/v1.EnvVar</a></em></td>
+<td><p>Additional environment variables to pass to containers booted from this template.</p></td>
+</tr>
+<tr class="odd">
+<td><code>envTemplates</code> <em>map[string]string</em></td>
+<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="https://github.com/tinyzimmer/kvdi/blob/main/pkg/types/auth_types.go#L79">JWTCaims object</a> and corresponding go types.</p></td>
+</tr>
+<tr class="even">
+<td><code>volumeMounts</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core">[]Kubernetes core/v1.VolumeMount</a></em></td>
+<td><p>Volume mounts for the desktop container.</p></td>
+</tr>
+<tr class="odd">
+<td><code>volumeDevices</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumedevice-v1-core">[]Kubernetes core/v1.VolumeDevice</a></em></td>
+<td><p>Volume devices for the desktop container.</p></td>
+</tr>
+<tr class="even">
 <td><code>capabilities</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#capability-v1-core">[]Kubernetes core/v1.Capability</a></em></td>
 <td><p>Extra system capabilities to add to desktops booted from this template.</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>allowRoot</code> <em>bool</em></td>
 <td><p>AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles in this repository, this will add the user to the sudo group and ability to sudo with no password.</p></td>
 </tr>
-<tr class="odd">
-<td><code>socketAddr</code> <em>string</em></td>
-<td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
-</tr>
 <tr class="even">
-<td><code>pulseServer</code> <em>string</em></td>
-<td><p>Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.</p></td>
-</tr>
-<tr class="odd">
-<td><code>allowFileTransfer</code> <em>bool</em></td>
-<td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
-</tr>
-<tr class="even">
-<td><code>proxyImage</code> <em>string</em></td>
-<td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.</p></td>
-</tr>
-<tr class="odd">
 <td><code>init</code> <em><a href="#DesktopInit">DesktopInit</a></em></td>
 <td><p>The type of init system inside the image, currently only <code>supervisord</code> and <code>systemd</code> are supported. Defaults to <code>systemd</code>. <code>systemd</code> containers are run privileged and downgrading to the desktop user must be done within the image’s init process. <code>supervisord</code> containers are run with minimal capabilities and directly as the desktop user.</p></td>
 </tr>
@@ -72,12 +85,13 @@ DesktopInit (`string` alias)
 
 DesktopInit represents the init system that the desktop container uses.
 
-### DesktopVolumeConfig
+### DockerInDockerConfig
 
 (*Appears on:* [TemplateSpec](#TemplateSpec))
 
-DesktopVolumeConfig represents configurations for volumes attached to
-pods booted from a template.
+DockerInDockerConfig is a configuration for mounting a DinD sidecar with
+desktops booted from the template. This will provide ephemeral docker
+daemons and storage to sessions.
 
 <table>
 <thead>
@@ -88,16 +102,65 @@ pods booted from a template.
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
-<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
+<td><code>image</code> <em>string</em></td>
+<td><p>The image to use for the dind sidecar. Defaults to <code>docker:dind</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><p>The pull policy to use when pulling the container image.</p></td>
+</tr>
+<tr class="odd">
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><p>Resource restraints to place on the dind sidecar.</p></td>
 </tr>
 <tr class="even">
 <td><code>volumeMounts</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core">[]Kubernetes core/v1.VolumeMount</a></em></td>
-<td><p>Volume mounts for the desktop container.</p></td>
+<td><p>Volume mounts for the dind container.</p></td>
 </tr>
 <tr class="odd">
 <td><code>volumeDevices</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumedevice-v1-core">[]Kubernetes core/v1.VolumeDevice</a></em></td>
-<td><p>Volume devices for the desktop container.</p></td>
+<td><p>Volume devices for the dind container.</p></td>
+</tr>
+</tbody>
+</table>
+
+### ProxyConfig
+
+(*Appears on:* [TemplateSpec](#TemplateSpec))
+
+ProxyConfig represents configurations for the display/audio proxy.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>image</code> <em>string</em></td>
+<td><p>The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.</p></td>
+</tr>
+<tr class="even">
+<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><p>The pull policy to use when pulling the container image.</p></td>
+</tr>
+<tr class="odd">
+<td><code>allowFileTransfer</code> <em>bool</em></td>
+<td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
+</tr>
+<tr class="even">
+<td><code>socketAddr</code> <em>string</em></td>
+<td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
+</tr>
+<tr class="odd">
+<td><code>pulseServer</code> <em>string</em></td>
+<td><p>Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.</p></td>
+</tr>
+<tr class="even">
+<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><p>Resource restraints to place on the proxy sidecar.</p></td>
 </tr>
 </tbody>
 </table>
@@ -216,38 +279,26 @@ Template is the Schema for the templates API
 <table>
 <tbody>
 <tr class="odd">
-<td><code>image</code> <em>string</em></td>
-<td><p>The docker repository and tag to use for desktops booted from this template.</p></td>
-</tr>
-<tr class="even">
-<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
-<td><p>The pull policy to use when pulling the container image.</p></td>
-</tr>
-<tr class="odd">
 <td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Any pull secrets required for pulling the container image.</p></td>
 </tr>
 <tr class="even">
-<td><code>env</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core">[]Kubernetes core/v1.EnvVar</a></em></td>
-<td><p>Additional environment variables to pass to containers booted from this template.</p></td>
+<td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
+<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
 </tr>
 <tr class="odd">
-<td><code>envTemplates</code> <em>map[string]string</em></td>
-<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="./metav1.md#JWTClaims">JWTCLaims object</a> and corresponding go types.</p></td>
-</tr>
-<tr class="even">
-<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
-<td><p>Resource requirements to apply to desktops booted from this template.</p></td>
-</tr>
-<tr class="odd">
-<td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
+<td><code>desktop</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
 <td><p>Configuration options for the instances. These are highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
-<td><code>volumeConfig</code> <em><a href="#DesktopVolumeConfig">DesktopVolumeConfig</a></em></td>
-<td><p>Volume configurations for the instances. These can be used for mounting custom volumes at arbitrary paths in desktops.</p></td>
+<td><code>proxy</code> <em><a href="#ProxyConfig">ProxyConfig</a></em></td>
+<td><p>Configurations for the display proxy.</p></td>
 </tr>
 <tr class="odd">
+<td><code>dind</code> <em><a href="#DockerInDockerConfig">DockerInDockerConfig</a></em></td>
+<td><p>Docker-in-docker configurations for running a dind sidecar along with desktop instances.</p></td>
+</tr>
+<tr class="even">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
 </tr>
@@ -276,38 +327,26 @@ TemplateSpec defines the desired state of Template
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>image</code> <em>string</em></td>
-<td><p>The docker repository and tag to use for desktops booted from this template.</p></td>
-</tr>
-<tr class="even">
-<td><code>imagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
-<td><p>The pull policy to use when pulling the container image.</p></td>
-</tr>
-<tr class="odd">
 <td><code>imagePullSecrets</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core">[]Kubernetes core/v1.LocalObjectReference</a></em></td>
 <td><p>Any pull secrets required for pulling the container image.</p></td>
 </tr>
 <tr class="even">
-<td><code>env</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core">[]Kubernetes core/v1.EnvVar</a></em></td>
-<td><p>Additional environment variables to pass to containers booted from this template.</p></td>
+<td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
+<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
 </tr>
 <tr class="odd">
-<td><code>envTemplates</code> <em>map[string]string</em></td>
-<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="./metav1.md#JWTClaims">JWTCLaims object</a> and corresponding go types.</p></td>
-</tr>
-<tr class="even">
-<td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
-<td><p>Resource requirements to apply to desktops booted from this template.</p></td>
-</tr>
-<tr class="odd">
-<td><code>config</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
+<td><code>desktop</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
 <td><p>Configuration options for the instances. These are highly dependant on using the Dockerfiles (or close derivitives) provided in this repository.</p></td>
 </tr>
 <tr class="even">
-<td><code>volumeConfig</code> <em><a href="#DesktopVolumeConfig">DesktopVolumeConfig</a></em></td>
-<td><p>Volume configurations for the instances. These can be used for mounting custom volumes at arbitrary paths in desktops.</p></td>
+<td><code>proxy</code> <em><a href="#ProxyConfig">ProxyConfig</a></em></td>
+<td><p>Configurations for the display proxy.</p></td>
 </tr>
 <tr class="odd">
+<td><code>dind</code> <em><a href="#DockerInDockerConfig">DockerInDockerConfig</a></em></td>
+<td><p>Docker-in-docker configurations for running a dind sidecar along with desktop instances.</p></td>
+</tr>
+<tr class="even">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
 </tr>
@@ -316,4 +355,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b6bee99`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `ed3ca54`.*

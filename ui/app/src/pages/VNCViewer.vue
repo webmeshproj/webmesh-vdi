@@ -30,7 +30,6 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
         <br />
         There are no active desktop sessions
       </div>
-      <iframe :class="xpraClassname" v-if="status === 'connected' && currentSession.socketType === 'xpra'" :src="`https://xpra.org/html5/index.html?${xpraArgs}`" />
     </div>
   </q-page>
 </template>
@@ -74,25 +73,6 @@ export default {
         onDisconnect: this.onDisconnect,
         onConnect: this.onConnect
       }
-    },
-
-    xpraArgs () {
-      if (this.status !== 'connected') {
-        return ''
-      }
-      const args = this.displayManager.xpraArgs()
-      return `\
-      server=${args.host}\
-      &port=${args.port}\
-      &path=${args.path}\
-      &ssl=${args.secure}\
-      &reconnect=true\
-      &dpi=96\
-      &notifications=false\
-      &clipboard=true\
-      &compression_level=1\
-      &floating_menu=false\
-      `.replace(/\s/g, '')
     }
   },
 

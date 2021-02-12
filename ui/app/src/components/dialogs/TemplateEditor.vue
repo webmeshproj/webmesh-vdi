@@ -47,8 +47,8 @@ kind: Template
 metadata:
   name: my-new-template
 spec:
-  image: myrepo/my-image:latest
-  config: {}
+  desktop:
+    image: myrepo/my-image:latest
   tags: {}
 `
 

@@ -49,26 +49,26 @@ func GetVDIClusterForDesktop(c client.Client, d *desktopsv1.Session) (*appv1.VDI
 func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDICluster, desktop *desktopsv1.Session) []corev1.Volume {
 	// Common volumes all containers will need.
 	volumes := []corev1.Volume{
-		corev1.Volume{
-			Name: desktopsv1.TmpVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: desktopsv1.RunVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: desktopsv1.RunLockVolume,
+		{
+			Name: v1.TmpVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
 		{
-			Name: desktopsv1.ShmVolume,
+			Name: v1.RunVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		{
+			Name: v1.RunLockVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+		{
+			Name: v1.ShmVolume,
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
 					Path: v1.HostShmPath,
@@ -76,7 +76,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 			},
 		},
 		{
-			Name: desktopsv1.TLSVolume,
+			Name: v1.TLSVolume,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: desktop.GetName(),
@@ -87,7 +87,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		volumes = append(volumes, corev1.Volume{
-			Name: desktopsv1.VNCSockVolume,
+			Name: v1.VNCSockVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -96,7 +96,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 
 	if t.NeedsDedicatedPulseVolume() {
 		volumes = append(volumes, corev1.Volume{
-			Name: desktopsv1.PulseSockVolume,
+			Name: v1.PulseSockVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -106,7 +106,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 	// A PVC claim for the user if specified, otherwise use an EmptyDir.
 	if cluster.GetUserdataVolumeSpec() != nil {
 		volumes = append(volumes, corev1.Volume{
-			Name: desktopsv1.HomeVolume,
+			Name: v1.HomeVolume,
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 					ClaimName: cluster.GetUserdataVolumeName(desktop.GetUser()),
@@ -115,7 +115,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 		})
 	} else {
 		volumes = append(volumes, corev1.Volume{
-			Name: desktopsv1.HomeVolume,
+			Name: v1.HomeVolume,
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
@@ -127,7 +127,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 	if t.GetInitSystem() == desktopsv1.InitSystemd {
 		volumes = append(volumes, []corev1.Volume{
 			{
-				Name: desktopsv1.CgroupsVolume,
+				Name: v1.CgroupsVolume,
 				VolumeSource: corev1.VolumeSource{
 					HostPath: &corev1.HostPathVolumeSource{
 						Path: v1.HostCgroupPath,
@@ -135,6 +135,21 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 				},
 			},
 		}...)
+	}
+
+	if t.DindIsEnabled() {
+		volumes = append(volumes, corev1.Volume{
+			Name: v1.DockerDataVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+		volumes = append(volumes, corev1.Volume{
+			Name: v1.DockerBinVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
 	}
 
 	if additionalVolumes := t.GetVolumes(); additionalVolumes != nil {
@@ -148,42 +163,48 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 func GetDesktopVolumeMountsFromTemplate(t *desktopsv1.Template, cluster *appv1.VDICluster, desktop *desktopsv1.Session) []corev1.VolumeMount {
 	mounts := []corev1.VolumeMount{
 		{
-			Name:      desktopsv1.TmpVolume,
+			Name:      v1.TmpVolume,
 			MountPath: v1.DesktopTmpPath,
 		},
 		{
-			Name:      desktopsv1.RunVolume,
+			Name:      v1.RunVolume,
 			MountPath: v1.DesktopRunPath,
 		},
 		{
-			Name:      desktopsv1.RunLockVolume,
+			Name:      v1.RunLockVolume,
 			MountPath: v1.DesktopRunLockPath,
 		},
 		{
-			Name:      desktopsv1.ShmVolume,
+			Name:      v1.ShmVolume,
 			MountPath: v1.DesktopShmPath,
 		},
 		{
-			Name:      desktopsv1.HomeVolume,
+			Name:      v1.HomeVolume,
 			MountPath: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
 	}
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      desktopsv1.VNCSockVolume,
+			Name:      v1.VNCSockVolume,
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
 		})
 	}
 	if t.NeedsDedicatedPulseVolume() {
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      desktopsv1.PulseSockVolume,
+			Name:      v1.PulseSockVolume,
 			MountPath: filepath.Dir(t.GetPulseServer()),
 		})
 	}
 	if t.GetInitSystem() == desktopsv1.InitSystemd {
 		mounts = append(mounts, corev1.VolumeMount{
-			Name:      desktopsv1.CgroupsVolume,
+			Name:      v1.CgroupsVolume,
 			MountPath: v1.DesktopCgroupPath,
+		})
+	}
+	if t.DindIsEnabled() {
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      v1.DockerBinVolume,
+			MountPath: v1.DockerBinPath,
 		})
 	}
 	if additionalMounts := t.GetVolumeMounts(); additionalMounts != nil {

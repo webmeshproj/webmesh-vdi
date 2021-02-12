@@ -39,29 +39,18 @@ const (
 
 // TemplateSpec defines the desired state of Template
 type TemplateSpec struct {
-	// The docker repository and tag to use for desktops booted from this template.
-	Image string `json:"image"`
-	// The pull policy to use when pulling the container image.
-	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Any pull secrets required for pulling the container image.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	// Additional environment variables to pass to containers booted from this template.
-	Env []corev1.EnvVar `json:"env,omitempty"`
-	// Optionally map additional information about the user (and potentially extended further
-	// in the future) into the environment of desktops booted from this template. The keys in the
-	// map are the environment variable to set inside the desktop, and the values are go templates
-	// or strings to set to the value. Currently the go templates are only passed a `Session` object
-	// containing the information in the claims for the user that created the desktop. For more information
-	// see the [JWTCLaims object](./metav1.md#JWTClaims) and corresponding go types.
-	EnvTemplates map[string]string `json:"envTemplates,omitempty"`
-	// Resource requirements to apply to desktops booted from this template.
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	// Additional volumes to attach to pods booted from this template. To mount them there
+	// must be cooresponding `volumeMounts` or `volumeDevices` specified.
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
 	// Configuration options for the instances. These are highly dependant on using
 	// the Dockerfiles (or close derivitives) provided in this repository.
-	Config *DesktopConfig `json:"config,omitempty"`
-	// Volume configurations for the instances. These can be used for mounting custom
-	// volumes at arbitrary paths in desktops.
-	VolumeConfig *DesktopVolumeConfig `json:"volumeConfig,omitempty"`
+	Config *DesktopConfig `json:"desktop"`
+	// Configurations for the display proxy.
+	ProxyConfig *ProxyConfig `json:"proxy,omitempty"`
+	// Docker-in-docker configurations for running a dind sidecar along with desktop instances.
+	DindConfig *DockerInDockerConfig `json:"dind,omitempty"`
 	// Arbitrary tags for displaying in the app UI.
 	Tags map[string]string `json:"tags,omitempty"`
 }
@@ -69,12 +58,51 @@ type TemplateSpec struct {
 // DesktopConfig represents configurations for the template and desktops booted
 // from it.
 type DesktopConfig struct {
+	// The docker repository and tag to use for desktops booted from this template.
+	Image string `json:"image"`
+	// The pull policy to use when pulling the container image.
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// Resource requirements to apply to desktops booted from this template.
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	// Additional environment variables to pass to containers booted from this template.
+	Env []corev1.EnvVar `json:"env,omitempty"`
+	// Optionally map additional information about the user (and potentially extended further
+	// in the future) into the environment of desktops booted from this template. The keys in the
+	// map are the environment variable to set inside the desktop, and the values are go templates
+	// or strings to set to the value. Currently the go templates are only passed a `Session` object
+	// containing the information in the claims for the user that created the desktop. For more information
+	// see the [JWTCaims object](https://github.com/tinyzimmer/kvdi/blob/main/pkg/types/auth_types.go#L79)
+	// and corresponding go types.
+	EnvTemplates map[string]string `json:"envTemplates,omitempty"`
+	// Volume mounts for the desktop container.
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+	// Volume devices for the desktop container.
+	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty"`
 	// Extra system capabilities to add to desktops booted from this template.
 	Capabilities []corev1.Capability `json:"capabilities,omitempty"`
 	// AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles
 	// in this repository, this will add the user to the sudo group and ability to
 	// sudo with no password.
 	AllowRoot bool `json:"allowRoot,omitempty"`
+	// The type of init system inside the image, currently only `supervisord` and `systemd`
+	// are supported. Defaults to `systemd`. `systemd` containers are run privileged and
+	// downgrading to the desktop user must be done within the image's init process. `supervisord`
+	// containers are run with minimal capabilities and directly as the desktop user.
+	Init DesktopInit `json:"init,omitempty"`
+}
+
+// ProxyConfig represents configurations for the display/audio proxy.
+type ProxyConfig struct {
+	// The image to use for the sidecar that proxies mTLS connections to the local
+	// VNC server inside the Desktop. Defaults to the public kvdi-proxy image
+	// matching the version of the currrently running manager.
+	Image string `json:"image,omitempty"`
+	// The pull policy to use when pulling the container image.
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image.
+	// This enables the API endpoint for exploring, downloading, and uploading files to
+	// desktop sessions booted from this template.
+	AllowFileTransfer bool `json:"allowFileTransfer,omitempty"`
 	// The address the VNC server listens on inside the image. This defaults to the
 	// UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward
 	// websockify requests validated by mTLS to this socket.
@@ -84,30 +112,23 @@ type DesktopConfig struct {
 	// when serving audio. This defaults to what the ubuntu/arch desktop images are configured
 	// to do during init. The value is assumed to be a unix socket.
 	PulseServer string `json:"pulseServer,omitempty"`
-	// AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image.
-	// This enables the API endpoint for exploring, downloading, and uploading files to
-	// desktop sessions booted from this template.
-	AllowFileTransfer bool `json:"allowFileTransfer,omitempty"`
-	// The image to use for the sidecar that proxies mTLS connections to the local
-	// VNC server inside the Desktop. Defaults to the public kvdi-proxy image
-	// matching the version of the currrently running manager.
-	ProxyImage string `json:"proxyImage,omitempty"`
-	// The type of init system inside the image, currently only `supervisord` and `systemd`
-	// are supported. Defaults to `systemd`. `systemd` containers are run privileged and
-	// downgrading to the desktop user must be done within the image's init process. `supervisord`
-	// containers are run with minimal capabilities and directly as the desktop user.
-	Init DesktopInit `json:"init,omitempty"`
+	// Resource restraints to place on the proxy sidecar.
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
-// DesktopVolumeConfig represents configurations for volumes attached to pods booted from
-// a template.
-type DesktopVolumeConfig struct {
-	// Additional volumes to attach to pods booted from this template. To mount them there
-	// must be cooresponding `volumeMounts` or `volumeDevices` specified.
-	Volumes []corev1.Volume `json:"volumes,omitempty"`
-	// Volume mounts for the desktop container.
+// DockerInDockerConfig is a configuration for mounting a DinD sidecar with desktops
+// booted from the template. This will provide ephemeral docker daemons and storage
+// to sessions.
+type DockerInDockerConfig struct {
+	// The image to use for the dind sidecar. Defaults to `docker:dind`.
+	Image string `json:"image,omitempty"`
+	// The pull policy to use when pulling the container image.
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	// Resource restraints to place on the dind sidecar.
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	// Volume mounts for the dind container.
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
-	// Volume devices for the desktop container.
+	// Volume devices for the dind container.
 	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty"`
 }
 

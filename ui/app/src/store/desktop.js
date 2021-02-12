@@ -91,13 +91,6 @@ export const DesktopSessions = new Vuex.Store({
           data.serviceAccount = serviceAccount
         }
         const session = await Vue.prototype.$axios.post('/api/sessions', data)
-        // add the socket type from the template config so we know how to connect
-        // to the display
-        if (typeof template.spec.config.socketType === 'string') {
-          session.data.socketType = template.spec.config.socketType
-        } else {
-          session.data.socketType = 'xvnc'
-        }
         commit('new_session', session.data)
         commit('set_active_session', session.data)
       } catch (err) {

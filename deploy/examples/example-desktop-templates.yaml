@@ -3,11 +3,14 @@ kind: Template
 metadata:
   name: ubuntu-xfce
 spec:
-  image: ghcr.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
-  imagePullPolicy: IfNotPresent
-  config:
-    allowFileTransfer: true
+  desktop:
+    image: ghcr.io/tinyzimmer/kvdi:ubuntu-xfce4-latest
+    imagePullPolicy: IfNotPresent
     allowRoot: true
+  proxy:
+    allowFileTransfer: true
+  dind: 
+    image: "docker:19-dind" # Defaults to latest which may have issues depending on your runtime
   tags:
     os: ubuntu
     desktop: xfce4
@@ -19,39 +22,12 @@ kind: Template
 metadata:
   name: dosbox
 spec:
-  image: ghcr.io/tinyzimmer/kvdi:dosbox-latest
-  imagePullPolicy: IfNotPresent
-  config:
+  desktop:
+    image: ghcr.io/tinyzimmer/kvdi:dosbox-latest
+    imagePullPolicy: IfNotPresent
     init: supervisord
+  proxy:
     pulseServer: unix:///var/run/kvdi/pulse-server
   tags:
     os: ubuntu
     desktop: dosbox
-
-# ---
-# apiVersion: desktops.kvdi.io/v1
-# kind: Template
-# metadata:
-#   name: lens-ide
-# spec:
-#   image: ghcr.io/tinyzimmer/kvdi:app-lens-latest
-#   imagePullPolicy: IfNotPresent
-#   config:
-#     init: supervisord
-#     pulseServer: unix:///var/run/kvdi/pulse-server
-#   tags:
-#     app-profile: Lens
-# ---
-# apiVersion: desktops.kvdi.io/v1
-# kind: Template
-# metadata:
-#   name: postman
-# spec:
-#   image: ghcr.io/tinyzimmer/kvdi:app-lens-latest
-#   imagePullPolicy: IfNotPresent
-#   config:
-#     allowRoot: true
-#     init: systemd
-#     socketType: xpra
-#   tags:
-#     app-profile: Postman

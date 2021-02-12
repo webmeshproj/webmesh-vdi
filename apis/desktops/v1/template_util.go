@@ -30,43 +30,69 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/version"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// GetInitContainers returns any init containers required to run before the desktop launches.
+func (t *Template) GetInitContainers() []corev1.Container {
+	containers := make([]corev1.Container, 0)
+	if t.DindIsEnabled() {
+		containers = append(containers, corev1.Container{
+			Name:            "dind-init",
+			Image:           t.GetDindImage(),
+			ImagePullPolicy: t.GetDindPullPolicy(),
+			Command:         []string{"/bin/sh", "-c", fmt.Sprintf("cp -r /usr/local/bin/* %s", v1.DockerBinPath)},
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      v1.DockerBinVolume,
+					MountPath: v1.DockerBinPath,
+				},
+			},
+		})
+	}
+	return containers
+}
+
 // GetStaticEnvVars returns the environment variables configured in the template.
-func (t *Template) GetStaticEnvVars() []corev1.EnvVar { return t.Spec.Env }
+func (t *Template) GetStaticEnvVars() []corev1.EnvVar {
+	if t.Spec.Config != nil {
+		return t.Spec.Config.Env
+	}
+	return nil
+}
 
 // GetEnvTemplates returns the environment variable templates.
-func (t *Template) GetEnvTemplates() map[string]string { return t.Spec.EnvTemplates }
+func (t *Template) GetEnvTemplates() map[string]string {
+	if t.Spec.Config != nil {
+		return t.Spec.Config.EnvTemplates
+	}
+	return nil
+}
 
 // GetPulseServer returns the pulse server to give to the proxy for handling audio streams.
 func (t *Template) GetPulseServer() string {
-	if t.Spec.Config != nil && t.Spec.Config.PulseServer != "" {
-		return strings.TrimPrefix(t.Spec.Config.PulseServer, "unix://")
+	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.PulseServer != "" {
+		return strings.TrimPrefix(t.Spec.ProxyConfig.PulseServer, "unix://")
 	}
 	return fmt.Sprintf("/run/user/%d/pulse/native", v1.DefaultUser)
 }
 
 // GetVolumes returns the additional volumes to apply to a pod.
 func (t *Template) GetVolumes() []corev1.Volume {
-	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.Volumes != nil {
-		return t.Spec.VolumeConfig.Volumes
-	}
-	return nil
+	return t.Spec.Volumes
 }
 
 // GetVolumeMounts returns the additional volume mounts to apply to the desktop container.
 func (t *Template) GetVolumeMounts() []corev1.VolumeMount {
-	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.VolumeMounts != nil {
-		return t.Spec.VolumeConfig.VolumeMounts
+	if t.Spec.Config != nil && len(t.Spec.Config.VolumeMounts) > 0 {
+		return t.Spec.Config.VolumeMounts
 	}
 	return nil
 }
 
 // GetVolumeDevices returns the additional volume devices to apply to the desktop container.
 func (t *Template) GetVolumeDevices() []corev1.VolumeDevice {
-	if t.Spec.VolumeConfig != nil && t.Spec.VolumeConfig.VolumeDevices != nil {
-		return t.Spec.VolumeConfig.VolumeDevices
+	if t.Spec.Config != nil && len(t.Spec.Config.VolumeDevices) > 0 {
+		return t.Spec.Config.VolumeDevices
 	}
 	return nil
 }
@@ -91,16 +117,16 @@ func (t *Template) RootEnabled() bool {
 // FileTransferEnabled returns true if desktops booted from the template should
 // allow file transfer.
 func (t *Template) FileTransferEnabled() bool {
-	if t.Spec.Config != nil {
-		return t.Spec.Config.AllowFileTransfer
+	if t.Spec.ProxyConfig != nil {
+		return t.Spec.ProxyConfig.AllowFileTransfer
 	}
 	return false
 }
 
 // GetKVDIVNCProxyImage returns the kvdi-proxy image for the desktop instance.
 func (t *Template) GetKVDIVNCProxyImage() string {
-	if t.Spec.Config != nil && t.Spec.Config.ProxyImage != "" {
-		return t.Spec.Config.ProxyImage
+	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.Image != "" {
+		return t.Spec.ProxyConfig.Image
 	}
 	return fmt.Sprintf("ghcr.io/tinyzimmer/kvdi:kvdi-proxy-%s", version.Version)
 }
@@ -108,13 +134,16 @@ func (t *Template) GetKVDIVNCProxyImage() string {
 // GetDesktopImage returns the docker image to use for instances booted from
 // this template.
 func (t *Template) GetDesktopImage() string {
-	return t.Spec.Image
+	if t.Spec.Config != nil {
+		return t.Spec.Config.Image
+	}
+	return ""
 }
 
 // GetDesktopPullPolicy returns the image pull policy for this template.
 func (t *Template) GetDesktopPullPolicy() corev1.PullPolicy {
-	if t.Spec.ImagePullPolicy != "" {
-		return t.Spec.ImagePullPolicy
+	if t.Spec.Config != nil && t.Spec.Config.ImagePullPolicy != "" {
+		return t.Spec.Config.ImagePullPolicy
 	}
 	return corev1.PullIfNotPresent
 }
@@ -126,7 +155,10 @@ func (t *Template) GetDesktopPullSecrets() []corev1.LocalObjectReference {
 
 // GetDesktopResources returns the resource requirements for this instance.
 func (t *Template) GetDesktopResources() corev1.ResourceRequirements {
-	return t.Spec.Resources
+	if t.Spec.Config != nil {
+		return t.Spec.Config.Resources
+	}
+	return corev1.ResourceRequirements{}
 }
 
 // IsTCPDisplaySocket returns true if the VNC server is listening on a TCP socket.
@@ -146,8 +178,8 @@ func (t *Template) GetDisplaySocketAddress() string {
 
 // GetDisplaySocketURI returns the display socket URI to pass to the nonvnc-proxy.
 func (t *Template) GetDisplaySocketURI() string {
-	if t.Spec.Config != nil && t.Spec.Config.SocketAddr != "" {
-		return t.Spec.Config.SocketAddr
+	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.SocketAddr != "" {
+		return t.Spec.ProxyConfig.SocketAddr
 	}
 	return v1.DefaultDisplaySocketAddr
 }
@@ -219,19 +251,6 @@ func (t *Template) GetDesktopContainerSecurityContext() *corev1.SecurityContext 
 	}
 }
 
-// Volume names
-var (
-	TmpVolume       = "tmp"
-	RunVolume       = "run"
-	ShmVolume       = "shm"
-	TLSVolume       = "tls"
-	HomeVolume      = "home"
-	CgroupsVolume   = "cgroups"
-	RunLockVolume   = "run-lock"
-	VNCSockVolume   = "vnc-sock"
-	PulseSockVolume = "pulse-sock"
-)
-
 // NeedsDedicatedPulseVolume returns true if the location of the pulse socket is not
 // covered by any of the existing mounts.
 func (t *Template) NeedsDedicatedPulseVolume() bool {
@@ -240,8 +259,8 @@ func (t *Template) NeedsDedicatedPulseVolume() bool {
 			return false
 		}
 	}
-	if t.Spec.VolumeConfig != nil && len(t.Spec.VolumeConfig.VolumeMounts) > 0 {
-		for _, mount := range t.Spec.VolumeConfig.VolumeMounts {
+	if t.Spec.Config != nil && len(t.Spec.Config.VolumeMounts) > 0 {
+		for _, mount := range t.Spec.Config.VolumeMounts {
 			if strings.HasPrefix(t.GetPulseServer(), mount.MountPath) {
 				return false
 			}
@@ -255,49 +274,65 @@ func (t *Template) NeedsDedicatedPulseVolume() bool {
 	return true
 }
 
+// GetProxyPullPolicy returns the pull policy for the proxy container.
+func (t *Template) GetProxyPullPolicy() corev1.PullPolicy {
+	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.ImagePullPolicy != "" {
+		return t.Spec.ProxyConfig.ImagePullPolicy
+	}
+	return corev1.PullIfNotPresent
+}
+
+// GetProxyResources returns the resources for the proxy container.
+func (t *Template) GetProxyResources() corev1.ResourceRequirements {
+	if t.Spec.ProxyConfig != nil {
+		return t.Spec.ProxyConfig.Resources
+	}
+	return corev1.ResourceRequirements{}
+}
+
 // GetDesktopProxyContainer returns the configuration for the kvdi-proxy sidecar.
 func (t *Template) GetDesktopProxyContainer() corev1.Container {
 	proxyVolMounts := []corev1.VolumeMount{
 		{
-			Name:      TmpVolume,
+			Name:      v1.TmpVolume,
 			MountPath: v1.DesktopTmpPath,
 		},
 		{
-			Name:      RunVolume,
+			Name:      v1.RunVolume,
 			MountPath: v1.DesktopRunPath,
 		},
 		{
-			Name:      RunLockVolume,
+			Name:      v1.RunLockVolume,
 			MountPath: v1.DesktopRunLockPath,
 		},
 		{
-			Name:      TLSVolume,
+			Name:      v1.TLSVolume,
 			MountPath: v1.ServerCertificateMountPath,
 			ReadOnly:  true,
 		},
 	}
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
-			Name:      VNCSockVolume,
+			Name:      v1.VNCSockVolume,
 			MountPath: filepath.Dir(t.GetDisplaySocketAddress()),
 		})
 	}
 	if t.NeedsDedicatedPulseVolume() {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
-			Name:      PulseSockVolume,
+			Name:      v1.PulseSockVolume,
 			MountPath: filepath.Dir(t.GetPulseServer()),
 		})
 	}
 	if t.FileTransferEnabled() {
 		proxyVolMounts = append(proxyVolMounts, corev1.VolumeMount{
-			Name:      HomeVolume,
+			Name:      v1.HomeVolume,
 			MountPath: v1.DesktopHomeMntPath,
 		})
 	}
 	return corev1.Container{
 		Name:            "kvdi-proxy",
 		Image:           t.GetKVDIVNCProxyImage(),
-		ImagePullPolicy: corev1.PullIfNotPresent,
+		ImagePullPolicy: t.GetProxyPullPolicy(),
 		Args: []string{
 			"--vnc-addr", t.GetDisplaySocketURI(),
 			"--user-id", strconv.Itoa(int(v1.DefaultUser)),
@@ -310,20 +345,78 @@ func (t *Template) GetDesktopProxyContainer() corev1.Container {
 			},
 		},
 		VolumeMounts: proxyVolMounts,
-		// TODO: Make these configurable
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("50m"),
-				corev1.ResourceMemory: resource.MustParse("64Mi"),
-			},
-			// We need to be able to burst pretty high if the user wants to
-			// download a large directory. An admin should be the one to determine
-			// how many resources a user can use at any given time. This would also have
-			// the benefit of limiting network traffic.
-			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("500m"),
-				corev1.ResourceMemory: resource.MustParse("256Mi"),
-			},
+		Resources:    t.GetProxyResources(),
+	}
+}
+
+// DindIsEnabled returns true if dind is enabled for instances from this template.
+func (t *Template) DindIsEnabled() bool {
+	return t.Spec.DindConfig != nil
+}
+
+// GetDindImage returns the image to use for the dind sidecar.
+func (t *Template) GetDindImage() string {
+	if t.Spec.DindConfig != nil && t.Spec.DindConfig.Image != "" {
+		return t.Spec.DindConfig.Image
+	}
+	return "docker:dind"
+}
+
+// GetDindPullPolicy returns the pull policy for the proxy container.
+func (t *Template) GetDindPullPolicy() corev1.PullPolicy {
+	if t.Spec.DindConfig != nil && t.Spec.DindConfig.ImagePullPolicy != "" {
+		return t.Spec.DindConfig.ImagePullPolicy
+	}
+	return corev1.PullIfNotPresent
+}
+
+// GetDindResources returns the resources for the dind container.
+func (t *Template) GetDindResources() corev1.ResourceRequirements {
+	if t.Spec.DindConfig != nil {
+		return t.Spec.DindConfig.Resources
+	}
+	return corev1.ResourceRequirements{}
+}
+
+// GetDindVolumeMounts returns the volume mounts for the dind container.
+func (t *Template) GetDindVolumeMounts() []corev1.VolumeMount {
+	var mounts []corev1.VolumeMount
+	if t.Spec.DindConfig != nil && len(t.Spec.DindConfig.VolumeMounts) > 0 {
+		mounts = t.Spec.DindConfig.VolumeMounts
+	} else {
+		mounts = []corev1.VolumeMount{}
+	}
+	mounts = append(mounts, corev1.VolumeMount{
+		Name:      v1.RunVolume,
+		MountPath: v1.DesktopRunPath,
+	})
+	mounts = append(mounts, corev1.VolumeMount{
+		Name:      v1.DockerDataVolume,
+		MountPath: v1.DockerDataPath,
+	})
+	return mounts
+}
+
+// GetDindVolumeDevices returns the volume devices for the dind container.
+func (t *Template) GetDindVolumeDevices() []corev1.VolumeDevice {
+	if t.Spec.DindConfig != nil && len(t.Spec.DindConfig.VolumeDevices) > 0 {
+		return t.Spec.DindConfig.VolumeDevices
+	}
+	return nil
+}
+
+// GetDindContainer returns a dind sidecar to run for an instance, or nil if not configured
+// on the template.
+func (t *Template) GetDindContainer() corev1.Container {
+	return corev1.Container{
+		Name:            "dind",
+		Image:           t.GetDindImage(),
+		ImagePullPolicy: t.GetDindPullPolicy(),
+		Resources:       t.GetDindResources(),
+		VolumeMounts:    t.GetDindVolumeMounts(),
+		VolumeDevices:   t.GetDindVolumeDevices(),
+		SecurityContext: &corev1.SecurityContext{
+			Privileged: &v1.True,
 		},
 	}
 }
