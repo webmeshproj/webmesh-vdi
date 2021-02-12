@@ -634,4 +634,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `ed3ca54`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `532ff7c`.*

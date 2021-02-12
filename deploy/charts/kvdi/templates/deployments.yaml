@@ -32,7 +32,7 @@ spec:
           command:
             - /manager
           image: {{ .Values.manager.image.repository }}/{{ .Values.manager.image.name  }}:{{ include "kvdi.managerTag" . }}
-          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}latest
+          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
           livenessProbe:
             httpGet:
               path: /healthz
