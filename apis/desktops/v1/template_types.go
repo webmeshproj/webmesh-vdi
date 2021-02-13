@@ -1,21 +1,21 @@
 /*
 
-Copyright 2020,2021 Avi Zimmerman
+   Copyright 2020,2021 Avi Zimmerman
 
-This file is part of kvdi.
+   This file is part of kvdi.
 
-kvdi is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+   kvdi is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-kvdi is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   kvdi is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
+   You should have received a copy of the GNU General Public License
+   along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
@@ -46,11 +46,15 @@ type TemplateSpec struct {
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
 	// Configuration options for the instances. These are highly dependant on using
 	// the Dockerfiles (or close derivitives) provided in this repository.
-	Config *DesktopConfig `json:"desktop"`
+	DesktopConfig *DesktopConfig `json:"desktop,omitempty"`
 	// Configurations for the display proxy.
 	ProxyConfig *ProxyConfig `json:"proxy,omitempty"`
 	// Docker-in-docker configurations for running a dind sidecar along with desktop instances.
 	DindConfig *DockerInDockerConfig `json:"dind,omitempty"`
+	// QEMU configurations for this template. When defined, VMs are used instead of containers
+	// for desktop sessions. This object is mututally exclusive with `desktop` and will take
+	// precedence when defined.
+	QEMUConfig *QEMUConfig `json:"qemu,omitempty"`
 	// Arbitrary tags for displaying in the app UI.
 	Tags map[string]string `json:"tags,omitempty"`
 }
@@ -59,7 +63,7 @@ type TemplateSpec struct {
 // from it.
 type DesktopConfig struct {
 	// The docker repository and tag to use for desktops booted from this template.
-	Image string `json:"image"`
+	Image string `json:"image,omitempty"`
 	// The pull policy to use when pulling the container image.
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// Resource requirements to apply to desktops booted from this template.
@@ -104,9 +108,9 @@ type ProxyConfig struct {
 	// desktop sessions booted from this template.
 	AllowFileTransfer bool `json:"allowFileTransfer,omitempty"`
 	// The address the VNC server listens on inside the image. This defaults to the
-	// UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward
-	// websockify requests validated by mTLS to this socket.
-	// Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
+	// UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward
+	// websockify requests validated by mTLS to this socket. Must be in the format of
+	// `tcp://{host}:{port}` or `unix://{path}`.
 	SocketAddr string `json:"socketAddr,omitempty"`
 	// Override the address of the PulseAudio server that the proxy will try to connect to
 	// when serving audio. This defaults to what the ubuntu/arch desktop images are configured
@@ -130,6 +134,29 @@ type DockerInDockerConfig struct {
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 	// Volume devices for the dind container.
 	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty"`
+}
+
+// QEMUConfig represents configurations for running a qemu virtual machine for instances
+// booted from this template.
+type QEMUConfig struct {
+	// The container image bundling the disks for this template.
+	DiskImage string `json:"diskImage,omitempty"`
+	// The pull policy to use when pulling the disk image.
+	DiskImagePullPolicy corev1.PullPolicy `json:"diskImagePullPolicy,omitempty"`
+	// The container image containing the QEMU utilities to use to launch the VM.
+	// Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
+	QEMUImage string `json:"qemuImage,omitempty"`
+	// The pull policy to use when pulling the QEMU image.
+	QEMUImagePullPolicy corev1.PullPolicy `json:"qemuImagePullPolicy,omitempty"`
+	// The path to the boot volume inside the image. Defaults to `/disk/boot.img`.
+	DiskPath string `json:"diskPath,omitempty"`
+	// The path to a pre-built cloud init image to use when booting the VM. Defaults
+	// to an auto-generated one at runtime.
+	CloudInitPath string `json:"cloudInitPath,omitempty"`
+	// The number of vCPUs to assign the virtual machine. Defaults to 1.
+	CPUs int `json:"cpus,omitempty"`
+	// The amount of memory to assign the virtual machine (in MB). Defaults to 1024.
+	Memory int `json:"memory,omitempty"`
 }
 
 // TemplateStatus defines the observed state of Template

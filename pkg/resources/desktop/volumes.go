@@ -25,6 +25,7 @@ import (
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
 	"github.com/go-logr/logr"
@@ -119,7 +120,7 @@ func newPVCForUser(cluster *appv1.VDICluster, instance *desktopsv1.Session, exis
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            cluster.GetUserdataVolumeName(instance.GetUser()),
 			Namespace:       instance.GetNamespace(),
-			Labels:          cluster.GetDesktopLabels(instance),
+			Labels:          k8sutil.GetDesktopLabels(cluster, instance),
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: *spec,

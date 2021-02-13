@@ -86,6 +86,9 @@ const (
 	// VNCSockEnvVar is the environment variable used to set the VNC socket during the init
 	// process.
 	VNCSockEnvVar = "VNC_SOCK_ADDR"
+	// UIDEnvVar is the environment varible where the UID of the user is set. This is a generic
+	// UID used for all users.
+	UIDEnvVar = "UID"
 )
 
 // Desktop runtime volume names
@@ -101,6 +104,7 @@ var (
 	PulseSockVolume  = "pulse-sock"
 	DockerDataVolume = "docker-data"
 	DockerBinVolume  = "docker-bin"
+	KVMVolume        = "qemu-kvm"
 )
 
 // Desktop runtime mount paths
@@ -115,6 +119,7 @@ const (
 	DesktopCgroupPath  = "/sys/fs/cgroup"
 	DesktopHomeFmt     = "/home/%s"
 	DesktopHomeMntPath = "/mnt/home"
+	DesktopKVMPath     = "/dev/kvm"
 	DockerDataPath     = "/var/lib/docker"
 	DockerBinPath      = "/usr/local/docker/bin"
 )

@@ -16,6 +16,7 @@ UBUNTU_BASE_IMAGE       ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
 ARCH_BASE_IMAGE         ?= ${REPO}/${NAME}:arch-base-${VERSION}
 APP_PROFILE_BASE_IMAGE  ?= ${REPO}/${NAME}:app-base-${VERSION}
 DOSBOX_IMAGE            ?= ${REPO}/${NAME}:dosbox-${VERSION}
+QEMU_IMAGE              ?= ${REPO}/${NAME}:qemu-${VERSION}
 
 # K3d Options
 HELM_VERSION ?= v3.1.2

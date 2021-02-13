@@ -30,6 +30,7 @@ import (
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -85,7 +86,7 @@ func (m *Manager) ReconcileDesktop(reqLogger logr.Logger, desktop *desktopsv1.Se
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            nn.Name,
 				Namespace:       nn.Namespace,
-				Labels:          m.cluster.GetDesktopLabels(desktop),
+				Labels:          k8sutil.GetDesktopLabels(m.cluster, desktop),
 				Annotations:     desktop.GetAnnotations(),
 				OwnerReferences: desktop.OwnerReferences(),
 			},

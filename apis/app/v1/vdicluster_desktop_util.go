@@ -22,7 +22,6 @@ package v1
 import (
 	"time"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 )
 
@@ -53,17 +52,4 @@ func (c *VDICluster) GetUserDesktopSelector(username string) map[string]string {
 		v1.UserLabel:       username,
 		v1.VDIClusterLabel: c.GetName(),
 	}
-}
-
-// GetDesktopLabels returns the labels to apply to components for a desktop.
-func (c *VDICluster) GetDesktopLabels(desktop *desktopsv1.Session) map[string]string {
-	labels := desktop.GetLabels()
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels[v1.UserLabel] = desktop.GetUser()
-	labels[v1.VDIClusterLabel] = c.GetName()
-	labels[v1.ComponentLabel] = "desktop"
-	labels[v1.DesktopNameLabel] = desktop.GetName()
-	return labels
 }

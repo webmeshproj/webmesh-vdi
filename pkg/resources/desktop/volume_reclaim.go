@@ -24,7 +24,6 @@ import (
 
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +32,7 @@ import (
 )
 
 func (f *Reconciler) reclaimVolumes(reqLogger logr.Logger, instance *desktopsv1.Session) error {
-	cluster, err := k8sutil.GetVDIClusterForDesktop(f.client, instance)
+	cluster, err := instance.GetVDICluster(f.client)
 	if err != nil {
 		return err
 	}

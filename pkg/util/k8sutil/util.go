@@ -31,6 +31,7 @@ import (
 	"strings"
 
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
@@ -64,6 +65,19 @@ func LookupClusterByName(c client.Client, name string) (*appv1.VDICluster, error
 // IsMarkedForDeletion returns true if the given cluster is marked for deletion.
 func IsMarkedForDeletion(cr *appv1.VDICluster) bool {
 	return cr.GetDeletionTimestamp() != nil
+}
+
+// GetDesktopLabels returns the labels to apply to components for a desktop.
+func GetDesktopLabels(c *appv1.VDICluster, desktop *desktopsv1.Session) map[string]string {
+	labels := desktop.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[v1.UserLabel] = desktop.GetUser()
+	labels[v1.VDIClusterLabel] = c.GetName()
+	labels[v1.ComponentLabel] = "desktop"
+	labels[v1.DesktopNameLabel] = desktop.GetName()
+	return labels
 }
 
 // SetCreationSpecAnnotation sets an annotation with a checksum of the desired

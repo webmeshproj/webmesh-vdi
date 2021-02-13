@@ -31,53 +31,16 @@ import (
 )
 
 func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, instance *desktopsv1.Session, envSecret string) *corev1.Pod {
-	pod := &corev1.Pod{
+	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
 			Namespace:       instance.GetNamespace(),
-			Labels:          cluster.GetDesktopLabels(instance),
+			Labels:          k8sutil.GetDesktopLabels(cluster, instance),
 			Annotations:     instance.GetAnnotations(),
 			OwnerReferences: instance.OwnerReferences(),
 		},
-		Spec: corev1.PodSpec{
-			Hostname:           instance.GetName(),
-			Subdomain:          instance.GetName(),
-			ServiceAccountName: instance.GetServiceAccount(),
-			SecurityContext:    tmpl.GetDesktopPodSecurityContext(),
-			Volumes:            k8sutil.GetDesktopVolumesFromTemplate(tmpl, cluster, instance),
-			ImagePullSecrets:   tmpl.GetDesktopPullSecrets(),
-			InitContainers:     tmpl.GetInitContainers(),
-			Containers: []corev1.Container{
-				tmpl.GetDesktopProxyContainer(),
-				{
-					Name:            "desktop",
-					Image:           tmpl.GetDesktopImage(),
-					ImagePullPolicy: tmpl.GetDesktopPullPolicy(),
-					VolumeMounts:    k8sutil.GetDesktopVolumeMountsFromTemplate(tmpl, cluster, instance),
-					VolumeDevices:   tmpl.GetVolumeDevices(),
-					SecurityContext: tmpl.GetDesktopContainerSecurityContext(),
-					Env:             tmpl.GetDesktopEnvVars(instance),
-					Lifecycle:       tmpl.GetLifecycle(),
-					Resources:       tmpl.GetDesktopResources(),
-				},
-			},
-		},
+		Spec: tmpl.ToPodSpec(cluster, instance, envSecret),
 	}
-	if envSecret != "" {
-		pod.Spec.Containers[1].EnvFrom = []corev1.EnvFromSource{
-			{
-				SecretRef: &corev1.SecretEnvSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: envSecret,
-					},
-				},
-			},
-		}
-	}
-	if tmpl.DindIsEnabled() {
-		pod.Spec.Containers = append(pod.Spec.Containers, tmpl.GetDindContainer())
-	}
-	return pod
 }
 
 func newServiceForCR(cluster *appv1.VDICluster, instance *desktopsv1.Session) *corev1.Service {
@@ -85,13 +48,13 @@ func newServiceForCR(cluster *appv1.VDICluster, instance *desktopsv1.Session) *c
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
 			Namespace:       instance.GetNamespace(),
-			Labels:          cluster.GetDesktopLabels(instance),
+			Labels:          k8sutil.GetDesktopLabels(cluster, instance),
 			Annotations:     instance.GetAnnotations(),
 			OwnerReferences: instance.OwnerReferences(),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     corev1.ServiceTypeClusterIP,
-			Selector: cluster.GetDesktopLabels(instance),
+			Selector: k8sutil.GetDesktopLabels(cluster, instance),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "kvdi-proxy",

@@ -33,7 +33,6 @@ import (
 	"github.com/tinyzimmer/kvdi/pkg/secrets"
 	"github.com/tinyzimmer/kvdi/pkg/util/common"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/reconcile"
 
 	"github.com/go-logr/logr"
@@ -74,7 +73,7 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 	if err != nil {
 		return err
 	}
-	cluster, err := k8sutil.GetVDIClusterForDesktop(f.client, instance)
+	cluster, err := instance.GetVDICluster(f.client)
 	if err != nil {
 		return err
 	}

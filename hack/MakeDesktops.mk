@@ -15,6 +15,11 @@ build-app-base:
 		-f Dockerfile.base \
 		-t ${APP_PROFILE_BASE_IMAGE}
 
+build-qemu:
+	cd build/desktops/qemu && docker build . \
+		-f Dockerfile.base \
+		-t ${QEMU_IMAGE}
+
 build-dosbox:
 	cd build/desktops/dosbox && docker build . \
 		-f Dockerfile.base \
@@ -50,6 +55,9 @@ push-arch-base: build-arch-base
 push-dosbox: build-dosbox
 	docker push ${DOSBOX_IMAGE}
 
+push-qemu: build-qemu
+	docker push ${QEMU_IMAGE}
+
 push-ubuntu-%: build-ubuntu-%
 	docker push ${REPO}/${NAME}:ubuntu-$*-${VERSION}
 
@@ -72,6 +80,9 @@ load-app-%: $(K3D) build-app-%
 
 load-dosbox: $(K3D) build-dosbox
 	$(call load_image,${DOSBOX_IMAGE})
+
+load-qemu: $(K3D) build-qemu
+	$(call load_image,${QEMU_IMAGE})
 
 #
 # For building demo environment

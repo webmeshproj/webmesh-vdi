@@ -123,6 +123,7 @@ build-kvdi-proxy: build-base
 
 license-headers:
 	for i in `find cmd/ -name '*.go'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
+	for i in `find apis/ -name '*.go' -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
 	for i in `find pkg/ -name '*.go' -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
 	for i in `find ui/app/src -name '*.js'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
 	for i in `find ui/app/src -name '*.vue'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.vue.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
@@ -295,6 +296,10 @@ test-oidc:
 HELM_ARGS ?=
 deploy: ${HELM} chart-yaml
 	${HELM_K3D} upgrade --install ${NAME} deploy/charts/kvdi --wait ${HELM_ARGS}
+
+## make deploy-crds            # Deploys just the CRDs into the k3d cluster.
+deploy-crds: manifests kustomize
+	$(KUSTOMIZE) build config/crd | ${KUBECTL_K3D} apply -f -
 
 helm-template: ${HELM} chart-yaml
 	${HELM_K3D} template ${NAME} deploy/charts/kvdi ${HELM_ARGS}

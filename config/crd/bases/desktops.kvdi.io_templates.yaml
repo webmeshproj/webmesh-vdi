@@ -281,8 +281,6 @@ spec:
                       - name
                       type: object
                     type: array
-                required:
-                - image
                 type: object
               dind:
                 description: Docker-in-docker configurations for running a dind sidecar
@@ -447,10 +445,46 @@ spec:
                     type: object
                   socketAddr:
                     description: The address the VNC server listens on inside the
-                      image. This defaults to the UNIX socket /var/run/kvdi/display.sock.
+                      image. This defaults to the UNIX socket `/var/run/kvdi/display.sock`.
                       The kvdi-proxy sidecar will forward websockify requests validated
                       by mTLS to this socket. Must be in the format of `tcp://{host}:{port}`
                       or `unix://{path}`.
+                    type: string
+                type: object
+              qemu:
+                description: QEMU configurations for this template. When defined,
+                  VMs are used instead of containers for desktop sessions. This object
+                  is mututally exclusive with `desktop` and will take precedence when
+                  defined.
+                properties:
+                  cloudInitPath:
+                    description: The path to a pre-built cloud init image to use when
+                      booting the VM. Defaults to an auto-generated one at runtime.
+                    type: string
+                  cpus:
+                    description: The number of vCPUs to assign the virtual machine.
+                      Defaults to 1.
+                    type: integer
+                  diskImage:
+                    description: The container image bundling the disks for this template.
+                    type: string
+                  diskImagePullPolicy:
+                    description: The pull policy to use when pulling the disk image.
+                    type: string
+                  diskPath:
+                    description: The path to the boot volume inside the image. Defaults
+                      to `/disk/boot.img`.
+                    type: string
+                  memory:
+                    description: The amount of memory to assign the virtual machine
+                      (in MB). Defaults to 1024.
+                    type: integer
+                  qemuImage:
+                    description: The container image containing the QEMU utilities
+                      to use to launch the VM. Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
+                    type: string
+                  qemuImagePullPolicy:
+                    description: The pull policy to use when pulling the QEMU image.
                     type: string
                 type: object
               tags:
@@ -1891,8 +1925,6 @@ spec:
                   - name
                   type: object
                 type: array
-            required:
-            - desktop
             type: object
           status:
             description: TemplateStatus defines the observed state of Template

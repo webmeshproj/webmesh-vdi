@@ -58,15 +58,15 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
             </q-td>
 
             <q-td key="image" :props="props">
-              <strong>{{ props.row.spec.desktop.image }}</strong>
+              <strong>{{ imageName(props.row.spec) }}</strong>
             </q-td>
 
             <q-td key="root" :props="props">
-              <q-avatar v-if="props.row.spec.desktop.allowRoot" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
+              <q-avatar v-if="rootEnabled(props.row.spec)" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
 
             <q-td key="fileXfer" :props="props">
-              <q-avatar v-if="props.row.spec.proxy.allowFileTransfer" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
+              <q-avatar v-if="xferEnabled(props.row.spec)" size="27px" font-size="20px" color="green" text-color="white" icon="done" />
             </q-td>
 
             <q-td key="tags" :props="props">
@@ -178,6 +178,15 @@ export default {
   },
 
   methods: {
+    rootEnabled (spec) { return spec.desktop && spec.desktop.allowRoot },
+    xferEnabled (spec) { return spec.proxy && spec.proxy.allowFileTransfer },
+
+    imageName (spec) {
+      if (spec.desktop && spec.desktop.image) { return spec.desktop.image }
+      if (spec.qemu && spec.qemu.diskImage) { return spec.qemu.diskImage }
+      return ''
+    },
+
     async onNewTemplate () {
       this.$q.dialog({
         component: TemplateEditor,

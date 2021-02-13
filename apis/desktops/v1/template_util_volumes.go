@@ -1,52 +1,40 @@
 /*
 
-   Copyright 2020,2021 Avi Zimmerman
+Copyright 2020,2021 Avi Zimmerman
 
-   This file is part of kvdi.
+This file is part of kvdi.
 
-   kvdi is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+kvdi is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   kvdi is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+kvdi is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 */
 
-package k8sutil
+package v1
 
 import (
-	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// GetVDIClusterForDesktop retrieves the VDICluster for this Desktop instance
-func GetVDIClusterForDesktop(c client.Client, d *desktopsv1.Session) (*appv1.VDICluster, error) {
-	nn := types.NamespacedName{Name: d.Spec.VDICluster, Namespace: metav1.NamespaceAll}
-	found := &appv1.VDICluster{}
-	return found, c.Get(context.TODO(), nn, found)
-}
-
-// GetDesktopVolumesFromTemplate returns the volumes to mount to desktop pods.
-func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDICluster, desktop *desktopsv1.Session) []corev1.Volume {
+// GetVolumes returns the volumes to mount to desktop pods.
+func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []corev1.Volume {
 	// Common volumes all containers will need.
 	volumes := []corev1.Volume{
 		{
@@ -124,7 +112,7 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 
 	// If systemd we need to add a few more temp filesystems and bind mount
 	// /sys/fs/cgroup.
-	if t.GetInitSystem() == desktopsv1.InitSystemd {
+	if t.GetInitSystem() == InitSystemd || t.IsQEMUTemplate() {
 		volumes = append(volumes, []corev1.Volume{
 			{
 				Name: v1.CgroupsVolume,
@@ -135,6 +123,18 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 				},
 			},
 		}...)
+	}
+
+	// Append the kvm device if a QEMU machine
+	if t.IsQEMUTemplate() {
+		volumes = append(volumes, corev1.Volume{
+			Name: v1.KVMVolume,
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: v1.DesktopKVMPath,
+				},
+			},
+		})
 	}
 
 	if t.DindIsEnabled() {
@@ -152,15 +152,15 @@ func GetDesktopVolumesFromTemplate(t *desktopsv1.Template, cluster *appv1.VDIClu
 		})
 	}
 
-	if additionalVolumes := t.GetVolumes(); additionalVolumes != nil {
-		volumes = append(volumes, additionalVolumes...)
+	if len(t.Spec.Volumes) > 0 {
+		volumes = append(volumes, t.Spec.Volumes...)
 	}
 
 	return volumes
 }
 
-// GetDesktopVolumeMountsFromTemplate returns the volume mounts for the main desktop container.
-func GetDesktopVolumeMountsFromTemplate(t *desktopsv1.Template, cluster *appv1.VDICluster, desktop *desktopsv1.Session) []corev1.VolumeMount {
+// GetDesktopVolumeMounts returns the volume mounts for the main desktop container.
+func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Session) []corev1.VolumeMount {
 	mounts := []corev1.VolumeMount{
 		{
 			Name:      v1.TmpVolume,
@@ -195,10 +195,16 @@ func GetDesktopVolumeMountsFromTemplate(t *desktopsv1.Template, cluster *appv1.V
 			MountPath: filepath.Dir(t.GetPulseServer()),
 		})
 	}
-	if t.GetInitSystem() == desktopsv1.InitSystemd {
+	if t.GetInitSystem() == InitSystemd || t.IsQEMUTemplate() {
 		mounts = append(mounts, corev1.VolumeMount{
 			Name:      v1.CgroupsVolume,
 			MountPath: v1.DesktopCgroupPath,
+		})
+	}
+	if t.IsQEMUTemplate() {
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      v1.KVMVolume,
+			MountPath: v1.DesktopKVMPath,
 		})
 	}
 	if t.DindIsEnabled() {
@@ -207,8 +213,8 @@ func GetDesktopVolumeMountsFromTemplate(t *desktopsv1.Template, cluster *appv1.V
 			MountPath: v1.DockerBinPath,
 		})
 	}
-	if additionalMounts := t.GetVolumeMounts(); additionalMounts != nil {
-		mounts = append(mounts, additionalMounts...)
+	if t.Spec.DesktopConfig != nil && len(t.Spec.DesktopConfig.VolumeMounts) > 0 {
+		mounts = append(mounts, t.Spec.DesktopConfig.VolumeMounts...)
 	}
 	return mounts
 }

@@ -22,6 +22,7 @@ package v1
 import (
 	"context"
 
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,4 +61,11 @@ func (d *Session) OwnerReferences() []metav1.OwnerReference {
 			BlockOwnerDeletion: &v1.False,
 		},
 	}
+}
+
+// GetVDICluster retrieves the VDICluster for this Desktop instance
+func (d *Session) GetVDICluster(c client.Client) (*appv1.VDICluster, error) {
+	nn := types.NamespacedName{Name: d.Spec.VDICluster, Namespace: metav1.NamespaceAll}
+	found := &appv1.VDICluster{}
+	return found, c.Get(context.TODO(), nn, found)
 }
