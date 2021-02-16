@@ -91,6 +91,7 @@ export const DesktopSessions = new Vuex.Store({
           data.serviceAccount = serviceAccount
         }
         const session = await Vue.prototype.$axios.post('/api/sessions', data)
+        session.data.template = template
         commit('new_session', session.data)
         commit('set_active_session', session.data)
       } catch (err) {

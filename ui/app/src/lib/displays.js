@@ -20,7 +20,21 @@
 */
 
 import RFB from '@novnc/novnc'
+import { 
+    SpiceMainConn, 
+    handle_resize, 
+    resize_helper,
+    handle_file_dragover,
+    handle_file_drop,
+} from './spice/main.js'
 import { Emitter, Events } from './events.js'
+
+export function getDisplay(session) {
+    if (session.template.spec.qemu && session.template.spec.qemu.spice) {
+        return new SPICEDisplay()
+    }
+    return new VNCDisplay()
+}
 
 // A base implementation for a display to be extended by objects using different protocols.
 class Display extends Emitter {
@@ -44,7 +58,7 @@ class Display extends Emitter {
         }
     }
 
-    // Convenience wrapper for calling a method on a child implementation, emitting any errors.
+    // Convenience wrapper for calling a method on a child implementation if it exists.
     call(method, data) {
         if (typeof (this[method]) === 'function') {
             this[method](data)
@@ -129,12 +143,53 @@ export class VNCDisplay extends Display {
     }
 }
 
-// export class SpiceDisplay extends Display {
-//     async _connect(view) {
+export class SPICEDisplay extends Display {
+    async _connect(view, displayUrl) {
+        console.log('Creating SPICE connection')
+        this._spiceClient = new SpiceMainConn({
+            uri: displayUrl,
+            screen_id: view.id,
+            onerror: (err) => { 
+                this.emit(Events.error, err)
+                this._disconnect(err)
+            },
+            onsuccess: () => { this.emit(Events.connected) },
+            onagent: (sc) => { this._connectedToSpiceAgent(sc) }
+        })
+    }
 
-//     }
+    async _disconnect(err) {
+        window.removeEventListener('resize', handle_resize)
+        window.spice_connection = null
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            const spice_xfer_area = document.getElementById('spice-xfer-area')
+            if (spice_xfer_area != null) {
+              document.getElementById('view-area').removeChild(spice_xfer_area)
+            }
+            document.getElementById('view-area').removeEventListener('dragover', handle_file_dragover, false)
+            document.getElementById('view-area').removeEventListener('drop', handle_file_drop, false)
+        }
+        if (!err && this._spiceClient) {
+            await this._spiceClient.stop()
+        }
+        console.log('Disconnected from SPICE server')
+        this._spiceClient = null
+        this.emit(Events.disconnected)
+    }
 
-//     async _disconnect() {
-
-//     }
-// }
+    _connectedToSpiceAgent(sc) {
+        console.log('Connected to SPICE server')
+        window.addEventListener('resize', handle_resize)
+        window.spice_connection = sc
+        resize_helper(sc)
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            const spice_xfer_area = document.createElement("div")
+            spice_xfer_area.setAttribute('id', 'spice-xfer-area')
+            document.getElementById('view-area').appendChild(spice_xfer_area)
+            document.getElementById('view-area').addEventListener('dragover', handle_file_dragover, false)
+            document.getElementById('view-area').addEventListener('drop', handle_file_drop, false)
+        } else {
+            console.log("File API is not supported")
+        }
+    }
+}

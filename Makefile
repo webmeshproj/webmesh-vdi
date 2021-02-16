@@ -228,17 +228,11 @@ ${HELM}:
 
 ## make test-cluster           # Make a local k3d cluster for testing.
 test-cluster: $(K3D)
-	mkdir -p /tmp/k3d/kubelet/pods
-	mkdir -p /tmp/k3d/containers/storage
-	mkdir -p /tmp/k3d/var/run/containers/storage
 	$(K3D) cluster create $(CLUSTER_NAME) \
 		--kubeconfig-update-default=false \
 		--k3s-server-arg="--disable=traefik" \
 		--volume="/dev/shm:/dev/shm@server[0]" \
 		--volume="/dev/kvm:/dev/kvm@server[0]" \
-		--volume="/tmp/k3d/kubelet/pods:/var/lib/kubelet/pods:shared@server[0]" \
-		--volume="/tmp/k3d/containers/storage:/var/lib/containers/storage:shared@server[0]" \
-		--volume="/tmp/k3d/var/run/containers/storage:/var/run/containers/storage:shared@server[0]" \
 		-p 443:443@loadbalancer -p 5556:5556@loadbalancer \
 		--registry-create
 	$(K3D) kubeconfig get $(CLUSTER_NAME) > $(CLUSTER_KUBECONFIG)
@@ -359,7 +353,6 @@ clean-cluster: ${KUBECTL} ${HELM}
 remove-cluster: $(K3D)
 	$(K3D) cluster delete $(CLUSTER_NAME)
 	rm -f $(CLUSTER_KUBECONFIG)
-	sudo rm -rf /tmp/k3d
 
 ##
 ## # Runtime Helpers

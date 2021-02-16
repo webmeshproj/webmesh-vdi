@@ -27,18 +27,18 @@ if [[ "${ENABLE_ROOT}" == "true" ]] ; then
 fi
 
 # Set the VNC socket dir - this will effectivelt do nothing if the UNIX socket env var is not set
-if [[ -z "${VNC_SOCK_ADDR}" ]] ; then
-    export VNC_SOCK_ADDR="/run/user/${UID}/vnc.sock"
+if [[ -z "${DISPLAY_SOCK_ADDR}" ]] ; then
+    export DISPLAY_SOCK_ADDR="/run/user/${UID}/vnc.sock"
 fi
 
 # Pre-create the vnc socket directory and give it to the user
-mkdir -p "$(dirname ${VNC_SOCK_ADDR})" && chown -R ${USER}: "$(dirname ${VNC_SOCK_ADDR})"
+mkdir -p "$(dirname ${DISPLAY_SOCK_ADDR})" && chown -R ${USER}: "$(dirname ${DISPLAY_SOCK_ADDR})"
 
 # Iterate all var files and do substitution
 find /etc/default -type f -exec \
     sed -i \
       -e "s|%USER%|${USER}|g" \
-      -e "s|%UNIX_SOCK%|${VNC_SOCK_ADDR}|g" \
+      -e "s|%UNIX_SOCK%|${DISPLAY_SOCK_ADDR}|g" \
       -e "s|%USER_ID%|${UID}|g" \
       -e "s|%HOME%|${HOME}|g" {} +
 

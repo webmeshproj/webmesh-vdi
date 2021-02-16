@@ -4,7 +4,7 @@ DEFAULT_CPUS="1"
 DEFAULT_MEMORY="1024"
 DEFAULT_ARCH="x86_64"
 DEFAULT_IMAGE="/disk/boot.img"
-DEFAULT_SOCK_ADDR="unix:///tmp/vnc.sock"
+DEFAULT_SOCK_ADDR="unix:///tmp/display.sock"
 DEFAULT_CLOUD_IMAGE="/tmp/cloud.img"
 
 set -x
@@ -15,11 +15,38 @@ export MEMORY=${MEMORY:-$DEFAULT_MEMORY}
 export ARCH=${ARCH:-$DEFAULT_ARCH}
 export BOOT_IMAGE=${BOOT_IMAGE:-$DEFAULT_IMAGE}
 export CLOUD_IMAGE=${CLOUD_IMAGE:-$DEFAULT_CLOUD_IMAGE}
-export VNC_SOCK_ADDR=${VNC_SOCK_ADDR:-$DEFAULT_SOCK_ADDR}
+export DISPLAY_SOCK_ADDR=${DISPLAY_SOCK_ADDR:-$DEFAULT_SOCK_ADDR}
 
 ENVIRONMENT=$(env | base64 --wrap 0)
 
-if [ ! -f "${CLOUD_IMAGE}" ] ; then cat << EOF | cloud-localds ${CLOUD_IMAGE} /dev/stdin
+
+if [[ "${DISPLAY_SOCK_ADDR}" =~ ^unix://* ]] ; then
+  socket_type="unix"
+  socket_address=${DISPLAY_SOCK_ADDR#"unix://"}
+else
+  socket_type="tcp"
+  address=${DISPLAY_SOCK_ADDR#"tcp://"}
+  tcp_address=$(echo ${address} | cut -d ":" -f1)
+  tcp_port=$(echo ${address} | cut -d ":" -f2)
+fi
+
+if [[ -n "${SPICE_DISPLAY}" ]] && [[ "${SPICE_DISPLAY}" == "true" ]] ; then
+  if [[ "${socket_type}" == "unix" ]] ; then
+    DISPLAY_ARGS="-vga qxl -spice disable-ticketing,unix,addr=${socket_address} \
+      -device virtio-serial -chardev spicevmc,id=vdagent,debug=0,name=vdagent"
+  else
+    DISPLAY_ARGS="-vga qxl -spice disable-ticketing,addr=${tcp_address},port=${tcp_port} \
+      -device virtio-serial -chardev spicevmc,id=vdagent,debug=0,name=vdagent"
+  fi
+else
+  if [[ "${socket_type}" == "unix" ]] ; then
+    DISPLAY_ARGS="-vnc unix:${socket_address}"
+  else
+    DISPLAY_ARGS="-vnc ${tcp_address}:${tcp_port}"
+  fi
+fi
+
+if [[ ! -f "${CLOUD_IMAGE}" ]] ; then cat << EOF | cloud-localds ${CLOUD_IMAGE} /dev/stdin
 #cloud-config
 
 growpart:
@@ -90,7 +117,7 @@ fi
 qemu-system-${ARCH} \
   -enable-kvm \
   -bios /usr/share/qemu/OVMF.fd \
-	-display vnc="${VNC_SOCK_ADDR}" \
+	${DISPLAY_ARGS} \
 	-cpu host -smp ${CPUS} -m ${MEMORY} \
   -usb -device usb-tablet \
 	-device virtio-blk,drive=image -drive if=none,id=image,file="${BOOT_IMAGE}" \
@@ -98,5 +125,4 @@ qemu-system-${ARCH} \
   -fsdev local,id=home,path=${HOME},security_model=none -device virtio-9p,fsdev=home,mount_tag=home \
   -fsdev local,id=kvdi_run,path=/run,security_model=none -device virtio-9p,fsdev=kvdi_run,mount_tag=kvdi_run \
 	-device virtio-net,netdev=user -netdev user,id=user \
-  -monitor unix:/run/qemu-monitor.sock,server,nowait \
-  -netdev user,id=user0,hostfwd=tcp::2222-:22
+  -monitor unix:/run/qemu-monitor.sock,server,nowait

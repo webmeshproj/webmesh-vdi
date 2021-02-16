@@ -105,16 +105,20 @@ type ProxyConfig struct {
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	// AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image.
 	// This enables the API endpoint for exploring, downloading, and uploading files to
-	// desktop sessions booted from this template.
+	// desktop sessions booted from this template. When using a `qemu` configuration with
+	// SPICE, file upload is enabled by default.
 	AllowFileTransfer bool `json:"allowFileTransfer,omitempty"`
-	// The address the VNC server listens on inside the image. This defaults to the
+	// The address the display server listens on inside the image. This defaults to the
 	// UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward
 	// websockify requests validated by mTLS to this socket. Must be in the format of
-	// `tcp://{host}:{port}` or `unix://{path}`.
+	// `tcp://{host}:{port}` or `unix://{path}`. This will usually be a VNC server unless
+	// using a `qemu` configuration with SPICE. If using custom init scripts inside your
+	// containers, this value is set to the `DISPLAY_SOCK_ADDR` environment variable.
 	SocketAddr string `json:"socketAddr,omitempty"`
 	// Override the address of the PulseAudio server that the proxy will try to connect to
 	// when serving audio. This defaults to what the ubuntu/arch desktop images are configured
-	// to do during init. The value is assumed to be a unix socket.
+	// to do during init, which is to place a socket in the user's run directory. The value is
+	// assumed to be a unix socket.
 	PulseServer string `json:"pulseServer,omitempty"`
 	// Resource restraints to place on the proxy sidecar.
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
@@ -146,13 +150,15 @@ type QEMUConfig struct {
 	// Set to true to use the image-populator CSI to mount the disk images to a qemu container.
 	// You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator)
 	// driver installed. Defaults to copying the contents out of the disk image via an init
-	// container.
+	// container. This is experimental and not really tested.
 	UseCSI bool `json:"useCSI,omitempty"`
 	// The container image containing the QEMU utilities to use to launch the VM.
 	// Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
 	QEMUImage string `json:"qemuImage,omitempty"`
 	// The pull policy to use when pulling the QEMU image.
 	QEMUImagePullPolicy corev1.PullPolicy `json:"qemuImagePullPolicy,omitempty"`
+	// Resource requirements to place on the qemu runner instance.
+	QEMUResources corev1.ResourceRequirements `json:"qemuResources,omitempty"`
 	// The path to the boot volume inside the disk image. Defaults to `/disk/boot.img`.
 	DiskPath string `json:"diskPath,omitempty"`
 	// The path to a pre-built cloud init image to use when booting the VM inside the disk
@@ -162,6 +168,11 @@ type QEMUConfig struct {
 	CPUs int `json:"cpus,omitempty"`
 	// The amount of memory to assign the virtual machine (in MB). Defaults to 1024.
 	Memory int `json:"memory,omitempty"`
+	// Set to true to use the SPICE protocol when proxying the display. If using custom qemu runners,
+	// this sets the `SPICE_DISPLAY` environment variable to `true`. The runners provided by this
+	// repository will tell qemu to set up a SPICE server at `proxy.socketAddr`. The default is to use
+	// VNC. This value is also used by the UI to determine which protocol to expect from a display connection.
+	SPICE bool `json:"spice,omitempty"`
 }
 
 // TemplateStatus defines the observed state of Template

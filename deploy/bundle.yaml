@@ -376,7 +376,7 @@ spec:
                 description: Configurations for the display proxy.
                 properties:
                   allowFileTransfer:
-                    description: AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.
+                    description: AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template. When using a `qemu` configuration with SPICE, file upload is enabled by default.
                     type: boolean
                   image:
                     description: The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.
@@ -385,7 +385,7 @@ spec:
                     description: The pull policy to use when pulling the container image.
                     type: string
                   pulseServer:
-                    description: Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.
+                    description: Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init, which is to place a socket in the user's run directory. The value is assumed to be a unix socket.
                     type: string
                   resources:
                     description: Resource restraints to place on the proxy sidecar.
@@ -410,7 +410,7 @@ spec:
                         type: object
                     type: object
                   socketAddr:
-                    description: The address the VNC server listens on inside the image. This defaults to the UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
+                    description: The address the display server listens on inside the image. This defaults to the UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of `tcp://{host}:{port}` or `unix://{path}`. This will usually be a VNC server unless using a `qemu` configuration with SPICE. If using custom init scripts inside your containers, this value is set to the `DISPLAY_SOCK_ADDR` environment variable.
                     type: string
                 type: object
               qemu:
@@ -440,8 +440,33 @@ spec:
                   qemuImagePullPolicy:
                     description: The pull policy to use when pulling the QEMU image.
                     type: string
+                  qemuResources:
+                    description: Resource requirements to place on the qemu runner instance.
+                    properties:
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                    type: object
+                  spice:
+                    description: Set to true to use the SPICE protocol when proxying the display. If using custom qemu runners, this sets the `SPICE_DISPLAY` environment variable to `true`. The runners provided by this repository will tell qemu to set up a SPICE server at `proxy.socketAddr`. The default is to use VNC. This value is also used by the UI to determine which protocol to expect from a display connection.
+                    type: boolean
                   useCSI:
-                    description: Set to true to use the image-populator CSI to mount the disk images to a qemu container. You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator) driver installed. Defaults to copying the contents out of the disk image via an init container.
+                    description: Set to true to use the image-populator CSI to mount the disk images to a qemu container. You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator) driver installed. Defaults to copying the contents out of the disk image via an init container. This is experimental and not really tested.
                     type: boolean
                 type: object
               tags:
@@ -2280,7 +2305,7 @@ spec:
                 description: Configurations for the display proxy.
                 properties:
                   allowFileTransfer:
-                    description: AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.
+                    description: AllowFileTransfer will mount the user's home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template. When using a `qemu` configuration with SPICE, file upload is enabled by default.
                     type: boolean
                   image:
                     description: The image to use for the sidecar that proxies mTLS connections to the local VNC server inside the Desktop. Defaults to the public kvdi-proxy image matching the version of the currrently running manager.
@@ -2289,7 +2314,7 @@ spec:
                     description: The pull policy to use when pulling the container image.
                     type: string
                   pulseServer:
-                    description: Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.
+                    description: Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init, which is to place a socket in the user's run directory. The value is assumed to be a unix socket.
                     type: string
                   resources:
                     description: Resource restraints to place on the proxy sidecar.
@@ -2314,7 +2339,7 @@ spec:
                         type: object
                     type: object
                   socketAddr:
-                    description: The address the VNC server listens on inside the image. This defaults to the UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of `tcp://{host}:{port}` or `unix://{path}`.
+                    description: The address the display server listens on inside the image. This defaults to the UNIX socket `/var/run/kvdi/display.sock`. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of `tcp://{host}:{port}` or `unix://{path}`. This will usually be a VNC server unless using a `qemu` configuration with SPICE. If using custom init scripts inside your containers, this value is set to the `DISPLAY_SOCK_ADDR` environment variable.
                     type: string
                 type: object
               qemu:
@@ -2344,8 +2369,33 @@ spec:
                   qemuImagePullPolicy:
                     description: The pull policy to use when pulling the QEMU image.
                     type: string
+                  qemuResources:
+                    description: Resource requirements to place on the qemu runner instance.
+                    properties:
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        type: object
+                    type: object
+                  spice:
+                    description: Set to true to use the SPICE protocol when proxying the display. If using custom qemu runners, this sets the `SPICE_DISPLAY` environment variable to `true`. The runners provided by this repository will tell qemu to set up a SPICE server at `proxy.socketAddr`. The default is to use VNC. This value is also used by the UI to determine which protocol to expect from a display connection.
+                    type: boolean
                   useCSI:
-                    description: Set to true to use the image-populator CSI to mount the disk images to a qemu container. You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator) driver installed. Defaults to copying the contents out of the disk image via an init container.
+                    description: Set to true to use the image-populator CSI to mount the disk images to a qemu container. You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator) driver installed. Defaults to copying the contents out of the disk image via an init container. This is experimental and not really tested.
                     type: boolean
                 type: object
               tags:

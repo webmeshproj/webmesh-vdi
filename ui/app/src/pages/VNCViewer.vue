@@ -19,16 +19,18 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 <template>
   <q-page flex>
-    <div contenteditable="true" id="view" :class="className">
-      <div q-gutter-md row v-if="status === 'disconnected' && currentSession">
-        <q-spinner-hourglass color="grey" size="4em" />
-        <q-space />
-        <pre>{{ statusText }}</pre>
-      </div>
-      <div q-gutter-md row items-center v-if="status === 'disconnected' && !currentSession">
-        <q-icon name="warning" class="text-red" style="font-size: 4rem;" />
-        <br />
-        There are no active desktop sessions
+    <div id="view-area">
+      <div contenteditable="true" id="view" :class="className">
+        <div q-gutter-md row v-if="status === 'disconnected' && currentSession">
+          <q-spinner-hourglass color="grey" size="4em" />
+          <q-space />
+          <pre>{{ statusText }}</pre>
+        </div>
+        <div q-gutter-md row items-center v-if="status === 'disconnected' && !currentSession">
+          <q-icon name="warning" class="text-red" style="font-size: 4rem;" />
+          <br />
+          There are no active desktop sessions
+        </div>
       </div>
     </div>
   </q-page>

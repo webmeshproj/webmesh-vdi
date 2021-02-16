@@ -22,7 +22,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 import AudioManager from './audioManager.js'
 import DesktopAddressGetter from './addresses.js'
 import { Emitter, Events } from './events.js'
-import { VNCDisplay } from './displays.js'
+import { getDisplay } from './displays.js'
 
 // DisplayManager handles display and audio connections to remote desktop sessions.
 export default class DisplayManager extends Emitter {
@@ -296,7 +296,7 @@ export default class DisplayManager extends Emitter {
             return
         }
 
-        this._display = new VNCDisplay()
+        this._display = getDisplay(this._getActiveSession())
         this._display.bind(this)
         this._display.on(Events.disconnected, (ev) => { this._disconnectedFromDisplay(ev) })
 
@@ -313,7 +313,7 @@ export default class DisplayManager extends Emitter {
     // _disconnectedFromDisplay is called when the connection is dropped to a
     // display session.
     async _disconnectedFromDisplay (event) {
-        if (event.detail.clean) {
+        if (!event || event.detail.clean) {
             // The server disconnecting cleanly would mean expired session,
             // but this should probably be handled better.
             if (this._currentSession) {
@@ -328,7 +328,7 @@ export default class DisplayManager extends Emitter {
                 }
             }
         } else {
-            console.log('Something went wrong, connection is closed')
+            console.log(`Something went wrong, connection is closed: ${event}`)
             this._doStatusWebsocket()
         }
 

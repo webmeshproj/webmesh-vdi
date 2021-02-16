@@ -88,7 +88,7 @@ const (
 	EnableRootEnvVar = "ENABLE_ROOT"
 	// VNCSockEnvVar is the environment variable used to set the VNC socket during the init
 	// process.
-	VNCSockEnvVar = "VNC_SOCK_ADDR"
+	VNCSockEnvVar = "DISPLAY_SOCK_ADDR"
 	// UIDEnvVar is the environment varible where the UID of the user is set. This is a generic
 	// UID used for all users.
 	UIDEnvVar = "UID"
@@ -102,6 +102,8 @@ const (
 	QEMUCPUsEnvVar = "CPUS"
 	// QEMUMemoryEnvVar contains the memory to allocate a virtual machine.
 	QEMUMemoryEnvVar = "MEMORY"
+	// SPICEDisplayEnvVar is used to signal that the template wishes to use a SPICE display.
+	SPICEDisplayEnvVar = "SPICE_DISPLAY"
 )
 
 // Desktop runtime volume names

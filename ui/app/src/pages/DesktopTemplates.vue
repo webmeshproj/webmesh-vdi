@@ -23,7 +23,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
       <q-space />
     </div>
     <div style="float: right">
-      <q-btn flat color="primary" icon-right="add" label="New Template" @click="onNewTemplate" />
+      <q-btn flat color="primary" :loading="refreshLoading" @click="refreshData" label="Refresh" />
+      <q-btn flat color="primary" label="New Template" @click="onNewTemplate" />
     </div>
 
     <div style="clear: right">
@@ -193,13 +194,14 @@ export default {
         parent: this
       }).onOk(async () => {
         await new Promise((resolve, reject) => setTimeout(resolve, 300))
-        this.fetchData()
+        this.refreshData()
       }).onCancel(() => {
       }).onDismiss(() => {
       })
     },
 
     onLaunchTemplate (template) {
+      console.log(`Launching: ${template.metadata.name}:${template.idx}`)
       const ns = this.$refs[`ns-${template.idx}`].selection
       const sa = this.$refs[`sa-${template.idx}`].selection
       const payload = { template: template }
@@ -225,7 +227,7 @@ export default {
         existing: this.pruneTemplateObject(template)
       }).onOk(async () => {
         await new Promise((resolve, reject) => setTimeout(resolve, 300))
-        this.fetchData()
+        this.refreshData()
       }).onCancel(() => {
       }).onDismiss(() => {
       })

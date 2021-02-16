@@ -41,6 +41,22 @@ func (t *Template) QEMUUseCSI() bool {
 	return false
 }
 
+// QEMUUseSPICE returns true if the template is configured to use the SPICE protocol.
+func (t *Template) QEMUUseSPICE() bool {
+	if t.Spec.QEMUConfig != nil {
+		return t.Spec.QEMUConfig.SPICE
+	}
+	return false
+}
+
+// GetQEMURunnerResources returns the resources for the qemu runner.
+func (t *Template) GetQEMURunnerResources() corev1.ResourceRequirements {
+	if t.Spec.QEMUConfig != nil {
+		return t.Spec.QEMUConfig.QEMUResources
+	}
+	return corev1.ResourceRequirements{}
+}
+
 // GetQEMUContainer returns the container for launching the QEMU vm.
 func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session) corev1.Container {
 	c := corev1.Container{
@@ -48,6 +64,7 @@ func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session
 		Image:           t.GetQEMUImage(),
 		ImagePullPolicy: t.GetQEMUImagePullPolicy(),
 		VolumeMounts:    t.GetDesktopVolumeMounts(cluster, instance),
+		Resources:       t.GetQEMURunnerResources(),
 		Env: []corev1.EnvVar{
 			{
 				Name:  v1.VNCSockEnvVar,
@@ -114,6 +131,13 @@ func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session
 				Value: v1.QEMUNonCSICloudImagePath,
 			},
 		}...)
+	}
+
+	if t.QEMUUseSPICE() {
+		c.Env = append(c.Env, corev1.EnvVar{
+			Name:  v1.SPICEDisplayEnvVar,
+			Value: "true",
+		})
 	}
 
 	return c

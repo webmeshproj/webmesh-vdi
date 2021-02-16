@@ -25,7 +25,7 @@ export class Emitter {
     // to this one.
     bind(obj) {
         if (!obj._callbacks) { return }
-        for ( const [event, cbs] of Object.entries(obj._callbacks)) {
+        for (const [event, cbs] of Object.entries(obj._callbacks)) {
             cbs.forEach((cb) => { this.on(event, cb) })
         }
     }
