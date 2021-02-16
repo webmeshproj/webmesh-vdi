@@ -22,6 +22,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package v1
 
 import (
+	"fmt"
 	"strconv"
 
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
@@ -132,6 +133,10 @@ func (t *Template) GetDesktopEnvVars(desktop *Session) []corev1.EnvVar {
 		{
 			Name:  v1.UIDEnvVar,
 			Value: strconv.Itoa(int(v1.DefaultUser)),
+		},
+		{
+			Name:  v1.HomeEnvVar,
+			Value: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
 	}
 	if t.IsUNIXDisplaySocket() {

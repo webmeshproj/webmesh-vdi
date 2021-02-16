@@ -20,6 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package v1
 
 import (
+	"fmt"
 	"path"
 	"strconv"
 
@@ -29,23 +30,20 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// TODO: Move
-var (
-	qemuBootImagePath  = path.Join(v1.DesktopRunPath, "boot.img")
-	qemuCloudImagePath = path.Join(v1.DesktopRunPath, "cloud.img")
-
-	qemuBootImageEnvVar  = "BOOT_IMAGE"
-	qemuCloudImageEnvVar = "CLOUD_IMAGE"
-	qemuCPUsEnvVar       = "CPUS"
-	qemuMemoryEnvVar     = "MEMORY"
-)
-
 // IsQEMUTemplate returns true if this template is for a QEMU vm.
 func (t *Template) IsQEMUTemplate() bool { return t.Spec.QEMUConfig != nil }
 
+// QEMUUseCSI returns if the CSI driver should be used for mounting disk images.
+func (t *Template) QEMUUseCSI() bool {
+	if t.Spec.QEMUConfig != nil {
+		return t.Spec.QEMUConfig.UseCSI
+	}
+	return false
+}
+
 // GetQEMUContainer returns the container for launching the QEMU vm.
 func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session) corev1.Container {
-	return corev1.Container{
+	c := corev1.Container{
 		Name:            "qemu-kvm",
 		Image:           t.GetQEMUImage(),
 		ImagePullPolicy: t.GetQEMUImagePullPolicy(),
@@ -64,19 +62,15 @@ func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session
 				Value: strconv.Itoa(int(v1.DefaultUser)),
 			},
 			{
-				Name:  qemuBootImageEnvVar,
-				Value: qemuBootImagePath,
+				Name:  v1.HomeEnvVar,
+				Value: fmt.Sprintf(v1.DesktopHomeFmt, instance.GetUser()),
 			},
 			{
-				Name:  qemuCloudImageEnvVar,
-				Value: qemuCloudImagePath,
-			},
-			{
-				Name:  qemuCPUsEnvVar,
+				Name:  v1.QEMUCPUsEnvVar,
 				Value: strconv.Itoa(t.GetQEMUNumCPUs()),
 			},
 			{
-				Name:  qemuMemoryEnvVar,
+				Name:  v1.QEMUMemoryEnvVar,
 				Value: strconv.Itoa(t.GetQEMUMemory()),
 			},
 		},
@@ -92,6 +86,37 @@ func (t *Template) GetQEMUContainer(cluster *appv1.VDICluster, instance *Session
 			},
 		},
 	}
+
+	if t.QEMUUseCSI() {
+		c.Env = append(c.Env, corev1.EnvVar{
+			Name:  v1.QEMUBootImageEnvVar,
+			Value: path.Join(v1.QEMUCSIDiskPath, t.GetQEMUDiskPath()),
+		})
+		if cloudInit := t.GetQEMUCloudInitPath(); cloudInit != "" {
+			c.Env = append(c.Env, corev1.EnvVar{
+				Name:  v1.QEMUCloudImageEnvVar,
+				Value: path.Join(v1.QEMUCSIDiskPath, cloudInit),
+			})
+		} else {
+			c.Env = append(c.Env, corev1.EnvVar{
+				Name:  v1.QEMUCloudImageEnvVar,
+				Value: path.Join(v1.QEMUCSIDiskPath, "cloud.img"),
+			})
+		}
+	} else {
+		c.Env = append(c.Env, []corev1.EnvVar{
+			{
+				Name:  v1.QEMUBootImageEnvVar,
+				Value: v1.QEMUNonCSIBootImagePath,
+			},
+			{
+				Name:  v1.QEMUCloudImageEnvVar,
+				Value: v1.QEMUNonCSICloudImagePath,
+			},
+		}...)
+	}
+
+	return c
 }
 
 // GetQEMUImage returns the qemu utility image to use.

@@ -59,10 +59,10 @@ func (t *Template) GetContainers(cluster *appv1.VDICluster, instance *Session, e
 
 // GetInitContainers returns any init containers required to run before the desktop launches.
 func (t *Template) GetInitContainers() []corev1.Container {
-	if t.IsQEMUTemplate() {
-		cmd := fmt.Sprintf("cp %s %s && chmod 666 %s", t.GetQEMUDiskPath(), qemuBootImagePath, qemuBootImagePath)
+	if t.IsQEMUTemplate() && !t.QEMUUseCSI() {
+		cmd := fmt.Sprintf("cp %s %s && chmod 666 %s", t.GetQEMUDiskPath(), v1.QEMUNonCSIBootImagePath, v1.QEMUNonCSIBootImagePath)
 		if cloudInit := t.GetQEMUCloudInitPath(); cloudInit != "" {
-			cmd += fmt.Sprintf(" && cp %s %s && chmod 666 %s", cloudInit, qemuCloudImagePath, qemuCloudImagePath)
+			cmd += fmt.Sprintf(" && cp %s %s && chmod 666 %s", cloudInit, v1.QEMUNonCSICloudImagePath, v1.QEMUNonCSICloudImagePath)
 		}
 		return []corev1.Container{
 			{
@@ -79,22 +79,23 @@ func (t *Template) GetInitContainers() []corev1.Container {
 			},
 		}
 	}
-	containers := make([]corev1.Container, 0)
 	if t.DindIsEnabled() {
-		containers = append(containers, corev1.Container{
-			Name:            "dind-init",
-			Image:           t.GetDindImage(),
-			ImagePullPolicy: t.GetDindPullPolicy(),
-			Command:         []string{"/bin/sh", "-c", fmt.Sprintf("cp -r /usr/local/bin/* %s", v1.DockerBinPath)},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      v1.DockerBinVolume,
-					MountPath: v1.DockerBinPath,
+		return []corev1.Container{
+			{
+				Name:            "dind-init",
+				Image:           t.GetDindImage(),
+				ImagePullPolicy: t.GetDindPullPolicy(),
+				Command:         []string{"/bin/sh", "-c", fmt.Sprintf("cp -r /usr/local/bin/* %s", v1.DockerBinPath)},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      v1.DockerBinVolume,
+						MountPath: v1.DockerBinPath,
+					},
 				},
 			},
-		})
+		}
 	}
-	return containers
+	return nil
 }
 
 // GetPullSecrets returns the pull secrets for this instance.

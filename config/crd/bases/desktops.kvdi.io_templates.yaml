@@ -459,7 +459,8 @@ spec:
                 properties:
                   cloudInitPath:
                     description: The path to a pre-built cloud init image to use when
-                      booting the VM. Defaults to an auto-generated one at runtime.
+                      booting the VM inside the disk image. Defaults to an auto-generated
+                      one at runtime.
                     type: string
                   cpus:
                     description: The number of vCPUs to assign the virtual machine.
@@ -472,8 +473,8 @@ spec:
                     description: The pull policy to use when pulling the disk image.
                     type: string
                   diskPath:
-                    description: The path to the boot volume inside the image. Defaults
-                      to `/disk/boot.img`.
+                    description: The path to the boot volume inside the disk image.
+                      Defaults to `/disk/boot.img`.
                     type: string
                   memory:
                     description: The amount of memory to assign the virtual machine
@@ -486,6 +487,12 @@ spec:
                   qemuImagePullPolicy:
                     description: The pull policy to use when pulling the QEMU image.
                     type: string
+                  useCSI:
+                    description: Set to true to use the image-populator CSI to mount
+                      the disk images to a qemu container. You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator)
+                      driver installed. Defaults to copying the contents out of the
+                      disk image via an init container.
+                    type: boolean
                 type: object
               tags:
                 additionalProperties:

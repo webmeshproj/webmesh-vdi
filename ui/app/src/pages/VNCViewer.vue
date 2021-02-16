@@ -36,6 +36,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 <script>
 import DisplayManager from 'src/lib/displayManager.js'
+import { Events } from 'src/lib/events.js'
 
 export default {
   name: 'VNCViewer',
@@ -45,16 +46,24 @@ export default {
       status: 'disconnected',
       statusLines: [],
       className: 'info',
-      xpraClassname: 'iframe-container',
       statusText: '',
-      currentSession: null
+      currentSession: null,
+      displayManager: null
     }
   },
 
   created () {
-    this.displayManager = new DisplayManager(this.displayManagerArgs)
+    this.displayManager = new DisplayManager({
+      userStore: this.$userStore,
+      sessionStore: this.$desktopSessions
+    })
+    this.displayManager.on(Events.connected, this.onConnect)
+    this.displayManager.on(Events.disconnected, this.onDisconnect)
+    this.displayManager.on(Events.update, this.onStatusUpdate)
+    this.displayManager.on(Events.error, this.onError)
     this.$root.$on('set-fullscreen', this.setFullscreen)
     this.$root.$on('paste-clipboard', this.onPaste)
+    this.setCurrentSession()
   },
 
   beforeDestroy () {
@@ -63,35 +72,19 @@ export default {
     this.displayManager.destroy()
   },
 
-  computed: {
-    displayManagerArgs () {
-      return {
-        userStore: this.$userStore,
-        sessionStore: this.$desktopSessions,
-        onError: this.onError,
-        onStatusUpdate: this.onStatusUpdate,
-        onDisconnect: this.onDisconnect,
-        onConnect: this.onConnect
-      }
-    }
-  },
-
   methods: {
 
-    onPaste (data) { this.displayManager.syncClipboardData(data) },
+    onPaste (data) { this.displayManager.sendClipboardData(data) },
 
     setCurrentSession () { this.currentSession = this.displayManager.getCurrentSession() },
 
     setFullscreen (val) {
       if (val) {
         this.className = 'no-margin full-screen'
-        this.xpraClassname = 'no-margin full-screen iframe-full-screen'
       } else if (this.status === 'connected') {
         this.className = 'no-margin display-container'
-        this.xpraClassname = 'iframe-container'
       } else {
         this.className = 'info'
-        this.xpraClassname = 'iframe-container'
       }
     },
 
@@ -99,6 +92,7 @@ export default {
       this.setCurrentSession()
       this.status = 'connected'
       this.className = 'no-margin display-container'
+      this.statusText = ''
     },
 
     onDisconnect () {
@@ -135,30 +129,8 @@ export default {
   overflow: hidden;
 }
 
-.iframe-container {
-  flex-grow: 1;
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
 .full-screen {
   height: 100vh;
-}
-
-.iframe-full-screen {
-  position:fixed;
-  top:0;
-  left:0;
-  bottom:0;
-  right:0;
-  width:100%;
-  height:100%;
-  border:none;
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  z-index:999999;
 }
 
 .info {

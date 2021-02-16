@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export HOME="/home/${USER}"
+export HOME="${HOME:-/home/$USER}"
 
 # simple function for ensuring a basedir then writing a file from stdin
 write () {

@@ -135,21 +135,37 @@ func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []cor
 				},
 			},
 		})
+		if t.QEMUUseCSI() {
+			volumes = append(volumes, corev1.Volume{
+				Name: v1.QEMUDiskVolume,
+				VolumeSource: corev1.VolumeSource{
+					CSI: &corev1.CSIVolumeSource{
+						Driver: "image.csi.k8s.io",
+						VolumeAttributes: map[string]string{
+							"image":           t.GetQEMUDiskImage(),
+							"imagePullPolicy": string(t.GetQEMUDiskImagePullPolicy()),
+						},
+					},
+				},
+			})
+		}
 	}
 
 	if t.DindIsEnabled() {
-		volumes = append(volumes, corev1.Volume{
-			Name: v1.DockerDataVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
+		volumes = append(volumes, []corev1.Volume{
+			{
+				Name: v1.DockerDataVolume,
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
 			},
-		})
-		volumes = append(volumes, corev1.Volume{
-			Name: v1.DockerBinVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			{
+				Name: v1.DockerBinVolume,
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
 			},
-		})
+		}...)
 	}
 
 	if len(t.Spec.Volumes) > 0 {
@@ -206,6 +222,12 @@ func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Se
 			Name:      v1.KVMVolume,
 			MountPath: v1.DesktopKVMPath,
 		})
+		if t.QEMUUseCSI() {
+			mounts = append(mounts, corev1.VolumeMount{
+				Name:      v1.QEMUDiskVolume,
+				MountPath: v1.QEMUCSIDiskPath,
+			})
+		}
 	}
 	if t.DindIsEnabled() {
 		mounts = append(mounts, corev1.VolumeMount{
@@ -213,7 +235,7 @@ func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Se
 			MountPath: v1.DockerBinPath,
 		})
 	}
-	if t.Spec.DesktopConfig != nil && len(t.Spec.DesktopConfig.VolumeMounts) > 0 {
+	if !t.IsQEMUTemplate() && t.Spec.DesktopConfig != nil && len(t.Spec.DesktopConfig.VolumeMounts) > 0 {
 		mounts = append(mounts, t.Spec.DesktopConfig.VolumeMounts...)
 	}
 	return mounts

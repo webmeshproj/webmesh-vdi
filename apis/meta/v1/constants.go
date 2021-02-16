@@ -21,7 +21,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 package v1
 
-import "time"
+import (
+	"path"
+	"time"
+)
 
 const (
 	// RoleClusterRefLabel marks for which cluster a role belongs
@@ -89,6 +92,16 @@ const (
 	// UIDEnvVar is the environment varible where the UID of the user is set. This is a generic
 	// UID used for all users.
 	UIDEnvVar = "UID"
+	// HomeEnvVar is the environment variable where the home directory of the user is set.
+	HomeEnvVar = "HOME"
+	// QEMUBootImageEnvVar contains the path to the root disk image for the virtual machine.
+	QEMUBootImageEnvVar = "BOOT_IMAGE"
+	// QEMUCloudImageEnvVar contains the path to the cloud-init image to use when booting the machine.
+	QEMUCloudImageEnvVar = "CLOUD_IMAGE"
+	// QEMUCPUsEnvVar contains the number of CPUs to allocate a virtual machine.
+	QEMUCPUsEnvVar = "CPUS"
+	// QEMUMemoryEnvVar contains the memory to allocate a virtual machine.
+	QEMUMemoryEnvVar = "MEMORY"
 )
 
 // Desktop runtime volume names
@@ -105,6 +118,7 @@ var (
 	DockerDataVolume = "docker-data"
 	DockerBinVolume  = "docker-bin"
 	KVMVolume        = "qemu-kvm"
+	QEMUDiskVolume   = "qemu-disk-image"
 )
 
 // Desktop runtime mount paths
@@ -122,6 +136,13 @@ const (
 	DesktopKVMPath     = "/dev/kvm"
 	DockerDataPath     = "/var/lib/docker"
 	DockerBinPath      = "/usr/local/docker/bin"
+)
+
+// Qemu variables
+var (
+	QEMUCSIDiskPath          = "/disk"
+	QEMUNonCSIBootImagePath  = path.Join(DesktopRunPath, "boot.img")
+	QEMUNonCSICloudImagePath = path.Join(DesktopRunPath, "cloud.img")
 )
 
 // Other defaults that we need to take the address of occasionally

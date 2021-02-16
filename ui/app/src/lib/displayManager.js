@@ -1,4 +1,5 @@
 /*
+
 Copyright 2020,2021 Avi Zimmerman
 
 This file is part of kvdi.
@@ -15,26 +16,25 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
+
 */
 
-import RFB from '@novnc/novnc/core/rfb.js'
 import AudioManager from './audioManager.js'
+import DesktopAddressGetter from './addresses.js'
+import { Emitter, Events } from './events.js'
+import { VNCDisplay } from './displays.js'
 
 // DisplayManager handles display and audio connections to remote desktop sessions.
-export default class DisplayManager {
+export default class DisplayManager extends Emitter {
     // Builds the DisplayManager instance. The userStore and sessionStore are Vuex
     // Store instances that reflect the currently logged in user and the current desktop
     // sessions respectively.
-    constructor ({ userStore, sessionStore, onError, onStatusUpdate, onDisconnect, onConnect }) {
+    constructor ({ userStore, sessionStore }) {
+        super()
         // Vuex stores
         this._userStore = userStore
         this._sessionStore = sessionStore
-        // Event listeners - I am sure there is a more correct way to do this
-        this._errCb = onError
-        this._disconnectCb = onDisconnect
-        this._connectCb = onConnect
-        this._statusCb = onStatusUpdate
-        // Current session represents the session that the rfbClient is currently connected
+        // Current session represents the session that the display is currently connected
         // to. This is not always the same as the activeSession as far as the sessionStore
         // is concerned.
         this._currentSession = this._getActiveSession()
@@ -42,8 +42,8 @@ export default class DisplayManager {
         this._statusSocket = null
         // Status text to display to a user when a connection is pending
         this._statusText = ''
-        // The RFB client for noVNC connections
-        this._rfbClient = null
+        // The display object managing the view canvas
+        this._display = null
         // The audio player for streaming playback
         this._audioManager = null
         // Subscribe to changes to desktop sessions
@@ -52,29 +52,11 @@ export default class DisplayManager {
         })
     }
 
-    // _callDisconnect will call the onDisconnect callback if configured.
-    _callDisconnect () { if (this._disconnectCb) { this._disconnectCb() }}
-
-    // _callConnect will call the onConnect callback if configured.
-    _callConnect () { if (this._connectCb) { this._connectCb() } }
-
-    // _callStatusUpdate will call the onStatusUpdate callback if configured.
-    _callStatusUpdate (st) { if (this._statusCb) { this._statusCb(st) } }
-
-    // _callError will call the onError callback if configured.
-    _callError (err) { if (this._errCb) { this._errCb(err) } }
-
     // _getActiveSession returns the session currently marked as active in the session store.
     _getActiveSession () {
         return this._sessionStore.getters.activeSession
     }
 
-    // _setRFBQualityLevel sets the quality level on an RFB instance
-    _setRFBQualityLevel (lvl) {
-        if (this._rfbClient) {
-            this._rfbClient.qualityLevel = lvl
-        }
-    }
 
     // _audioIsEnabled returns true if audio is currently enabled
     _audioIsEnabled () {
@@ -155,13 +137,12 @@ export default class DisplayManager {
 
     // _createAudioManager creates a new AudioManager object for this DisplayManager
     _createAudioManager () {
-        const playerCfg = {
+        this._audioManager = new AudioManager({
             addressGetter: this._getSessionURLs(),
-            userStore: this._userStore,
-            onDisconnect: () => { this._resetAudioStatus() },
-            onError: (err) => {  this._callError(err) }
-        }
-        this._audioManager = new AudioManager(playerCfg)
+            userStore: this._userStore
+        })
+        this._audioManager.on(Events.disconnected, () => { this._resetAudioStatus() })
+        this._audioManager.on(Events.error, (err) => { this.emit(Events.error, err) })
     }
 
     // _enableAudio starts a new audio stream over the websocket endpoint.
@@ -220,8 +201,8 @@ export default class DisplayManager {
 
         let msgCount = 0
 
-        socket.onopen = (e) => {
-            this._callStatusUpdate(`Connecting to ${activeSession.namespace}/${activeSession.name}`)
+        socket.onopen = () => {
+            this.emit(Events.update, `Connecting to ${activeSession.namespace}/${activeSession.name}`)
         }
           
         socket.onmessage = (event) => {
@@ -233,8 +214,8 @@ export default class DisplayManager {
             // If there is an error on the pipe, send it to the user.
             if (st.error) {
                 this._currentSession = this._getActiveSession()
-                this._callDisconnect()
-                this._callError(new Error(st.error))
+                this.emit(Events.disconnected)
+                this.emit(Events.error, new Error(st.error))
                 return
             }
 
@@ -250,15 +231,15 @@ export default class DisplayManager {
                                 // only retry once
                                 return this._createConnection()
                                     .catch((err) => { 
-                                        this._callError(err)
-                                        this._callDisconnect()
+                                        this.emit(Events.disconnected)
+                                        this.emit(Events.error, err)
                                      })
                             })
                     })
                 if (socket.readyState === 1) {
                     socket.close()
                 }
-                this._callStatusUpdate('')
+                this.emit(Events.update, 'Desktop is ready - Launching display')
                 return
             }
 
@@ -266,10 +247,10 @@ export default class DisplayManager {
             let statusText = `Waiting for ${activeSession.namespace}/${activeSession.name}`
             if (msgCount > 6) {
                 statusText += '\n\nThis is taking a while. The server might be pulling the'
-                statusText += '\nimage for the first time, or the control-plane is having'
-                statusText += '\ntrouble scheduling the desktop instance.'
+                statusText += '\nimage for the first time, this is a large qemu disk image,'
+                statusText += '\nor the control-plane is having trouble scheduling the desktop.'
             }
-            this._callStatusUpdate(statusText)
+            this.emit(Events.update, statusText)
         }
 
         socket.onclose = (event) => {
@@ -282,99 +263,56 @@ export default class DisplayManager {
                             this._doStatusWebsocket(true)
                         })
                         .catch((err) => {
+                            this.emit(Events.error, err)
                             throw err
                         })
                     return
                 }
-                this._callError(new Error(`Error getting session status: ${event.code} ${event.reason}`))
+                this.emit(Events.error, new Error(`Error getting session status: ${event.code} ${event.reason}`))
             }
         }
           
         socket.onerror = (err) => {
             if (retry) {
-                this._callError(err)
-                this._callDisconnect()
+                this.emit(Events.disconnected)
+                this.emit(Events.error, err)
             }
         }
 
         this._statusSocket = socket
     }
 
-    // _createConnection will create a new RFB connection
+    // _createConnection will create a new display connection
     async _createConnection () {
         // get the websocket display address
         const urls = this._getSessionURLs()
         const displayURL = urls.displayURL()
-        // get the view port for the display
+        // get the viewport for the display
         const view = document.getElementById('view')
         if (view === null || view === undefined) {
             console.log('No view found in the window')
             return
         }
+
+        this._display = new VNCDisplay()
+        this._display.on(Events.connected, (ev) => { this.emit(Events.connected, ev) })
+        this._display.on(Events.error, (ev) => { this.emit(Events.error, ev) })
+        this._display.on(Events.disconnected, (ev) => { this._disconnectedFromDisplay(ev) })
+
         try {
-            // create a vnc connection
-            console.log('Creating RFB connection')
-            await this._createRFBConnection(view, displayURL)
+            // create a display connection
+            await this._display.connect(view, displayURL)
         } catch (err) {
-            this._callDisconnect()
-            this._callError(err)
             this._currentSession = this._getActiveSession()
-            return
-        }
-        this._callConnect()
-    }
-
-    // _createRFBConnection creates a new RFB connection.
-    async _createRFBConnection (view, url) {
-        if (this._rfbClient) { 
-            console.log('An RFB client already appears to be connected, returning')
-            return 
-        }
-        this._rfbClient = new RFB(view, url)
-        this._rfbClient.addEventListener('connect', () => { this._connectedToRFBServer() })
-        this._rfbClient.addEventListener('disconnect', (ev) => { this._disconnectedFromRFBServer(ev) })
-        this._rfbClient.addEventListener('clipboard', (ev) => { this._handleRecvClipboard(ev) })
-        this._rfbClient.resizeSession = true
-        this._rfbClient.scaleViewport = true
-    }
-
-    // _handleRecvClipboard is called when the RFB connection sends clipboard data
-    // from the server.
-    async _handleRecvClipboard (ev) {
-        if (!ev.detail.text) {
-            console.log(`Received invalid clipboard event: ${ev}`)
-            return
-        }
-        try {
-            await navigator.clipboard.writeText(ev.detail.text)
-            console.log('Synced remote clipboard contents to local')
-        } catch (err) {
-            this._callError(err)
+            throw err
         }
     }
 
-    // _connectedToRFBServer is called when the RFB connection is established
-    // with the desktop session.
-    _connectedToRFBServer () {
-        console.log('Connected to display server!')
-        this._currentSession = this._getActiveSession()
-        
-        const canvas = document.querySelector('canvas')
-        canvas.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.location === 2) { // secondary ctrl locks pointer
-                console.log('Locking pointer to view dom')
-                // canvas.requestPointerLock() // https://github.com/novnc/noVNC/pull/1520
-            }
-        })
-    }
 
-    // _disconnectedFromRFBServer is called when the connection is dropped to a
-    // desktop session.
-    async _disconnectedFromRFBServer (event) {
-        if (this._rfbClient) {
-            this._rfbClient = null
-        }
-        this._callDisconnect()
+    // _disconnectedFromDisplay is called when the connection is dropped to a
+    // display session.
+    async _disconnectedFromDisplay (event) {
+        this.emit(Events.disconnected, event)
 
         if (event.detail.clean) {
             // The server disconnecting cleanly would mean expired session,
@@ -387,10 +325,9 @@ export default class DisplayManager {
                 } catch {
                     this._sessionStore.dispatch('deleteSession', this._currentSession)
                     this._currentSession = null
-                    this._callError(new Error("The desktop session has ended"))
+                    this.emit(Events.error, new Error("The desktop session has ended"))
                 }
             }
-            console.log('Disconnected')
         } else {
             console.log('Something went wrong, connection is closed')
             this._doStatusWebsocket()
@@ -415,27 +352,24 @@ export default class DisplayManager {
 
     // _disconnect will close any connections currently open
     _disconnect () {
-        if (this._rfbClient) {
+        if (this._display) {
             try {
-                // _disconnectedFromRFBServer will call the disconnect callback
-                this._rfbClient.disconnect()
+                this._display.disconnect()
             } catch (err) {
-                console.log(err)
+                console.error(err)
             } finally {
-                this._rfbClient = null
+                this._display = null
             }
-            return
         }
         if (this._statusSocket) {
             try {
                 this._statusSocket.close()
             } catch (err) {
-                console.log(err)
+                console.error(err)
             } finally {
                 this._statusSocket = null
             }
         }
-        this._callDisconnect()
     }
 
     // destroy is called when the viewport holding this display manager is destroyed.
@@ -464,64 +398,13 @@ export default class DisplayManager {
         return this._currentSession
     }
 
-    // getConnectingStatus returns the status message for the connecting status
-    getConnectingStatus () {
-        return this._statusText
-    }
-
-    // syncClipboardData syncs the provied data to the clipboard inside the currently
-    // active RFB connection.
-    syncClipboardData (data) {
-        if (!this._rfbClient) {
+    // sendClipboardData syncs the provied data to the clipboard inside the currently
+    // active display connection.
+    sendClipboardData (data) {
+        if (!this._display) {
             return
         }
-        this._rfbClient.clipboardPasteFrom(data)
+        this._display.call('sendClipboard', data)
     }
 
 }
-
-// DesktopAddressGetter is a convenience wrapper around retrieving connection
-// URLs for a given desktop instance.
-export class DesktopAddressGetter {
-    // constructor takes the Vuex user session store (for token retrieval) and
-    // the namespace and name of the desktop instance.
-    constructor (userStore, namespace, name) {
-      this.userStore = userStore
-      this.namespace = namespace
-      this.name = name
-    }
-  
-    // _getToken returns the current authentication token.
-    _getToken () {
-      return this.userStore.getters.token
-    }
-  
-    // _buildAddress builds a websocket address for the given desktop function (endpoint).
-    _buildAddress (endpoint) {
-      return `${window.location.origin.replace('http', 'ws')}/api/desktops/ws/${this.namespace}/${this.name}/${endpoint}?token=${this._getToken()}`
-    }
-  
-    // displayURL returns the websocket address for display connections.
-    displayURL () {
-      return this._buildAddress('display')
-    }
-  
-    // audioURL returns the websocket address for audio connections.
-    audioURL () {
-      return this._buildAddress('audio')
-    }
-  
-    // statusURL returns the websocket address for querying desktop status.
-    statusURL () {
-      return this._buildAddress('status')
-    }
-
-    logsFollowURL (container) {
-        return this._buildAddress(`logs/${container}`)
-    }
-  
-    logsURL (container) {
-        return `/api/desktops/${this.namespace}/${this.name}/logs/${container}`
-    }
-
-  }

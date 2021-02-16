@@ -228,11 +228,19 @@ ${HELM}:
 
 ## make test-cluster           # Make a local k3d cluster for testing.
 test-cluster: $(K3D)
+	mkdir -p /tmp/k3d/kubelet/pods
+	mkdir -p /tmp/k3d/containers/storage
+	mkdir -p /tmp/k3d/var/run/containers/storage
 	$(K3D) cluster create $(CLUSTER_NAME) \
 		--kubeconfig-update-default=false \
 		--k3s-server-arg="--disable=traefik" \
 		--volume="/dev/shm:/dev/shm@server[0]" \
-		-p 443:443@loadbalancer -p 5556:5556@loadbalancer
+		--volume="/dev/kvm:/dev/kvm@server[0]" \
+		--volume="/tmp/k3d/kubelet/pods:/var/lib/kubelet/pods:shared@server[0]" \
+		--volume="/tmp/k3d/containers/storage:/var/lib/containers/storage:shared@server[0]" \
+		--volume="/tmp/k3d/var/run/containers/storage:/var/run/containers/storage:shared@server[0]" \
+		-p 443:443@loadbalancer -p 5556:5556@loadbalancer \
+		--registry-create
 	$(K3D) kubeconfig get $(CLUSTER_NAME) > $(CLUSTER_KUBECONFIG)
 
 ##
@@ -290,6 +298,11 @@ test-ldap:
 test-oidc:
 	${KUBECTL_K3D} apply -f hack/oidc.yaml
 
+## make test-image-populator   # Deploys the imagepopulator CSI plugin
+test-image-populator:
+	${KUBECTL_K3D} apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-daemonset.yaml
+	${KUBECTL_K3D} apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-csidriverinfo.yaml
+
 ##
 ## make deploy                 # Deploys kVDI into the local k3d cluster.
 .PHONY: deploy
@@ -346,6 +359,7 @@ clean-cluster: ${KUBECTL} ${HELM}
 remove-cluster: $(K3D)
 	$(K3D) cluster delete $(CLUSTER_NAME)
 	rm -f $(CLUSTER_KUBECONFIG)
+	sudo rm -rf /tmp/k3d
 
 ##
 ## # Runtime Helpers

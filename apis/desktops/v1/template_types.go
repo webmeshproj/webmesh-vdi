@@ -143,15 +143,20 @@ type QEMUConfig struct {
 	DiskImage string `json:"diskImage,omitempty"`
 	// The pull policy to use when pulling the disk image.
 	DiskImagePullPolicy corev1.PullPolicy `json:"diskImagePullPolicy,omitempty"`
+	// Set to true to use the image-populator CSI to mount the disk images to a qemu container.
+	// You must have the [image-populator](https://github.com/kubernetes-csi/csi-driver-image-populator)
+	// driver installed. Defaults to copying the contents out of the disk image via an init
+	// container.
+	UseCSI bool `json:"useCSI,omitempty"`
 	// The container image containing the QEMU utilities to use to launch the VM.
 	// Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
 	QEMUImage string `json:"qemuImage,omitempty"`
 	// The pull policy to use when pulling the QEMU image.
 	QEMUImagePullPolicy corev1.PullPolicy `json:"qemuImagePullPolicy,omitempty"`
-	// The path to the boot volume inside the image. Defaults to `/disk/boot.img`.
+	// The path to the boot volume inside the disk image. Defaults to `/disk/boot.img`.
 	DiskPath string `json:"diskPath,omitempty"`
-	// The path to a pre-built cloud init image to use when booting the VM. Defaults
-	// to an auto-generated one at runtime.
+	// The path to a pre-built cloud init image to use when booting the VM inside the disk
+	// image. Defaults to an auto-generated one at runtime.
 	CloudInitPath string `json:"cloudInitPath,omitempty"`
 	// The number of vCPUs to assign the virtual machine. Defaults to 1.
 	CPUs int `json:"cpus,omitempty"`

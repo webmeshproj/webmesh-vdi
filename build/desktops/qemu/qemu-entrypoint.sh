@@ -9,6 +9,7 @@ DEFAULT_CLOUD_IMAGE="/tmp/cloud.img"
 
 set -x
 
+export HOME="${HOME:-/home/$USER}"
 export CPUS=${CPUS:-$DEFAULT_CPUS}
 export MEMORY=${MEMORY:-$DEFAULT_MEMORY}
 export ARCH=${ARCH:-$DEFAULT_ARCH}
@@ -16,18 +17,69 @@ export BOOT_IMAGE=${BOOT_IMAGE:-$DEFAULT_IMAGE}
 export CLOUD_IMAGE=${CLOUD_IMAGE:-$DEFAULT_CLOUD_IMAGE}
 export VNC_SOCK_ADDR=${VNC_SOCK_ADDR:-$DEFAULT_SOCK_ADDR}
 
-env 2>&1
+ENVIRONMENT=$(env | base64 --wrap 0)
 
-if [ ! -f "${CLOUD_IMAGE}" ] ; then
-  echo "Generating cloud-init image"
-  cat << EOF | cloud-localds ${CLOUD_IMAGE} /dev/stdin
+if [ ! -f "${CLOUD_IMAGE}" ] ; then cat << EOF | cloud-localds ${CLOUD_IMAGE} /dev/stdin
 #cloud-config
-bootcmd:
-  - sed -i 's/%USER%/${USER}/g' /etc/gdm/custom.conf
+
+growpart:
+  mode: auto
+  devices: ["/"]
+  ignore_growroot_disabled: false
+
+mounts:
+  - ["kvdi_run", "/run/kvdi", "9p", "trans=virtio,rw,msize=104857600,nodevmap,access=client,_netdev"]
+  - ["home", "${HOME}", "9p", "trans=virtio,rw,dfltuid=${UID},dfltgid=${UID},msize=104857600,access=client,_netdev"]
+
+write_files:
+
+  - path: /etc/environment
+    permissions: "0644"
+    encoding: b64
+    content: ${ENVIRONMENT}
+
+  - path: "${HOME}/.config/gnome-initial-setup-done"
+    permissions: "0644"
+    content: "yes"
+
+  - path: /etc/lightdm/lightdm.conf.d/12-autologin.conf
+    permissions: "0644"
+    content: |
+      [SeatDefaults]
+      autologin-user=${USER}
+      autologin-session=xfce
+  
+  - path: /usr/share/gnome-session/sessions/gdm-shell.session
+    permissions: "0644"
+    content: |
+      [GNOME Session]
+      Name=KVDI
+
+  - path: /etc/gdm3/custom.conf
+    permissions: "0644"
+    content: |
+      [daemon]
+      AutomaticLoginEnable=true
+      AutomaticLogin=${USER}
+
+      [security]
+
+      [xdmcp]
+
+      [chooser]
+
+      [debug]
+
+groups:
+  - autologin
+  - nopasswdlogin
+
 users:
   - name: ${USER}
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
-    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    uid: "${UID}"
+    groups: wheel, autologin, nopasswdlogin
+    homedir: ${HOME}
     shell: /bin/bash
 EOF
 fi
@@ -37,11 +89,14 @@ fi
 
 qemu-system-${ARCH} \
   -enable-kvm \
-  -serial stdio \
+  -bios /usr/share/qemu/OVMF.fd \
 	-display vnc="${VNC_SOCK_ADDR}" \
 	-cpu host -smp ${CPUS} -m ${MEMORY} \
   -usb -device usb-tablet \
 	-device virtio-blk,drive=image -drive if=none,id=image,file="${BOOT_IMAGE}" \
-	-device virtio-blk,drive=cloud -drive if=none,id=cloud,file="${CLOUD_IMAGE}" \
+	-device virtio-blk,drive=cloud -drive if=none,id=cloud,format=raw,file="${CLOUD_IMAGE}" \
+  -fsdev local,id=home,path=${HOME},security_model=none -device virtio-9p,fsdev=home,mount_tag=home \
+  -fsdev local,id=kvdi_run,path=/run,security_model=none -device virtio-9p,fsdev=kvdi_run,mount_tag=kvdi_run \
 	-device virtio-net,netdev=user -netdev user,id=user \
-  -monitor unix:/run/qemu-monitor.sock,server,nowait
+  -monitor unix:/run/qemu-monitor.sock,server,nowait \
+  -netdev user,id=user0,hostfwd=tcp::2222-:22

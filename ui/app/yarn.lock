@@ -1078,10 +1078,10 @@
     core-js "^3.6.5"
     core-js-compat "^3.6.5"
 
-"@quasar/extras@^1.9.15":
-  version "1.9.15"
-  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-1.9.15.tgz#bfc22bf4edcb079820dea248c06fe21f73221262"
-  integrity sha512-dm2oztROc3PgjieMEMAaqEcJ6ZC6PUGIZQet/eP2p/2vJTPwcyzhCGTBWoRJzEjOKoQeIJzM+F5diMhCaFFksA==
+"@quasar/extras@^1.9.17":
+  version "1.9.17"
+  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-1.9.17.tgz#1fbe4535b601b31f08f79219452ba54319d4f597"
+  integrity sha512-kZTHP+DY9BdGWRhKr2eCnmXXf0QYYh+7fse0lOnDZ1hFjPY7NbKDk8rpLUQ9NLAXiYNIHXkR59Ez+tkdk5I5KA==
 
 "@quasar/fastclick@1.1.4":
   version "1.1.4"
@@ -7709,10 +7709,10 @@ qs@^6.9.4:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.9.4.tgz#9090b290d1f91728d3c22e54843ca44aea5ab687"
   integrity sha512-A1kFqHekCTM7cz0udomYUoYNWjBebHm/5wzU/XqrBRBNWectVH0QIiN+NEcZ0Dte5hvzHwbr8+XQmguPhJ6WdQ==
 
-quasar@^1.15.2:
-  version "1.15.2"
-  resolved "https://registry.yarnpkg.com/quasar/-/quasar-1.15.2.tgz#21ce2ac2910c79d5785b249435d5fcfe5a09577f"
-  integrity sha512-1cbe4iNj6BaZ5BIXjRXnMrqyuOEwd2SoIyQQmRqZNxIlXd4B/4L9+IUgeYhc80x8JvkKivNTogH6ltcMghDvUw==
+quasar@^1.15.3:
+  version "1.15.3"
+  resolved "https://registry.yarnpkg.com/quasar/-/quasar-1.15.3.tgz#6dc65d473b09ee75e83262fa8a4ce1d1fff9de69"
+  integrity sha512-WJil2QRNu3VSkw+gg1AMEwizzkCUBa7i36CQRHxPeHfFyKkiCZ4Fi25FNHGGjpuUYuJaMDQztb21ZyNK4mQhRQ==
 
 query-string@^4.1.0:
   version "4.3.4"
@@ -8898,7 +8898,7 @@ strip-ansi@6.0.0, strip-ansi@^6.0.0:
   dependencies:
     ansi-regex "^5.0.0"
 
-strip-ansi@^3.0.0, strip-ansi@^3.0.1:
+strip-ansi@=3.0.1, strip-ansi@^3.0.0, strip-ansi@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-3.0.1.tgz#6a385fb8853d952d5ff05d0e8aaf94278dc63dcf"
   integrity sha1-ajhfuIU9lS1f8F0Oiq+UJ43GPc8=
@@ -9768,8 +9768,10 @@ watchpack@^1.7.4:
   resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.7.5.tgz#1267e6c55e0b9b5be44c2023aed5437a2c26c453"
   integrity sha512-9P3MWk6SrKjHsGkLT2KHXdQ/9SNkyoJbabxnKOoJepsvJjJG8uYTR3yTPxPQvNDI3w4Nz1xnE0TLHK4RIVe/MQ==
   dependencies:
+    chokidar "^3.4.1"
     graceful-fs "^4.1.2"
     neo-async "^2.5.0"
+    watchpack-chokidar2 "^2.0.1"
   optionalDependencies:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"

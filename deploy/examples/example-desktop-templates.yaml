@@ -38,10 +38,12 @@ kind: Template
 metadata:
   name: qemu-kvm
 spec:
-  desktop: {}
   qemu:
     diskImage: ghcr.io/tinyzimmer/kvdi:ubuntu-qemu-latest
     diskImagePullPolicy: IfNotPresent
+    cpus: 4
+    memory: 4096
+    useCSI: false
   tags:
     kvm: "true"
     os: ubuntu

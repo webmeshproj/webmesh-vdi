@@ -45,7 +45,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import { DesktopAddressGetter } from 'src/lib/displayManager.js'
+import DesktopAddressGetter from 'src/lib/addresses.js'
 
 export default {
   name: 'LogViewerDialog',

@@ -19,13 +19,14 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 import Recorder from 'opus-recorder'
 import Websock from '@novnc/novnc/core/websock.js'
+import { Emitter, Events } from './events.js'
 import encoderPath from 'opus-recorder/dist/encoderWorker.min.js'
 
 // AudioManager is an object for managing audio playback and recording
 // to/from a desktop session.
-export default class AudioManager {
+export default class AudioManager extends Emitter {
 
-  constructor ({ addressGetter, userStore, onDisconnect, onError }) {
+  constructor ({ addressGetter, userStore }) {
     this._addressGetter = addressGetter
     this._userStore = userStore
     this._onDisconnect = onDisconnect
@@ -37,7 +38,7 @@ export default class AudioManager {
 
   // _connect will create a new Websocket connection. Use novnc/websockify-js 
   // for more control over the recv and send queues.
-  _connect (retry) {
+  async _connect (retry) {
     this._socket = new Websock()
     this._socket.open(this._addressGetter.audioURL())
     this._socket.binaryType = 'arraybuffer'
@@ -48,17 +49,16 @@ export default class AudioManager {
             this._connect(true)
           })
           .catch((err) => {
-            if (this._onError) { this._onError(err) }
+            this.emit(Events.error, err)
+            throw err
           })
         return
       }
       this.stopRecording()
       if (!event.wasClean || (event.code !== 1000 && event.code !== 1005)) {
-        this._onError(new Error(`Unexpected message from websocket: ${event.code} ${event.reason}`))
+        this.emit(Events.error, new Error(`Unexpected message from websocket: ${event.code} ${event.reason}`))
       }
-      if (this._onDisconnect) {
-        this._onDisconnect()
-      }
+      this.emit(Events.disconnected)
       this._socket = null
     })
   }
@@ -101,9 +101,7 @@ export default class AudioManager {
       .then(() => { console.log('Started audio recorder')})
       .catch((err) => {
         const serr = new Error(`Failed to start audio recording: ${err}`)
-        if (this._onError) {
-          this._onError(serr)
-        }
+        this.emit(Events.error, serr)
       })
   }
 
@@ -116,10 +114,10 @@ export default class AudioManager {
   }
 
   // startPlayback starts the playback process
-  startPlayback () {
+  async startPlayback () {
 
     if (!this._socket) {
-      this._connect()
+      await this._connect()
     }
 
     // Create a new MediaSource and tie it to a fake audio object
