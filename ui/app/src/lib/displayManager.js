@@ -141,6 +141,8 @@ export default class DisplayManager extends Emitter {
             addressGetter: this._getSessionURLs(),
             userStore: this._userStore
         })
+        // Don't use bind here because the VNCViewer component is only expecting display
+        // disconnected events.
         this._audioManager.on(Events.disconnected, () => { this._resetAudioStatus() })
         this._audioManager.on(Events.error, (err) => { this.emit(Events.error, err) })
     }
@@ -295,8 +297,7 @@ export default class DisplayManager extends Emitter {
         }
 
         this._display = new VNCDisplay()
-        this._display.on(Events.connected, (ev) => { this.emit(Events.connected, ev) })
-        this._display.on(Events.error, (ev) => { this.emit(Events.error, ev) })
+        this._display.bind(this)
         this._display.on(Events.disconnected, (ev) => { this._disconnectedFromDisplay(ev) })
 
         try {
@@ -312,8 +313,6 @@ export default class DisplayManager extends Emitter {
     // _disconnectedFromDisplay is called when the connection is dropped to a
     // display session.
     async _disconnectedFromDisplay (event) {
-        this.emit(Events.disconnected, event)
-
         if (event.detail.clean) {
             // The server disconnecting cleanly would mean expired session,
             // but this should probably be handled better.

@@ -27,10 +27,9 @@ import encoderPath from 'opus-recorder/dist/encoderWorker.min.js'
 export default class AudioManager extends Emitter {
 
   constructor ({ addressGetter, userStore }) {
+    super()
     this._addressGetter = addressGetter
     this._userStore = userStore
-    this._onDisconnect = onDisconnect
-    this._onError = onError
 
     this._socket = null
     this._mediaRecorder = null
