@@ -28,7 +28,11 @@ fi
 
 # Set the VNC socket dir - this will effectivelt do nothing if the UNIX socket env var is not set
 if [[ -z "${DISPLAY_SOCK_ADDR}" ]] ; then
-    export DISPLAY_SOCK_ADDR="/run/user/${UID}/vnc.sock"
+    if [[ -n "${VNC_SOCK_ADDR}" ]] ; then
+        export DISPLAY_SOCK_ADDR="${VNC_SOCK_ADDR}"
+    else
+        export DISPLAY_SOCK_ADDR="/run/user/${UID}/vnc.sock"
+    fi
 fi
 
 # Pre-create the vnc socket directory and give it to the user
