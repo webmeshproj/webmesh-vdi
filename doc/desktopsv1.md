@@ -10,6 +10,7 @@ Types
 -   [DesktopInit](#%23desktops.kvdi.io%2fv1.DesktopInit)
 -   [DockerInDockerConfig](#%23desktops.kvdi.io%2fv1.DockerInDockerConfig)
 -   [ProxyConfig](#%23desktops.kvdi.io%2fv1.ProxyConfig)
+-   [QEMUConfig](#%23desktops.kvdi.io%2fv1.QEMUConfig)
 -   [Session](#%23desktops.kvdi.io%2fv1.Session)
 -   [SessionSpec](#%23desktops.kvdi.io%2fv1.SessionSpec)
 -   [Template](#%23desktops.kvdi.io%2fv1.Template)
@@ -148,19 +149,81 @@ ProxyConfig represents configurations for the display/audio proxy.
 </tr>
 <tr class="odd">
 <td><code>allowFileTransfer</code> <em>bool</em></td>
-<td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template.</p></td>
+<td><p>AllowFileTransfer will mount the user’s home directory inside the kvdi-proxy image. This enables the API endpoint for exploring, downloading, and uploading files to desktop sessions booted from this template. When using a <code>qemu</code> configuration with SPICE, file upload is enabled by default.</p></td>
 </tr>
 <tr class="even">
 <td><code>socketAddr</code> <em>string</em></td>
-<td><p>The address the VNC server listens on inside the image. This defaults to the UNIX socket /var/run/kvdi/display.sock. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>.</p></td>
+<td><p>The address the display server listens on inside the image. This defaults to the UNIX socket <code>/var/run/kvdi/display.sock</code>. The kvdi-proxy sidecar will forward websockify requests validated by mTLS to this socket. Must be in the format of <code>tcp://{host}:{port}</code> or <code>unix://{path}</code>. This will usually be a VNC server unless using a <code>qemu</code> configuration with SPICE. If using custom init scripts inside your containers, this value is set to the <code>DISPLAY_SOCK_ADDR</code> environment variable.</p></td>
 </tr>
 <tr class="odd">
 <td><code>pulseServer</code> <em>string</em></td>
-<td><p>Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init. The value is assumed to be a unix socket.</p></td>
+<td><p>Override the address of the PulseAudio server that the proxy will try to connect to when serving audio. This defaults to what the ubuntu/arch desktop images are configured to do during init, which is to place a socket in the user’s run directory. The value is assumed to be a unix socket.</p></td>
 </tr>
 <tr class="even">
 <td><code>resources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
 <td><p>Resource restraints to place on the proxy sidecar.</p></td>
+</tr>
+</tbody>
+</table>
+
+### QEMUConfig
+
+(*Appears on:* [TemplateSpec](#TemplateSpec))
+
+QEMUConfig represents configurations for running a qemu virtual machine
+for instances booted from this template.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>diskImage</code> <em>string</em></td>
+<td><p>The container image bundling the disks for this template.</p></td>
+</tr>
+<tr class="even">
+<td><code>diskImagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><p>The pull policy to use when pulling the disk image.</p></td>
+</tr>
+<tr class="odd">
+<td><code>useCSI</code> <em>bool</em></td>
+<td><p>Set to true to use the image-populator CSI to mount the disk images to a qemu container. You must have the <a href="https://github.com/kubernetes-csi/csi-driver-image-populator">image-populator</a> driver installed. Defaults to copying the contents out of the disk image via an init container. This is experimental and not really tested.</p></td>
+</tr>
+<tr class="even">
+<td><code>qemuImage</code> <em>string</em></td>
+<td><p>The container image containing the QEMU utilities to use to launch the VM. Defaults to <code>ghcr.io/tinyzimmer/kvdi:qemu-latest</code>.</p></td>
+</tr>
+<tr class="odd">
+<td><code>qemuImagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
+<td><p>The pull policy to use when pulling the QEMU image.</p></td>
+</tr>
+<tr class="even">
+<td><code>qemuResources</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core">Kubernetes core/v1.ResourceRequirements</a></em></td>
+<td><p>Resource requirements to place on the qemu runner instance.</p></td>
+</tr>
+<tr class="odd">
+<td><code>diskPath</code> <em>string</em></td>
+<td><p>The path to the boot volume inside the disk image. Defaults to <code>/disk/boot.img</code>.</p></td>
+</tr>
+<tr class="even">
+<td><code>cloudInitPath</code> <em>string</em></td>
+<td><p>The path to a pre-built cloud init image to use when booting the VM inside the disk image. Defaults to an auto-generated one at runtime.</p></td>
+</tr>
+<tr class="odd">
+<td><code>cpus</code> <em>int</em></td>
+<td><p>The number of vCPUs to assign the virtual machine. Defaults to 1.</p></td>
+</tr>
+<tr class="even">
+<td><code>memory</code> <em>int</em></td>
+<td><p>The amount of memory to assign the virtual machine (in MB). Defaults to 1024.</p></td>
+</tr>
+<tr class="odd">
+<td><code>spice</code> <em>bool</em></td>
+<td><p>Set to true to use the SPICE protocol when proxying the display. If using custom qemu runners, this sets the <code>SPICE_DISPLAY</code> environment variable to <code>true</code>. The runners provided by this repository will tell qemu to set up a SPICE server at <code>proxy.socketAddr</code>. The default is to use VNC. This value is also used by the UI to determine which protocol to expect from a display connection.</p></td>
 </tr>
 </tbody>
 </table>
@@ -299,6 +362,10 @@ Template is the Schema for the templates API
 <td><p>Docker-in-docker configurations for running a dind sidecar along with desktop instances.</p></td>
 </tr>
 <tr class="even">
+<td><code>qemu</code> <em><a href="#QEMUConfig">QEMUConfig</a></em></td>
+<td><p>QEMU configurations for this template. When defined, VMs are used instead of containers for desktop sessions. This object is mututally exclusive with <code>desktop</code> and will take precedence when defined.</p></td>
+</tr>
+<tr class="odd">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
 </tr>
@@ -347,6 +414,10 @@ TemplateSpec defines the desired state of Template
 <td><p>Docker-in-docker configurations for running a dind sidecar along with desktop instances.</p></td>
 </tr>
 <tr class="even">
+<td><code>qemu</code> <em><a href="#QEMUConfig">QEMUConfig</a></em></td>
+<td><p>QEMU configurations for this template. When defined, VMs are used instead of containers for desktop sessions. This object is mututally exclusive with <code>desktop</code> and will take precedence when defined.</p></td>
+</tr>
+<tr class="odd">
 <td><code>tags</code> <em>map[string]string</em></td>
 <td><p>Arbitrary tags for displaying in the app UI.</p></td>
 </tr>
@@ -355,4 +426,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `532ff7c`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `b1db34e`.*
