@@ -23,19 +23,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 
 	"github.com/google/uuid"
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	corev1 "k8s.io/api/core/v1"
 
+	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	proxyclient "github.com/tinyzimmer/kvdi/pkg/proxyproto/client"
 	"github.com/tinyzimmer/kvdi/pkg/types"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // TokenHeader is the HTTP header containing the user's access token
@@ -125,15 +121,7 @@ func (d *desktopAPI) lookupRefreshToken(refreshToken string) (string, error) {
 	return string(user), d.secrets.WriteSecretMap(v1.RefreshTokensSecretKey, tokens)
 }
 
-func (d *desktopAPI) getDesktopWebsocketURL(r *http.Request) (*url.URL, error) {
-	host, err := d.getDesktopWebHost(r)
-	if err != nil {
-		return nil, err
-	}
-	return url.Parse(fmt.Sprintf("wss://%s", host))
-}
-
-func (d *desktopAPI) getDesktopWebHost(r *http.Request) (string, error) {
+func (d *desktopAPI) getDesktopProxyHost(r *http.Request) (string, error) {
 	nn := apiutil.GetNamespacedNameFromRequest(r)
 	found := &corev1.Service{}
 	if err := d.client.Get(context.TODO(), nn, found); err != nil {
@@ -142,30 +130,12 @@ func (d *desktopAPI) getDesktopWebHost(r *http.Request) (string, error) {
 	return fmt.Sprintf("%s:%d", found.Spec.ClusterIP, v1.WebPort), nil
 }
 
-func (d *desktopAPI) serveHTTPProxy(w http.ResponseWriter, r *http.Request) {
-	desktopHost, err := d.getDesktopWebHost(r)
+func (d *desktopAPI) getProxyClientForRequest(r *http.Request) (*proxyclient.Client, error) {
+	endpointURL, err := d.getDesktopProxyHost(r)
 	if err != nil {
-		if client.IgnoreNotFound(err) == nil {
-			apiutil.ReturnAPINotFound(err, w)
-			return
-		}
-		apiutil.ReturnAPIError(err, w)
-		return
+		return nil, err
 	}
-
-	clientTLSConfig, err := tlsutil.NewClientTLSConfig()
-	if err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
-
-	proxy := httputil.NewSingleHostReverseProxy(&url.URL{
-		Scheme: "https",
-		Host:   desktopHost,
-	})
-	proxy.Transport = &http.Transport{TLSClientConfig: clientTLSConfig}
-
-	proxy.ServeHTTP(w, r)
+	return proxyclient.New(apiLogger, endpointURL), nil
 }
 
 // Session response

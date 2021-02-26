@@ -27,6 +27,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/tinyzimmer/kvdi/pkg/version"
 	"golang.org/x/net/websocket"
 )
 
@@ -45,6 +47,14 @@ func (d *desktopAPI) buildRouter() error {
 
 	// Setup the decoder
 	r.Use(DecodeRequest)
+
+	// simple version handler - TODO: should be cleaned up and documented
+	r.PathPrefix("/api/version").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiutil.WriteJSON(map[string]string{
+			"version":   version.Version,
+			"gitCommit": version.GitCommit,
+		}, w)
+	}).Methods("GET")
 
 	// metrics
 	r.PathPrefix("/api/metrics").Handler(promhttp.Handler())
@@ -77,6 +87,11 @@ func (d *desktopAPI) buildRouter() error {
 	// Main HTTP routes
 
 	protected := r.PathPrefix("/api").Subrouter()
+
+	// Validate the user session on all requests
+	protected.Use(d.ValidateUserSession)
+	// check the grants for the request user
+	protected.Use(d.ValidateUserGrants)
 
 	// SUBROUTER ASSUMES /api PREFIX ON ALL ROUTES
 
@@ -138,11 +153,6 @@ func (d *desktopAPI) buildRouter() error {
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/stat/").HandlerFunc(d.GetStatDesktopFile).Methods("GET")    // Retrieve file info or a directory listing from a desktop
 	protected.PathPrefix("/desktops/fs/{namespace}/{name}/get/").HandlerFunc(d.GetDownloadDesktopFile).Methods("GET") // Retrieve the contents of a file from a desktop
 	protected.HandleFunc("/desktops/fs/{namespace}/{name}/put", d.PutDesktopFile).Methods("PUT")                      // Uploads a file to a desktop
-
-	// Validate the user session on all requests
-	protected.Use(d.ValidateUserSession)
-	// check the grants for the request user
-	protected.Use(d.ValidateUserGrants)
 
 	d.router = r
 	return nil

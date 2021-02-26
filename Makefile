@@ -1,6 +1,6 @@
 REPO    ?= ghcr.io/tinyzimmer
 NAME     = kvdi
-VERSION ?= latest
+VERSION ?= $(shell git describe --tags)
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
 
@@ -56,7 +56,7 @@ vet:
 
 # Generate code
 generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./apis/..."
 
 # Download controller-gen locally if necessary
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
@@ -121,6 +121,15 @@ build-app: build-base
 build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
+build-kvdictl:
+	cd cmd/kvdictl && \
+		go build \
+   			-ldflags=" \
+			   	-s -w \
+			   	-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
+				-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'" \
+			-o $(GOBIN)/kvdictl .
+
 license-headers:
 	for i in `find cmd/ -name '*.go'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
 	for i in `find apis/ -name '*.go' -not -name zz_generated.deepcopy.go` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done
@@ -155,7 +164,7 @@ push-kvdi-proxy: build-kvdi-proxy
 ##
 
 GOLANGCI_LINT    ?= $(GOBIN)/golangci-lint
-GOLANGCI_VERSION ?= v1.33.0
+GOLANGCI_VERSION ?= v1.37.1
 $(GOLANGCI_LINT):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) $(GOLANGCI_VERSION)
 
@@ -233,8 +242,7 @@ test-cluster: $(K3D)
 		--k3s-server-arg="--disable=traefik" \
 		--volume="/dev/shm:/dev/shm@server[0]" \
 		--volume="/dev/kvm:/dev/kvm@server[0]" \
-		-p 443:443@loadbalancer -p 5556:5556@loadbalancer \
-		--registry-create
+		-p 443:443@loadbalancer -p 5556:5556@loadbalancer
 	$(K3D) kubeconfig get $(CLUSTER_NAME) > $(CLUSTER_KUBECONFIG)
 
 ##

@@ -72,6 +72,9 @@ func newAppServerCertificate(cluster *appv1.VDICluster) *x509.Certificate {
 		SubjectKeyId: []byte{1, 2, 3, 4, 6},
 		KeyUsage:     certificateUsages,
 		ExtKeyUsage:  serverExtUsages,
+		IPAddresses: []net.IP{
+			net.IPv4(127, 0, 0, 1),
+		},
 	}
 }
 

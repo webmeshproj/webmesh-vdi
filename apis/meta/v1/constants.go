@@ -154,3 +154,9 @@ var (
 	True                  = true
 	False                 = false
 )
+
+// Websocket configurations
+const (
+	WebsocketWriteBufferSize = 512
+	WebsocketReadBufferSize  = 512
+)

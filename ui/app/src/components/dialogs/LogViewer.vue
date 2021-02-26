@@ -131,7 +131,9 @@ export default {
         }
         this.logData = this.logData + ev.data
         const logDiv = document.getElementById('logs')
-        logDiv.scrollTop = logDiv.scrollHeight
+        if (logDiv) {
+          logDiv.scrollTop = logDiv.scrollHeight
+        }
       })
       this.socket.addEventListener('close', (ev) => {
         if (!ev.wasClean && ev.code === 1006 && !retry) {

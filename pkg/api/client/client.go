@@ -37,8 +37,9 @@ type Client struct {
 	httpClient *http.Client
 	// the current access token for performing requests
 	accessToken string
-	// a stop channel for the refresh_token loop
-	stopCh chan struct{}
+	// whether to retry unauthorized requests with a refresh token.
+	// only works for long-lived client usages.
+	tokenRetry bool
 }
 
 // Opts are options to pass to New when creating a new client interface.
@@ -62,7 +63,7 @@ type Opts struct {
 
 // New creates a new kVDI client.
 func New(opts *Opts) (*Client, error) {
-	cl := &Client{opts: opts}
+	cl := &Client{opts: opts, tokenRetry: true}
 
 	// refresh tokens are supplied as httponly cookies
 	jar, err := cookiejar.New(nil)
@@ -91,12 +92,13 @@ func New(opts *Opts) (*Client, error) {
 	return cl, cl.authenticate()
 }
 
+// SetAutoRefreshToken will set whether the client should try to auto refresh tokens after
+// an unauthorized response. The default value is true. Use this method to disable the behavior.
+func (c *Client) SetAutoRefreshToken(val bool) { c.tokenRetry = val }
+
 // Close will stop the token refresh goroutine if it's running.
 func (c *Client) Close() {
-	if c.stopCh != nil {
-		c.stopCh <- struct{}{}
-	}
-	if err := c.do(http.MethodPost, "logout", nil, nil); err != nil {
+	if err := c.do(http.MethodPost, "logout", nil, nil, false); err != nil {
 		log.Println("Error posting to /api/logout. Refresh token could not be revoked:", err)
 	}
 }

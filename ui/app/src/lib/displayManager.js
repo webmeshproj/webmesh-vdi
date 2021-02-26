@@ -313,7 +313,7 @@ export default class DisplayManager extends Emitter {
     // _disconnectedFromDisplay is called when the connection is dropped to a
     // display session.
     async _disconnectedFromDisplay (event) {
-        if (!event || event.detail.clean) {
+        if (!event || (event.detail && event.detail.clean)) {
             // The server disconnecting cleanly would mean expired session,
             // but this should probably be handled better.
             if (this._currentSession) {
@@ -322,13 +322,13 @@ export default class DisplayManager extends Emitter {
                     // it was deleted.
                     await this._sessionStore.getters.sessionStatus(this._currentSession)
                 } catch {
-                    this._sessionStore.dispatch('deleteSession', this._currentSession)
+                    this._sessionStore.dispatch('deleteSessionOffline', this._currentSession)
                     this._currentSession = null
                     this.emit(Events.error, new Error("The desktop session has ended"))
                 }
             }
         } else {
-            console.log(`Something went wrong, connection is closed: ${event}`)
+            console.log(`Something went wrong, connection is closed (${event}) - Reconnecting`)
             this._doStatusWebsocket()
         }
 

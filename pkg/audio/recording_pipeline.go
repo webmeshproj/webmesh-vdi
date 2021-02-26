@@ -106,8 +106,9 @@ func newRecordingPipelineWriter(log logr.Logger, errors chan error, opts *record
 	pipeline.GetPipelineBus().AddWatch(func(msg *gst.Message) bool {
 		switch msg.Type() {
 		case gst.MessageError:
-			log.Error(err, "Error from pipeline")
-			errors <- msg.ParseError()
+			merr := msg.ParseError()
+			log.Error(merr, "Error from pipeline", "Debug", merr.DebugString())
+			errors <- merr
 		case gst.MessageEOS:
 			log.Info("Pipeline has reached EOS")
 			errors <- app.ErrEOS
@@ -178,8 +179,9 @@ func newSinkPipeline(log logr.Logger, errors chan error, opts *playbackPipelineO
 	pipeline.GetPipelineBus().AddWatch(func(msg *gst.Message) bool {
 		switch msg.Type() {
 		case gst.MessageError:
-			log.Error(err, "Error from pipeline")
-			errors <- msg.ParseError()
+			merr := msg.ParseError()
+			log.Error(merr, "Error from pipeline", "Debug", merr.DebugString())
+			errors <- merr
 		case gst.MessageEOS:
 			log.Info("Pipeline has reached EOS")
 			errors <- app.ErrEOS

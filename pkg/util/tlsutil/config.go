@@ -42,17 +42,22 @@ var serverCertMountPath = v1.ServerCertificateMountPath
 var clientCertMountPath = v1.ClientCertificateMountPath
 
 // The minimum TLS version required for all mTLS traffic
-var minTLSVersion = uint16(tls.VersionTLS12)
+var minTLSVersion = uint16(tls.VersionTLS13)
 
 // NewServerTLSConfig returns a new server TLS configuration with client
 // certificate verification enabled.
 func NewServerTLSConfig() (*tls.Config, error) {
+	cert, err := tls.LoadX509KeyPair(ServerKeypair())
+	if err != nil {
+		return nil, err
+	}
 	caCertPool, err := getCACertPool(serverCertMountPath)
 	if err != nil {
 		return nil, err
 	}
 	tlsConfig := &tls.Config{
 		ClientCAs:                caCertPool,
+		Certificates:             []tls.Certificate{cert},
 		ClientAuth:               tls.RequireAndVerifyClientCert,
 		PreferServerCipherSuites: true,
 		MinVersion:               minTLSVersion,

@@ -174,7 +174,7 @@ var KeyNames = {
   KEY_KP_3        :/* 3           PgDown    0x51  */   81,
   KEY_KP_0        :/* 0           Insert    0x52  */   82,
   KEY_KP_Decimal  :/* . (Decimal) Delete    0x53  */   83,
-  KEY_SysReqest   :/* SysReqest             0x54  */   84,
+  KEY_SysRequest  :/* SysRequest            0x54  */   84,
                    /* NOTUSED               0x55  */
   KEY_Less        :/* < (Less)   >(Greater) 0x56  */   86,
   KEY_F11         :/* F11                   0x57  */   87,

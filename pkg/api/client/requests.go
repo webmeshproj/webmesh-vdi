@@ -31,6 +31,15 @@ import (
 
 // Miscellaneous functions
 
+// GetServerVersion will return the version and git commit of the running API server.
+func (c *Client) GetServerVersion() (version, gitCommit string, err error) {
+	var out map[string]string
+	if err = c.do(http.MethodGet, "version", nil, &out); err != nil {
+		return
+	}
+	return out["version"], out["gitCommit"], nil
+}
+
 // GetServerConfig returns the VDICluster configuration of the server.
 func (c *Client) GetServerConfig() (*appv1.VDIClusterSpec, error) {
 	spec := &appv1.VDIClusterSpec{}

@@ -109,10 +109,18 @@ func (t *Template) GetPodSecurityContext() *corev1.PodSecurityContext {
 	if t.DindIsEnabled() || t.GetInitSystem() == InitSystemd {
 		return &corev1.PodSecurityContext{
 			RunAsNonRoot: &v1.False,
+			FSGroup:      &v1.DefaultUser,
 		}
 	}
 	return &corev1.PodSecurityContext{
 		RunAsNonRoot: &v1.True,
 		RunAsUser:    &v1.DefaultUser,
+		FSGroup:      &v1.DefaultUser,
 	}
+}
+
+// HasManagedEnvSecret returns true if the template should have a pre-created secret
+// containing sensitive environment variables.
+func (t *Template) HasManagedEnvSecret() bool {
+	return len(t.GetEnvTemplates()) > 0
 }

@@ -24,7 +24,7 @@ COPY cmd/kvdi-proxy  /build/cmd/kvdi-proxy
 # Build the binary
 RUN go build \
   -o /tmp/kvdi-proxy \
-  -ldflags="-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
+  -ldflags="-s -w -X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
   ./cmd/kvdi-proxy && upx /tmp/kvdi-proxy
 
 ###############

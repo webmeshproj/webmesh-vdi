@@ -102,6 +102,8 @@ SpiceMainConn.prototype.process_channel_message = function(msg)
 
         if (DEBUG > 0)
         {
+            // FIXME - there is a lot here we don't handle; mouse modes, agent,
+            //          ram_hint, multi_media_time
             this.log_info("session id "                 + this.main_init.session_id +
                           " ; display_channels_hint "   + this.main_init.display_channels_hint +
                           " ; supported_mouse_modes "   + this.main_init.supported_mouse_modes +

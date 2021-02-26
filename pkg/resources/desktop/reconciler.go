@@ -120,7 +120,7 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 
 	// If a secret was pre-created by the API for extra environment variables, fetch its name
 	var secretName string
-	if envTemplates := template.GetEnvTemplates(); len(envTemplates) > 0 {
+	if template.HasManagedEnvSecret() {
 		secretList := &corev1.SecretList{}
 		if err := f.client.List(ctx, secretList, client.InNamespace(instance.GetNamespace()), client.MatchingLabels{v1.DesktopNameLabel: instance.GetName()}); err != nil {
 			return err
@@ -192,48 +192,52 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 			return nil
 		}
 		tickerRoutines[instance.GetUID()] = struct{}{}
-		go func() {
-			reqLogger.Info("Starting session timer for desktop instance.")
-
-			// make sure to clean the global map on return
-			defer func() { delete(tickerRoutines, instance.GetUID()) }()
-
-			// define the namespaced name and setup tickers
-			nn := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
-			sessTicker := time.NewTicker(dur)
-			pollTicker := time.NewTicker(time.Duration(10) * time.Second)
-
-			// listen on the ticker channels
-			for {
-				select {
-
-				case <-sessTicker.C:
-					// the desktop session has expired
-					reqLogger.Info("Desktop session has expired, destroying instance")
-					if err := f.client.Delete(ctx, instance); err != nil {
-						if client.IgnoreNotFound(err) != nil {
-							reqLogger.Error(err, fmt.Sprintf("Error destroying desktop instance: %s", err.Error()))
-						}
-					}
-					return
-
-				case <-pollTicker.C:
-					// return if desktop has been deleted
-					if err := f.client.Get(ctx, nn, &desktopsv1.Session{}); err != nil {
-						if client.IgnoreNotFound(err) == nil {
-							reqLogger.Info("Desktop instance has been deleted, stopping session poll")
-							return
-						}
-						reqLogger.Error(err, fmt.Sprintf("Error polling desktop instance: %s", err.Error()))
-						// retry on next loop
-					}
-
-				}
-			}
-		}()
+		go f.killOnSessionTimeout(reqLogger, instance, dur)
 	}
 
 	return nil
+}
+
+func (f *Reconciler) killOnSessionTimeout(reqLogger logr.Logger, instance *desktopsv1.Session, dur time.Duration) {
+	ctx := context.Background()
+
+	reqLogger.Info("Starting session timer for desktop instance.")
+
+	// make sure to clean the global map on return
+	defer func() { delete(tickerRoutines, instance.GetUID()) }()
+
+	// define the namespaced name and setup tickers
+	nn := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
+	sessTicker := time.NewTicker(dur)
+	pollTicker := time.NewTicker(time.Duration(10) * time.Second)
+
+	// listen on the ticker channels
+	for {
+		select {
+
+		case <-sessTicker.C:
+			// the desktop session has expired
+			reqLogger.Info("Desktop session has expired, destroying instance")
+			if err := f.client.Delete(ctx, instance); err != nil {
+				if client.IgnoreNotFound(err) != nil {
+					reqLogger.Error(err, fmt.Sprintf("Error destroying desktop instance: %s", err.Error()))
+				}
+			}
+			return
+
+		case <-pollTicker.C:
+			// return if desktop has been deleted
+			if err := f.client.Get(ctx, nn, &desktopsv1.Session{}); err != nil {
+				if client.IgnoreNotFound(err) == nil {
+					reqLogger.Info("Desktop instance has been deleted, stopping session poll")
+					return
+				}
+				reqLogger.Error(err, fmt.Sprintf("Error polling desktop instance: %s", err.Error()))
+				// retry on next loop
+			}
+
+		}
+	}
 }
 
 func (f *Reconciler) updateNonRunningStatusAndRequeue(ctx context.Context, instance *desktopsv1.Session, pod *corev1.Pod, msg string) error {

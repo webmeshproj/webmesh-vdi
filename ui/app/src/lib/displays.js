@@ -170,11 +170,11 @@ export class SPICEDisplay extends Display {
             document.getElementById('view-area').removeEventListener('drop', handle_file_drop, false)
         }
         if (!err && this._spiceClient) {
-            await this._spiceClient.stop()
+            this._spiceClient.stop()
         }
         console.log('Disconnected from SPICE server')
         this._spiceClient = null
-        this.emit(Events.disconnected)
+        this.emit(Events.disconnected, err)
     }
 
     _connectedToSpiceAgent(sc) {

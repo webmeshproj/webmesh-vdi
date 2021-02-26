@@ -20,25 +20,20 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
 	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/lock"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gorilla/websocket"
-	"github.com/koding/websocketproxy"
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
 
 // swagger:operation GET /api/desktops/ws/{namespace}/{name}/display Desktops doWebsocket
 // ---
@@ -88,7 +83,7 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	d.ServeWebsocketProxy(w, r)
+	d.ServeWebsocketProxy(w, r, proxyproto.RequestTypeDisplay)
 }
 
 // swagger:operation GET /api/desktops/ws/{namespace}/{name}/audio Desktops doAudio
@@ -138,11 +133,19 @@ func (d *desktopAPI) GetWebsockifyAudio(w http.ResponseWriter, r *http.Request) 
 		}
 	}()
 
-	d.ServeWebsocketProxy(w, r)
+	d.ServeWebsocketProxy(w, r, proxyproto.RequestTypeAudio)
 }
 
-func (d *desktopAPI) ServeWebsocketProxy(w http.ResponseWriter, r *http.Request) {
-	endpointURL, err := d.getDesktopWebsocketURL(r)
+var upgrader = &websocket.Upgrader{
+	CheckOrigin:       func(r *http.Request) bool { return true },
+	EnableCompression: true,
+	Subprotocols:      []string{"binary"},
+	ReadBufferSize:    v1.WebsocketReadBufferSize,
+	WriteBufferSize:   v1.WebsocketWriteBufferSize,
+}
+
+func (d *desktopAPI) ServeWebsocketProxy(w http.ResponseWriter, r *http.Request, rt proxyproto.RequestType) {
+	proxy, err := d.getProxyClientForRequest(r)
 	if err != nil {
 		if client.IgnoreNotFound(err) == nil {
 			apiutil.ReturnAPINotFound(err, w)
@@ -151,19 +154,51 @@ func (d *desktopAPI) ServeWebsocketProxy(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	clientTLSConfig, err := tlsutil.NewClientTLSConfig()
+
+	apiLogger.Info("Connecting to desktop proxy", "Path", r.URL.Path)
+
+	var conn *proxyproto.Conn
+	switch rt {
+	case proxyproto.RequestTypeDisplay:
+		conn, err = proxy.DisplayProxy()
+	case proxyproto.RequestTypeAudio:
+		conn, err = proxy.AudioProxy()
+	}
 	if err != nil {
+		apiLogger.Error(err, "Error creating connection to proxy server")
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
+	defer conn.Close()
 
-	apiLogger.Info("Starting new websocket proxy", "Host", endpointURL, "Path", r.URL.Path)
-	proxy := websocketproxy.NewProxy(endpointURL)
-	proxy.Dialer = &websocket.Dialer{
-		TLSClientConfig: clientTLSConfig,
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+	wsconn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		apiLogger.Error(err, "Failed to upgrade the websocket connection")
+		apiutil.ReturnAPIError(err, w)
+		return
 	}
-	proxy.Upgrader = &upgrader
-	proxy.ServeHTTP(w, r)
+	defer wsconn.Close()
+
+	client := apiutil.NewGorillaReadWriter(wsconn)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Copy client connection to server
+	go func() {
+		defer cancel()
+		if _, err := io.Copy(conn, client); err != nil {
+			apiLogger.Error(err, "Error while copying stream from websocket connection to proxy")
+		}
+	}()
+
+	// Copy server connection to the client
+	go func() {
+		defer cancel()
+		if _, err := io.Copy(client, conn); err != nil {
+			apiLogger.Error(err, "Error while copying stream from proxy to websocket connection")
+		}
+	}()
+
+	// block until the context is finished
+	for range ctx.Done() {
+	}
 }

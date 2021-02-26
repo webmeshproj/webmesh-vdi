@@ -4,9 +4,10 @@
 *.exe~
 *.dll
 *.so
+*.h
 *.dylib
 bin
-testbin/*
+testbin
 
 # Test binary, build with `go test -c`
 *.test
@@ -19,6 +20,7 @@ testbin/*
 *.swp
 *.swo
 *~
+*.log
 
 ### Vim ###
 # swap

@@ -190,7 +190,7 @@ function handle_keyup(e)
     e.preventDefault();
 }
 
-function sendCtrlAltDel()
+function sendCtrlAltDel(sc)
 {
     if (sc && sc.inputs && sc.inputs.state === "ready"){
         var key = new Messages.SpiceMsgcKeyDown();

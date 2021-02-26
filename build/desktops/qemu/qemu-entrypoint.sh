@@ -31,11 +31,12 @@ else
 fi
 
 if [[ -n "${SPICE_DISPLAY}" ]] && [[ "${SPICE_DISPLAY}" == "true" ]] ; then
+  spice_opts="disable-ticketing,image-compression=lz,jpeg-wan-compression=always,zlib-glz-wan-compression=always,playback-compression=off,streaming-video=filter,seamless-migration=on"
   if [[ "${socket_type}" == "unix" ]] ; then
-    DISPLAY_ARGS="-vga qxl -spice disable-ticketing,unix,addr=${socket_address} \
+    DISPLAY_ARGS="-vga qxl -spice unix,addr=${socket_address},${spice_opts} \
       -device virtio-serial -chardev spicevmc,id=vdagent,debug=0,name=vdagent"
   else
-    DISPLAY_ARGS="-vga qxl -spice disable-ticketing,addr=${tcp_address},port=${tcp_port} \
+    DISPLAY_ARGS="-vga qxl -spice addr=${tcp_address},port=${tcp_port},${spice_opts} \
       -device virtio-serial -chardev spicevmc,id=vdagent,debug=0,name=vdagent"
   fi
 else
@@ -125,4 +126,9 @@ qemu-system-${ARCH} \
   -fsdev local,id=home,path=${HOME},security_model=none -device virtio-9p,fsdev=home,mount_tag=home \
   -fsdev local,id=kvdi_run,path=/run,security_model=none -device virtio-9p,fsdev=kvdi_run,mount_tag=kvdi_run \
 	-device virtio-net,netdev=user -netdev user,id=user \
-  -monitor unix:/run/qemu-monitor.sock,server,nowait
+  -monitor unix:/run/qemu-monitor.sock,server,nowait \
+  -chardev socket,path=/run/qga.sock,server,nowait,id=qga0 \
+  -device virtio-serial \
+  -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0
+
+# {"execute":"guest-exec", "arguments":{"path":"/bin/bash","arg": ["-c", "touch /tmp/test.txt"]}}

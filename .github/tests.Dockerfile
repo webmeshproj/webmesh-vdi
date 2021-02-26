@@ -1,4 +1,4 @@
-FROM ubuntu:20.10
+FROM ubuntu:rolling
 
 RUN mkdir -p /build \
     && apt-get update \

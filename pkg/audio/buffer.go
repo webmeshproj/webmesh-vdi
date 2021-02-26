@@ -233,16 +233,16 @@ func (a *Buffer) IsClosed() bool { return a.closed }
 // Close kills the gstreamer pipelines.
 func (a *Buffer) Close() error {
 	if !a.IsClosed() {
+		a.mainLoop.Quit()
 		if err := a.pbkReader.Close(); err != nil {
 			return err
 		}
 		if err := a.recWriter.Close(); err != nil {
 			return err
 		}
-		if err := a.micSinkPipeline.BlockSetState(gst.StateNull); err != nil {
+		if err := a.micSinkPipeline.SetState(gst.StateNull); err != nil {
 			return err
 		}
-		a.mainLoop.Quit()
 		a.closed = true
 	}
 	return nil

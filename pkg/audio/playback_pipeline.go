@@ -20,7 +20,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package audio
 
 import (
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/go-logr/logr"
 
@@ -56,7 +58,12 @@ func newPlaybackPipelineReader(log logr.Logger, errors chan error, opts *playbac
 		return
 	}
 
-	if err = pulsesrc.SetProperty("device", opts.DeviceName); err != nil {
+	deviceName := opts.DeviceName
+	if !strings.HasSuffix(deviceName, ".monitor") {
+		deviceName = fmt.Sprintf("%s.monitor", deviceName)
+	}
+
+	if err = pulsesrc.SetProperty("device", deviceName); err != nil {
 		return
 	}
 
@@ -94,8 +101,9 @@ func newPlaybackPipelineReader(log logr.Logger, errors chan error, opts *playbac
 	pipeline.GetPipelineBus().AddWatch(func(msg *gst.Message) bool {
 		switch msg.Type() {
 		case gst.MessageError:
-			log.Error(err, "Error from pipeline")
-			errors <- msg.ParseError()
+			merr := msg.ParseError()
+			log.Error(merr, "Error from pipeline", "Debug", merr.DebugString())
+			errors <- merr
 		case gst.MessageEOS:
 			log.Info("Pipeline has reached EOS")
 			errors <- app.ErrEOS

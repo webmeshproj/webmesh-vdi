@@ -24,7 +24,7 @@ COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
 RUN go build -o /tmp/app \
-    -ldflags="-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
+    -ldflags="-s -w -X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
     ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \
@@ -57,5 +57,4 @@ COPY --from=builder /tmp/swagger.json /static/swagger.json
 # Latest quasar does not currently copy statics into dist
 COPY ui/app/src/statics /static/statics
 
-EXPOSE 8443
 ENTRYPOINT ["/app"]

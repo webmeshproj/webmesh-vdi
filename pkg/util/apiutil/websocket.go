@@ -21,9 +21,11 @@ package apiutil
 
 import (
 	"bufio"
+	"io/ioutil"
 	"net"
 	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
@@ -102,4 +104,55 @@ func (w *WebsocketWatcher) prometheusLabels() prometheus.Labels {
 		return prometheus.Labels{}
 	}
 	return prometheus.Labels(w.labels)
+}
+
+// GorillaReadWriter implements a wrapper around gorilla websocket connections. It implements a
+// ReadWriter and is used by the kvdi API for copying display/audio connections.
+type GorillaReadWriter struct {
+	*websocket.Conn
+	buffered []byte
+}
+
+// NewGorillaReadWriter returns a new gorilla websocket readwriter.
+func NewGorillaReadWriter(conn *websocket.Conn) *GorillaReadWriter {
+	return &GorillaReadWriter{Conn: conn}
+}
+
+// Read implements a Reader.
+func (w *GorillaReadWriter) Read(b []byte) (int, error) {
+	var pos int
+	if len(w.buffered) > 0 {
+		pos = copy(b, w.buffered)
+		if len(w.buffered) > pos {
+			w.buffered = w.buffered[pos:]
+			return pos, nil
+		}
+		w.buffered = nil
+	}
+	_, rdr, err := w.NextReader()
+	if err != nil {
+		return 0, err
+	}
+	body, err := ioutil.ReadAll(rdr)
+	if err != nil {
+		return 0, err
+	}
+	size := copy(b[pos:], body)
+	if len(body) > size {
+		w.buffered = body[size:]
+	}
+	return size, err
+}
+
+// Write implements a Writer.
+func (w *GorillaReadWriter) Write(b []byte) (int, error) {
+	writer, err := w.NextWriter(websocket.BinaryMessage)
+	if err != nil {
+		return 0, err
+	}
+	size, err := writer.Write(b)
+	if err != nil {
+		return size, err
+	}
+	return size, writer.Close()
 }

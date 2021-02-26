@@ -43,8 +43,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 export default {
   name: 'ServiceAccountSelector',
   props: {
-    idx: {
-      type: Number
+    tmplName: {
+      type: String
     },
     parentRefs: {
       type: Object
@@ -67,7 +67,7 @@ export default {
       try {
         let namespace
         console.log(this.parentRefs)
-        const nsRef = this.parentRefs[`ns-${this.idx}`]
+        const nsRef = this.parentRefs[`ns-${this.tmplName}`]
         if (!nsRef.selection || typeof (nsRef.selection) === 'object' || nsRef.selection === '' || nsRef.selection === []) {
           namespace = this.$configStore.getters.serverConfig.appNamespace || 'default'
         } else {

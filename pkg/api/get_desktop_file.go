@@ -20,9 +20,16 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
+	"io"
 	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/gorilla/mux"
+	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
 	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // swagger:operation GET /api/desktops/fs/{namespace}/{name}/stat/{fpath} Desktops statDesktopFile
@@ -54,7 +61,27 @@ import (
 //   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) GetStatDesktopFile(w http.ResponseWriter, r *http.Request) {
-	d.serveHTTPProxy(w, r)
+	proxy, err := d.getProxyClientForRequest(r)
+	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	path := getPathFromRequest(r)
+	res, err := proxy.StatFile(&proxyproto.FStatRequest{
+		Path: path,
+	})
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	defer res.Close()
+	if _, err := io.Copy(w, res); err != nil {
+		apiLogger.Error(err, "Error copying proxy response to client")
+	}
 }
 
 // File stat response
@@ -96,5 +123,43 @@ type swaggerStatDesktopFileResponse struct {
 //   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) GetDownloadDesktopFile(w http.ResponseWriter, r *http.Request) {
-	d.serveHTTPProxy(w, r)
+	proxy, err := d.getProxyClientForRequest(r)
+	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	path := getPathFromRequest(r)
+	res, err := proxy.GetFile(&proxyproto.FGetRequest{
+		Path: path,
+	})
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+	defer res.Body.Close()
+
+	fileSizeStr := strconv.FormatInt(res.Size, 10)
+
+	w.Header().Set("Content-Length", fileSizeStr)
+	w.Header().Set("Content-Type", res.Type)
+	w.Header().Set("Content-Disposition", "attachment; filename="+res.Name)
+	w.Header().Set("X-Suggested-Filename", res.Name)
+	w.Header().Set("X-Decompressed-Content-Length", fileSizeStr)
+	w.WriteHeader(http.StatusOK)
+
+	// Copy the file contents to the response
+	if _, err := io.Copy(w, res.Body); err != nil {
+		apiLogger.Error(err, "Failed to copy file contents to response buffer")
+	}
+}
+
+func getPathFromRequest(r *http.Request) string {
+	pathPrefix := apiutil.GetGorillaPath(r)
+	pathPrefix = strings.Replace(pathPrefix, "{name}", mux.Vars(r)["name"], 1)
+	pathPrefix = strings.Replace(pathPrefix, "{namespace}", mux.Vars(r)["namespace"], 1)
+	return strings.TrimPrefix(r.URL.Path, pathPrefix)
 }

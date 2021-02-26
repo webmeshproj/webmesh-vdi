@@ -24,7 +24,7 @@ const equal = function (o1, o2) {
   return o1.name === o2.name && o1.namespace === o2.namespace
 }
 
-export const DesktopSessions = new Vuex.Store({
+const DesktopSessions = new Vuex.Store({
 
   state: {
     sessions: [], // deciding against local storage here, but it is still an option
@@ -103,6 +103,10 @@ export const DesktopSessions = new Vuex.Store({
 
     setActiveSession ({ commit }, data) {
       commit('set_active_session', data)
+    },
+
+    deleteSessionOffline ({ commit }, data) {
+      commit('delete_session', data)
     },
 
     async deleteSession ({ commit }, data) {

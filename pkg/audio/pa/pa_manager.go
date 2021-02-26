@@ -77,10 +77,14 @@ func NewDeviceManager(opts *DeviceManagerOpts) (*DeviceManager, error) {
 // connect will create a new context and start the main loop.
 func (p *DeviceManager) connect() error {
 	// build args
-	cname := C.CString(fmt.Sprintf("device_manager_%s", time.Now().String()))
+	cname := C.CString("kvdi_device_manager")
 	defer C.free(unsafe.Pointer(cname))
-	cserverName := C.CString(p.getServer())
-	defer C.free(unsafe.Pointer(cserverName))
+
+	var cserverName *C.char
+	if server := p.getServer(); server != "" {
+		cserverName = C.CString(server)
+		defer C.free(unsafe.Pointer(cserverName))
+	}
 
 	// build a new context
 	p.paCtx = C.pa_context_new((*C.pa_mainloop_api)(p.getMainLoopAPI()), (*C.char)(cname))
@@ -217,6 +221,8 @@ type SourceOpts struct {
 	Channels, SampleRate int
 }
 
+var idFailed = 4294967295
+
 // AddSource adds a new pipe-source with the given name, description, and FIFO path.
 func (p *DeviceManager) AddSource(opts *SourceOpts) (*Device, error) {
 	p.mux.Lock()
@@ -228,6 +234,9 @@ func (p *DeviceManager) AddSource(opts *SourceOpts) (*Device, error) {
 	deviceID, err := p.loadModule("module-pipe-source", args)
 	if err != nil {
 		return nil, err
+	}
+	if deviceID == idFailed {
+		return nil, errors.New("Device parameters were incorrect")
 	}
 	device := &Device{
 		pulseCtx:    p.nativeCtx(),

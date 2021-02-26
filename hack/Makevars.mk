@@ -1,22 +1,20 @@
 # Go options
-GO111MODULE ?= auto
-CGO_ENABLED ?= 0
+GO111MODULE ?= on
 GOROOT      ?= `go env GOROOT`
 GOPATH      ?= $(shell go env GOPATH)
 GOBIN       ?= $(GOPATH)/bin
 
 GIT_COMMIT ?= `git rev-parse HEAD`
 
-# Image Options
+# Image Names
 BASE_IMAGE              ?= ${REPO}/${NAME}:build-base-${VERSION}
 MANAGER_IMAGE           ?= ${REPO}/${NAME}:manager-${VERSION}
 APP_IMAGE               ?= ${REPO}/${NAME}:app-${VERSION}
 KVDI_PROXY_IMAGE        ?= ${REPO}/${NAME}:kvdi-proxy-${VERSION}
-UBUNTU_BASE_IMAGE       ?= ${REPO}/${NAME}:ubuntu-base-${VERSION}
-ARCH_BASE_IMAGE         ?= ${REPO}/${NAME}:arch-base-${VERSION}
-APP_PROFILE_BASE_IMAGE  ?= ${REPO}/${NAME}:app-base-${VERSION}
-DOSBOX_IMAGE            ?= ${REPO}/${NAME}:dosbox-${VERSION}
-QEMU_IMAGE              ?= ${REPO}/${NAME}:qemu-${VERSION}
+UBUNTU_BASE_IMAGE       ?= ${REPO}/${NAME}:ubuntu-base-latest
+APP_PROFILE_BASE_IMAGE  ?= ${REPO}/${NAME}:app-base-latest
+DOSBOX_IMAGE            ?= ${REPO}/${NAME}:dosbox-latest
+QEMU_IMAGE              ?= ${REPO}/${NAME}:qemu-latest
 
 # K3d Options
 HELM_VERSION ?= v3.1.2

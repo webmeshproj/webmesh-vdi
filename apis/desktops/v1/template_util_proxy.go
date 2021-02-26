@@ -160,12 +160,12 @@ func (t *Template) GetDesktopProxyContainer() corev1.Container {
 			MountPath: v1.DesktopHomeMntPath,
 		})
 	}
-	return corev1.Container{
+	c := corev1.Container{
 		Name:            "kvdi-proxy",
 		Image:           t.GetKVDIVNCProxyImage(),
 		ImagePullPolicy: t.GetProxyPullPolicy(),
 		Args: []string{
-			"--vnc-addr", t.GetDisplaySocketURI(),
+			"--display-addr", t.GetDisplaySocketURI(),
 			"--user-id", strconv.Itoa(int(v1.DefaultUser)),
 			"--pulse-server", t.GetPulseServer(),
 		},
@@ -178,4 +178,10 @@ func (t *Template) GetDesktopProxyContainer() corev1.Container {
 		VolumeMounts: proxyVolMounts,
 		Resources:    t.GetProxyResources(),
 	}
+
+	// if t.IsQEMUTemplate() && t.QEMUUseSPICE() {
+	// 	c.Args = append(c.Args, "--spice")
+	// }
+
+	return c
 }

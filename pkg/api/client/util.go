@@ -45,14 +45,14 @@ func (c *Client) getEndpoint(ep string) string {
 // If the body cannot be decoded, an error containing its contents is returned.
 func (c *Client) returnAPIError(body []byte) error {
 	err := &errors.APIError{}
-	if decodeerr := json.Unmarshal(body, err); decodeerr != nil {
+	if decodeErr := json.Unmarshal(body, err); decodeErr != nil {
 		return errors.New(string(body))
 	}
 	return err
 }
 
 // do is a helper function for a generic request flow with the API.
-func (c *Client) do(method, endpoint string, req, resp interface{}) error {
+func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...bool) error {
 	var reqBody []byte
 	var err error
 
@@ -81,8 +81,22 @@ func (c *Client) do(method, endpoint string, req, resp interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	if rawRes.StatusCode != http.StatusOK {
 		return c.returnAPIError(body)
+	}
+
+	if rawRes.StatusCode == http.StatusUnauthorized {
+		if c.tokenRetry {
+			if len(retry) == 0 || retry[0] == true {
+				session, err := c.refreshToken()
+				if err != nil {
+					return err
+				}
+				c.setAccessToken(session.Token)
+				return c.do(method, endpoint, req, resp, false)
+			}
+		}
 	}
 
 	if resp != nil {

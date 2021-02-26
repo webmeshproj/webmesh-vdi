@@ -19,7 +19,14 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 package api
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/kennygrant/sanitize"
+	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 // swagger:operation PUT /api/desktops/fs/{namespace}/{name}/put Desktops putDesktopFile
 // ---
@@ -51,5 +58,30 @@ import "net/http"
 //   "404":
 //     "$ref": "#/responses/error"
 func (d *desktopAPI) PutDesktopFile(w http.ResponseWriter, r *http.Request) {
-	d.serveHTTPProxy(w, r)
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	proxy, err := d.getProxyClientForRequest(r)
+	if err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			apiutil.ReturnAPINotFound(err, w)
+			return
+		}
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	if err := proxy.PutFile(&proxyproto.FPutRequest{
+		Name: sanitize.BaseName(handler.Filename),
+		Size: handler.Size,
+		Body: file,
+	}); err != nil {
+		apiutil.ReturnAPIError(err, w)
+		return
+	}
+
+	apiutil.WriteOK(w)
 }

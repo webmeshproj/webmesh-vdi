@@ -35,7 +35,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
         title="Desktop Templates"
         :data="data"
         :columns="columns"
-        row-key="idx"
+        row-key="name"
         v-if="!loading"
         ref="table"
       >
@@ -79,11 +79,11 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
             </q-td>
 
             <q-td key="serviceaccount" :props="props">
-              <ServiceAccountSelector :ref="`sa-${props.row.idx}`" :parentRefs="$refs" :idx="props.row.idx" :label="`Service Account (default)`" />
+              <ServiceAccountSelector :ref="`sa-${props.row.metadata.name}`" :parentRefs="$refs" :tmplName="props.row.metadata.name" :label="`Service Account (default)`" />
             </q-td>
 
             <q-td key="namespace" :props="props">
-              <NamespaceSelector :ref="`ns-${props.row.idx}`" :multiSelect="false" :showAllOption="false" :label="`Launch Namespace (${defaultNamespace})`" />
+              <NamespaceSelector :ref="`ns-${props.row.metadata.name}`" :multiSelect="false" :showAllOption="false" :label="`Launch Namespace (${defaultNamespace})`" />
             </q-td>
 
             <q-td key="useTemplate" :props="props">
@@ -201,9 +201,9 @@ export default {
     },
 
     onLaunchTemplate (template) {
-      console.log(`Launching: ${template.metadata.name}:${template.idx}`)
-      const ns = this.$refs[`ns-${template.idx}`].selection
-      const sa = this.$refs[`sa-${template.idx}`].selection
+      console.log(`Launching: ${template.metadata.name}`)
+      const ns = this.$refs[`ns-${template.metadata.name}`].selection
+      const sa = this.$refs[`sa-${template.metadata.name}`].selection
       const payload = { template: template }
       // When the attribute comes back as an object, it actually means
       // no selection
@@ -246,7 +246,6 @@ export default {
     },
 
     pruneTemplateObject (template) {
-      delete template.idx
       delete template.metadata.creationTimestamp
       delete template.metadata.generation
       delete template.metadata.managedFields
@@ -306,12 +305,7 @@ export default {
       try {
         this.data = []
         const res = await this.$axios.get('/api/templates')
-        res.data.forEach((tmpl, idx) => {
-          this.data.push({
-            idx: idx,
-            ...tmpl
-          })
-        })
+        res.data.forEach((tmpl) => { this.data.push(tmpl) })
       } catch (err) {
         this.$root.$emit('notify-error', err)
       }
