@@ -88,7 +88,7 @@ func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...boo
 
 	if rawRes.StatusCode == http.StatusUnauthorized {
 		if c.tokenRetry {
-			if len(retry) == 0 || retry[0] == true {
+			if len(retry) == 0 || retry[0] {
 				session, err := c.refreshToken()
 				if err != nil {
 					return err

@@ -78,8 +78,8 @@ func TestNewServerTLSConfig(t *testing.T) {
 	if config.ClientAuth != tls.RequireAndVerifyClientCert {
 		t.Error("Expected RequireAndVerifyClientCert in TLS config, got:", config.ClientAuth)
 	}
-	if config.MinVersion != tls.VersionTLS12 {
-		t.Error("Expected Minimum VersionTLS12 in TLS config, got:", config.MinVersion)
+	if config.MinVersion != tls.VersionTLS13 {
+		t.Error("Expected Minimum VersionTLS13 in TLS config, got:", config.MinVersion)
 	}
 
 	clean()
@@ -100,8 +100,8 @@ func TestNewClientTLSConfig(t *testing.T) {
 	if err != nil {
 		t.Error("Expected no error, got:", err)
 	}
-	if config.MinVersion != tls.VersionTLS12 {
-		t.Error("Expected Minimum VersionTLS12 in TLS config, got:", config.MinVersion)
+	if config.MinVersion != tls.VersionTLS13 {
+		t.Error("Expected Minimum VersionTLS13 in TLS config, got:", config.MinVersion)
 	}
 
 	// cause the CA error
@@ -133,8 +133,8 @@ func TestNewClientTLSConfigFromSecret(t *testing.T) {
 	if err != nil {
 		t.Error("Expected no error for valid secret, got:", err)
 	}
-	if config.MinVersion != tls.VersionTLS12 {
-		t.Error("Expected Minimum VersionTLS12 in TLS config, got:", config.MinVersion)
+	if config.MinVersion != tls.VersionTLS13 {
+		t.Error("Expected Minimum VersionTLS13 in TLS config, got:", config.MinVersion)
 	}
 
 	secret.Data[corev1.TLSCertKey] = []byte("invalid")

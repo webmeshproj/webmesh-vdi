@@ -29,7 +29,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/tinyzimmer/kvdi/pkg/api/client"
 )
@@ -171,7 +171,7 @@ func initClient() {
 
 	if kvdiPassword == "" && notVersionCmd() {
 		fmt.Printf("Enter Password for %q: ", kvdiUser)
-		password, err = terminal.ReadPassword(int(os.Stdin.Fd()))
+		password, err = term.ReadPassword(int(os.Stdin.Fd()))
 		cobra.CheckErr(err)
 		kvdiPassword = string(password)
 	}

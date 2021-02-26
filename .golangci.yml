@@ -1,5 +1,8 @@
 issues:
   exclude-rules:
+  - path: pkg/cmd
+    linters:
+    - errcheck
   - path: pkg/api
     linters:
     - deadcode
@@ -7,7 +10,7 @@ issues:
     - staticcheck
   - path: _test\.go
     linters:
-      - errcheck
-      - staticcheck
-      - deadcode
-      - unused
+    - errcheck
+    - staticcheck
+    - deadcode
+    - unused
