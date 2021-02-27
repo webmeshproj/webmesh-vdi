@@ -232,7 +232,7 @@ var sessionStatCmd = &cobra.Command{
 			out[i] = fmt.Sprintf("%s/%s:", sess.Namespace, sess.Name)
 		}
 		if len(strings.Split(toComplete, ":")) < 2 {
-			return out, cobra.ShellCompDirectiveNoFileComp
+			return out, cobra.ShellCompDirectiveNoSpace
 		}
 		for _, opt := range out {
 			if !strings.HasPrefix(opt, toComplete) {
