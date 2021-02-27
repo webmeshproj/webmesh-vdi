@@ -23,6 +23,7 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 //+kubebuilder:object:root=true
@@ -48,6 +49,30 @@ type VDIRoleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []VDIRole `json:"items"`
+}
+
+// Trim will trim the managed fields and other metadata not used in processing. It
+// has the benefit of producing less data when sending over the wire. Note that the
+// objects returned by this method should NOT be used when sending later Update requests.
+func (v *VDIRoleList) Trim() []*VDIRole {
+	if len(v.Items) == 0 {
+		return nil
+	}
+	out := make([]*VDIRole, len(v.Items))
+	for i, role := range v.Items {
+		r := role.DeepCopy()
+		r.SetManagedFields(nil)
+		r.SetOwnerReferences(nil)
+		r.SetGeneration(0)
+		r.SetResourceVersion("")
+		r.SetUID(types.UID(""))
+		if annotations := r.GetAnnotations(); annotations != nil {
+			delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
+			r.SetAnnotations(annotations)
+		}
+		out[i] = r
+	}
+	return out
 }
 
 func init() {

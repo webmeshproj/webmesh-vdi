@@ -19,29 +19,34 @@
 
 */
 
-package apiutil
+package cmd
 
 import (
-	"bytes"
-	"encoding/json"
-	"html/template"
-
-	desktopvsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	"github.com/spf13/cobra"
 )
 
-// RenderTemplate renders the given template with the provided data.
-func RenderTemplate(tmpl *desktopvsv1.Template, data interface{}) error {
-	body, err := json.Marshal(tmpl)
-	if err != nil {
-		return err
-	}
-	t, err := template.New("").Parse(string(body))
-	if err != nil {
-		return err
-	}
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, data); err != nil {
-		return err
-	}
-	return json.Unmarshal(buf.Bytes(), tmpl)
+func init() {
+	sessionsCmd.AddCommand(sessionsGetCmd)
+
+	rootCmd.AddCommand(sessionsCmd)
+}
+
+var sessionsCmd = &cobra.Command{
+	Use:     "sessions",
+	Aliases: []string{"sess", "session", "s"},
+	Short:   "Desktop sessions commands",
+}
+
+var sessionsGetCmd = &cobra.Command{
+	Use:     "get",
+	Short:   "Retrieve VDI sessions",
+	Args:    cobra.NoArgs,
+	PreRunE: checkClientInitErr,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		sessions, err := kvdiClient.GetDesktopSessions()
+		if err != nil {
+			return err
+		}
+		return writeObject(sessions.Sessions)
+	},
 }

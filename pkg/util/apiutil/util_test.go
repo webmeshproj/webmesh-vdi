@@ -178,7 +178,7 @@ func TestWriteOK(t *testing.T) {
 }
 
 func TestFilterUserRolesByName(t *testing.T) {
-	roles := []rbacv1.VDIRole{
+	roles := []*rbacv1.VDIRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test-role-one",

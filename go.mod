@@ -9,6 +9,7 @@ require (
 	github.com/docker/docker v20.10.3+incompatible // indirect
 	github.com/go-ldap/ldap/v3 v3.1.10
 	github.com/go-logr/logr v0.3.0
+	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.5.1
@@ -16,6 +17,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/vault v1.6.2
 	github.com/hashicorp/vault/api v1.0.5-0.20201001211907-38d91b749c77
+	github.com/jmespath/go-jmespath v0.4.0
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/mattn/go-pointer v0.0.1
 	github.com/mitchellh/mapstructure v1.3.3

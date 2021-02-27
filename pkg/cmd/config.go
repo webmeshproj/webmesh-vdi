@@ -22,65 +22,78 @@
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 )
 
 func init() {
-	serverConfigCmd.AddCommand(serverGetConfigCmd)
+	clientConfigCmd.AddCommand(setClientConfigCmd)
+	clientConfigCmd.AddCommand(getClientConfigCmd)
 
 	configCmd.AddCommand(serverConfigCmd)
+	configCmd.AddCommand(clientConfigCmd)
 
 	rootCmd.AddCommand(configCmd)
 }
 
 var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "kVDI configuration commands",
+	Use:     "config",
+	Aliases: []string{"conf", "c"},
+	Short:   "Configuration commands",
 }
 
 var serverConfigCmd = &cobra.Command{
 	Use:     "server",
-	Short:   "kVDI server configuration commands",
+	Short:   "Retrieve server configurations",
 	PreRunE: checkClientInitErr,
-}
-
-var serverGetConfigCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Retrieve server configurations",
-	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := kvdiClient.GetServerConfig()
 		if err != nil {
 			return err
 		}
+		return writeObject(cfg)
+	},
+}
 
-		j, err := json.MarshalIndent(cfg, "", "  ")
-		if err != nil {
-			return err
-		}
+// TODO: Allow configuring server?
 
-		var out []byte
-		switch viper.Get("server.output").(string) {
-		case "json":
-			out = j
-		case "yaml":
-			var in map[string]interface{}
-			err = json.Unmarshal(j, &in)
-			if err != nil {
-				return err
-			}
-			out, err = yaml.Marshal(in)
-		}
-		if err != nil {
-			return err
-		}
+var clientConfigCmd = &cobra.Command{
+	Use:   "client",
+	Short: "Client configuration commands",
+}
 
-		fmt.Println(string(out))
-		return nil
+var getClientConfigCmd = &cobra.Command{
+	Use:   "get <PATH>",
+	Short: "Retrieve client configurations",
+	Args:  cobra.ExactArgs(1),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return viper.AllKeys(), cobra.ShellCompDirectiveDefault
+	},
+	RunE: func(cmd *cobra.Command, args []string) error { return writeObject(viper.Get(args[0])) },
+}
+
+var setClientConfigCmd = &cobra.Command{
+	Use:   "set <PATH> <VALUE>",
+	Short: "Set client configurations",
+	Args:  cobra.ExactArgs(2),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return viper.AllKeys(), cobra.ShellCompDirectiveDefault
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		key, value := args[0], args[1]
+		switch strings.ToLower(value) {
+		case "true":
+			viper.Set(key, true)
+		case "false":
+			viper.Set(key, false)
+		default:
+			viper.Set(key, value)
+		}
+		return viper.WriteConfig()
 	},
 }

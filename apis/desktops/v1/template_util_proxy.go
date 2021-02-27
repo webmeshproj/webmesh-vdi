@@ -125,7 +125,7 @@ func (t *Template) GetProxyResources() corev1.ResourceRequirements {
 func (t *Template) GetDesktopProxyContainer() corev1.Container {
 	proxyVolMounts := []corev1.VolumeMount{
 		{
-			Name:      v1.TmpVolume,
+			Name:      t.GetTmpVolume(),
 			MountPath: v1.DesktopTmpPath,
 		},
 		{
@@ -178,10 +178,6 @@ func (t *Template) GetDesktopProxyContainer() corev1.Container {
 		VolumeMounts: proxyVolMounts,
 		Resources:    t.GetProxyResources(),
 	}
-
-	// if t.IsQEMUTemplate() && t.QEMUUseSPICE() {
-	// 	c.Args = append(c.Args, "--spice")
-	// }
 
 	return c
 }

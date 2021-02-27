@@ -58,7 +58,7 @@ func (r *ResourceGetter) GetRoles() ([]types.VDIUserRole, error) {
 	}
 	userRoles := make([]types.VDIUserRole, 0)
 	for _, role := range roles {
-		userRoles = append(userRoles, *rbac.VDIRoleToUserRole(&role))
+		userRoles = append(userRoles, *rbac.VDIRoleToUserRole(role))
 	}
 	return userRoles, nil
 }

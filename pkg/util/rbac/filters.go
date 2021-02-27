@@ -29,8 +29,8 @@ import (
 
 // FilterTemplates will take a list of DesktopTemplates and filter them based
 // off which ones the user is allowed to use.
-func FilterTemplates(u *types.VDIUser, tmpls []desktopsv1.Template) []desktopsv1.Template {
-	filtered := make([]desktopsv1.Template, 0)
+func FilterTemplates(u *types.VDIUser, tmpls []*desktopsv1.Template) []*desktopsv1.Template {
+	filtered := make([]*desktopsv1.Template, 0)
 	for _, tmpl := range tmpls {
 		action := &types.APIAction{
 			Verb:         rbacv1.VerbLaunch,

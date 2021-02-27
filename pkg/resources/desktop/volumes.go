@@ -43,6 +43,7 @@ func (f *Reconciler) reconcileVolumes(ctx context.Context, reqLogger logr.Logger
 	var existingVol string
 	var ok bool
 	if existingVol, ok = volMapCM.Data[instance.GetUser()]; ok {
+		reqLogger.Info("Fetching existing volume for user")
 		if err := f.client.Get(ctx, types.NamespacedName{Name: existingVol, Namespace: metav1.NamespaceAll}, &corev1.PersistentVolume{}); err != nil {
 			if client.IgnoreNotFound(err) != nil {
 				return err

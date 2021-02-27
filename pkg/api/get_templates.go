@@ -45,7 +45,7 @@ func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request)
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(rbac.FilterTemplates(sess.User, tmpls.Items), w)
+	apiutil.WriteJSON(rbac.FilterTemplates(sess.User, tmpls.Trim()), w)
 }
 
 // getAllDesktopTemplates lists the DesktopTemplates registered in the api servers.
@@ -84,7 +84,7 @@ func (d *desktopAPI) GetDesktopTemplate(w http.ResponseWriter, r *http.Request) 
 		apiutil.ReturnAPIError(err, w)
 		return
 	}
-	apiutil.WriteJSON(tmpl, w)
+	apiutil.WriteJSON(tmpl.Trim(), w)
 }
 
 // Templates response

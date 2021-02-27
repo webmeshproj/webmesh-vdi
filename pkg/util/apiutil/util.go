@@ -119,12 +119,12 @@ func WriteOK(w http.ResponseWriter) {
 
 // FilterUserRolesByNames returns a list of UserRoles matching the provided names
 // and clusterw
-func FilterUserRolesByNames(roles []rbacv1.VDIRole, names []string) []*types.VDIUserRole {
+func FilterUserRolesByNames(roles []*rbacv1.VDIRole, names []string) []*types.VDIUserRole {
 	userRoles := make([]*types.VDIUserRole, 0)
 	for _, name := range names {
 		for _, role := range roles {
 			if role.GetName() == name {
-				userRoles = append(userRoles, rbacutil.VDIRoleToUserRole(&role))
+				userRoles = append(userRoles, rbacutil.VDIRoleToUserRole(role))
 			}
 		}
 	}

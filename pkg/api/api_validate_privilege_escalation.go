@@ -102,10 +102,10 @@ func denyUserElevatePerms(d *desktopAPI, reqUser *types.VDIUser, r *http.Request
 	return false, elevateDenyReason, nil
 }
 
-func getRoleByName(roles []rbacv1.VDIRole, name string) *rbacv1.VDIRole {
+func getRoleByName(roles []*rbacv1.VDIRole, name string) *rbacv1.VDIRole {
 	for _, role := range roles {
 		if role.GetName() == name {
-			return &role
+			return role
 		}
 	}
 	return nil

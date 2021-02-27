@@ -34,11 +34,15 @@ type VDIClusterSpec struct {
 	AppNamespace string `json:"appNamespace,omitempty"`
 	// Pull secrets to use when pulling container images
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	// The configuration for user volumes. **NOTE:** Even though the controller
-	// will try to force the reclaim policy on created volumes to `Retain`, you
-	// may want to set it explicitly on your storage-class controller as an extra
-	// safeguard.
-	UserDataSpec *corev1.PersistentVolumeClaimSpec `json:"userdataSpec,omitempty"`
+	// The configuration for user $HOME volumes to be managed by kVDI.
+	//
+	// **NOTE:** Even though the controller will try to force the reclaim policy on
+	// created volumes to `Retain`, you may want to set it explicitly on your storage-class
+	// controller as an extra safeguard.
+	UserdataSpec *corev1.PersistentVolumeClaimSpec `json:"userdataSpec,omitempty"`
+	// A configuration for selecting pre-existing PVCs to use as the $HOME directory for
+	// sessions. This configuration takes precedence over `userdataSpec`.
+	UserdataSelector *UserdataSelector `json:"userdataSelector,omitempty"`
 	// App configurations.
 	App *AppConfig `json:"app,omitempty"`
 	// Authentication configurations
@@ -49,6 +53,25 @@ type VDIClusterSpec struct {
 	Secrets *SecretsConfig `json:"secrets,omitempty"`
 	// Metrics configurations.
 	Metrics *MetricsConfig `json:"metrics,omitempty"`
+}
+
+// UserdataSelector represents a means for selecting pre-existing userdata PVCs based off
+// a label or name match. Note that you will need to restrict templates to launching in
+// namespaces that contain the PVCs yourself.
+type UserdataSelector struct {
+	// MatchName is a pattern to match for the name of the PVC. The string ${USERNAME} will be
+	// replaced in the pattern with the actual username when searching for the volume. Note, this
+	// will only work if usernames are DNS compliant.
+	MatchName string `json:"matchName,omitempty"`
+	// MatchLabel is a label **key** to use to select a PVC for the user. The value will in the
+	// selector will be the name of the user launching the session. Use this if your usernames
+	// may not always be DNS compliant.
+	MatchLabel string `json:"matchLabel,omitempty"`
+}
+
+// IsValid returns true if this is a usable selector.
+func (u *UserdataSelector) IsValid() bool {
+	return u.MatchName != "" || u.MatchLabel != ""
 }
 
 // DesktopsConfig represents global configurations for desktop

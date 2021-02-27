@@ -37,11 +37,11 @@ import (
 //   400: error
 //   403: error
 func (d *desktopAPI) PostLogout(w http.ResponseWriter, r *http.Request) {
-	userSession := apiutil.GetRequestUserSession(r)
-	if err := d.CleanupUserDesktops(userSession.User.GetName()); err != nil {
-		apiutil.ReturnAPIError(err, w)
-		return
-	}
+	// userSession := apiutil.GetRequestUserSession(r)
+	// if err := d.CleanupUserDesktops(userSession.User.GetName()); err != nil {
+	// 	apiutil.ReturnAPIError(err, w)
+	// 	return
+	// }
 	refreshToken, err := r.Cookie(RefreshTokenCookie)
 	if err == nil {
 		// Revoke the token and remove the cookie

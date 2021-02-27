@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, instance *desktopsv1.Session, envSecret string) *corev1.Pod {
+func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, instance *desktopsv1.Session, envSecret, userdataVol string) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            instance.GetName(),
@@ -39,7 +39,7 @@ func newDesktopPodForCR(cluster *appv1.VDICluster, tmpl *desktopsv1.Template, in
 			Annotations:     instance.GetAnnotations(),
 			OwnerReferences: instance.OwnerReferences(),
 		},
-		Spec: tmpl.ToPodSpec(cluster, instance, envSecret),
+		Spec: tmpl.ToPodSpec(cluster, instance, envSecret, userdataVol),
 	}
 }
 

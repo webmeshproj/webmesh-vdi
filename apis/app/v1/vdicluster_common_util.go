@@ -100,10 +100,15 @@ func (c *VDICluster) OwnerReferences() []metav1.OwnerReference {
 	}
 }
 
+// GetUserdataSelector returns the selector to use for locating PVCs for a user's $HOME.
+func (c *VDICluster) GetUserdataSelector() *UserdataSelector {
+	return c.Spec.UserdataSelector
+}
+
 // GetUserdataVolumeSpec returns the spec for creating PVCs for user persistence.
 func (c *VDICluster) GetUserdataVolumeSpec() *corev1.PersistentVolumeClaimSpec {
-	if c.Spec.UserDataSpec != nil && !reflect.DeepEqual(*c.Spec.UserDataSpec, corev1.PersistentVolumeClaimSpec{}) {
-		return c.Spec.UserDataSpec
+	if c.Spec.UserdataSpec != nil && !reflect.DeepEqual(*c.Spec.UserdataSpec, corev1.PersistentVolumeClaimSpec{}) {
+		return c.Spec.UserdataSpec
 	}
 	return nil
 }

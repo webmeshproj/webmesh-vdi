@@ -24,6 +24,7 @@ package v1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // DesktopInit represents the init system that the desktop container uses.
@@ -42,7 +43,7 @@ type TemplateSpec struct {
 	// Any pull secrets required for pulling the container image.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 	// Additional volumes to attach to pods booted from this template. To mount them there
-	// must be cooresponding `volumeMounts` or `volumeDevices` specified.
+	// must be corresponding `volumeMounts` or `volumeDevices` specified.
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
 	// Configuration options for the instances. These are highly dependant on using
 	// the Dockerfiles (or close derivitives) provided in this repository.
@@ -57,6 +58,8 @@ type TemplateSpec struct {
 	QEMUConfig *QEMUConfig `json:"qemu,omitempty"`
 	// Arbitrary tags for displaying in the app UI.
 	Tags map[string]string `json:"tags,omitempty"`
+	// Set to true to pass this template through a go-template render before processing into
+	// pod specs. This is useful if you have volumes you want to match
 }
 
 // DesktopConfig represents configurations for the template and desktops booted
@@ -175,20 +178,15 @@ type QEMUConfig struct {
 	SPICE bool `json:"spice,omitempty"`
 }
 
-// TemplateStatus defines the observed state of Template
-type TemplateStatus struct{}
-
 //+kubebuilder:object:root=true
 //+kubebuilder:resource:path=templates,scope=Cluster
-//+kubebuilder:subresource:status
 
 // Template is the Schema for the templates API
 type Template struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TemplateSpec   `json:"spec,omitempty"`
-	Status TemplateStatus `json:"status,omitempty"`
+	Spec TemplateSpec `json:"spec,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -198,6 +196,37 @@ type TemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Template `json:"items"`
+}
+
+// Trim will trim the managed fields and other metadata not used in processing. It
+// has the benefit of producing less data when sending over the wire. Note that the
+// objects returned by this method should NOT be used when sending later Update requests.
+func (v *Template) Trim() *Template {
+	t := v.DeepCopy()
+	t.SetManagedFields(nil)
+	t.SetOwnerReferences(nil)
+	t.SetGeneration(0)
+	t.SetResourceVersion("")
+	t.SetUID(types.UID(""))
+	if annotations := t.GetAnnotations(); annotations != nil {
+		delete(annotations, "kubectl.kubernetes.io/last-applied-configuration")
+		t.SetAnnotations(annotations)
+	}
+	return t
+}
+
+// Trim will trim the managed fields and other metadata not used in processing. It
+// has the benefit of producing less data when sending over the wire. Note that the
+// objects returned by this method should NOT be used when sending later Update requests.
+func (v *TemplateList) Trim() []*Template {
+	if len(v.Items) == 0 {
+		return nil
+	}
+	out := make([]*Template, len(v.Items))
+	for i, tmpl := range v.Items {
+		out[i] = tmpl.Trim()
+	}
+	return out
 }
 
 func init() {

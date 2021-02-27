@@ -39,6 +39,7 @@ var (
 	kvdiClient *client.Client
 	clientErr  error
 	cfgFile    string
+	outFilter  string
 )
 
 func init() {
@@ -52,7 +53,8 @@ func init() {
 	persistentFlags.StringP("user", "u", "admin", "the username to use when authenticating against the API")
 	persistentFlags.StringP("ca-file", "C", "", "the CA certificate to use to verify the API certificate")
 	persistentFlags.BoolP("insecure-skip-verify", "k", false, "skip verification of the API server certificate")
-	persistentFlags.StringP("output", "o", "json", "the format to dump responses in")
+	persistentFlags.StringP("output", "o", "json", "the format to dump results in")
+	persistentFlags.StringVarP(&outFilter, "filter", "f", "", "a jmespath expression for filtering results (where applicable)")
 
 	rootCmd.RegisterFlagCompletionFunc("output", completeFormats)
 	rootCmd.MarkFlagFilename("config", "yaml", "yml", "json", "toml", "ini", "hcl", "env")
@@ -68,6 +70,13 @@ func init() {
 	viper.SetDefault("server.caCert", "")
 	// Allow the configuration file to contain a password
 	viper.SetDefault("server.password", "")
+}
+
+// Execute executes the cobra command.
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 
 var rootCmd = &cobra.Command{
@@ -87,6 +96,8 @@ configuration file, you will be prompted when credentials are required. You may 
 password in the environment variable KVDI_PASSWORD to avoid being prompted. In the future, there 
 will potentially be the ability to create API tokens specifically for API and CLI usage.
 
+Using the CLI with a user that requires MFA is currently not supported.
+
 An example for a configuration file might look similar to this:
    
     server:
@@ -99,7 +110,10 @@ An example for a configuration file might look similar to this:
       caCert: |
         -----BEGIN CERTIFICATE-----
         MII...
-		-----END CERTIFICATE-----
+        -----END CERTIFICATE-----
+
+Most commands that provide an output can be configured to do so either in yaml or json. 
+Additionally, the --filter flag can be used with a JMESpath to filter the output further.
 
 Complete documentation for kvdi is available at https://github.com/tinyzimmer/kvdi`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -111,18 +125,11 @@ Complete documentation for kvdi is available at https://github.com/tinyzimmer/kv
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if kvdiClient != nil && clientErr == nil {
+		if clientErr == nil && kvdiClient != nil {
 			kvdiClient.Close()
 		}
 	},
-}
-
-// Execute executes the cobra command.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	SilenceUsage: true,
 }
 
 func initConfig() {
@@ -140,13 +147,17 @@ func initConfig() {
 		viper.SetConfigName(".kvdi")
 	}
 
+	viper.SetEnvPrefix("KVDI")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			fmt.Fprint(os.Stderr, err.Error())
-			os.Exit(2)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			return
 		}
+		// Any read related errors of a found configuration would
+		// be fatal.
+		fmt.Fprint(os.Stderr, "ERROR:", err.Error())
+		os.Exit(2)
 	}
 }
 
@@ -155,15 +166,15 @@ func initClient() {
 	var tlsCA []byte
 	var password []byte
 
-	if caCertBody := viper.Get("server.caCert").(string); caCertBody != "" {
+	if caCertBody := viper.GetString("server.caCert"); caCertBody != "" {
 		tlsCA = []byte(caCertBody)
-	} else if caCertFile := viper.Get("server.caFile").(string); caCertFile != "" {
+	} else if caCertFile := viper.GetString("server.caFile"); caCertFile != "" {
 		tlsCA, err = ioutil.ReadFile(caCertFile)
+		cobra.CheckErr(err)
 	}
-	cobra.CheckErr(err)
 
-	kvdiUser := viper.Get("server.user").(string)
-	kvdiPassword := viper.Get("server.password").(string)
+	kvdiUser := viper.GetString("server.user")
+	kvdiPassword := viper.GetString("server.password")
 
 	if kvdiPassword == "" {
 		kvdiPassword = os.Getenv("KVDI_PASSWORD")
@@ -177,33 +188,20 @@ func initClient() {
 	}
 
 	kvdiClient, clientErr = client.New(&client.Opts{
-		URL:                   viper.Get("server.url").(string),
+		URL:                   viper.GetString("server.url"),
 		Username:              kvdiUser,
 		Password:              kvdiPassword,
 		TLSCACert:             tlsCA,
-		TLSInsecureSkipVerify: viper.Get("server.insecureSkipVerify").(bool),
+		TLSInsecureSkipVerify: viper.GetBool("server.insecureSkipVerify"),
 	})
 
 	// This would only happen during a bizarre memory allocation issue during cookiejar.New().
-	// Authentication errors are not always fatal, depending on the command being used, and the
-	// client object will still be returned.
+	// Authentication errors are not always fatal depending on the command being used, and the
+	// client object will still be usable (e.g. when querying server version).
 	if kvdiClient == nil {
-		fmt.Fprint(os.Stderr, "Fatal error creating kvdi client")
+		fmt.Fprint(os.Stderr, "ERROR: Fatal error creating kvdi client")
 		os.Exit(3)
 	}
-}
 
-func checkClientInitErr(cmd *cobra.Command, args []string) error { return clientErr }
-
-func notVersionCmd() bool {
-	for _, arg := range os.Args {
-		if arg == "version" {
-			return false
-		}
-	}
-	return true
-}
-
-func completeFormats(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return []string{"json", "yaml"}, cobra.ShellCompDirectiveDefault
+	kvdiClient.SetAutoRefreshToken(false)
 }

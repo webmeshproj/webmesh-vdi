@@ -30,15 +30,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// GetRoles returns a list of all the VDIRoles that apply to this cluster instance.
-func (c *VDICluster) GetRoles(cl client.Client) ([]rbacv1.VDIRole, error) {
+// GetRoles returns a list of all the VDIRoles that apply to this cluster instance. Note that the roles
+// are trimmed of extra metadata before returning.
+func (c *VDICluster) GetRoles(cl client.Client) ([]*rbacv1.VDIRole, error) {
 	roleList := &rbacv1.VDIRoleList{}
-	return roleList.Items, cl.List(
+	err := cl.List(
 		context.TODO(),
 		roleList,
 		client.InNamespace(metav1.NamespaceAll),
 		client.MatchingLabels{v1.RoleClusterRefLabel: c.GetName()},
 	)
+	if err != nil {
+		return nil, err
+	}
+	return roleList.Trim(), nil
 }
 
 // GetLaunchTemplatesRole returns a launch-templates role for a cluster. A role like this

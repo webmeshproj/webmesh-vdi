@@ -218,7 +218,7 @@ func getUsernameFromClaims(claims map[string]interface{}) (string, error) {
 	return "", fmt.Errorf("Could not parse username from claims: %+v", claims)
 }
 
-func appendRoleIfBound(boundRoles, userGroups []string, role rbacv1.VDIRole) []string {
+func appendRoleIfBound(boundRoles, userGroups []string, role *rbacv1.VDIRole) []string {
 	if annotations := role.GetAnnotations(); annotations != nil {
 		if oidcGroupStr, ok := annotations[v1.OIDCGroupRoleAnnotation]; ok {
 			oidcGroups := strings.Split(oidcGroupStr, v1.AuthGroupSeparator)

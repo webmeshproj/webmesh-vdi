@@ -34,15 +34,9 @@ import (
 )
 
 // GetVolumes returns the volumes to mount to desktop pods.
-func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []corev1.Volume {
+func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session, userdataVol string) []corev1.Volume {
 	// Common volumes all containers will need.
 	volumes := []corev1.Volume{
-		{
-			Name: v1.TmpVolume,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
 		{
 			Name: v1.RunVolume,
 			VolumeSource: corev1.VolumeSource{
@@ -73,6 +67,15 @@ func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []cor
 		},
 	}
 
+	if t.NeedsEmptyTmpVolume() {
+		volumes = append(volumes, corev1.Volume{
+			Name: v1.TmpVolume,
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+	}
+
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		volumes = append(volumes, corev1.Volume{
 			Name: v1.VNCSockVolume,
@@ -92,12 +95,12 @@ func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []cor
 	}
 
 	// A PVC claim for the user if specified, otherwise use an EmptyDir.
-	if cluster.GetUserdataVolumeSpec() != nil {
+	if userdataVol != "" {
 		volumes = append(volumes, corev1.Volume{
 			Name: v1.HomeVolume,
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: cluster.GetUserdataVolumeName(desktop.GetUser()),
+					ClaimName: userdataVol,
 				},
 			},
 		})
@@ -179,10 +182,6 @@ func (t *Template) GetVolumes(cluster *appv1.VDICluster, desktop *Session) []cor
 func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Session) []corev1.VolumeMount {
 	mounts := []corev1.VolumeMount{
 		{
-			Name:      v1.TmpVolume,
-			MountPath: v1.DesktopTmpPath,
-		},
-		{
 			Name:      v1.RunVolume,
 			MountPath: v1.DesktopRunPath,
 		},
@@ -198,6 +197,12 @@ func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Se
 			Name:      v1.HomeVolume,
 			MountPath: fmt.Sprintf(v1.DesktopHomeFmt, desktop.GetUser()),
 		},
+	}
+	if t.NeedsEmptyTmpVolume() {
+		mounts = append(mounts, corev1.VolumeMount{
+			Name:      v1.TmpVolume,
+			MountPath: v1.DesktopTmpPath,
+		})
 	}
 	if t.IsUNIXDisplaySocket() && !strings.HasPrefix(path.Dir(t.GetDisplaySocketAddress()), v1.DesktopTmpPath) {
 		mounts = append(mounts, corev1.VolumeMount{
@@ -239,4 +244,31 @@ func (t *Template) GetDesktopVolumeMounts(cluster *appv1.VDICluster, desktop *Se
 		mounts = append(mounts, t.Spec.DesktopConfig.VolumeMounts...)
 	}
 	return mounts
+}
+
+// NeedsEmptyTmpVolume returns true if none of the user-provided volumes provide
+// the /tmp directory.
+func (t *Template) NeedsEmptyTmpVolume() bool {
+	if t.Spec.DesktopConfig == nil || len(t.Spec.DesktopConfig.VolumeMounts) == 0 {
+		return true
+	}
+	for _, mount := range t.Spec.DesktopConfig.VolumeMounts {
+		if strings.TrimSuffix(mount.MountPath, "/") == v1.DesktopTmpPath {
+			return false
+		}
+	}
+	return true
+}
+
+// GetTmpVolume returns the name of the volume providing the tmp directory.
+func (t *Template) GetTmpVolume() string {
+	if t.NeedsEmptyTmpVolume() {
+		return v1.TmpVolume
+	}
+	for _, mount := range t.Spec.DesktopConfig.VolumeMounts {
+		if strings.TrimSuffix(mount.MountPath, "/") == v1.DesktopTmpPath {
+			return mount.Name
+		}
+	}
+	return v1.TmpVolume
 }

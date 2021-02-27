@@ -80,8 +80,10 @@ func (d *desktopAPI) auditLog(result *AuditResult) {
 	auditLogger.Info(
 		msg,
 		"Allowed", result.Allowed,
-		"User.Name", result.UserSession.User.Name,
-		"Request.Path", result.Request.URL.Path,
-		"API.Actions", result.Actions,
+		"Username", result.UserSession.User.Name,
+		"RequestPath", result.Request.URL.Path,
+		"RequestOrigin", result.Request.RemoteAddr,
+		"RequestForwardedFor", result.Request.Header.Get("X-Forwarded-For"),
+		"APIActions", result.Actions,
 	)
 }

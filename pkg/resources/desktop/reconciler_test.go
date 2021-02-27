@@ -59,7 +59,7 @@ func newCluster(t *testing.T) *appv1.VDICluster {
 	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
 	cluster.Spec = appv1.VDIClusterSpec{
-		UserDataSpec: &corev1.PersistentVolumeClaimSpec{
+		UserdataSpec: &corev1.PersistentVolumeClaimSpec{
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{"storage": resource.MustParse("10Gi")},
 			},

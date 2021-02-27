@@ -50,6 +50,14 @@ const (
 	ResourceAll Resource = "*"
 )
 
+func resourcesToStrings(r []Resource) []string {
+	out := make([]string, len(r))
+	for x, y := range r {
+		out[x] = string(y)
+	}
+	return out
+}
+
 // Verb represents an API action
 // +kubebuilder:validation:Enum=create;read;update;delete;use;launch;*
 type Verb string
@@ -71,3 +79,11 @@ const (
 	// VerbAll matches all actions
 	VerbAll Verb = "*"
 )
+
+func verbsToStrings(r []Verb) []string {
+	out := make([]string, len(r))
+	for x, y := range r {
+		out[x] = string(y)
+	}
+	return out
+}

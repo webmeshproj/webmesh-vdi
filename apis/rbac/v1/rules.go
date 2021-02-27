@@ -22,8 +22,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package v1
 
 import (
-	"reflect"
 	"regexp"
+	"sort"
 )
 
 // Rule represents a set of permissions applied to a VDIRole. It mostly resembles
@@ -54,12 +54,66 @@ type Rule struct {
 	Namespaces []string `json:"namespaces,omitempty"`
 }
 
-// DeepEqual returns true if the provided rule matches this one exactly.
+// IsEmpty returns true if this rule is empty.
+func (r *Rule) IsEmpty() bool {
+	return len(r.Verbs) == 0 &&
+		len(r.Resources) == 0 &&
+		len(r.ResourcePatterns) == 0 &&
+		len(r.Namespaces) == 0
+}
+
+// DeepEqual returns true if the provided rule matches this one exactly. All values in both rules
+// are first sorted and then equality is derived from whether all fields pass reflect.DeepEqual.
 func (r *Rule) DeepEqual(rule Rule) bool {
-	return reflect.DeepEqual(r.Verbs, rule.Verbs) &&
-		reflect.DeepEqual(r.Resources, rule.Resources) &&
-		reflect.DeepEqual(r.ResourcePatterns, rule.ResourcePatterns) &&
-		reflect.DeepEqual(r.Namespaces, rule.Namespaces)
+	this := r.DeepCopy()
+	that := rule.DeepCopy()
+
+	thisResourceStrings := resourcesToStrings(this.Resources)
+	thisVerbStrings := verbsToStrings(this.Verbs)
+	thatResourceStrings := resourcesToStrings(that.Resources)
+	thatVerbStrings := verbsToStrings(that.Verbs)
+
+	sort.Strings(thisResourceStrings)
+	sort.Strings(thisVerbStrings)
+	sort.Strings(thatResourceStrings)
+	sort.Strings(thatVerbStrings)
+
+	sort.Strings(this.ResourcePatterns)
+	sort.Strings(this.Namespaces)
+	sort.Strings(that.ResourcePatterns)
+	sort.Strings(that.Namespaces)
+
+	return strSliceEqual(thisResourceStrings, thatResourceStrings) &&
+		strSliceEqual(thisVerbStrings, thatVerbStrings) &&
+		strSliceEqual(this.ResourcePatterns, that.ResourcePatterns) &&
+		strSliceEqual(this.Namespaces, that.Namespaces)
+}
+
+func strSliceEqual(ss, xx []string) bool {
+	lS := len(ss)
+	lX := len(xx)
+	if lS == 0 && lX == 0 {
+		return true
+	}
+	if lS != lX {
+		return false
+	}
+	if lS > 0 {
+		for i, s := range ss {
+			if xx[i] == s {
+				continue
+			}
+			return false
+		}
+		return true
+	}
+	for i, x := range xx {
+		if ss[i] == x {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // HasVerb returns true if this rule contains the given verb.

@@ -232,6 +232,7 @@ export const UserStore = new Vuex.Store({
     },
 
     async logout ({ commit }) {
+      await Vue.prototype.$desktopSessions.dispatch('clearSessions')
       commit('logout')
       try {
         await Vue.prototype.$axios.post('/api/logout')

@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
 
@@ -69,6 +70,8 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 		return f.runFinalizers(ctx, reqLogger, instance)
 	}
 
+	reqLogger.Info("Retrieving template and cluster for session")
+
 	template, err := instance.GetTemplate(f.client)
 	if err != nil {
 		return err
@@ -80,14 +83,24 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 
 	resourceNamespacedName := types.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
 
+	var userdataVol string
 	// create a PV for the user if we need to
-	if cluster.GetUserdataVolumeSpec() != nil {
+	if selector := cluster.GetUserdataSelector(); selector != nil && selector.IsValid() {
+		reqLogger.Info("Cluster has userdataSelector, searching for user PVC")
+		userdataVol, err = f.locateUserdataPVC(ctx, reqLogger, instance, selector)
+		if err != nil {
+			return err
+		}
+	} else if cluster.GetUserdataVolumeSpec() != nil {
+		reqLogger.Info("Cluster has userdataSpec, reconciling volumes")
 		if err := f.reconcileVolumes(ctx, reqLogger, cluster, instance); err != nil {
 			return err
 		}
+		userdataVol = cluster.GetUserdataVolumeName(instance.GetUser())
 	}
 
 	// create a service in front of the desktop (so we can pre-allocate an IP that resolves to the pod)
+	reqLogger.Info("Reconciling service for the desktop session")
 	if err := reconcile.Service(ctx, reqLogger, f.client, newServiceForCR(cluster, instance)); err != nil {
 		return err
 	}
@@ -103,6 +116,7 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 	}
 
 	// Set up a temporary connection to the secrets engine
+	reqLogger.Info("Generating mTLS certificate for the session proxy")
 	secretsEngine := secrets.GetSecretEngine(cluster)
 	if err := secretsEngine.Setup(f.client, cluster); err != nil {
 		return err
@@ -121,6 +135,7 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 	// If a secret was pre-created by the API for extra environment variables, fetch its name
 	var secretName string
 	if template.HasManagedEnvSecret() {
+		reqLogger.Info("Session has secret environment variables from user, retrieving")
 		secretList := &corev1.SecretList{}
 		if err := f.client.List(ctx, secretList, client.InNamespace(instance.GetNamespace()), client.MatchingLabels{v1.DesktopNameLabel: instance.GetName()}); err != nil {
 			return err
@@ -148,7 +163,8 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 	}
 
 	// ensure the pod
-	if _, err := reconcile.Pod(ctx, reqLogger, f.client, newDesktopPodForCR(cluster, template, instance, secretName)); err != nil {
+	reqLogger.Info("Reconciling pod for session")
+	if _, err := reconcile.Pod(ctx, reqLogger, f.client, newDesktopPodForCR(cluster, template, instance, secretName, userdataVol)); err != nil {
 		return err
 	}
 
@@ -168,7 +184,7 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 		}
 	}
 
-	if cluster.GetUserdataVolumeSpec() != nil {
+	if (cluster.GetUserdataSelector() == nil || !cluster.GetUserdataSelector().IsValid()) && cluster.GetUserdataVolumeSpec() != nil {
 		if err := f.reconcileUserdataMapping(ctx, reqLogger, cluster, instance); err != nil {
 			return err
 		}
@@ -196,6 +212,43 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 	}
 
 	return nil
+}
+
+func (f *Reconciler) locateUserdataPVC(ctx context.Context, reqLogger logr.Logger, instance *desktopsv1.Session, selector *appv1.UserdataSelector) (string, error) {
+	if selector.MatchName != "" {
+		var pvc corev1.PersistentVolumeClaim
+		nn := types.NamespacedName{
+			Name:      strings.Replace(selector.MatchName, "${USERNAME}", instance.GetUser(), -1),
+			Namespace: instance.GetNamespace(),
+		}
+		err := f.client.Get(ctx, nn, &pvc)
+		if err != nil {
+			return "", err
+		}
+		return pvc.GetName(), nil
+	}
+	if selector.MatchLabel != "" {
+		var pvcList corev1.PersistentVolumeClaimList
+		err := f.client.List(
+			ctx, &pvcList,
+			client.InNamespace(instance.GetNamespace()),
+			client.MatchingLabels{selector.MatchLabel: instance.GetUser()},
+		)
+		if err != nil {
+			return "", err
+		}
+		if len(pvcList.Items) == 0 {
+			return "", fmt.Errorf("%s=%s did not return any PVCs in namespace %s",
+				selector.MatchLabel, instance.GetUser(), instance.GetNamespace())
+		}
+		if len(pvcList.Items) > 1 {
+			return "", fmt.Errorf("%s=%s returned multiple PVCs in namespace %s",
+				selector.MatchLabel, instance.GetUser(), instance.GetNamespace())
+		}
+		return pvcList.Items[0].GetName(), nil
+	}
+	// Safeguard but would never fire if selector is pre-checked for validity
+	return "", errors.New("Cannot use empty userdata selector")
 }
 
 func (f *Reconciler) killOnSessionTimeout(reqLogger logr.Logger, instance *desktopsv1.Session, dur time.Duration) {

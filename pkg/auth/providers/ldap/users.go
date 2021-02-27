@@ -52,7 +52,7 @@ func (a *AuthProvider) GetUsers() ([]*types.VDIUser, error) {
 	vdiUsers := make([]*types.VDIUser, 0)
 	for _, role := range roles {
 
-		userRole := rbacutil.VDIRoleToUserRole(&role)
+		userRole := rbacutil.VDIRoleToUserRole(role)
 
 		if annotations := role.GetAnnotations(); annotations != nil {
 			if ldapGroupStr, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
@@ -136,7 +136,7 @@ RoleLoop:
 						continue GroupLoop
 					}
 					if common.StringSliceContains(user.GetAttributeValues(a.cluster.GetLDAPUserGroupsAttribute()), group) {
-						vdiUser.Roles = append(vdiUser.Roles, rbacutil.VDIRoleToUserRole(&role))
+						vdiUser.Roles = append(vdiUser.Roles, rbacutil.VDIRoleToUserRole(role))
 						continue RoleLoop
 					}
 				}

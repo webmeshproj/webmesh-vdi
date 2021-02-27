@@ -121,14 +121,26 @@ build-app: build-base
 build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
+LDFLAGS ?= "-s -w \
+			-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
+			-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'"
+
 build-kvdictl:
 	cd cmd/kvdictl && \
-		go build \
-   			-ldflags=" \
-			   	-s -w \
-			   	-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
-				-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'" \
-			-o $(GOBIN)/kvdictl .
+		go build -ldflags=$(LDFLAGS) -o $(GOBIN)/kvdictl .
+
+GOX ?= $(GOBIN)/gox
+$(GOX):
+	GO111MODULE=off go get github.com/mitchellh/gox
+
+DIST ?= $(PWD)/dist
+COMPILE_TARGETS ?= "darwin/amd64 linux/amd64 linux/arm linux/arm64 windows/amd64"
+COMPILE_OUTPUT  ?= "$(DIST)/{{.Dir}}_{{.OS}}_{{.Arch}}"
+dist-kvdictl: $(GOX)
+	mkdir -p dist
+	cd cmd/kvdictl && \
+		CGO_ENABLED=0 $(GOX) -osarch=$(COMPILE_TARGETS) -output=$(COMPILE_OUTPUT) -ldflags=$(LDFLAGS)
+	upx -9 $(DIST)/*
 
 license-headers:
 	for i in `find cmd/ -name '*.go'` ; do if ! grep -q Copyright $$i ; then cat hack/boilerplate.go.txt $$i > $$i.new && mv $$i.new $$i ; fi ; done

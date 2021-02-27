@@ -103,7 +103,7 @@ func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult,
 	return &types.AuthResult{User: vdiUser}, nil
 }
 
-func appendRoleIfBound(boundRoles, userGroups []string, role rbacv1.VDIRole) []string {
+func appendRoleIfBound(boundRoles, userGroups []string, role *rbacv1.VDIRole) []string {
 	if annotations := role.GetAnnotations(); annotations != nil {
 		if ldapGroups, ok := annotations[v1.LDAPGroupRoleAnnotation]; ok {
 			boundGroups := strings.Split(ldapGroups, v1.AuthGroupSeparator)
