@@ -117,7 +117,7 @@ var rolesCmd = &cobra.Command{
 }
 
 var rolesGetCmd = &cobra.Command{
-	Use:               "get [<NAME>]",
+	Use:               "get [NAME]",
 	Short:             "Retrieve VDI role(s)",
 	Args:              cobra.MaximumNArgs(1),
 	PreRunE:           checkClientInitErr,

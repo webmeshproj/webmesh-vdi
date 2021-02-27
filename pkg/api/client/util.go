@@ -23,10 +23,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/websocket"
+	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
@@ -41,6 +44,12 @@ func (c *Client) getEndpoint(ep string) string {
 	return fmt.Sprintf("%s/api/%s", strings.TrimSuffix(c.opts.URL, "/"), ep)
 }
 
+// getWebsocketEndpoint returns the full URL (token included) for a given websocket endpoint.
+func (c *Client) getWebsocketEndpoint(ep string) string {
+	u := strings.Replace(c.opts.URL, "http", "ws", 1)
+	return fmt.Sprintf("%s/api/%s?token=%s", u, ep, c.getAccessToken())
+}
+
 // returnAPIError converts the given response body into an API error and returns it.
 // If the body cannot be decoded, an error containing its contents is returned.
 func (c *Client) returnAPIError(body []byte) error {
@@ -51,27 +60,44 @@ func (c *Client) returnAPIError(body []byte) error {
 	return err
 }
 
-// do is a helper function for a generic request flow with the API.
-func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...bool) error {
+// doWebsocket is a helper function for a generic websocket request flow with the API.
+func (c *Client) doWebsocket(endpoint string) (io.ReadWriteCloser, error) {
+	dialer := websocket.Dialer{
+		TLSClientConfig: c.tlsConfig,
+	}
+	conn, _, err := dialer.Dial(c.getWebsocketEndpoint(endpoint), nil)
+	if err != nil {
+		return nil, err
+	}
+	return apiutil.NewGorillaReadWriter(conn), nil
+}
+
+// doRaw retrieves the raw response for the given endpoint and method.
+func (c *Client) doRaw(method, endpoint string, req interface{}) (*http.Response, error) {
 	var reqBody []byte
 	var err error
 
 	if req != nil {
 		reqBody, err = json.Marshal(req)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	r, err := http.NewRequest(method, c.getEndpoint(endpoint), bytes.NewReader(reqBody))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	r.Header.Add("X-Session-Token", c.getAccessToken())
 	r.Header.Add("Content-Type", "application/json")
 
-	rawRes, err := c.httpClient.Do(r)
+	return c.httpClient.Do(r)
+}
+
+// do is a helper function for a generic request flow with the API.
+func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...bool) error {
+	rawRes, err := c.doRaw(method, endpoint, req)
 	if err != nil {
 		return err
 	}

@@ -45,18 +45,11 @@ type swaggerCreateSessionRequest struct {
 	Body types.CreateSessionRequest
 }
 
-// CreateSessionResponse returns the name of the Desktop and what namespace
-// it is running in.
-type CreateSessionResponse struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-}
-
 // New session response
 // swagger:response postSessionResponse
 type swaggerCreateSessionResponse struct {
 	// in:body
-	Body CreateSessionResponse
+	Body types.CreateSessionResponse
 }
 
 // swagger:route POST /api/sessions Sessions postSessionRequest
@@ -121,7 +114,7 @@ func (d *desktopAPI) StartDesktopSession(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	apiutil.WriteJSON(&CreateSessionResponse{
+	apiutil.WriteJSON(&types.CreateSessionResponse{
 		Name:      desktop.GetName(),
 		Namespace: desktop.GetNamespace(),
 	}, w)

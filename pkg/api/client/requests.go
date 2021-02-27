@@ -20,14 +20,25 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package client
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	"github.com/tinyzimmer/kvdi/pkg/types"
+
+	ktypes "k8s.io/apimachinery/pkg/types"
 )
+
+// NamespacedName casts the Kubernetes NamespacedName for ease of use when using this package.
+type NamespacedName ktypes.NamespacedName
+
+func (n NamespacedName) String() string { return fmt.Sprintf("%s/%s", n.Namespace, n.Name) }
 
 // Miscellaneous functions
 
@@ -48,8 +59,15 @@ func (c *Client) GetServerConfig() (*appv1.VDIClusterSpec, error) {
 
 // GetNamespaces retrieves a list of namespaces the current user has access to.
 func (c *Client) GetNamespaces() ([]string, error) {
-	nss := make([]string, 0)
+	var nss []string
 	return nss, c.do(http.MethodGet, "namespaces", nil, &nss)
+}
+
+// GetServiceAccounts retrieves all the service accounts the current user can use in the given
+// namespace.
+func (c *Client) GetServiceAccounts(namespace string) ([]string, error) {
+	var sas []string
+	return sas, c.do(http.MethodGet, fmt.Sprintf("serviceaccounts/%s", namespace), nil, &sas)
 }
 
 // WhoAmI retrieves the user details for the currently authenticated account.
@@ -67,7 +85,84 @@ func (c *Client) GetDesktopSessions() (*types.DesktopSessionsResponse, error) {
 	return resp, c.do(http.MethodGet, "sessions", nil, resp)
 }
 
-// TODO: Should Create,Use,Delete desktop sessions be implemented?
+// CreateDesktopSession creates a new desktop session.
+func (c *Client) CreateDesktopSession(opts *types.CreateSessionRequest) (*types.CreateSessionResponse, error) {
+	resp := &types.CreateSessionResponse{}
+	return resp, c.do(http.MethodPost, "sessions", opts, resp)
+}
+
+// DeleteDesktopSession terminates the given desktop session.
+func (c *Client) DeleteDesktopSession(nn NamespacedName) error {
+	return c.do(http.MethodDelete, fmt.Sprintf("sessions/%s/%s", nn.Namespace, nn.Name), nil, nil)
+}
+
+// GetDesktopDisplayProxy returns a ReadWriteCloser proxying the display of the given session.
+func (c *Client) GetDesktopDisplayProxy(nn NamespacedName) (io.ReadWriteCloser, error) {
+	return c.doWebsocket(fmt.Sprintf("desktops/ws/%s/%s/display", nn.Namespace, nn.Name))
+}
+
+// GetDesktopAudioProxy returns a ReadWriteCloser proxying the audio of the given session.
+func (c *Client) GetDesktopAudioProxy(nn NamespacedName) (io.ReadWriteCloser, error) {
+	return c.doWebsocket(fmt.Sprintf("desktops/ws/%s/%s/audio", nn.Namespace, nn.Name))
+}
+
+// StatDesktopFile retrieves stat information for the given path on the desktop.
+func (c *Client) StatDesktopFile(nn NamespacedName, path string) (*types.StatDesktopFileResponse, error) {
+	resp := &types.StatDesktopFileResponse{}
+	return resp, c.do(http.MethodGet, fmt.Sprintf("desktops/fs/%s/%s/stat/%s", nn.Namespace, nn.Name, path), nil, resp)
+}
+
+// GetDesktopFile retrieves a ReadCloser containing the contents of the requested file
+func (c *Client) GetDesktopFile(nn NamespacedName, path string) (io.ReadCloser, error) {
+	resp, err := c.doRaw(http.MethodGet, fmt.Sprintf("desktops/fs/%s/%s/get/%s", nn.Namespace, nn.Name, path), nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, c.returnAPIError(body)
+	}
+	return resp.Body, nil
+}
+
+// PutDesktopFile uploads a file to the given desktop session.
+func (c *Client) PutDesktopFile(nn NamespacedName, name string, contents io.Reader) error {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	fw, err := w.CreateFormFile("file", name)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(fw, contents); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	r, err := http.NewRequest(http.MethodPut, c.getEndpoint(fmt.Sprintf("desktops/fs/%s/%s/put", nn.Namespace, nn.Name)), &b)
+	if err != nil {
+		return err
+	}
+	r.Header.Add("X-Session-Token", c.getAccessToken())
+	r.Header.Set("Content-Type", w.FormDataContentType())
+	resp, err := c.httpClient.Do(r)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return c.returnAPIError(body)
+}
 
 // VDIRole functions
 

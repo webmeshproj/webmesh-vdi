@@ -38,7 +38,7 @@ var templatesCmd = &cobra.Command{
 }
 
 var templatesGetCmd = &cobra.Command{
-	Use:               "get [<NAME>]",
+	Use:               "get [NAME]",
 	Short:             "Retrieve VDI template(s)",
 	Args:              cobra.MaximumNArgs(1),
 	PreRunE:           checkClientInitErr,

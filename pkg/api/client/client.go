@@ -35,6 +35,8 @@ type Client struct {
 	opts *Opts
 	// the http client used for sending requests
 	httpClient *http.Client
+	// the tls config for requests
+	tlsConfig *tls.Config
 	// the current access token for performing requests
 	accessToken string
 	// whether to retry unauthorized requests with a refresh token.
@@ -76,16 +78,16 @@ func New(opts *Opts) (*Client, error) {
 
 	if strings.HasPrefix(cl.opts.URL, "https") {
 		// configure tls
-		tlsConfig := &tls.Config{
+		cl.tlsConfig = &tls.Config{
 			InsecureSkipVerify: cl.opts.TLSInsecureSkipVerify,
 		}
 		if len(cl.opts.TLSCACert) != 0 {
 			certPool := x509.NewCertPool()
 			certPool.AppendCertsFromPEM(cl.opts.TLSCACert)
-			tlsConfig.RootCAs = certPool
+			cl.tlsConfig.RootCAs = certPool
 		}
 		cl.httpClient.Transport = &http.Transport{
-			TLSClientConfig: tlsConfig,
+			TLSClientConfig: cl.tlsConfig,
 		}
 	}
 

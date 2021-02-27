@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	jmespath "github.com/jmespath/go-jmespath"
@@ -73,7 +74,6 @@ func completeResources(cmd *cobra.Command, args []string, toComplete string) ([]
 }
 
 func completeTemplates(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	args = mergeWithToComplete(args, toComplete)
 	templates, err := kvdiClient.GetDesktopTemplates()
 	if err != nil {
 		return []string{}, cobra.ShellCompDirectiveError
@@ -88,7 +88,6 @@ func completeTemplates(cmd *cobra.Command, args []string, toComplete string) ([]
 }
 
 func completeRoles(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	args = mergeWithToComplete(args, toComplete)
 	roles, err := kvdiClient.GetVDIRoles()
 	if err != nil {
 		return []string{}, cobra.ShellCompDirectiveError
@@ -102,8 +101,19 @@ func completeRoles(cmd *cobra.Command, args []string, toComplete string) ([]stri
 	return out, cobra.ShellCompDirectiveDefault
 }
 
+func completeSessions(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	sessions, err := kvdiClient.GetDesktopSessions()
+	if err != nil {
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+	out := make([]string, 0)
+	for _, sess := range sessions.Sessions {
+		out = append(out, sess.NamespacedName())
+	}
+	return out, cobra.ShellCompDirectiveDefault
+}
+
 func completeUsers(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	args = mergeWithToComplete(args, toComplete)
 	users, err := kvdiClient.GetVDIUsers()
 	if err != nil {
 		return []string{}, cobra.ShellCompDirectiveError
@@ -112,6 +122,30 @@ func completeUsers(cmd *cobra.Command, args []string, toComplete string) ([]stri
 	for _, user := range users {
 		if !argsContains(args, user.GetName()) {
 			out = append(out, user.GetName())
+		}
+	}
+	return out, cobra.ShellCompDirectiveDefault
+}
+
+func completeSessionPath(toComplete string) ([]string, cobra.ShellCompDirective) {
+	spl := strings.Split(toComplete, ":")
+	if len(spl) < 2 {
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+	sess := spl[0]
+	nn, err := argToNamespacedName(sess)
+	if err != nil {
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+	path := filepath.Dir(strings.Join(spl[1:], ":"))
+	stat, err := kvdiClient.StatDesktopFile(nn, path)
+	if err != nil {
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+	out := make([]string, 0)
+	if stat.Stat.IsDirectory {
+		for _, f := range stat.Stat.Contents {
+			out = append(out, fmt.Sprintf("%s:%s/%s", sess, path, f.Name))
 		}
 	}
 	return out, cobra.ShellCompDirectiveDefault
@@ -156,16 +190,6 @@ func writeObject(obj interface{}) error {
 
 	fmt.Println(string(out))
 	return nil
-}
-
-func mergeWithToComplete(args []string, toComplete string) []string {
-	comp := strings.Split(toComplete, ",")
-	for _, c := range comp {
-		if !argsContains(args, c) {
-			args = append(args, c)
-		}
-	}
-	return args
 }
 
 func argsContains(args []string, s string) bool {

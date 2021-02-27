@@ -283,6 +283,13 @@ func (r *CreateSessionRequest) GetNamespace() string {
 // GetServiceAccount returns the service account for this request.
 func (r *CreateSessionRequest) GetServiceAccount() string { return r.ServiceAccount }
 
+// CreateSessionResponse returns the name of the Desktop and what namespace
+// it is running in.
+type CreateSessionResponse struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
+
 // DesktopSessionsResponse contains a list of desktop sessions and information
 // about their statuses.
 type DesktopSessionsResponse struct {
@@ -303,6 +310,9 @@ type DesktopSession struct {
 	// Connection status for the session.
 	Status *DesktopSessionStatus `json:"status"`
 }
+
+// NamespacedName returns the namespaced-name representation of this session.
+func (d *DesktopSession) NamespacedName() string { return fmt.Sprintf("%s/%s", d.Namespace, d.Name) }
 
 // DesktopSessionStatus contains information about the connection status for a session's
 // display and audio.
