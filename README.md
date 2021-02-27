@@ -24,7 +24,7 @@ That still doesn't mean I highly recommend it's usage, but rather I am relativel
       - [Helm](#helm)
       - [Bundle](#bundle-manifest)
       - [Kustomize](#kustomize)
- - [CLI](#doc/kvdictl/kvdictl.md)
+ - [CLI](doc/kvdictl/kvdictl.md)
  - [Upgrading](#Upgrading)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
