@@ -347,7 +347,7 @@ Template is the Schema for the templates API
 </tr>
 <tr class="even">
 <td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
-<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
+<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be corresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
 </tr>
 <tr class="odd">
 <td><code>desktop</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
@@ -372,10 +372,6 @@ Template is the Schema for the templates API
 </tbody>
 </table></td>
 </tr>
-<tr class="odd">
-<td><code>status</code> <em><a href="#TemplateStatus">TemplateStatus</a></em></td>
-<td></td>
-</tr>
 </tbody>
 </table>
 
@@ -399,7 +395,7 @@ TemplateSpec defines the desired state of Template
 </tr>
 <tr class="even">
 <td><code>volumes</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core">[]Kubernetes core/v1.Volume</a></em></td>
-<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be cooresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
+<td><p>Additional volumes to attach to pods booted from this template. To mount them there must be corresponding <code>volumeMounts</code> or <code>volumeDevices</code> specified.</p></td>
 </tr>
 <tr class="odd">
 <td><code>desktop</code> <em><a href="#DesktopConfig">DesktopConfig</a></em></td>
@@ -426,4 +422,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b1db34e`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c4d5801`.*

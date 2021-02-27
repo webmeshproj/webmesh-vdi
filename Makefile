@@ -129,6 +129,9 @@ build-kvdictl:
 	cd cmd/kvdictl && \
 		go build -ldflags=$(LDFLAGS) -o $(GOBIN)/kvdictl .
 
+kvdictl-docs:
+	go run hack/gen-kvdictl-docs.go
+
 GOX ?= $(GOBIN)/gox
 $(GOX):
 	GO111MODULE=off go get github.com/mitchellh/gox
@@ -423,4 +426,4 @@ check-release:
 		echo "You must specify a VERSION for release" ; exit 1 ; \
 	fi
 
-prep-release: check-release generate manifests helm-chart api-docs helm-docs package-chart package-index
+prep-release: check-release generate manifests helm-chart api-docs helm-docs kvdictl-docs package-chart package-index

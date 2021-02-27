@@ -19,6 +19,7 @@ Types
 -   [SecretsConfig](#SecretsConfig)
 -   [ServiceMonitorConfig](#ServiceMonitorConfig)
 -   [TLSConfig](#TLSConfig)
+-   [UserdataSelector](#UserdataSelector)
 -   [VDICluster](#VDICluster)
 -   [VDIClusterSpec](#VDIClusterSpec)
 -   [VaultConfig](#VaultConfig)
@@ -472,6 +473,34 @@ TLSConfig contains TLS configurations for kVDI.
 </tbody>
 </table>
 
+### UserdataSelector
+
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
+
+UserdataSelector represents a means for selecting pre-existing userdata
+PVCs based off a label or name match. Note that you will need to
+restrict templates to launching in namespaces that contain the PVCs
+yourself.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>matchName</code> <em>string</em></td>
+<td><p>MatchName is a pattern to match for the name of the PVC. The string ${USERNAME} will be replaced in the pattern with the actual username when searching for the volume. Note, this will only work if usernames are DNS compliant.</p></td>
+</tr>
+<tr class="even">
+<td><code>matchLabel</code> <em>string</em></td>
+<td><p>MatchLabel is a label <strong>key</strong> to use to select a PVC for the user. The value will in the selector will be the name of the user launching the session. Use this if your usernames may not always be DNS compliant.</p></td>
+</tr>
+</tbody>
+</table>
+
 ### VDICluster
 
 VDICluster is the Schema for the vdiclusters API
@@ -498,6 +527,10 @@ VDICluster is the Schema for the vdiclusters API
 <br />
 
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <tbody>
 <tr class="odd">
 <td><code>appNamespace</code> <em>string</em></td>
@@ -509,25 +542,30 @@ VDICluster is the Schema for the vdiclusters API
 </tr>
 <tr class="odd">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
-<td><p>The configuration for user volumes. <strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+<td><p>The configuration for user $HOME volumes to be managed by kVDI.</p>
+<p><strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="even">
+<td><code>userdataSelector</code> <em><a href="#UserdataSelector">UserdataSelector</a></em></td>
+<td><p>A configuration for selecting pre-existing PVCs to use as the $HOME directory for sessions. This configuration takes precedence over <code>userdataSpec</code>.</p></td>
+</tr>
+<tr class="odd">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>desktops</code> <em><a href="#DesktopsConfig">DesktopsConfig</a></em></td>
 <td><p>Global desktop configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
 <td><p>Metrics configurations.</p></td>
 </tr>
@@ -548,6 +586,10 @@ VDICluster is the Schema for the vdiclusters API
 VDIClusterSpec defines the desired state of VDICluster
 
 <table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Field</th>
@@ -565,25 +607,30 @@ VDIClusterSpec defines the desired state of VDICluster
 </tr>
 <tr class="odd">
 <td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
-<td><p>The configuration for user volumes. <strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
+<td><p>The configuration for user $HOME volumes to be managed by kVDI.</p>
+<p><strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
 <tr class="even">
+<td><code>userdataSelector</code> <em><a href="#UserdataSelector">UserdataSelector</a></em></td>
+<td><p>A configuration for selecting pre-existing PVCs to use as the $HOME directory for sessions. This configuration takes precedence over <code>userdataSpec</code>.</p></td>
+</tr>
+<tr class="odd">
 <td><code>app</code> <em><a href="#AppConfig">AppConfig</a></em></td>
 <td><p>App configurations.</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>auth</code> <em><a href="#AuthConfig">AuthConfig</a></em></td>
 <td><p>Authentication configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>desktops</code> <em><a href="#DesktopsConfig">DesktopsConfig</a></em></td>
 <td><p>Global desktop configurations</p></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>secrets</code> <em><a href="#SecretsConfig">SecretsConfig</a></em></td>
 <td><p>Secrets backend configurations</p></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>metrics</code> <em><a href="#MetricsConfig">MetricsConfig</a></em></td>
 <td><p>Metrics configurations.</p></td>
 </tr>
@@ -634,4 +681,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `b1db34e`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c4d5801`.*

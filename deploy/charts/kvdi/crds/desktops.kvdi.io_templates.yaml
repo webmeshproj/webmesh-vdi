@@ -542,7 +542,7 @@ spec:
                 type: object
               volumes:
                 description: Additional volumes to attach to pods booted from this
-                  template. To mount them there must be cooresponding `volumeMounts`
+                  template. To mount them there must be corresponding `volumeMounts`
                   or `volumeDevices` specified.
                 items:
                   description: Volume represents a named volume in a pod that may
@@ -1974,14 +1974,9 @@ spec:
                   type: object
                 type: array
             type: object
-          status:
-            description: TemplateStatus defines the observed state of Template
-            type: object
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
 status:
   acceptedNames:
     kind: ""

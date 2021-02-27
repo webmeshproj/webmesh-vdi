@@ -15,9 +15,6 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
 
-This also means I won't be doing any major refactoring in the near future. So, if you were considering a pull request, I'm not as likely to be making all your work irrelevant.
-If I end up doing more refactoring, I'll work on branches and update documentation on `main` to reflect the work-in-progress. 
-
  - [API Reference](doc/appv1.md)
    - [RBAC Reference](doc/rbacv1.md)
    - [Templates Reference](doc/desktopsv1.md)
@@ -27,6 +24,7 @@ If I end up doing more refactoring, I'll work on branches and update documentati
       - [Helm](#helm)
       - [Bundle](#bundle-manifest)
       - [Kustomize](#kustomize)
+ - [CLI](#doc/kvdictl/kvdictl.md)
  - [Upgrading](#Upgrading)
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
@@ -54,11 +52,10 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
   - Use built-in local authentication, LDAP, or OpenID.
 
   - App metrics to either scrape externally or view in the UI. More details in the `helm` doc.
-
 ### TODO
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
-  - DOSBox/Game profiles could be cool...
+  - DOSBox/Game profiles could be cool...same as "App Profiles"
   - UI could use a serious makeover from someone who actually knows what they are doing
 
 ## Requirements
