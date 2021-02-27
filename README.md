@@ -115,7 +115,7 @@ You can then create a [VDICluster](doc/appv1.md#VDIClusterSpec) object manually 
 To install the manifest:
 
 ```bash
-export KVDI_VERSION=v0.2.0
+export KVDI_VERSION=v0.3.1
 
 kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/bundle.yaml --validate=false
 ```
@@ -130,7 +130,7 @@ They can be found in the [config](config/) directory in this repository.
 Most of the time you can just run a regular helm upgrade to update your deployment manifests to the latest images.
 
 ```bash
-helm upgrade kvdi tinyzimmer/kvdi --version v0.2.0
+helm upgrade kvdi tinyzimmer/kvdi --version v0.3.1
 ```
 
 However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible. 
@@ -140,7 +140,7 @@ You can get around this by applying the CRDs for the version you are upgrading t
 For example:
 
 ```bash
-export KVDI_VERSION=v0.2.0
+export KVDI_VERSION=v0.3.1
 
 kubectl apply \
   -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/app.kvdi.io_vdiclusters.yaml \
