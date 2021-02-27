@@ -71,7 +71,7 @@ var usersCmd = &cobra.Command{
 var usersGetCmd = &cobra.Command{
 	Use:               "get [<NAME>]",
 	Short:             "Retrieve VDI user(s)",
-	Args:              cobra.ExactArgs(1),
+	Args:              cobra.MaximumNArgs(1),
 	PreRunE:           checkClientInitErr,
 	ValidArgsFunction: completeUsers,
 	RunE: func(cmd *cobra.Command, args []string) error {
