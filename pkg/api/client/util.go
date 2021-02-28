@@ -50,16 +50,6 @@ func (c *Client) getWebsocketEndpoint(ep string) string {
 	return fmt.Sprintf("%s/api/%s?token=%s", u, ep, c.getAccessToken())
 }
 
-// returnAPIError converts the given response body into an API error and returns it.
-// If the body cannot be decoded, an error containing its contents is returned.
-func (c *Client) returnAPIError(body []byte) error {
-	err := &errors.APIError{}
-	if decodeErr := json.Unmarshal(body, err); decodeErr != nil {
-		return errors.New(string(body))
-	}
-	return err
-}
-
 // doWebsocket is a helper function for a generic websocket request flow with the API.
 func (c *Client) doWebsocket(endpoint string) (io.ReadWriteCloser, error) {
 	dialer := websocket.Dialer{
@@ -103,13 +93,13 @@ func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...boo
 	}
 	defer rawRes.Body.Close()
 
-	body, err := ioutil.ReadAll(rawRes.Body)
-	if err != nil {
+	if err := errors.CheckAPIError(rawRes); err != nil {
 		return err
 	}
 
-	if rawRes.StatusCode != http.StatusOK {
-		return c.returnAPIError(body)
+	body, err := ioutil.ReadAll(rawRes.Body)
+	if err != nil {
+		return err
 	}
 
 	if rawRes.StatusCode == http.StatusUnauthorized {

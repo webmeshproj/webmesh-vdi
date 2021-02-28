@@ -134,9 +134,21 @@ export const UserStore = new Vuex.Store({
           const res = await Vue.prototype.$axios.get('/api/whoami')
           commit('auth_got_user', res.data)
           if (res.data.sessions) {
-            res.data.sessions.forEach((item) => {
+            res.data.sessions.forEach(async (item) => {
               console.log(`Adding existing session ${item.namespace}/${item.name}`)
-              Vue.prototype.$desktopSessions.dispatch('addExistingSession', item)
+              try {
+                const templateData = await Vue.prototype.$axios.get(`/api/templates/${item.template}`)
+                item.template = { spec: templateData }
+                Vue.prototype.$desktopSessions.dispatch('addExistingSession', item)
+              } catch (err) {
+                Vue.prototype.$q.notify({
+                  color: 'red-4',
+                  textColor: 'black',
+                  icon: 'error',
+                  message: `Error fetching metadata for ${item.namespace}/${item.name} - you will not be able to reconnect`
+                })
+                console.error(err)
+              }
             })
           }
           console.log(`Resuming session as ${res.data.name}`)

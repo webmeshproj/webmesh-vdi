@@ -26,7 +26,7 @@ import (
 )
 
 func TestAPIError(t *testing.T) {
-	apiErr := ToAPIError(errors.New("fake error"))
+	apiErr := ToAPIError(errors.New("fake error"), ServerError)
 	apiJSON := apiErr.JSON()
 
 	res := make(map[string]string)

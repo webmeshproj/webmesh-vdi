@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 
@@ -31,6 +30,7 @@ import (
 	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
 	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
 	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 
 	ktypes "k8s.io/apimachinery/pkg/types"
 )
@@ -118,13 +118,8 @@ func (c *Client) GetDesktopFile(nn NamespacedName, path string) (io.ReadCloser, 
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, c.returnAPIError(body)
+	if err := errors.CheckAPIError(resp); err != nil {
+		return nil, err
 	}
 	return resp.Body, nil
 }
@@ -154,14 +149,7 @@ func (c *Client) PutDesktopFile(nn NamespacedName, name string, contents io.Read
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
-		return nil
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	return c.returnAPIError(body)
+	return errors.CheckAPIError(resp)
 }
 
 // VDIRole functions

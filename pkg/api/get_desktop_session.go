@@ -110,7 +110,13 @@ func (d *desktopAPI) GetDesktopSessionStatusWebsocket(conn *websocket.Conn) {
 
 		desktop, err := d.getDesktopForRequest(conn.Request())
 		if err != nil {
-			if _, err := conn.Write(errors.ToAPIError(err).JSON()); err != nil {
+			var apiError *errors.APIError
+			if client.IgnoreNotFound(err) == nil {
+				apiError = errors.ToAPIError(err, errors.NotFound)
+			} else {
+				apiError = errors.ToAPIError(err, errors.ServerError)
+			}
+			if _, err := conn.Write(apiError.JSON()); err != nil {
 				apiLogger.Error(err, "Failed to write error to websocket connection")
 				return
 			}

@@ -307,6 +307,8 @@ type DesktopSession struct {
 	User string `json:"user"`
 	// The service account being used by this session.
 	ServiceAccount string `json:"serviceAccount"`
+	// The template this session is booted from.
+	Template string `json:"template"`
 	// Connection status for the session.
 	Status *DesktopSessionStatus `json:"status"`
 }

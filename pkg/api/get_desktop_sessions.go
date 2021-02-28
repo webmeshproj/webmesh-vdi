@@ -86,6 +86,7 @@ func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) 
 			Namespace:      desktop.GetNamespace(),
 			User:           desktop.GetUser(),
 			ServiceAccount: desktop.GetServiceAccount(),
+			Template:       desktop.GetTemplateName(),
 			Status:         getSessionStatus(d.vdiCluster, desktop, displayLocks.Items, audioLocks.Items),
 		}
 		res.Sessions = append(res.Sessions, sess)

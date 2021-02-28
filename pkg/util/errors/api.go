@@ -19,7 +19,22 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 package errors
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+)
+
+// ErrorStatus represents a type of API error
+type ErrorStatus string
+
+// Error types
+const (
+	Unauthorized ErrorStatus = "Unauthorized"
+	Forbidden    ErrorStatus = "Forbidden"
+	NotFound     ErrorStatus = "NotFound"
+	ServerError  ErrorStatus = "ServerError"
+)
 
 // APIError is for errors from the API server. It's main purpose
 // is to provide a quick interface for returning json encoded error
@@ -27,6 +42,28 @@ import "encoding/json"
 type APIError struct {
 	// A message describing the error
 	ErrMsg string `json:"error"`
+	// The status for the error.
+	ErrStatus ErrorStatus `json:"status"`
+}
+
+// CheckAPIError evaluates if the HTTP response contains an API error.
+// If so, an attempt is made to unmarshal it into an API error. If this
+// fails, then an error containing the original body is returned, or any
+// error from attempting to read the body.
+func CheckAPIError(r *http.Response) error {
+	if r.StatusCode == http.StatusOK {
+		return nil
+	}
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	var out APIError
+	if err := json.Unmarshal(body, &out); err != nil {
+		return New(string(body))
+	}
+	return &out
 }
 
 // Error implements the error interface
@@ -35,9 +72,10 @@ func (r *APIError) Error() string {
 }
 
 // ToAPIError converts a generic error into an API error
-func ToAPIError(err error) *APIError {
+func ToAPIError(err error, errStatus ErrorStatus) *APIError {
 	return &APIError{
-		ErrMsg: err.Error(),
+		ErrMsg:    err.Error(),
+		ErrStatus: errStatus,
 	}
 }
 
@@ -46,4 +84,44 @@ func ToAPIError(err error) *APIError {
 func (r *APIError) JSON() []byte {
 	out, _ := json.MarshalIndent(r, "", "    ")
 	return out
+}
+
+// IsAPINotFound checks if the given error from the API is a NotFound error.
+func IsAPINotFound(err error) bool {
+	if apiErr, ok := err.(*APIError); ok {
+		if apiErr.ErrStatus == NotFound {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAPIUnauthorized checks if the given error from the API is a Unauthorized error.
+func IsAPIUnauthorized(err error) bool {
+	if apiErr, ok := err.(*APIError); ok {
+		if apiErr.ErrStatus == Unauthorized {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAPIForbidden checks if the given error from the API is a Forbidden error.
+func IsAPIForbidden(err error) bool {
+	if apiErr, ok := err.(*APIError); ok {
+		if apiErr.ErrStatus == Forbidden {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAPIServerError checks if the given error from the API is a ServerError error.
+func IsAPIServerError(err error) bool {
+	if apiErr, ok := err.(*APIError); ok {
+		if apiErr.ErrStatus == ServerError {
+			return true
+		}
+	}
+	return false
 }

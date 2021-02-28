@@ -129,7 +129,13 @@ func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 
 	pod, err := d.getDesktopPodForRequest(wsconn.Request())
 	if err != nil {
-		if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
+		var apiError *errors.APIError
+		if client.IgnoreNotFound(err) == nil {
+			apiError = errors.ToAPIError(err, errors.NotFound)
+		} else {
+			apiError = errors.ToAPIError(err, errors.ServerError)
+		}
+		if _, werr := wsconn.Write(apiError.JSON()); werr != nil {
 			apiLogger.Error(err, "Error retrieving pod for request")
 			apiLogger.Error(werr, "Failed to write error to websocket connection")
 		}
@@ -138,7 +144,7 @@ func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 	container := apiutil.GetContainerFromRequest(wsconn.Request())
 	logRdr := k8sutil.NewLogFollower(pod, container)
 	if err := logRdr.Stream(true); err != nil {
-		if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
+		if _, werr := wsconn.Write(errors.ToAPIError(err, errors.ServerError).JSON()); werr != nil {
 			apiLogger.Error(err, "Error retrieving logs from pod")
 			apiLogger.Error(werr, "Failed to write error to websocket connection")
 		}
@@ -158,7 +164,7 @@ func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 				time.Sleep(time.Second)
 				continue
 			}
-			if _, werr := wsconn.Write(errors.ToAPIError(err).JSON()); werr != nil {
+			if _, werr := wsconn.Write(errors.ToAPIError(err, errors.ServerError).JSON()); werr != nil {
 				apiLogger.Error(err, "Error occured while reading from log reader")
 				apiLogger.Error(werr, "Failed to write error to websocket connection")
 			}

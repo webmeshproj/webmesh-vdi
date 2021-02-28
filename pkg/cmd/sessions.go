@@ -208,12 +208,16 @@ func proxyConn(conn io.ReadWriteCloser) error {
 		if err != nil {
 			fmt.Println("Error accepting client connection:", err.Error())
 		}
-		fmt.Println("-- Handling connection from", clientConn.RemoteAddr().String())
-		go io.Copy(clientConn, conn)
-		io.Copy(conn, clientConn)
-		clientConn.Close()
-		fmt.Println("Client", clientConn.RemoteAddr().String(), "disconnected --")
+		handleProxyConn(conn, clientConn)
 	}
+}
+
+func handleProxyConn(proxyConn io.ReadWriteCloser, clientConn net.Conn) {
+	fmt.Println("-- Handling connection from", clientConn.RemoteAddr().String())
+	defer clientConn.Close()
+	go io.Copy(clientConn, proxyConn)
+	io.Copy(proxyConn, clientConn)
+	fmt.Println("Client", clientConn.RemoteAddr().String(), "disconnected --")
 }
 
 var sessionStatCmd = &cobra.Command{
@@ -265,6 +269,9 @@ var sessionCopyCmd = &cobra.Command{
 	Use:     "copy",
 	Aliases: []string{"cp", "scp"},
 	Short:   "Copy files to and from a VDI session",
+	PreRunE: checkClientInitErr,
+	Args:    cobra.ExactArgs(2),
+	Hidden:  true,
 }
 
 func argToNamespacedName(arg string) (client.NamespacedName, error) {

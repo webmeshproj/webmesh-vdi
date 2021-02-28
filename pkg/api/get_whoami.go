@@ -54,6 +54,7 @@ func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
 				Name:      desktop.GetName(),
 				Namespace: desktop.GetNamespace(),
 				User:      desktop.GetUser(),
+				Template:  desktop.GetTemplateName(),
 			}
 		}
 	}

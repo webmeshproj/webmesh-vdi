@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/tinyzimmer/kvdi/pkg/types"
@@ -49,13 +48,13 @@ func (c *Client) authenticate() error {
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
+	if err := errors.CheckAPIError(res); err != nil {
 		return err
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return c.returnAPIError(body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return err
 	}
 
 	sessionResponse := &types.SessionResponse{}
@@ -80,13 +79,13 @@ func (c *Client) refreshToken() (*types.SessionResponse, error) {
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
+	if err := errors.CheckAPIError(res); err != nil {
 		return nil, err
 	}
 
-	if res.StatusCode != http.StatusOK {
-		return nil, c.returnAPIError(body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	sessionResponse := &types.SessionResponse{}

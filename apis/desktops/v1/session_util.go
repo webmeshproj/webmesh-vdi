@@ -32,10 +32,13 @@ import (
 
 // GetTemplate retrieves the DesktopTemplate for this Desktop instance.
 func (d *Session) GetTemplate(c client.Client) (*Template, error) {
-	nn := types.NamespacedName{Name: d.Spec.Template, Namespace: metav1.NamespaceAll}
+	nn := types.NamespacedName{Name: d.GetTemplateName(), Namespace: metav1.NamespaceAll}
 	found := &Template{}
 	return found, c.Get(context.TODO(), nn, found)
 }
+
+// GetTemplateName returns the name of the template backing this instance.
+func (d *Session) GetTemplateName() string { return d.Spec.Template }
 
 // GetServiceAccount returns the service account for this instance.
 func (d *Session) GetServiceAccount() string { return d.Spec.ServiceAccount }

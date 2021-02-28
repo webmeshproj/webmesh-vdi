@@ -61,13 +61,13 @@ func ReturnAPIErrors(errs []error, w http.ResponseWriter) {
 // ReturnAPIError returns a BadRequest status code with a json encoded error
 // message.
 func ReturnAPIError(err error, w http.ResponseWriter) {
-	WriteOrLogError(errors.ToAPIError(err).JSON(), w, http.StatusBadRequest)
+	WriteOrLogError(errors.ToAPIError(err, errors.ServerError).JSON(), w, http.StatusBadRequest)
 }
 
 // ReturnAPINotFound returns a NotFound status code with a json encoded error
 // message.
 func ReturnAPINotFound(err error, w http.ResponseWriter) {
-	WriteOrLogError(errors.ToAPIError(err).JSON(), w, http.StatusNotFound)
+	WriteOrLogError(errors.ToAPIError(err, errors.NotFound).JSON(), w, http.StatusNotFound)
 }
 
 // ReturnAPIForbidden returns a Forbidden status code with a json encoded error
@@ -76,7 +76,7 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
-	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg)).JSON(), w, http.StatusForbidden)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg), errors.Forbidden).JSON(), w, http.StatusForbidden)
 }
 
 // ReturnAPIUnauthorized returns an Unauthorized status with a json encoded error message.
@@ -85,7 +85,7 @@ func ReturnAPIUnauthorized(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
-	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Unauthorized: %s", msg)).JSON(), w, http.StatusUnauthorized)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Unauthorized: %s", msg), errors.Unauthorized).JSON(), w, http.StatusUnauthorized)
 }
 
 // WriteJSON encodes the provided interface to JSON and writes it to the response

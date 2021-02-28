@@ -200,7 +200,7 @@ export default class DisplayManager extends Emitter {
         const urls = this._getSessionURLs()
         const activeSession = this._getActiveSession()
         const socket = new WebSocket(urls.statusURL())
-
+        console.log(activeSession)
         let msgCount = 0
 
         socket.onopen = () => {
@@ -296,7 +296,8 @@ export default class DisplayManager extends Emitter {
             return
         }
 
-        this._display = getDisplay(this._getActiveSession())
+        const activeSession = this._getActiveSession()
+        this._display = getDisplay(activeSession)
         this._display.bind(this)
         this._display.on(Events.disconnected, (ev) => { this._disconnectedFromDisplay(ev) })
 
