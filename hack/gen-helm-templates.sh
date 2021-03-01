@@ -69,7 +69,7 @@ cat deploy/bundle.yaml | \
     yq -y '. | select(.kind | test("^Deployment$"))' | \
     sed '/kvdi-system/d' | \
     sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.labels" . | nindent 4 }}/g' | \
-    sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.labels" . | nindent 6 }}/g' | \
+    sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.selectorLabels" . | nindent 6 }}/g' | \
     sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.labels" . | nindent 8 }}/g' | \
     sed 's/kvdi-controller/{{ include "kvdi.fullname" . }}/' | \
     sed 's/replicas: 1/replicas: {{ .Values.manager.replicaCount }}/' | \

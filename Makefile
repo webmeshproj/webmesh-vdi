@@ -36,12 +36,6 @@ install: manifests kustomize
 uninstall: manifests kustomize
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
-# Create a single yaml file bundle
-bundle: manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${MANAGER_IMAGE}
-	$(KUSTOMIZE) build config/crd > deploy/bundle.yaml
-	$(KUSTOMIZE) build config/default >> deploy/bundle.yaml
-
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
@@ -93,9 +87,24 @@ endef
 # uses modified shell that doesn't support pipefail
 SHELL := /bin/bash
 
+BUNDLE = $(CURDIR)/deploy/bundle.yaml
+# Create a single yaml file bundle
+bundle: manifests kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${MANAGER_IMAGE}
+	$(KUSTOMIZE) build config/crd > "$(BUNDLE)"
+	$(KUSTOMIZE) build config/default >> "$(BUNDLE)"
+
+
 ##
 ## # Building Images
 ##
+
+LDFLAGS ?= -s -w \
+			-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
+			-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'
+
+echo:
+	echo $(CTL_LDFLAGS)
 
 ## make                    # Alias to `make build-all`.
 ## make build
@@ -121,13 +130,10 @@ build-app: build-base
 build-kvdi-proxy: build-base
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
-LDFLAGS ?= "-s -w \
-			-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
-			-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'"
-
 build-kvdictl:
+	cp deploy/bundle.yaml pkg/cmd/
 	cd cmd/kvdictl && \
-		go build -ldflags=$(LDFLAGS) -o $(GOBIN)/kvdictl .
+		go build -ldflags="$(LDFLAGS)" -o $(GOBIN)/kvdictl .
 
 kvdictl-docs:
 	go run hack/gen-kvdictl-docs.go
@@ -141,8 +147,9 @@ COMPILE_TARGETS ?= "darwin/amd64 linux/amd64 linux/arm linux/arm64 windows/amd64
 COMPILE_OUTPUT  ?= "$(DIST)/{{.Dir}}_{{.OS}}_{{.Arch}}"
 dist-kvdictl: $(GOX)
 	mkdir -p dist
+	cp deploy/bundle.yaml pkg/cmd/
 	cd cmd/kvdictl && \
-		CGO_ENABLED=0 $(GOX) -osarch=$(COMPILE_TARGETS) -output=$(COMPILE_OUTPUT) -ldflags=$(LDFLAGS)
+		CGO_ENABLED=0 $(GOX) -osarch=$(COMPILE_TARGETS) -output=$(COMPILE_OUTPUT) -ldflags="$(LDFLAGS)"
 	upx -9 $(DIST)/*
 
 license-headers:

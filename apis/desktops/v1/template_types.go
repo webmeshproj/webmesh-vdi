@@ -58,8 +58,6 @@ type TemplateSpec struct {
 	QEMUConfig *QEMUConfig `json:"qemu,omitempty"`
 	// Arbitrary tags for displaying in the app UI.
 	Tags map[string]string `json:"tags,omitempty"`
-	// Set to true to pass this template through a go-template render before processing into
-	// pod specs. This is useful if you have volumes you want to match
 }
 
 // DesktopConfig represents configurations for the template and desktops booted
@@ -87,6 +85,11 @@ type DesktopConfig struct {
 	VolumeDevices []corev1.VolumeDevice `json:"volumeDevices,omitempty"`
 	// Extra system capabilities to add to desktops booted from this template.
 	Capabilities []corev1.Capability `json:"capabilities,omitempty"`
+	// Set the DNS policy for desktops booted from this template. Defaults to the Kubernetes default (ClusterFirst).
+	DNSPolicy corev1.DNSPolicy `json:"dnsPolicy,omitempty"`
+	// Specify the DNS parameters for desktops booted from this template. Parameters will be merged into the configuration
+	// based off the `dnsPolicy`.
+	DNSConfig *corev1.PodDNSConfig `json:"dnsConfig,omitempty"`
 	// AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles
 	// in this repository, this will add the user to the sudo group and ability to
 	// sudo with no password.

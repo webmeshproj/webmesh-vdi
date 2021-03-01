@@ -12,19 +12,15 @@ ARG GO_SWAGGER_VERSION=v0.23.0
 RUN curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
   && chmod +x /usr/local/bin/swagger
 
-ARG VERSION
-ENV VERSION=${VERSION}
-ARG GIT_COMMIT
-ENV GIT_COMMIT=${GIT_COMMIT}
-
 # Copy go code
 COPY apis/        /build/apis
 COPY pkg/         /build/pkg
 COPY cmd/app      /build/cmd/app
 
 # Build the binary and swagger json
+ARG LDFLAGS
 RUN go build -o /tmp/app \
-    -ldflags="-s -w -X 'github.com/tinyzimmer/kvdi/pkg/version.Version=${VERSION}' -X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=${GIT_COMMIT}'" \
+    -ldflags="${LDFLAGS}" \
     ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \

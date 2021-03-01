@@ -53,6 +53,46 @@ spec:
                       description: Capability represent POSIX capabilities type
                       type: string
                     type: array
+                  dnsConfig:
+                    description: Specify the DNS parameters for desktops booted from
+                      this template. Parameters will be merged into the configuration
+                      based off the `dnsPolicy`.
+                    properties:
+                      nameservers:
+                        description: A list of DNS name server IP addresses. This
+                          will be appended to the base nameservers generated from
+                          DNSPolicy. Duplicated nameservers will be removed.
+                        items:
+                          type: string
+                        type: array
+                      options:
+                        description: A list of DNS resolver options. This will be
+                          merged with the base options generated from DNSPolicy. Duplicated
+                          entries will be removed. Resolution options given in Options
+                          will override those that appear in the base DNSPolicy.
+                        items:
+                          description: PodDNSConfigOption defines DNS resolver options
+                            of a pod.
+                          properties:
+                            name:
+                              description: Required.
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      searches:
+                        description: A list of DNS search domains for host-name lookup.
+                          This will be appended to the base search paths generated
+                          from DNSPolicy. Duplicated search paths will be removed.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  dnsPolicy:
+                    description: Set the DNS policy for desktops booted from this
+                      template. Defaults to the Kubernetes default (ClusterFirst).
+                    type: string
                   env:
                     description: Additional environment variables to pass to containers
                       booted from this template.

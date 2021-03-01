@@ -20,6 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package app
 
 import (
+	_ "embed"
 	"fmt"
 
 	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
@@ -31,8 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// GrafanaDashboard is the JSON of the Grafana dashboard. This file is giant
-// so as not to muddy up the code it is set via build flags.
+// GrafanaDashboard is the JSON of the Grafana dashboard.
+//go:embed grafana-dashboard.json
 var GrafanaDashboard string
 
 // GrafanaDatasourceTmpl defines the prometheus datasource configuration to
