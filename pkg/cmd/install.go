@@ -29,7 +29,7 @@ func init() {
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Output a manifest for installing or upgrading kVDI base resources",
-	Long: `The install command can be used for install kVDI into a Kubernetes cluster.
+	Long: `The install command can be used for installing kVDI into a Kubernetes cluster.
 	
 The command outputs a complete manifest containing all of the CRDs for kVDI, along with
 roles, serviceaccounts, services, and deployments for the manager.
