@@ -34,9 +34,9 @@ jobs:
       if: ${{ github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh main
-      run: curl "https://proxy.golang.org/github.com/tinyzimmer/kvdi/@v/${GITHUB_REF##*/}.info"
+      run: curl "https://proxy.golang.org/github.com/kvdi/kvdi/@v/${GITHUB_REF##*/}.info"
       if: ${{ steps.version.outputs.tag == 'latest' && github.event_name != 'pull_request' }}
 
     - name: Force pkg.go.dev to refresh version
-      run: curl https://proxy.golang.org/github.com/tinyzimmer/kvdi/@v/${{ steps.version.outputs.tag }}.info
+      run: curl https://proxy.golang.org/github.com/kvdi/kvdi/@v/${{ steps.version.outputs.tag }}.info
       if: ${{ steps.version.outputs.tag != 'latest' && github.event_name != 'pull_request' }}
