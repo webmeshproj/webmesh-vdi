@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"github.com/tinyzimmer/kvdi/pkg/version"
 )
 
@@ -16,6 +17,8 @@ var bundleManifest string
 var (
 	managerVersion   string
 	installNamespace string
+
+	// kvdiClusterSpec = &appv1.VDIClusterSpec{}
 )
 
 func init() {
@@ -23,6 +26,7 @@ func init() {
 
 	installFlags.StringVar(&installNamespace, "namespace", "kvdi-system", "the namespace to use for the manifests")
 	installFlags.StringVar(&managerVersion, "manager-version", version.Version, "the version of the kvdi-manager to install")
+
 	rootCmd.AddCommand(installCmd)
 }
 
@@ -45,6 +49,7 @@ Example Usage:
 		bundleManifest = strings.Replace(bundleManifest, version.Version, managerVersion, -1)
 
 		fmt.Println(bundleManifest)
+
 		return nil
 	},
 }

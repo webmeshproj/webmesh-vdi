@@ -1,5 +1,4 @@
-REPO    ?= ghcr.io/tinyzimmer
-NAME     = kvdi
+REPO    ?= ghcr.io/kvdi
 VERSION ?= $(shell git describe --tags)
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
@@ -337,9 +336,6 @@ deploy: ${HELM} chart-yaml
 ## make deploy-crds            # Deploys just the CRDs into the k3d cluster.
 deploy-crds: manifests kustomize
 	$(KUSTOMIZE) build config/crd | ${KUBECTL_K3D} apply -f -
-
-helm-template: ${HELM} chart-yaml
-	${HELM_K3D} template ${NAME} deploy/charts/kvdi ${HELM_ARGS}
 
 ## make deploy-with-vault      # Deploys kVDI into the k3d cluster with a vault configuration for the product of `test-vault`.
 deploy-with-vault:

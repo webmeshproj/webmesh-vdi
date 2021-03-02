@@ -70,7 +70,7 @@ func (c *VDICluster) GetAppImage() string {
 	if c.Spec.App != nil && c.Spec.App.Image != "" {
 		return c.Spec.App.Image
 	}
-	return fmt.Sprintf("ghcr.io/tinyzimmer/kvdi:app-%s", version.Version)
+	return fmt.Sprintf("ghcr.io/kvdi/app:%s", version.Version)
 }
 
 // GetAppPullPolicy returns the ImagePullPolicy to use for the app deployment.

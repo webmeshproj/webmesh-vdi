@@ -19,9 +19,9 @@ manager:
   replicaCount: 1
   image:
     # manager.image.repository -- The repository to pull the manager image from..
-    repository: ghcr.io/tinyzimmer
+    repository: ghcr.io/kvdi
     # manager.image.name -- The image name in the repository where kvdi images are stored.
-    name: kvdi
+    name: manager
     # manager.image.tagOverride -- Override the tag for the kVDI manager. Defaults to `manager-{chart_version}`.
     tagOverride: ""
     # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.

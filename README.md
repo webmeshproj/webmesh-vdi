@@ -8,9 +8,19 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 
 ---
 
-![](https://github.com/tinyzimmer/kvdi/workflows/Tests/badge.svg)
-![](https://github.com/tinyzimmer/kvdi/workflows/Build/badge.svg)
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/tinyzimmer/kvdi)
+**ATTENTION:** The `helm` chart repository has been relocated (since the repo has been relocated). To update your repository you can do the following:
+
+```sh
+helm repo remove tinyzimmer
+helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts
+helm repo update
+
+helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
+```
+
+![](https://github.com/kvdi/kvdi/workflows/Tests/badge.svg)
+![](https://github.com/kvdi/kvdi/workflows/Build/badge.svg)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/kvdi/kvdi)
 
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.

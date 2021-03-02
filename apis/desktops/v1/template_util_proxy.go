@@ -56,7 +56,7 @@ func (t *Template) GetKVDIVNCProxyImage() string {
 	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.Image != "" {
 		return t.Spec.ProxyConfig.Image
 	}
-	return fmt.Sprintf("ghcr.io/tinyzimmer/kvdi:kvdi-proxy-%s", version.Version)
+	return fmt.Sprintf("ghcr.io/kvdi/proxy:%s", version.Version)
 }
 
 // IsTCPDisplaySocket returns true if the VNC server is listening on a TCP socket.
