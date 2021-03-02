@@ -4248,7 +4248,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: ghcr.io/tinyzimmer/kvdi:manager-v0.3.2-1-g30e3055
+        image: ghcr.io/kvdi/manager:v0.3.2-5-g93a9a74
         livenessProbe:
           httpGet:
             path: /healthz

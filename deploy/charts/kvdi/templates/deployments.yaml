@@ -31,8 +31,8 @@ spec:
             - --leader-elect
           command:
             - /manager
-          image: {{ .Values.manager.image.repository }}/{{ .Values.manager.image.name  }}:{{ include "kvdi.managerTag" . }}
-          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}v0.3.2-1-g30e3055
+          image: {{ .Values.manager.image.repository }}:{{ default .Values.manager.image.tag .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
           livenessProbe:
             httpGet:
               path: /healthz

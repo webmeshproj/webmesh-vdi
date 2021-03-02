@@ -18,12 +18,10 @@ manager:
   # If more than one is set, they will run in active/standby mode.
   replicaCount: 1
   image:
-    # manager.image.repository -- The repository to pull the manager image from..
-    repository: ghcr.io/kvdi
-    # manager.image.name -- The image name in the repository where kvdi images are stored.
-    name: manager
-    # manager.image.tagOverride -- Override the tag for the kVDI manager. Defaults to `manager-{chart_version}`.
-    tagOverride: ""
+    # manager.image.repository -- The repository and image for the manager.
+    repository: ghcr.io/kvdi/manager
+    # manager.image.tag -- The tag for the manager image. Defaults to the chart version.
+    tag: ""
     # manager.image.pullPolicy -- The `ImagePullPolicy` to use for the manager pod.
     pullPolicy: IfNotPresent
   # manager.imagePullSecrets -- Image pull secrets for the manager pod.
