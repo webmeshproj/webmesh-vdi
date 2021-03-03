@@ -86,7 +86,7 @@ _If you have an existing `k3s` installation, the ingress may not work since this
 
 ```bash
 # Download the script from this repository.
-curl -JLO https://raw.githubusercontent.com/tinyzimmer/kvdi/main/deploy/architect/kvdi-architect.sh
+curl -JLO https://raw.githubusercontent.com/kvdi/kvdi/main/deploy/architect/kvdi-architect.sh
 # Run the script. You will be prompted via dialogs to make configuration changes.
 bash kvdi-architect.sh   # Use --help to see all available options.
 ```
@@ -127,7 +127,7 @@ To install the manifest:
 ```bash
 export KVDI_VERSION=v0.3.1
 
-kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/bundle.yaml --validate=false
+kubectl apply -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/bundle.yaml --validate=false
 ```
 
 #### Kustomize
@@ -140,7 +140,7 @@ They can be found in the [config](config/) directory in this repository.
 Most of the time you can just run a regular helm upgrade to update your deployment manifests to the latest images.
 
 ```bash
-helm upgrade kvdi tinyzimmer/kvdi --version v0.3.2
+helm upgrade kvdi kvdi/kvdi --version v0.3.2
 ```
 
 However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible. 
@@ -153,10 +153,10 @@ For example:
 export KVDI_VERSION=v0.3.2
 
 kubectl apply \
-  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/app.kvdi.io_vdiclusters.yaml \
-  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_sessions.yaml \
-  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_templates.yaml \
-  -f https://raw.githubusercontent.com/tinyzimmer/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/rbac.kvdi.io_vdiroles.yaml
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/app.kvdi.io_vdiclusters.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_sessions.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_templates.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/rbac.kvdi.io_vdiroles.yaml
 ```
 
 When there is a change to one or more CRDs, it will be mentioned in the notes for that release.
