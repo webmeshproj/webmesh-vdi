@@ -4,7 +4,7 @@ metadata:
   name: ubuntu-xfce
 spec:
   desktop:
-    image: ghcr.io/kvdi/kvdi:ubuntu-xfce4-latest
+    image: ghcr.io/kvdi/ubuntu-xfce4:latest
     imagePullPolicy: IfNotPresent
     allowRoot: true
   proxy:
@@ -23,7 +23,7 @@ metadata:
   name: dosbox
 spec:
   desktop:
-    image: ghcr.io/kvdi/kvdi:dosbox-latest
+    image: ghcr.io/kvdi/dosbox:latest
     imagePullPolicy: IfNotPresent
     init: supervisord
   proxy:
@@ -32,18 +32,18 @@ spec:
     os: ubuntu
     desktop: dosbox
 
----
-apiVersion: desktops.kvdi.io/v1
-kind: Template
-metadata:
-  name: qemu-kvm
-spec:
-  qemu:
-    diskImage: ghcr.io/kvdi/kvdi:ubuntu-qemu-latest
-    diskImagePullPolicy: IfNotPresent
-    cpus: 4
-    memory: 4096
-    useCSI: false
-  tags:
-    kvm: "true"
-    os: ubuntu
+# ---
+# apiVersion: desktops.kvdi.io/v1
+# kind: Template
+# metadata:
+#   name: qemu-kvm
+# spec:
+#   qemu:
+#     diskImage: ghcr.io/kvdi/ubuntu-qemu:latest
+#     diskImagePullPolicy: IfNotPresent
+#     cpus: 4
+#     memory: 4096
+#     useCSI: false
+#   tags:
+#     kvm: "true"
+#     os: ubuntu
