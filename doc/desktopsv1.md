@@ -70,6 +70,14 @@ booted from it.
 <td><p>Extra system capabilities to add to desktops booted from this template.</p></td>
 </tr>
 <tr class="odd">
+<td><code>dnsPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#dnspolicy-v1-core">Kubernetes core/v1.DNSPolicy</a></em></td>
+<td><p>Set the DNS policy for desktops booted from this template. Defaults to the Kubernetes default (ClusterFirst).</p></td>
+</tr>
+<tr class="even">
+<td><code>dnsConfig</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#poddnsconfig-v1-core">Kubernetes core/v1.PodDNSConfig</a></em></td>
+<td><p>Specify the DNS parameters for desktops booted from this template. Parameters will be merged into the configuration based off the <code>dnsPolicy</code>.</p></td>
+</tr>
+<tr class="odd">
 <td><code>allowRoot</code> <em>bool</em></td>
 <td><p>AllowRoot will pass the ENABLE_ROOT envvar to the container. In the Dockerfiles in this repository, this will add the user to the sudo group and ability to sudo with no password.</p></td>
 </tr>
@@ -422,4 +430,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `3c6f272`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `5275727`.*

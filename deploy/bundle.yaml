@@ -4248,7 +4248,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: ghcr.io/kvdi/manager:latest
+        image: ghcr.io/kvdi/manager:v0.3.3
         livenessProbe:
           httpGet:
             path: /healthz
