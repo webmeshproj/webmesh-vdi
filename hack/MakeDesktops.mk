@@ -51,7 +51,7 @@ push-ubuntu-%: build-ubuntu-%
 	docker push ${REPO}/ubuntu-$*:latest
 
 push-app-%: build-app-%
-	docker push ${REPO}/app-base:latest
+	docker push ${REPO}/app-$*:latest
 
 # Loaders
 
