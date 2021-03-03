@@ -115,7 +115,7 @@ An example for a configuration file might look similar to this:
 Most commands that provide an output can be configured to do so either in yaml or json. 
 Additionally, the --filter flag can be used with a JMESpath to filter the output further.
 
-Complete documentation for kvdi is available at https://github.com/tinyzimmer/kvdi`,
+Complete documentation for kvdi is available at https://github.com/kvdi/kvdi`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		switch viper.Get("server.output").(string) {
 		case "json", "yaml":
