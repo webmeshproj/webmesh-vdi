@@ -148,7 +148,7 @@ func (t *Template) GetQEMUImage() string {
 	if t.Spec.QEMUConfig != nil && t.Spec.QEMUConfig.QEMUImage != "" {
 		return t.Spec.QEMUConfig.QEMUImage
 	}
-	return "ghcr.io/tinyzimmer/kvdi:qemu-latest"
+	return "ghcr.io/kvdi/qemu:latest"
 }
 
 // GetQEMUImagePullPolicy returns the pull policy for the qemu utility image.

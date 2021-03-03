@@ -31,5 +31,8 @@ jobs:
     - name: Build and push the dosbox image
       run: VERSION=${{ steps.version.outputs.tag }} make build-dosbox push-dosbox
 
+    - name: Build and push the qemu image
+      run: VERSION=${{ steps.version.outputs.tag }} make build-qemu push-qemu
+
     - name: Build and push the ubuntu xfce4 image
       run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-xfce4 push-ubuntu-xfce4
