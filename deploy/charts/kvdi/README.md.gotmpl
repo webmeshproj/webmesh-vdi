@@ -4,8 +4,8 @@
 ## Installation
 
 ```bash
-$> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
-$> helm install kvdi tinyzimmer/kvdi
+$> helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts
+$> helm install kvdi kvdi/kvdi
 ```
 
 Once the app pod is running (this may take a minute) you can retrieve the initial admin password with:
@@ -45,7 +45,7 @@ To enable the in-UI metrics you can do the following:
 helm install prometheus-operator stable/prometheus-operator -f hack/prom-operator-values.yaml
 
 # Follow the instructions above to set up the kvdi repo and then pass the metrics arguments:
-helm install kvdi tinyzimmer/kvdi \
+helm install kvdi kvdi/kvdi \
     --set vdi.spec.metrics.serviceMonitor.create=true \
     --set vdi.spec.metrics.prometheus.create=true \
     --set vdi.spec.metrics.grafana.enabled=true

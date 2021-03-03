@@ -5,8 +5,8 @@ A Kubernetes-Native Virtual Desktop Infrastructure
 ## Installation
 
 ```bash
-$> helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts
-$> helm install kvdi tinyzimmer/kvdi
+$> helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts
+$> helm install kvdi kvdi/kvdi
 ```
 
 Once the app pod is running (this may take a minute) you can retrieve the initial admin password with:
@@ -46,7 +46,7 @@ To enable the in-UI metrics you can do the following:
 helm install prometheus-operator stable/prometheus-operator -f hack/prom-operator-values.yaml
 
 # Follow the instructions above to set up the kvdi repo and then pass the metrics arguments:
-helm install kvdi tinyzimmer/kvdi \
+helm install kvdi kvdi/kvdi \
     --set vdi.spec.metrics.serviceMonitor.create=true \
     --set vdi.spec.metrics.prometheus.create=true \
     --set vdi.spec.metrics.grafana.enabled=true
@@ -58,10 +58,9 @@ helm install kvdi tinyzimmer/kvdi \
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | A full name override for resources created by the chart. |
 | manager.affinity | object | `{}` | Node affinity for the manager pod. |
-| manager.image.name | string | `"kvdi"` | The image name in the repository where kvdi images are stored. |
 | manager.image.pullPolicy | string | `"IfNotPresent"` | The `ImagePullPolicy` to use for the manager pod. |
-| manager.image.repository | string | `"ghcr.io/tinyzimmer"` | The repository to pull the manager image from.. |
-| manager.image.tagOverride | string | `""` | Override the tag for the kVDI manager. Defaults to `manager-{chart_version}`. |
+| manager.image.repository | string | `"ghcr.io/kvdi/manager"` | The repository and image for the manager. |
+| manager.image.tag | string | `""` | The tag for the manager image. Defaults to the chart version. |
 | manager.imagePullSecrets | list | `[]` | Image pull secrets for the manager pod. |
 | manager.nodeSelector | object | `{}` | Node selectors for the manager pod. |
 | manager.podSecurityContext | object | `{}` | The `PodSecurityContext` for the manager pod. |

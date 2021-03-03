@@ -102,11 +102,11 @@ For more complete installation instructions see the `helm` chart docs [here](dep
 The [API Reference](doc/appv1.md) can also be used for details on `kVDI` app-level configurations.
 
 ```bash
-helm repo add tinyzimmer https://tinyzimmer.github.io/kvdi/deploy/charts  # Add the kvdi repo
-helm repo update                                                          # Sync your repositories
+helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts  # Add the kvdi repo
+helm repo update                                              # Sync your repositories
 
 # Install kVDI
-helm install kvdi tinyzimmer/kvdi
+helm install kvdi kvdi/kvdi
 ```
 
 It will take a minute or two for all the parts to start running after the install command.

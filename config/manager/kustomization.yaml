@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: ghcr.io/kvdi/manager
-  newTag: v0.3.2-5-g93a9a74
+  newTag: v0.3.2-8-gc456bb4

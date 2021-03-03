@@ -331,7 +331,7 @@ test-image-populator:
 .PHONY: deploy
 HELM_ARGS ?=
 deploy: ${HELM} chart-yaml
-	${HELM_K3D} upgrade --install ${NAME} deploy/charts/kvdi --wait ${HELM_ARGS}
+	${HELM_K3D} upgrade --install kvdi deploy/charts/kvdi --wait ${HELM_ARGS}
 
 ## make deploy-crds            # Deploys just the CRDs into the k3d cluster.
 deploy-crds: manifests kustomize
