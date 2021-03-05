@@ -26,7 +26,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://cdn.quasar.dev/logo/svg/quasar-logo.svg">
+            <img src="statics/quasar.svg">
           </q-avatar>
           kVDI
         </q-toolbar-title>

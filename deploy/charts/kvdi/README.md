@@ -69,6 +69,9 @@ helm install kvdi kvdi/kvdi \
 | manager.securityContext | object | `{}` | The container security context for the manager pod. |
 | manager.tolerations | list | `[]` | Node tolerations for the manager pod. |
 | nameOverride | string | `""` | A name override for resources created by the chart. |
+| rbac.proxy | object | `{"repository":"gcr.io/kubebuilder/kube-rbac-proxy","tag":"v0.5.0"}` | RBAC Proxy configurations for the manager deployment |
+| rbac.proxy.repository | string | `"gcr.io/kubebuilder/kube-rbac-proxy"` | The repository to pull the kube-rbac-proxy image from |
+| rbac.proxy.tag | string | `"v0.5.0"` | The tag to pull for the kube-rbac-proxy. |
 | rbac.serviceAccount.create | bool | `true` | Specifies whether a `ServiceAccount` should be created. |
 | rbac.serviceAccount.name | string | If not set and create is true, a name is generated using the fullname template. | The name of the `ServiceAccount` to use. |
 | vdi.labels | object | `{"component":"kvdi-cluster"}` | Extra labels to apply to kvdi related resources. |

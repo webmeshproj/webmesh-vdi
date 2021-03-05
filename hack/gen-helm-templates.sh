@@ -73,7 +73,8 @@ cat deploy/bundle.yaml | \
     sed '0,/control-plane: controller-manager/s/control-plane: controller-manager/{{- include "kvdi.labels" . | nindent 8 }}/g' | \
     sed 's/kvdi-controller/{{ include "kvdi.fullname" . }}/' | \
     sed 's/replicas: 1/replicas: {{ .Values.manager.replicaCount }}/' | \
-    sed "s,image: ghcr.io/kvdi/manager:${VERSION},image: {{ .Values.manager.image.repository }}:{{ default .Values.manager.image.tag .Chart.AppVersion }}\n          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}," | \
+    sed 's,image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0,image: {{ .Values.rbac.proxy.repository }}:{{ .Values.rbac.proxy.tag }},' | \
+    sed "s,image: ghcr.io/kvdi/manager:.*$,image: {{ .Values.manager.image.repository }}:{{ default .Values.manager.image.tag .Chart.AppVersion }}\n          imagePullPolicy: {{ .Values.manager.image.pullPolicy }}," | \
     sed 's/}}latest/}}/' | \
     sed -n '1h;1!H;${g;s/resources.*PeriodSeconds: 10//;p;}' | sed '$ d' \
     > deploy/charts/kvdi/templates/deployments.yaml
