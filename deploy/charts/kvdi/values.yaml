@@ -6,6 +6,12 @@ nameOverride: ""
 fullnameOverride: ""
 
 rbac:
+  # rbac.proxy -- RBAC Proxy configurations for the manager deployment
+  proxy:
+    # rbac.proxy.repository -- The repository to pull the kube-rbac-proxy image from
+    repository: gcr.io/kubebuilder/kube-rbac-proxy
+    # rbac.proxy.tag -- The tag to pull for the kube-rbac-proxy.
+    tag: v0.5.0
   serviceAccount:
     # rbac.serviceAccount.create -- Specifies whether a `ServiceAccount` should be created.
     create: true
