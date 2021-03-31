@@ -22,13 +22,12 @@ package common
 import (
 	"archive/tar"
 	"compress/gzip"
-	cryptoRand "crypto/rand"
-	"encoding/binary"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
-	mathRand "math/rand"
+	"math/big"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -131,18 +130,16 @@ func GetClusterSuffix() string {
 
 // GeneratePassword generates a password with the given length
 func GeneratePassword(length int) (string, error) {
-	var b [8]byte
-	_, err := cryptoRand.Read(b[:])
-	if err != nil {
-		return "", fmt.Errorf("cannot seed math/rand package with cryptographically secure random number generator: %s", err)
-	}
-	mathRand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
 	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789")
 	buf := make([]rune, length)
 	for i := range buf {
-		buf[i] = chars[mathRand.Intn(len(chars))]
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", err
+		}
+		buf[i] = chars[n.Int64()]
 	}
 	return string(buf), nil
 }
