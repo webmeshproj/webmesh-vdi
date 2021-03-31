@@ -96,6 +96,7 @@ func main() {
 		DisplayProto:               displayConnectProto,
 		PulseServer:                pulseServer,
 		PlaybackDeviceName:         monitorDeviceName,
+		PlaybackSampleRate:         24000, // TODO
 		PlaybackDeviceDescription:  monitorDescription,
 		RecordingDeviceName:        micDeviceName,
 		RecordingDeviceDescription: micDeviceDescription,

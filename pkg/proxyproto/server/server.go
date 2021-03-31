@@ -48,6 +48,7 @@ type ProxyOpts struct {
 	FSUserID                                           int
 	DisplayAddress, DisplayProto                       string
 	PulseServer                                        string
+	PlaybackSampleRate                                 int
 	PlaybackDeviceName, PlaybackDeviceDescription      string
 	RecordingDeviceName, RecordingDeviceDescription    string
 	RecordingDevicePath, RecordingDeviceFormat         string

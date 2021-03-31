@@ -142,11 +142,12 @@ func (p *Server) handleAudio(conn *proxyproto.Conn) {
 	p.log.Info("Starting audio buffer")
 	// Create a new audio buffer
 	audioBuffer := audio.NewBuffer(&audio.BufferOpts{
-		Logger:           p.log,
-		PulseServer:      p.opts.PulseServer,
-		PulseMonitorName: p.opts.PlaybackDeviceName,
-		PulseMicName:     p.opts.RecordingDeviceName,
-		PulseMicPath:     p.opts.RecordingDevicePath,
+		Logger:                 p.log,
+		PulseServer:            p.opts.PulseServer,
+		PulseMonitorSampleRate: p.opts.PlaybackSampleRate,
+		PulseMonitorName:       p.opts.PlaybackDeviceName,
+		PulseMicName:           p.opts.RecordingDeviceName,
+		PulseMicPath:           p.opts.RecordingDevicePath,
 	})
 
 	// Start the audio buffer

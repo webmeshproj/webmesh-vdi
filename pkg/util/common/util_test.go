@@ -140,7 +140,10 @@ func TestGetClusterSuffix(t *testing.T) {
 }
 
 func TestPasswordFunctions(t *testing.T) {
-	passw := GeneratePassword(16)
+	passw, err := GeneratePassword(16)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(passw) != 16 {
 		t.Error("Generated password is the wrong length")
 	}

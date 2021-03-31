@@ -97,11 +97,15 @@ var userCreateCmd = &cobra.Command{
 	PreRunE: checkClientInitErr,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var generatedPass string
+		var err error
 		if userCreateOpts.Password == "" {
-			generatedPass = common.GeneratePassword(userPasswLength)
+			generatedPass, err = common.GeneratePassword(userPasswLength)
+			if err != nil {
+				return err
+			}
 			userCreateOpts.Password = generatedPass
 		}
-		if err := kvdiClient.CreateVDIUser(&userCreateOpts); err != nil {
+		if err = kvdiClient.CreateVDIUser(&userCreateOpts); err != nil {
 			return err
 		}
 		fmt.Printf("User %q created successfully\n", userCreateOpts.Username)
@@ -161,8 +165,12 @@ var userUpdateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		username := args[0]
 		var generatedPass string
+		var err error
 		if userUpdateOpts.Password == "" && len(userUpdateOpts.Roles) == 0 {
-			generatedPass = common.GeneratePassword(userPasswLength)
+			generatedPass, err = common.GeneratePassword(userPasswLength)
+			if err != nil {
+				return err
+			}
 			userUpdateOpts.Password = generatedPass
 		}
 		if err := kvdiClient.UpdateVDIUser(username, &userUpdateOpts); err != nil {
