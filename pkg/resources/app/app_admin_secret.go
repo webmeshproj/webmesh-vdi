@@ -44,7 +44,10 @@ func (r *Reconciler) reconcileAdminSecret(reqLogger logr.Logger, cluster *appv1.
 		}
 		// We are generating a password
 		reqLogger.Info("Generating password and creating new admin secret", "Secret.Name", nn.Name, "Secret.Namespace", nn.Namespace)
-		passw := common.GeneratePassword(16)
+		passw, err := common.GeneratePassword(16)
+		if err != nil {
+			return "", err
+		}
 		secret := &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:            nn.Name,

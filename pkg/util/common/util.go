@@ -22,11 +22,12 @@ package common
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -41,10 +42,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 // BoolPointer returns a pointer to the given boolean
 func BoolPointer(b bool) *bool { return &b }
@@ -132,16 +129,19 @@ func GetClusterSuffix() string {
 }
 
 // GeneratePassword generates a password with the given length
-func GeneratePassword(length int) string {
-	rand.Seed(time.Now().UnixNano())
+func GeneratePassword(length int) (string, error) {
 	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789")
 	buf := make([]rune, length)
 	for i := range buf {
-		buf[i] = chars[rand.Intn(len(chars))]
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", err
+		}
+		buf[i] = chars[n.Int64()]
 	}
-	return string(buf)
+	return string(buf), nil
 }
 
 // hashCost is the cost to use for generating salts from passwords

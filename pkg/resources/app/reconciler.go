@@ -81,7 +81,10 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 		if !errors.IsSecretNotFoundError(err) {
 			return err
 		}
-		jwtSecret := common.GeneratePassword(32)
+		jwtSecret, err := common.GeneratePassword(32)
+		if err != nil {
+			return err
+		}
 		if err := secretsEngine.WriteSecret(v1.JWTSecretKey, []byte(jwtSecret)); err != nil {
 			return err
 		}
