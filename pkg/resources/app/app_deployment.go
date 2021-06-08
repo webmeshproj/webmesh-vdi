@@ -214,7 +214,7 @@ func newGrafanaContainerForCR(instance *appv1.VDICluster) corev1.Container {
 				Value: "true",
 			},
 			{
-				Name:  "GF_SECURITY_ALLOW_EMVEDDING",
+				Name:  "GF_SECURITY_ALLOW_EMBEDDING",
 				Value: "true",
 			},
 			{
