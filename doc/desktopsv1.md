@@ -55,7 +55,7 @@ booted from it.
 </tr>
 <tr class="odd">
 <td><code>envTemplates</code> <em>map[string]string</em></td>
-<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="https://github.com/tinyzimmer/kvdi/blob/main/pkg/types/auth_types.go#L79">JWTCaims object</a> and corresponding go types.</p></td>
+<td><p>Optionally map additional information about the user (and potentially extended further in the future) into the environment of desktops booted from this template. The keys in the map are the environment variable to set inside the desktop, and the values are go templates or strings to set to the value. Currently the go templates are only passed a <code>Session</code> object containing the information in the claims for the user that created the desktop. For more information see the <a href="https://github.com/kvdi/kvdi/blob/main/pkg/types/auth_types.go#L79">JWTCaims object</a> and corresponding go types.</p></td>
 </tr>
 <tr class="even">
 <td><code>volumeMounts</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core">[]Kubernetes core/v1.VolumeMount</a></em></td>
@@ -203,7 +203,7 @@ for instances booted from this template.
 </tr>
 <tr class="even">
 <td><code>qemuImage</code> <em>string</em></td>
-<td><p>The container image containing the QEMU utilities to use to launch the VM. Defaults to <code>ghcr.io/tinyzimmer/kvdi:qemu-latest</code>.</p></td>
+<td><p>The container image containing the QEMU utilities to use to launch the VM. Defaults to <code>ghcr.io/kvdi/kvdi:qemu-latest</code>.</p></td>
 </tr>
 <tr class="odd">
 <td><code>qemuImagePullPolicy</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pullpolicy-v1-core">Kubernetes core/v1.PullPolicy</a></em></td>
@@ -430,4 +430,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `1f4e810`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c4e330a`.*

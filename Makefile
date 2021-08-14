@@ -10,7 +10,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: manager
+all: build
 
 # Run tests
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
@@ -101,9 +101,6 @@ bundle: manifests kustomize
 LDFLAGS ?= -s -w \
 			-X 'github.com/kvdi/kvdi/pkg/version.Version=$(VERSION)' \
 			-X 'github.com/kvdi/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'
-
-echo:
-	echo $(CTL_LDFLAGS)
 
 ## make                    # Alias to `make build-all`.
 ## make build
