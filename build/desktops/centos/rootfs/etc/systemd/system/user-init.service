@@ -1,0 +1,17 @@
+[Unit]
+Description=SystemD User Init Process
+Wants=network.target
+
+[Service]
+Type=idle
+EnvironmentFile=/etc/default/kvdi
+ExecStart=/usr/local/sbin/fakegetty
+UtmpIdentifier=cons
+TTYVHangup=yes
+KillMode=process
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+faketty () {
+    script -qfec "$(printf "%q " "$@")"
+}
+
+# faketty /sbin/agetty --autologin ${USER} --noclear pts/1 xterm
+faketty sudo -u ${USER} DISPLAY=${DISPLAY} gnome-shell

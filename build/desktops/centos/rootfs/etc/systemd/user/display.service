@@ -1,0 +1,12 @@
+[Unit]
+Description=Xvnc Display
+
+[Service]
+Type=simple
+Restart=always
+EnvironmentFile=/etc/default/kvdi
+# ExecStart=/usr/bin/Xvnc ${DISPLAY} -rfbunixpath ${DISPLAY_SOCK_ADDR} -SecurityTypes None
+ExecStart=/usr/bin/Xvnc ${DISPLAY} -SecurityTypes None
+
+[Install]
+WantedBy=default.target

@@ -99,8 +99,8 @@ bundle: manifests kustomize
 ##
 
 LDFLAGS ?= -s -w \
-			-X 'github.com/tinyzimmer/kvdi/pkg/version.Version=$(VERSION)' \
-			-X 'github.com/tinyzimmer/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'
+			-X 'github.com/kvdi/kvdi/pkg/version.Version=$(VERSION)' \
+			-X 'github.com/kvdi/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'
 
 echo:
 	echo $(CTL_LDFLAGS)
