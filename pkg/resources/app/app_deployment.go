@@ -22,9 +22,9 @@ package app
 import (
 	"fmt"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/util/common"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

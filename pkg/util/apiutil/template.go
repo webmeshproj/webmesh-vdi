@@ -26,7 +26,7 @@ import (
 	"encoding/json"
 	"html/template"
 
-	desktopvsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	desktopvsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
 )
 
 // RenderTemplate renders the given template with the provided data.

@@ -22,8 +22,8 @@ package api
 import (
 	"net/http"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 )
 
 // ValidateUserSession retrieves the JWT token from the X-Session-Token and

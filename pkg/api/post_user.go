@@ -23,8 +23,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 )
 
 // swagger:route POST /api/users Users postUserRequest

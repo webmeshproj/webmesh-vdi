@@ -31,9 +31,9 @@ import (
 	"net"
 	"time"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/util/tlsutil"
 )
 
 var ouName = []string{"kVDI"}

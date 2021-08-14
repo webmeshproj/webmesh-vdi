@@ -26,9 +26,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"golang.org/x/net/websocket"

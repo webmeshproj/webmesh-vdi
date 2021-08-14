@@ -24,8 +24,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/kvdi/kvdi/pkg/version"
 	"github.com/spf13/cobra"
-	"github.com/tinyzimmer/kvdi/pkg/version"
 )
 
 func init() {

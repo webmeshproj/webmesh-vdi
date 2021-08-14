@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"

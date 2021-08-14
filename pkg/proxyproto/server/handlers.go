@@ -34,13 +34,13 @@ import (
 	"time"
 
 	"github.com/kennygrant/sanitize"
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/audio"
-	"github.com/tinyzimmer/kvdi/pkg/audio/pa"
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/audio"
+	"github.com/kvdi/kvdi/pkg/audio/pa"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 func (p *Server) setupPulseAudio(manager *pa.DeviceManager) error {

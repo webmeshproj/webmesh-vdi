@@ -26,11 +26,11 @@ import (
 	"fmt"
 	"time"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/resources"
-	"github.com/tinyzimmer/kvdi/pkg/resources/app"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/resources"
+	"github.com/kvdi/kvdi/pkg/resources/app"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	kappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

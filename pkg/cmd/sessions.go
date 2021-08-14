@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kvdi/kvdi/pkg/api/client"
+	"github.com/kvdi/kvdi/pkg/types"
 	"github.com/spf13/cobra"
-	"github.com/tinyzimmer/kvdi/pkg/api/client"
-	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 var (

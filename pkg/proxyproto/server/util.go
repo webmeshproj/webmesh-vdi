@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 func getLocalPathFromRequest(path string) (string, error) {

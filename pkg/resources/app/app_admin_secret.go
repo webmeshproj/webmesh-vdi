@@ -22,9 +22,9 @@ package app
 import (
 	"context"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

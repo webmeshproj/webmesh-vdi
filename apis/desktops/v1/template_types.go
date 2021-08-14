@@ -76,7 +76,7 @@ type DesktopConfig struct {
 	// map are the environment variable to set inside the desktop, and the values are go templates
 	// or strings to set to the value. Currently the go templates are only passed a `Session` object
 	// containing the information in the claims for the user that created the desktop. For more information
-	// see the [JWTCaims object](https://github.com/tinyzimmer/kvdi/blob/main/pkg/types/auth_types.go#L79)
+	// see the [JWTCaims object](https://github.com/kvdi/kvdi/blob/main/pkg/types/auth_types.go#L79)
 	// and corresponding go types.
 	EnvTemplates map[string]string `json:"envTemplates,omitempty"`
 	// Volume mounts for the desktop container.
@@ -159,7 +159,7 @@ type QEMUConfig struct {
 	// container. This is experimental and not really tested.
 	UseCSI bool `json:"useCSI,omitempty"`
 	// The container image containing the QEMU utilities to use to launch the VM.
-	// Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
+	// Defaults to `ghcr.io/kvdi/kvdi:qemu-latest`.
 	QEMUImage string `json:"qemuImage,omitempty"`
 	// The pull policy to use when pulling the QEMU image.
 	QEMUImagePullPolicy corev1.PullPolicy `json:"qemuImagePullPolicy,omitempty"`

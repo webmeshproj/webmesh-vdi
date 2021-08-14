@@ -24,9 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"

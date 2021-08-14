@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tinyzimmer/kvdi/pkg/version"
+	"github.com/kvdi/kvdi/pkg/version"
 )
 
 //go:embed bundle.yaml

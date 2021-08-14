@@ -26,9 +26,9 @@ import (
 	"crypto/tls"
 	"strings"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/auth/common"
-	"github.com/tinyzimmer/kvdi/pkg/secrets"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/auth/common"
+	"github.com/kvdi/kvdi/pkg/secrets"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"

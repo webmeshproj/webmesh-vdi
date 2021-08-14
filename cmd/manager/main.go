@@ -37,12 +37,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	appcontrollers "github.com/tinyzimmer/kvdi/controllers/app"
-	desktopscontrollers "github.com/tinyzimmer/kvdi/controllers/desktops"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	appcontrollers "github.com/kvdi/kvdi/controllers/app"
+	desktopscontrollers "github.com/kvdi/kvdi/controllers/desktops"
+	"github.com/kvdi/kvdi/pkg/util/common"
 	//+kubebuilder:scaffold:imports
 )
 

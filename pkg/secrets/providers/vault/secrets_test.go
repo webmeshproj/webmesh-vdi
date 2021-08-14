@@ -22,7 +22,7 @@ package vault
 import (
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 func TestReadAndWriteSecret(t *testing.T) {

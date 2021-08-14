@@ -20,10 +20,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package desktop
 
 import (
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

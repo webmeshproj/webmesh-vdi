@@ -35,7 +35,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
 	//+kubebuilder:scaffold:imports
 )
 

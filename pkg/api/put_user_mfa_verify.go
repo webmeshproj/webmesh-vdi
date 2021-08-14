@@ -24,9 +24,9 @@ import (
 
 	"github.com/xlzd/gotp"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // swagger:operation PUT /api/users/{user}/mfa/verify Users putUserMFAVerifyRequest

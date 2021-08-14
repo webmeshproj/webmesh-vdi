@@ -26,8 +26,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
 )
 
 // WebsocketWatcher implements a wrapper around websocket connections,

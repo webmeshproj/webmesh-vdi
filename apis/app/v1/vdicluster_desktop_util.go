@@ -22,7 +22,7 @@ package v1
 import (
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 // GetMaxSessionLength returns the duration to wait to kill a desktop pod.

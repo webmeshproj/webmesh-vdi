@@ -24,8 +24,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/api/client"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/api/client"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 // mustNewTestAPI creates and starts a new HTTP server connected to the

@@ -26,10 +26,10 @@ import (
 	"net/http"
 	"strings"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/lock"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/lock"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gorilla/websocket"

@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/auth/providers/local"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/auth/providers/local"
 )
 
 func TestGetAuthProvider(t *testing.T) {

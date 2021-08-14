@@ -22,8 +22,8 @@ package vault
 import (
 	"encoding/base64"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/secrets/common"
 
 	"github.com/hashicorp/vault/api"
 	"sigs.k8s.io/controller-runtime/pkg/client"

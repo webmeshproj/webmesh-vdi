@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	rbacutil "github.com/tinyzimmer/kvdi/pkg/util/rbac"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	rbacutil "github.com/kvdi/kvdi/pkg/util/rbac"
 
 	ldapv3 "github.com/go-ldap/ldap/v3"
 )

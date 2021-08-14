@@ -23,10 +23,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/mitchellh/mapstructure"
 )
 

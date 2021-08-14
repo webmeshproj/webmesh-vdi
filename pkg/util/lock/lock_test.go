@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

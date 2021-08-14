@@ -23,9 +23,9 @@ import (
 	"context"
 	"net/http"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 )
 
 func allowSameUser(d *desktopAPI, reqUser *types.VDIUser, r *http.Request) (allowed, owner bool, err error) {

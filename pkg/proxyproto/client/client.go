@@ -27,7 +27,7 @@ import (
 	"io"
 
 	"github.com/go-logr/logr"
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
 )
 
 // Client is a structure used by the kvdi-app for sending traffic to and from

@@ -33,7 +33,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 )
 
 func checkClientInitErr(cmd *cobra.Command, args []string) error { return clientErr }

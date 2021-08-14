@@ -30,8 +30,8 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/util/tlsutil"
 )
 
 // Server is a structure used by the kvdi-proxy for accepting connections from

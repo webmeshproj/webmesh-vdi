@@ -30,7 +30,7 @@ import (
 	"net"
 
 	"github.com/go-logr/logr"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	"github.com/kvdi/kvdi/pkg/util/tlsutil"
 )
 
 // Conn represents a single connection between the app and proxy. It embeds a

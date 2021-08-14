@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/types"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 

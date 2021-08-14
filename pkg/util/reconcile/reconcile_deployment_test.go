@@ -23,7 +23,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

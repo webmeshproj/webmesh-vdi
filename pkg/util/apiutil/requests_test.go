@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 func mustNewRequest(t *testing.T, path string) *http.Request {

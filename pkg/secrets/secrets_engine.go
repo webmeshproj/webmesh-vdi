@@ -25,14 +25,14 @@ import (
 	"sync"
 	"time"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/lock"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/lock"
 
-	"github.com/tinyzimmer/kvdi/pkg/secrets/common"
-	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
-	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/vault"
+	"github.com/kvdi/kvdi/pkg/secrets/common"
+	"github.com/kvdi/kvdi/pkg/secrets/providers/k8secret"
+	"github.com/kvdi/kvdi/pkg/secrets/providers/vault"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"

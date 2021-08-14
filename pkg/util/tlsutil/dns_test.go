@@ -24,7 +24,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 func TestDNSNames(t *testing.T) {

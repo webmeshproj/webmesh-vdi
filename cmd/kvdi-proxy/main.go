@@ -32,9 +32,9 @@ import (
 
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	proxyserver "github.com/tinyzimmer/kvdi/pkg/proxyproto/server"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	proxyserver "github.com/kvdi/kvdi/pkg/proxyproto/server"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 // TODO: clean this all up

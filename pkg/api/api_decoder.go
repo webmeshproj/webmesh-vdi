@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"reflect"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 )
 
 // Decoders is a map of request paths/methods to the request object that

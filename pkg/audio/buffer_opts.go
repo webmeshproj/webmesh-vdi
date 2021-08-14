@@ -22,7 +22,7 @@ package audio
 import (
 	"path/filepath"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"

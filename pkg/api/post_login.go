@@ -22,10 +22,10 @@ package api
 import (
 	"net/http"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/rbac"
 )
 
 const userAnonymous = "anonymous"

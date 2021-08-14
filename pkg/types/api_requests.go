@@ -26,8 +26,8 @@ import (
 	"regexp"
 	"strings"
 
-	metav1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	metav1 "github.com/kvdi/kvdi/apis/meta/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 )
 
 // API Request/Response types

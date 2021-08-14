@@ -22,8 +22,8 @@ package common
 import (
 	"context"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/types"
 
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"

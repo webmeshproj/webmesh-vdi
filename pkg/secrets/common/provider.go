@@ -21,7 +21,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package common
 
 import (
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

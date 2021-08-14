@@ -23,8 +23,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"

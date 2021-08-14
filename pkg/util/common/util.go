@@ -35,7 +35,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/version"
+	"github.com/kvdi/kvdi/pkg/version"
 
 	"github.com/go-logr/logr"
 	"golang.org/x/crypto/bcrypt"

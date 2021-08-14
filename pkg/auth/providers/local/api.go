@@ -20,9 +20,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package local
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 // GetUsers implements AuthProvider and serves a GET /api/users request

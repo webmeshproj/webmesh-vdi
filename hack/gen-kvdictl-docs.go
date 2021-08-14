@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/tinyzimmer/kvdi/pkg/cmd"
+	"github.com/kvdi/kvdi/pkg/cmd"
 )
 
 func main() {

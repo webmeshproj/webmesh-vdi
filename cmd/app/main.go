@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"os"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/tlsutil"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/tlsutil"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"

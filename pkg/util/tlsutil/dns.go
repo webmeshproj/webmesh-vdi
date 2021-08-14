@@ -22,7 +22,7 @@ package tlsutil
 import (
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 // DNSNames returns the cluster DNS names for the given service name and namespace.

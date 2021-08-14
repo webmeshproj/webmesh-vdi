@@ -22,10 +22,10 @@ package api
 import (
 	"net/http"
 
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/rbac"
 )
 
 var elevateDenyReason = "The requested operation grants more privileges than the user has."

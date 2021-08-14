@@ -31,7 +31,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/term"
 
-	"github.com/tinyzimmer/kvdi/pkg/api/client"
+	"github.com/kvdi/kvdi/pkg/api/client"
 )
 
 // Internals

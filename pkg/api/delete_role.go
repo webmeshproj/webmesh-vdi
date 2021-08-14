@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"net/http"
 
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

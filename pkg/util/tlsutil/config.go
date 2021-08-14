@@ -28,7 +28,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"

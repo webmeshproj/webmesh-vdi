@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 )
 
 // ResourceGetter is an interface for retrieving lists of kVDI related resources.

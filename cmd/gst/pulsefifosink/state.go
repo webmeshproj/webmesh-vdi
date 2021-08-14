@@ -22,8 +22,8 @@
 package main
 
 import (
+	"github.com/kvdi/kvdi/pkg/audio/pa"
 	"github.com/tinyzimmer/go-gst/gst"
-	"github.com/tinyzimmer/kvdi/pkg/audio/pa"
 )
 
 type state struct {

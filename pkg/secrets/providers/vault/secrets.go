@@ -23,7 +23,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // ReadSecret implements SecretsProvider and will retrieve the requsted secret

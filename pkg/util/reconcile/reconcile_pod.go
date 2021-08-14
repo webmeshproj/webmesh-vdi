@@ -22,8 +22,8 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -27,9 +27,9 @@ import (
 	"net/http"
 	"strings"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/auth/common"
-	"github.com/tinyzimmer/kvdi/pkg/secrets"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/auth/common"
+	"github.com/kvdi/kvdi/pkg/secrets"
 
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/go-logr/logr"

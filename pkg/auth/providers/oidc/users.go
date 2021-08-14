@@ -20,8 +20,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package oidc
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // GetUsers should return a list of VDIUsers.

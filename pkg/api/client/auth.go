@@ -25,8 +25,8 @@ import (
 	"io/ioutil"
 
 	"github.com/google/uuid"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // authenticate retrieves an access token for the API and starts a goroutine

@@ -23,7 +23,7 @@ import (
 	"net"
 	"testing"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/hashicorp/vault/api"

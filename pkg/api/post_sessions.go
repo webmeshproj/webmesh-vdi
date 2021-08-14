@@ -27,10 +27,10 @@ import (
 	"net/http"
 	"text/template"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -22,7 +22,7 @@ package pki
 import (
 	"crypto/x509"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 )

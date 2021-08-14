@@ -24,7 +24,7 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/types"
 	ktypes "k8s.io/apimachinery/pkg/types"
 )
 

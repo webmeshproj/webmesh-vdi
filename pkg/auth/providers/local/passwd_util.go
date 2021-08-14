@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 func addUserToBuffer(file io.Reader, newUser *User) (io.Reader, error) {

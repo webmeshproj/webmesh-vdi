@@ -22,8 +22,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package rbac
 
 import (
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 // UserIncludesRule returns true if the rules applied to this user are not elevated

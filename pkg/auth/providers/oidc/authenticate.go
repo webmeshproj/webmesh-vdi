@@ -26,14 +26,14 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/rbac"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/rbac"
 
 	"golang.org/x/oauth2"
 )

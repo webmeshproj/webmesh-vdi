@@ -27,10 +27,10 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -25,10 +25,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
-	rbacutil "github.com/tinyzimmer/kvdi/pkg/util/rbac"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/errors"
+	rbacutil "github.com/kvdi/kvdi/pkg/util/rbac"
 )
 
 // WriteOrLogError will write the provided content to the response writer, or

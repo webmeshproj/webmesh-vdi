@@ -22,8 +22,8 @@ package desktop
 import (
 	"context"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"

@@ -213,7 +213,7 @@ spec:
                       values are go templates or strings to set to the value. Currently
                       the go templates are only passed a `Session` object containing
                       the information in the claims for the user that created the
-                      desktop. For more information see the [JWTCaims object](https://github.com/tinyzimmer/kvdi/blob/main/pkg/types/auth_types.go#L79)
+                      desktop. For more information see the [JWTCaims object](https://github.com/kvdi/kvdi/blob/main/pkg/types/auth_types.go#L79)
                       and corresponding go types.
                     type: object
                   image:
@@ -247,7 +247,7 @@ spec:
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                       requests:
                         additionalProperties:
@@ -259,7 +259,7 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   volumeDevices:
@@ -345,7 +345,7 @@ spec:
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                       requests:
                         additionalProperties:
@@ -357,7 +357,7 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   volumeDevices:
@@ -470,7 +470,7 @@ spec:
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                       requests:
                         additionalProperties:
@@ -482,7 +482,7 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   socketAddr:
@@ -527,7 +527,7 @@ spec:
                     type: integer
                   qemuImage:
                     description: The container image containing the QEMU utilities
-                      to use to launch the VM. Defaults to `ghcr.io/tinyzimmer/kvdi:qemu-latest`.
+                      to use to launch the VM. Defaults to `ghcr.io/kvdi/kvdi:qemu-latest`.
                     type: string
                   qemuImagePullPolicy:
                     description: The pull policy to use when pulling the QEMU image.
@@ -544,7 +544,7 @@ spec:
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                       requests:
                         additionalProperties:
@@ -556,7 +556,7 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   spice:
@@ -965,14 +965,14 @@ spec:
                       type: object
                     ephemeral:
                       description: "Ephemeral represents a volume that is handled
-                        by a cluster storage driver (Alpha feature). The volume's
-                        lifecycle is tied to the pod that defines it - it will be
-                        created before the pod starts, and deleted when the pod is
-                        removed. \n Use this if: a) the volume is only needed while
-                        the pod runs, b) features of normal volumes like restoring
-                        from snapshot or capacity    tracking are needed, c) the storage
-                        driver is specified through a storage class, and d) the storage
-                        driver supports dynamic volume provisioning through    a PersistentVolumeClaim
+                        by a cluster storage driver. The volume's lifecycle is tied
+                        to the pod that defines it - it will be created before the
+                        pod starts, and deleted when the pod is removed. \n Use this
+                        if: a) the volume is only needed while the pod runs, b) features
+                        of normal volumes like restoring from snapshot or capacity
+                        \   tracking are needed, c) the storage driver is specified
+                        through a storage class, and d) the storage driver supports
+                        dynamic volume provisioning through    a PersistentVolumeClaim
                         (see EphemeralVolumeSource for more    information on the
                         connection between this volume type    and PersistentVolumeClaim).
                         \n Use PersistentVolumeClaim or one of the vendor-specific
@@ -981,12 +981,10 @@ spec:
                         volumes if the CSI driver is meant to be used that way - see
                         the documentation of the driver for more information. \n A
                         pod can use both types of ephemeral volumes and persistent
-                        volumes at the same time."
+                        volumes at the same time. \n This is a beta feature and only
+                        available when the GenericEphemeralVolume feature gate is
+                        enabled."
                       properties:
-                        readOnly:
-                          description: Specifies a read-only configuration for the
-                            volume. Defaults to false (read/write).
-                          type: boolean
                         volumeClaimTemplate:
                           description: "Will be used to create a stand-alone PVC to
                             provision the volume. The pod in which this EphemeralVolumeSource
@@ -1068,7 +1066,7 @@ spec:
                                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                         x-kubernetes-int-or-string: true
                                       description: 'Limits describes the maximum amount
-                                        of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                        of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                       type: object
                                     requests:
                                       additionalProperties:
@@ -1082,7 +1080,7 @@ spec:
                                         is omitted for a container, it defaults to
                                         Limits if that is explicitly specified, otherwise
                                         to an implementation-defined value. More info:
-                                        https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                        https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                       type: object
                                   type: object
                                 selector:

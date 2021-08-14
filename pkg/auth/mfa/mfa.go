@@ -27,9 +27,9 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	"github.com/tinyzimmer/kvdi/pkg/secrets"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/secrets"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // Manager is an object for tracking users and their OTP secrets. It uses

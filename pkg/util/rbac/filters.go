@@ -22,9 +22,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package rbac
 
 import (
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 // FilterTemplates will take a list of DesktopTemplates and filter them based

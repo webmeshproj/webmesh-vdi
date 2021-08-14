@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 var secret = []byte("test-secret")

@@ -27,11 +27,11 @@ import (
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 
-	v1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	proxyclient "github.com/tinyzimmer/kvdi/pkg/proxyproto/client"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	proxyclient "github.com/kvdi/kvdi/pkg/proxyproto/client"
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // TokenHeader is the HTTP header containing the user's access token

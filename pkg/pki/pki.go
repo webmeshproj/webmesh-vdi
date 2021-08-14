@@ -20,8 +20,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package pki
 
 import (
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/secrets"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/secrets"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

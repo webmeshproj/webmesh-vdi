@@ -25,9 +25,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/common"
 	"github.com/spf13/cobra"
-	"github.com/tinyzimmer/kvdi/pkg/types"
-	"github.com/tinyzimmer/kvdi/pkg/util/common"
 )
 
 var (

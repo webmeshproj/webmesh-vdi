@@ -22,8 +22,8 @@ package api
 import (
 	"net/http"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 )
 
 // swagger:route GET /api/config Miscellaneous getConfig

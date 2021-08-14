@@ -26,9 +26,9 @@ import (
 	"net/url"
 
 	"github.com/gorilla/mux"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/version"
 	"golang.org/x/net/websocket"
 )
 

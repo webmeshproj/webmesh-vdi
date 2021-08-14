@@ -25,10 +25,10 @@ import (
 	"errors"
 	"fmt"
 
+	metav1 "github.com/kvdi/kvdi/apis/meta/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
 	"github.com/spf13/cobra"
-	metav1 "github.com/tinyzimmer/kvdi/apis/meta/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
 )
 
 var (

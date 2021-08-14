@@ -26,9 +26,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
 )
 
 // Prometheus gatherers

@@ -22,8 +22,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package rbac
 
 import (
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
-	"github.com/tinyzimmer/kvdi/pkg/types"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
+	"github.com/kvdi/kvdi/pkg/types"
 )
 
 // VDIRoleToUserRole converts the given VDIRole to the VDIUserRole format. The VDIUserRole is

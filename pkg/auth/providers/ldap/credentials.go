@@ -20,7 +20,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package ldap
 
 import (
-	"github.com/tinyzimmer/kvdi/pkg/auth/common"
+	"github.com/kvdi/kvdi/pkg/auth/common"
 )
 
 // getCredentials returns the bind credentials for the configured service account.

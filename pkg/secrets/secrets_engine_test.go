@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 
-	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/k8secret"
-	"github.com/tinyzimmer/kvdi/pkg/secrets/providers/vault"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/secrets/providers/k8secret"
+	"github.com/kvdi/kvdi/pkg/secrets/providers/vault"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -22,7 +22,7 @@ package reconcile
 import (
 	"context"
 
-	"github.com/tinyzimmer/kvdi/pkg/util/k8sutil"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	"github.com/go-logr/logr"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"

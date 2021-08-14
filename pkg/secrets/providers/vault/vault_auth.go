@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 )
 
 // DefaultTokenPath is where the k8s serviceaccount token is mounted inside the

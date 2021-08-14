@@ -29,9 +29,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/kvdi/kvdi/pkg/audio/pa"
 	"github.com/tinyzimmer/go-glib/glib"
 	"github.com/tinyzimmer/go-gst/gst"
-	"github.com/tinyzimmer/kvdi/pkg/audio/pa"
 )
 
 type pulsefifosink struct {

@@ -34,10 +34,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	"github.com/tinyzimmer/kvdi/pkg/resources"
-	"github.com/tinyzimmer/kvdi/pkg/resources/desktop"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	"github.com/kvdi/kvdi/pkg/resources"
+	"github.com/kvdi/kvdi/pkg/resources/desktop"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // SessionReconciler reconciles a Session object

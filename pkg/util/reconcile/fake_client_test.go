@@ -22,9 +22,9 @@ package reconcile
 import (
 	"testing"
 
-	appv1 "github.com/tinyzimmer/kvdi/apis/app/v1"
-	desktopsv1 "github.com/tinyzimmer/kvdi/apis/desktops/v1"
-	rbacv1 "github.com/tinyzimmer/kvdi/apis/rbac/v1"
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	desktopsv1 "github.com/kvdi/kvdi/apis/desktops/v1"
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 
 	kappsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

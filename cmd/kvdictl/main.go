@@ -21,6 +21,6 @@
 
 package main
 
-import "github.com/tinyzimmer/kvdi/pkg/cmd"
+import "github.com/kvdi/kvdi/pkg/cmd"
 
 func main() { cmd.Execute() }

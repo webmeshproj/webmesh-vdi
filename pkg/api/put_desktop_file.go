@@ -23,8 +23,8 @@ import (
 	"net/http"
 
 	"github.com/kennygrant/sanitize"
-	"github.com/tinyzimmer/kvdi/pkg/proxyproto"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/proxyproto"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

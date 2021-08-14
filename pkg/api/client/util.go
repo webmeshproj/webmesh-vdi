@@ -29,8 +29,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
-	"github.com/tinyzimmer/kvdi/pkg/util/apiutil"
-	"github.com/tinyzimmer/kvdi/pkg/util/errors"
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // setAccessToken sets the access token for the http client.
