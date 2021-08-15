@@ -7,6 +7,7 @@ RUN \
     yum upgrade -y \
     && yum install --allowerasing -y \
         epel-release sudo net-tools alsa-utils tigervnc-server xpra pulseaudio pavucontrol vim \
+	glibc-locale-source glibc-langpack-en \
     && yum --allowerasing -y groupinstall workstation \
     && cd /usr/lib/systemd/system/sysinit.target.wants/ \
     && ls | grep -v systemd-tmpfiles-setup | xargs rm -f $1 \

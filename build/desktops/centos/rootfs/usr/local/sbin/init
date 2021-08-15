@@ -17,6 +17,7 @@ mkdir -p "${HOME}"
 mkdir -p "${HOME}/.config/pulse"
 echo "load-module module-native-protocol-unix auth-anonymous=1" > "${HOME}/.config/pulse/default.pa"
 cp /etc/.gtkrc-2.0 "${HOME}"
+test -f "${HOME}/.bashrc" || cp /etc/bashrc "${HOME}/.bashrc"
 chown -R ${USER}: "${HOME}"
 
 echo "** Setting up user runtime dir"
@@ -66,6 +67,11 @@ echo pts/1 >> /etc/securetty
 
 echo AutomaticLoginEnable=true >> /etc/gdm/custom.conf
 echo AutomaticLogin=${USER} >> /etc/gdm/custom.conf
+
+# TODO: This should be configurable
+localedef -v -c -i en_US -f UTF-8 en_US.UTF-8
+echo LANG="en_US.UTF-8" >> /etc/default/locale
+# localectl set-locale LANG="en_US.UTF-8"
 
 export container=docker
 exec /usr/lib/systemd/systemd
