@@ -45,6 +45,13 @@ manager:
   # manager.affinity -- Node affinity for the manager pod.
   affinity: {}
 
+ingress:
+  enabled: false
+  #hostname: kvdi.example.domain
+  #annotations:
+  #  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  #tls: true
+
 vdi:
   # vdi.labels -- Extra labels to apply to kvdi related resources.
   labels:
@@ -87,7 +94,7 @@ vdi:
       resources: {}
     # vdi.spec.metrics -- Metrics configurations for `kVDI`.
     metrics:
-      # vdi.spec.metrics.serviceMonitor -- Configurations for creating a ServiceMonitor object to 
+      # vdi.spec.metrics.serviceMonitor -- Configurations for creating a ServiceMonitor object to
       # scrape `kVDI` metrics.
       serviceMonitor:
         # vdi.spec.metrics.serviceMonitor.create -- Set to true to have `kVDI` create a ServiceMonitor.
@@ -103,7 +110,7 @@ vdi:
       allowAnonymous: false
       # vdi.spec.auth.adminSecret -- The secret to store the generated admin password in.
       adminSecret: kvdi-admin-secret
-      # vdi.spec.auth.tokenDuration -- The time-to-live for access tokens issued to users. 
+      # vdi.spec.auth.tokenDuration -- The time-to-live for access tokens issued to users.
       # If using OIDC/Oauth, you probably want to set this to a higher value, since refreshing
       # tokens is currently not supported.
       tokenDuration: "15m"

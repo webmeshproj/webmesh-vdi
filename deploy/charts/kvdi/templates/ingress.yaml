@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion:  networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "kvdi.fullname" . }}-ingress
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+  {{- include "kvdi.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.ingress.annotations }}
+    {{- .Values.ingress.annotations | toYaml | nindent 4 }}
+  {{- end }}
+spec:
+  rules:
+    {{- if .Values.ingress.hostname }}
+    - host: {{ .Values.ingress.hostname }}
+      http:
+        paths:
+          - path: {{ default "/" .Values.ingress.path }}
+            pathType: {{ default "Prefix" .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ .Chart.Name }}-app
+                port:
+                  number: 443
+    {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.hostname }}
+      secretName: {{ printf "%s-tls" .Values.ingress.hostname }}
+  {{- end }}
+{{- end -}}
+
