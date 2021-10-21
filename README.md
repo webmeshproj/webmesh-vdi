@@ -21,7 +21,7 @@ helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
 ![](https://github.com/kvdi/kvdi/workflows/Tests/badge.svg)
 ![](https://github.com/kvdi/kvdi/workflows/Build/badge.svg)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/kvdi/kvdi)
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://patreon.com/kvdi)
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://www.patreon.com/kvdi?fan_landing=true)
 
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
