@@ -21,7 +21,6 @@ helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
 ![](https://github.com/kvdi/kvdi/workflows/Tests/badge.svg)
 ![](https://github.com/kvdi/kvdi/workflows/Build/badge.svg)
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/kvdi/kvdi)
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://www.patreon.com/kvdi?fan_landing=true)
 
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
@@ -40,6 +39,7 @@ That still doesn't mean I highly recommend it's usage, but rather I am relativel
  - [Building Desktop Images](build/desktops/README.md)
  - [Security](#security)
  - [Screenshots/Video](doc/screenshots.md)
+ - [Donating](#donating)
 
 If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
 I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
@@ -205,3 +205,14 @@ User authentication is provided by "providers". There are currently three implem
 
  All three authentication methods also support MFA.
 
+# Donating
+
+kVDI started as just a fun project, but as more people have started to use it, I've really wised I'd able to find more time to continue making improvements.
+Unfortunately, it just doesn't pay the bills so I can only really settle into it when I have nothing else going on.
+I've set up a Patreon and an ETH wallet if people would like to support further development:
+
+ - Patreon: [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://www.patreon.com/kvdi?fan_landing=true)
+
+ - ETH: `0xdFC61298BdFe4a6F7fb1eFae5Da27d905c1bD172`
+
+Feel free to email me at the address on my Github profile if you have any other questions.
