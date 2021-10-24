@@ -188,8 +188,10 @@ func (f *Reconciler) Reconcile(ctx context.Context, reqLogger logr.Logger, insta
 		if err := f.reconcileUserdataMapping(ctx, reqLogger, cluster, instance); err != nil {
 			return err
 		}
-		if err := f.ensureFinalizers(ctx, reqLogger, instance); err != nil {
-			return err
+		if !cluster.RetainPVCs() {
+			if err := f.ensureFinalizers(ctx, reqLogger, instance); err != nil {
+				return err
+			}
 		}
 	}
 

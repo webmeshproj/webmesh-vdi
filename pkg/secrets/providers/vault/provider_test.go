@@ -65,7 +65,7 @@ func mustSetupProvider(t *testing.T) (*Provider, net.Listener, *vault.Core) {
 			},
 		}, nil
 	}
-	if err := provider.Setup(fake.NewFakeClientWithScheme(runtime.NewScheme()), cr); err != nil {
+	if err := provider.Setup(fake.NewClientBuilder().WithScheme(runtime.NewScheme()).Build(), cr); err != nil {
 		t.Fatal(err)
 	}
 

@@ -214,30 +214,6 @@ lint-in-docker:
 	$(MAKE) run-in-docker TEST_CMD="make lint"
 
 ##
-## # Helm Generation
-##
-
-## make helm-chart      # Generates the templates for the helm chart.
-helm-chart: bundle chart-yaml
-	bash hack/gen-helm-templates.sh
-
-## make chart-yaml     # Generate the Chart.yaml from the template in hack/Makevars.mk.
-chart-yaml:
-	echo "$$CHART_YAML" > deploy/charts/kvdi/Chart.yaml
-
-## make package-chart  # Packages the helm chart.
-package-chart: ${HELM} helm-chart
-	cd deploy/charts && helm package kvdi
-
-## make package-index  # Create the helm repo package index.
-package-index:
-	cd deploy/charts && helm repo index .
-
-## make helm-docs      # Generates the helm chart documentation.
-helm-docs: helm-chart
-	docker run --rm -v "$(PWD)/deploy/charts/kvdi:/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-
-##
 ## # Local Testing with k3d
 ##
 
@@ -246,21 +222,22 @@ $(K3D):
 	curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | K3D_INSTALL_DIR=$(GOBIN) bash -s -- --no-sudo
 
 # Ensures a repo-local installation of kubectl
-${KUBECTL}:
-	$(call download_bin,${KUBECTL},${KUBECTL_DOWNLOAD_URL})
+$(KUBECTL):
+	$(call download_bin,$(KUBECTL),${KUBECTL_DOWNLOAD_URL})
 
 # Ensures a repo-local installation of helm
-${HELM}:
+$(HELM):
 	$(call get_helm)
 
 ## make test-cluster           # Make a local k3d cluster for testing.
 test-cluster: $(K3D)
 	$(K3D) cluster create $(CLUSTER_NAME) \
 		--kubeconfig-update-default=false \
-		--k3s-server-arg="--disable=traefik" \
-		--volume="/dev/shm:/dev/shm@server[0]" \
-		--volume="/dev/kvm:/dev/kvm@server[0]" \
+		--k3s-arg --disable=traefik@server:0 \
+		--volume="/dev/shm:/dev/shm@server:0" \
+		--volume="/dev/kvm:/dev/kvm@server:0" \
 		-p 443:443@loadbalancer -p 5556:5556@loadbalancer
+	mkdir -p $(shell dirname $(CLUSTER_KUBECONFIG))
 	$(K3D) kubeconfig get $(CLUSTER_NAME) > $(CLUSTER_KUBECONFIG)
 
 ##
@@ -279,28 +256,28 @@ load-app: $(K3D) build-app
 load-kvdi-proxy: $(K3D) build-kvdi-proxy
 	$(call load_image,${KVDI_PROXY_IMAGE})
 
-KUBECTL_K3D = ${KUBECTL} --kubeconfig ${CLUSTER_KUBECONFIG}
-HELM_K3D = ${HELM} --kubeconfig ${CLUSTER_KUBECONFIG}
+KUBECTL_K3D = $(KUBECTL) --kubeconfig ${CLUSTER_KUBECONFIG}
+HELM_K3D = $(HELM) --kubeconfig ${CLUSTER_KUBECONFIG}
 
 ## make test-vault             # Deploys a vault instance into the k3d cluster.
-test-vault: ${KUBECTL} ${HELM}
-	${HELM} repo add hashicorp https://helm.releases.hashicorp.com
-	${HELM_K3D} upgrade --install vault hashicorp/vault \
+test-vault: $(KUBECTL) $(HELM)
+	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
+	$(HELM_K3D) upgrade --install vault hashicorp/vault \
 		--set server.dev.enabled=true \
 		--wait
-	${KUBECTL_K3D} wait --for=condition=ready pod vault-0 --timeout=300s
-	${KUBECTL_K3D} exec -it vault-0 -- vault auth enable kubernetes
-	${KUBECTL_K3D} \
+	$(KUBECTL_K3D) wait --for=condition=ready pod vault-0 --timeout=300s
+	$(KUBECTL_K3D) exec -it vault-0 -- vault auth enable kubernetes
+	$(KUBECTL_K3D) \
 		config view --raw --minify --flatten -o jsonpath='{.clusters[].cluster.certificate-authority-data}' | \
 		base64 --decode > ca.crt
-	${KUBECTL_K3D} exec -it vault-0 -- vault write auth/kubernetes/config \
-		token_reviewer_jwt=`${KUBECTL_K3D} exec -it vault-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
+	$(KUBECTL_K3D) exec -it vault-0 -- vault write auth/kubernetes/config \
+		token_reviewer_jwt=`$(KUBECTL_K3D) exec -it vault-0 -- cat /var/run/secrets/kubernetes.io/serviceaccount/token` \
 		kubernetes_host=https://kubernetes.default:443 \
 		kubernetes_ca_cert="`cat ca.crt`"
 	rm ca.crt
-	echo "$$VAULT_POLICY" | ${KUBECTL_K3D} exec -it vault-0 -- vault policy write kvdi -
-	${KUBECTL_K3D} exec -it vault-0 -- vault secrets enable --path=kvdi/ kv
-	${KUBECTL_K3D} exec -it vault-0 -- vault write auth/kubernetes/role/kvdi \
+	echo "$$VAULT_POLICY" | $(KUBECTL_K3D) exec -it vault-0 -- vault policy write kvdi -
+	$(KUBECTL_K3D) exec -it vault-0 -- vault secrets enable --path=kvdi/ kv
+	$(KUBECTL_K3D) exec -it vault-0 -- vault write auth/kubernetes/role/kvdi \
 	    bound_service_account_names=kvdi-app,kvdi-manager \
 	    bound_service_account_namespaces=default \
 	    policies=kvdi \
@@ -308,31 +285,35 @@ test-vault: ${KUBECTL} ${HELM}
 
 ## make get-vault-token        # Returns a token that can be used to login to vault from the CLI or UI.
 get-vault-token:
-	${KUBECTL_K3D} exec -it vault-0 -- vault token create | grep token | head -n1
+	$(KUBECTL_K3D) exec -it vault-0 -- vault token create | grep token | head -n1
 
 ## make test-ldap              # Deploys a test LDAP server into the k3d cluster.
 test-ldap:
-	${KUBECTL_K3D} apply -f hack/glauth.yaml
+	$(KUBECTL_K3D) apply -f hack/glauth.yaml
 
 ## make test-oidc              # Deploys a test OIDC provider using dex
 test-oidc:
-	${KUBECTL_K3D} apply -f hack/oidc.yaml
+	$(KUBECTL_K3D) apply -f hack/oidc.yaml
 
 ## make test-image-populator   # Deploys the imagepopulator CSI plugin
 test-image-populator:
-	${KUBECTL_K3D} apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-daemonset.yaml
-	${KUBECTL_K3D} apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-csidriverinfo.yaml
+	$(KUBECTL_K3D) apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-daemonset.yaml
+	$(KUBECTL_K3D) apply -f https://raw.githubusercontent.com/kubernetes-csi/csi-driver-image-populator/master/deploy/kubernetes-1.16/csi-image-csidriverinfo.yaml
 
 ##
 ## make deploy                 # Deploys kVDI into the local k3d cluster.
 .PHONY: deploy
 HELM_ARGS ?=
-deploy: ${HELM} chart-yaml
-	${HELM_K3D} upgrade --install kvdi deploy/charts/kvdi --wait ${HELM_ARGS}
+REPO_URL  ?= https://kvdi.github.io/helm-charts/charts
+deploy: $(HELM)
+	$(HELM_K3D) repo add kvdi $(REPO_URL)
+	$(HELM_K3D) upgrade --install kvdi kvdi/kvdi \
+		--set manager.image.tag=$(VERSION) \
+		--wait ${HELM_ARGS}
 
 ## make deploy-crds            # Deploys just the CRDs into the k3d cluster.
 deploy-crds: manifests kustomize
-	$(KUSTOMIZE) build config/crd | ${KUBECTL_K3D} apply -f -
+	$(KUSTOMIZE) build config/crd | $(KUBECTL_K3D) apply -f -
 
 ## make deploy-with-vault      # Deploys kVDI into the k3d cluster with a vault configuration for the product of `test-vault`.
 deploy-with-vault:
@@ -341,36 +322,36 @@ deploy-with-vault:
 ## make deploy-with-ldap       # Deploys kVDI into the k3d cluster with an LDAP configuration for the product of `test-ldap`.
 deploy-with-ldap:
 	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-ldap-helm-values.yaml"
-	${KUBECTL_K3D} apply -f hack/glauth-role.yaml
+	$(KUBECTL_K3D) apply -f hack/glauth-role.yaml
 
 ## make deploy-with-oidc       # Deploys kVDI into the k3d cluster with an OIDC configuration for the product of `test-oidc`.
 ##                             # Requires you set kvdi.local to the localhost in /etc/hosts.
 deploy-with-oidc:
 	$(MAKE) deploy HELM_ARGS="-f deploy/examples/example-oidc-helm-values.yaml"
-	${KUBECTL_K3D} apply -f hack/oidc-role.yaml
+	$(KUBECTL_K3D) apply -f hack/oidc-role.yaml
 
 ##
 ## make example-vdi-templates  # Deploys the example VDITemplates into the k3d cluster.
-example-vdi-templates: ${KUBECTL}
-	${KUBECTL_K3D} apply \
+example-vdi-templates: $(KUBECTL)
+	$(KUBECTL_K3D) apply \
 		-f deploy/examples/example-desktop-templates.yaml
 
 ##
 ## make restart-manager    # Restart the manager pod.
-restart-manager: ${KUBECTL}
-	${KUBECTL_K3D} delete pod -l app.kubernetes.io/name=kvdi
+restart-manager: $(KUBECTL)
+	$(KUBECTL_K3D) delete pod -l app.kubernetes.io/name=kvdi
 
 ## make restart-app        # Restart the app pod.
-restart-app: ${KUBECTL}
-	${KUBECTL_K3D} delete pod -l vdiComponent=app
+restart-app: $(KUBECTL)
+	$(KUBECTL_K3D) delete pod -l vdiComponent=app
 
 ## make restart            # Restart the manager and app pod.
 restart: restart-manager restart-app
 
 ## make clean-cluster      # Remove all kVDI components from the cluster for a fresh start.
-clean-cluster: ${KUBECTL} ${HELM}
-	${KUBECTL_K3D} delete --ignore-not-found certificate --all
-	${HELM_K3D} del kvdi
+clean-cluster: $(KUBECTL) $(HELM)
+	$(KUBECTL_K3D) delete --ignore-not-found certificate --all
+	$(HELM_K3D) del kvdi
 
 ## make remove-cluster     # Deletes the k3d cluster.
 remove-cluster: $(K3D)
@@ -382,18 +363,18 @@ remove-cluster: $(K3D)
 ##
 
 ## make forward-app         # Run a kubectl port-forward to the app pod.
-forward-app: ${KUBECTL}
-	${KUBECTL_K3D} port-forward --address 0.0.0.0 svc/kvdi-app 8443:443
+forward-app: $(KUBECTL)
+	$(KUBECTL_K3D) port-forward --address 0.0.0.0 svc/kvdi-app 8443:443
 
 ## make get-app-secret      # Get the app client TLS certificate for debugging.
-get-app-secret: ${KUBECTL}
-	${KUBECTL_K3D} get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
-	${KUBECTL_K3D} get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
-	${KUBECTL_K3D} get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
+get-app-secret: $(KUBECTL)
+	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
+	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
+	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
 ## make get-admin-password  # Get the generated admin password for kVDI.
-get-admin-password: ${KUBECTL}
-	${KUBECTL_K3D} get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
+get-admin-password: $(KUBECTL)
+	$(KUBECTL_K3D) get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
 
 ##
 ## # Doc generation
@@ -426,4 +407,4 @@ check-release:
 		echo "You must specify a VERSION for release" ; exit 1 ; \
 	fi
 
-prep-release: check-release generate manifests helm-chart api-docs helm-docs kvdictl-docs package-chart package-index
+prep-release: check-release generate manifests api-docs kvdictl-docs

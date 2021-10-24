@@ -33,7 +33,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
         <q-space />
 
-        <q-btn type="a" href="https://github.com/tinyzimmer/kvdi" target="_blank" stretch flat icon="img:statics/github.png" label="Github" />
+        <q-btn type="a" href="https://github.com/kvdi/kvdi" target="_blank" stretch flat icon="img:statics/github.png" label="Github" />
 
       </q-toolbar>
 

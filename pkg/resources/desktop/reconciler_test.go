@@ -51,7 +51,7 @@ func newReconciler(t *testing.T) *Reconciler {
 	corev1.AddToScheme(scheme)
 	appsv1.AddToScheme(scheme)
 	rbacv1.AddToScheme(scheme)
-	return New(fake.NewFakeClientWithScheme(scheme), scheme)
+	return New(fake.NewClientBuilder().WithScheme(scheme).Build(), scheme)
 }
 
 func newCluster(t *testing.T) *appv1.VDICluster {
@@ -59,11 +59,12 @@ func newCluster(t *testing.T) *appv1.VDICluster {
 	cluster := &appv1.VDICluster{}
 	cluster.Name = "test-cluster"
 	cluster.Spec = appv1.VDIClusterSpec{
-		UserdataSpec: &corev1.PersistentVolumeClaimSpec{
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{"storage": resource.MustParse("10Gi")},
-			},
-		},
+		UserdataSpec: &appv1.UserdataSpec{
+			PersistentVolumeClaimSpec: &corev1.PersistentVolumeClaimSpec{
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{"storage": resource.MustParse("10Gi")},
+				},
+			}},
 	}
 	return cluster
 }

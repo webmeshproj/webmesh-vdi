@@ -22,10 +22,8 @@ package audio
 import (
 	"path/filepath"
 
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-
 	"github.com/go-logr/logr"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 // BufferOpts represents options passed to NewBuffer when building
@@ -61,9 +59,6 @@ type BufferOpts struct {
 }
 
 func (o *BufferOpts) getLogger() logr.Logger {
-	if o.Logger == nil {
-		return logf.Log.WithName("audio_buffer")
-	}
 	return o.Logger
 }
 
