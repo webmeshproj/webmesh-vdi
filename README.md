@@ -155,10 +155,10 @@ For example:
 export KVDI_VERSION=v0.3.6
 
 kubectl apply \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/app.kvdi.io_vdiclusters.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/desktops.kvdi.io_sessions.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/crds/desktops.kvdi.io_templates.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/crds/rbac.kvdi.io_vdiroles.yaml
+  -f https://github.com/kvdi/kvdi/raw/${KVDI_VERSION}/config/crd/bases/app.kvdi.io_vdiclusters.yaml \
+  -f https://github.com/kvdi/kvdi/raw/${KVDI_VERSION}/config/crd/bases/desktops.kvdi.io_sessions.yaml \
+  -f https://github.com/kvdi/kvdi/raw/${KVDI_VERSION}/config/crd/bases/desktops.kvdi.io_templates.yaml \
+  -f https://github.com/kvdi/kvdi/raw/${KVDI_VERSION}/config/crd/bases/rbac.kvdi.io_vdiroles.yaml
 ```
 
 When there is a change to one or more CRDs, it will be mentioned in the notes for that release.
