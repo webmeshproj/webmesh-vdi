@@ -8,11 +8,11 @@ _Except as I've continued to work on this, I've noticed this is really just a fr
 
 ---
 
-**ATTENTION:** The `helm` chart repository has been relocated (since the repo has been relocated). To update your repository you can do the following:
+**ATTENTION:** The `helm` chart repository has been moved to a [separate repo](https://github.com/kvdi/helm-charts) to tidy things up here more. To update your repository you can do the following:
 
 ```sh
-helm repo remove tinyzimmer
-helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts
+helm repo remove kvdi
+helm repo add kvdi https://kvdi.github.io/helm-charts/charts
 helm repo update
 
 helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
@@ -67,6 +67,7 @@ I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the st
 
   - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
   - DOSBox/Game profiles could be cool...same as "App Profiles"
+  - ARM64 support. Should be easy, but the build files will need some shuffling.
   - UI could use a serious makeover from someone who actually knows what they are doing
 
 ## Requirements
@@ -103,7 +104,7 @@ For more complete installation instructions see the `helm` chart docs [here](dep
 The [API Reference](doc/appv1.md) can also be used for details on `kVDI` app-level configurations.
 
 ```bash
-helm repo add kvdi https://kvdi.github.io/kvdi/deploy/charts  # Add the kvdi repo
+helm repo add kvdi https://kvdi.github.io/helm-charts/charts  # Add the kvdi charts repo
 helm repo update                                              # Sync your repositories
 
 # Install kVDI
@@ -126,7 +127,7 @@ You can then create a [VDICluster](doc/appv1.md#VDIClusterSpec) object manually 
 To install the manifest:
 
 ```bash
-export KVDI_VERSION=v0.3.1
+export KVDI_VERSION=v0.3.6
 
 kubectl apply -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/bundle.yaml --validate=false
 ```
@@ -141,7 +142,7 @@ They can be found in the [config](config/) directory in this repository.
 Most of the time you can just run a regular helm upgrade to update your deployment manifests to the latest images.
 
 ```bash
-helm upgrade kvdi kvdi/kvdi --version v0.3.2
+helm upgrade kvdi kvdi/kvdi --version v0.3.6
 ```
 
 However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible. 
@@ -151,20 +152,20 @@ You can get around this by applying the CRDs for the version you are upgrading t
 For example:
 
 ```bash
-export KVDI_VERSION=v0.3.2
+export KVDI_VERSION=v0.3.6
 
 kubectl apply \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/app.kvdi.io_vdiclusters.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_sessions.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/desktops.kvdi.io_templates.yaml \
-  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/deploy/charts/kvdi/crds/rbac.kvdi.io_vdiroles.yaml
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/app.kvdi.io_vdiclusters.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/desktops.kvdi.io_sessions.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/crds/desktops.kvdi.io_templates.yaml \
+  -f https://raw.githubusercontent.com/kvdi/kvdi/${KVDI_VERSION}/config/crd/bases/crds/rbac.kvdi.io_vdiroles.yaml
 ```
 
 When there is a change to one or more CRDs, it will be mentioned in the notes for that release.
 
 ## Building and Running Locally
 
-The `Makefiles` contain helpers for testing the full solution locally using `kind`. Run `make help` to see all the available options.
+The `Makefile` contains helpers for testing the full solution locally using `k3d`. Run `make help` to see all the available options.
 
 _If you choose to pull the images from the registry instead of building and loading first - you probably want to set `VERSION=latest` (or a previous version) in your environment also.
 The `Makefile` is usually pointed at the next version to be released and published images may not exist yet_.

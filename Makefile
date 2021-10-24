@@ -407,4 +407,4 @@ check-release:
 		echo "You must specify a VERSION for release" ; exit 1 ; \
 	fi
 
-prep-release: check-release generate manifests api-docs kvdictl-docs
+prep-release: check-release generate manifests api-docs kvdictl-docs bundle

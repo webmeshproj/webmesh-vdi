@@ -20,6 +20,7 @@ Types
 -   [ServiceMonitorConfig](#ServiceMonitorConfig)
 -   [TLSConfig](#TLSConfig)
 -   [UserdataSelector](#UserdataSelector)
+-   [UserdataSpec](#UserdataSpec)
 -   [VDICluster](#VDICluster)
 -   [VDIClusterSpec](#VDIClusterSpec)
 -   [VaultConfig](#VaultConfig)
@@ -501,6 +502,32 @@ yourself.
 </tbody>
 </table>
 
+### UserdataSpec
+
+(*Appears on:* [VDIClusterSpec](#VDIClusterSpec))
+
+UserdataSpec is an inline of the corev1 PersistentVolumeClaimSpec. It
+contains additional fields for controlling how kvdi works with volumes.
+
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PersistentVolumeClaimSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><p>(Members of <code>PersistentVolumeClaimSpec</code> are embedded into this type.)</p></td>
+</tr>
+<tr class="even">
+<td><code>retainPVCs</code> <em>bool</em></td>
+<td><p>RetainPVCs tells the desktop controller to leave PVCs in-tact after they are allocated for a user. The default behavior is to free the volume from the PVC after each desktop session so it can be used across other namespaces. Note that if you set this value to <code>true</code> users will only be able to launch sessions in a single namespace (unless the PVC is manually removed).</p></td>
+</tr>
+</tbody>
+</table>
+
 ### VDICluster
 
 VDICluster is the Schema for the vdiclusters API
@@ -541,7 +568,7 @@ VDICluster is the Schema for the vdiclusters API
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
-<td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userdataSpec</code> <em><a href="#UserdataSpec">UserdataSpec</a></em></td>
 <td><p>The configuration for user $HOME volumes to be managed by kVDI.</p>
 <p><strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
@@ -606,7 +633,7 @@ VDIClusterSpec defines the desired state of VDICluster
 <td><p>Pull secrets to use when pulling container images</p></td>
 </tr>
 <tr class="odd">
-<td><code>userdataSpec</code> <em><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaimspec-v1-core">Kubernetes core/v1.PersistentVolumeClaimSpec</a></em></td>
+<td><code>userdataSpec</code> <em><a href="#UserdataSpec">UserdataSpec</a></em></td>
 <td><p>The configuration for user $HOME volumes to be managed by kVDI.</p>
 <p><strong>NOTE:</strong> Even though the controller will try to force the reclaim policy on created volumes to <code>Retain</code>, you may want to set it explicitly on your storage-class controller as an extra safeguard.</p></td>
 </tr>
@@ -681,4 +708,4 @@ server.
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `c4e330a`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c911719`.*

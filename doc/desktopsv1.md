@@ -430,4 +430,4 @@ TemplateSpec defines the desired state of Template
 
 ------------------------------------------------------------------------
 
-*Generated with `gen-crd-api-reference-docs` on git commit `c4e330a`.*
+*Generated with `gen-crd-api-reference-docs` on git commit `c911719`.*
