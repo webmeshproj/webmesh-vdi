@@ -33,11 +33,3 @@ jobs:
     - name: Push the manager, app, and kvdi-proxy docker images
       run: VERSION=${{ steps.version.outputs.tag }} make -j 3 push-manager push-app push-kvdi-proxy
       if: ${{ github.event_name != 'pull_request' }}
-
-    - name: Force pkg.go.dev to refresh main
-      run: curl "https://proxy.golang.org/github.com/kvdi/kvdi/@v/${GITHUB_REF##*/}.info"
-      if: ${{ steps.version.outputs.tag == 'latest' && github.event_name != 'pull_request' }}
-
-    - name: Force pkg.go.dev to refresh version
-      run: curl https://proxy.golang.org/github.com/kvdi/kvdi/@v/${{ steps.version.outputs.tag }}.info
-      if: ${{ steps.version.outputs.tag != 'latest' && github.event_name != 'pull_request' }}

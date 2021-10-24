@@ -17,9 +17,9 @@ DOSBOX_IMAGE            ?= ${REPO}/dosbox:latest
 QEMU_IMAGE              ?= ${REPO}/qemu:latest
 
 # K3d Options
-HELM_VERSION ?= v3.1.2
+HELM_VERSION ?= v3.7.0
 CLUSTER_NAME ?= kvdi
-KUBERNETES_VERSION ?= v1.20.2
+KUBERNETES_VERSION ?= v1.22.2
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
 CLUSTER_KUBECONFIG ?= bin/kubeconfig.yaml
@@ -46,12 +46,6 @@ define get_helm
 	chmod +x $(HELM)
 endef
 
-define get_helm_docs
-	mkdir -p $(dir ${HELM_DOCS})
-	curl -JL $(HELM_DOCS_DOWNLOAD_URL) | tar xzf - --to-stdout helm-docs > $(HELM_DOCS)
-	chmod +x $(HELM_DOCS)
-endef
-
 define build_docker
 	docker build . \
 		-f build/Dockerfile.$(1) \
@@ -64,15 +58,6 @@ define load_image
 	$(K3D) image import --cluster=$(CLUSTER_NAME) $(1)
 endef
 
-define CHART_YAML
-apiVersion: v2
-name: kvdi
-description: A Kubernetes-Native Virtual Desktop Infrastructure
-type: application
-version: ${VERSION}
-appVersion: ${VERSION}
-endef
-export CHART_YAML
 
 define VAULT_POLICY
 path "kvdi/*" {
