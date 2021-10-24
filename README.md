@@ -207,7 +207,7 @@ User authentication is provided by "providers". There are currently three implem
 
 # Donating
 
-kVDI started as just a fun project, but as more people have started to use it, I've really wised I'd able to find more time to continue making improvements.
+kVDI started as just a fun project, but as more people have started to use it, I've really wanted to find more time to continue making improvements.
 Unfortunately, it just doesn't pay the bills so I can only really settle into it when I have nothing else going on.
 I've set up a Patreon and an ETH wallet if people would like to support further development:
 
