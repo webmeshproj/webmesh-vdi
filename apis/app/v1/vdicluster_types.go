@@ -39,7 +39,7 @@ type VDIClusterSpec struct {
 	// **NOTE:** Even though the controller will try to force the reclaim policy on
 	// created volumes to `Retain`, you may want to set it explicitly on your storage-class
 	// controller as an extra safeguard.
-	UserdataSpec *corev1.PersistentVolumeClaimSpec `json:"userdataSpec,omitempty"`
+	UserdataSpec *UserdataSpec `json:"userdataSpec,omitempty"`
 	// A configuration for selecting pre-existing PVCs to use as the $HOME directory for
 	// sessions. This configuration takes precedence over `userdataSpec`.
 	UserdataSelector *UserdataSelector `json:"userdataSelector,omitempty"`
@@ -53,6 +53,19 @@ type VDIClusterSpec struct {
 	Secrets *SecretsConfig `json:"secrets,omitempty"`
 	// Metrics configurations.
 	Metrics *MetricsConfig `json:"metrics,omitempty"`
+}
+
+// UserdataSpec is an inline of the corev1 PersistentVolumeClaimSpec. It contains
+// additional fields for controlling how kvdi works with volumes.
+type UserdataSpec struct {
+	*corev1.PersistentVolumeClaimSpec `json:",inline"`
+
+	// RetainPVCs tells the desktop controller to leave PVCs in-tact after they
+	// are allocated for a user. The default behavior is to free the volume from
+	// the PVC after each desktop session so it can be used across other namespaces.
+	// Note that if you set this value to `true` users will only be able to launch
+	// sessions in a single namespace (unless the PVC is manually removed).
+	RetainPVCs bool `json:"retainPVCs,omitempty"`
 }
 
 // UserdataSelector represents a means for selecting pre-existing userdata PVCs based off

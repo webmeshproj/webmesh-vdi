@@ -107,8 +107,8 @@ func (c *VDICluster) GetUserdataSelector() *UserdataSelector {
 
 // GetUserdataVolumeSpec returns the spec for creating PVCs for user persistence.
 func (c *VDICluster) GetUserdataVolumeSpec() *corev1.PersistentVolumeClaimSpec {
-	if c.Spec.UserdataSpec != nil && !reflect.DeepEqual(*c.Spec.UserdataSpec, corev1.PersistentVolumeClaimSpec{}) {
-		return c.Spec.UserdataSpec
+	if c.Spec.UserdataSpec != nil && !reflect.DeepEqual(*c.Spec.UserdataSpec.PersistentVolumeClaimSpec, corev1.PersistentVolumeClaimSpec{}) {
+		return c.Spec.UserdataSpec.PersistentVolumeClaimSpec
 	}
 	return nil
 }
@@ -124,4 +124,12 @@ func (c *VDICluster) GetUserdataVolumeMapName() types.NamespacedName {
 		Name:      fmt.Sprintf("%s-userdata-volume-map", c.GetName()),
 		Namespace: c.GetCoreNamespace(),
 	}
+}
+
+// RetainUserdataPVCs returns if userdata PVCs should be retained across sessions.
+func (c *VDICluster) RetainPVCs() bool {
+	if c.Spec.UserdataSpec != nil {
+		return c.Spec.UserdataSpec.RetainPVCs
+	}
+	return false
 }

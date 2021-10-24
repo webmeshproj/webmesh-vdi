@@ -117,12 +117,16 @@ func newPVCForUser(cluster *appv1.VDICluster, instance *desktopsv1.Session, exis
 	if existingPVName != "" {
 		spec.VolumeName = existingPVName
 	}
+	var ownerReferences []metav1.OwnerReference
+	if !cluster.RetainPVCs() {
+		ownerReferences = instance.OwnerReferences()
+	}
 	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            cluster.GetUserdataVolumeName(instance.GetUser()),
 			Namespace:       instance.GetNamespace(),
 			Labels:          k8sutil.GetDesktopLabels(cluster, instance),
-			OwnerReferences: instance.OwnerReferences(),
+			OwnerReferences: ownerReferences,
 		},
 		Spec: *spec,
 	}
