@@ -99,7 +99,7 @@ _NOTE: This script is fairly new and still has some bugs_
 
 #### Helm
 
-For more complete installation instructions see the `helm` chart docs [here](deploy/charts/kvdi/README.md) for available configuration options.
+For more complete installation instructions see the `helm` chart docs [here](https://github.com/kvdi/helm-charts/blob/main/charts/kvdi/README.md) for available configuration options.
 
 The [API Reference](doc/appv1.md) can also be used for details on `kVDI` app-level configurations.
 
