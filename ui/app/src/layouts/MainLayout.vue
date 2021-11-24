@@ -314,7 +314,7 @@ export default {
       this.onClickLogin()
       this.pushIfNotCurrent('login')
     }
-    await this.syncRemoteClipboardListener()
+    await this.onFocusSyncRemoteClipboardListener()
   },
 
   mounted () {
@@ -398,7 +398,7 @@ export default {
 
   methods: {
 
-    syncRemoteClipboardListener () {
+    onFocusSyncRemoteClipboardListener () {
       window.addEventListener('focus', this.onPaste)
     },
 
