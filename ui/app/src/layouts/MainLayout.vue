@@ -314,7 +314,7 @@ export default {
       this.onClickLogin()
       this.pushIfNotCurrent('login')
     }
-    await this.onFocusSyncRemoteClipboardListener()
+    this.onFocusSyncRemoteClipboardListener()
   },
 
   mounted () {
