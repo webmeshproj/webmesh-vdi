@@ -61,7 +61,7 @@ function fetch-helm-chart() {
         -w /workspace \
         -v "${tmpdir}":/workspace \
             alpine/helm:3.2.4 \
-            fetch --untar https://tinyzimmer.github.io/kvdi/deploy/charts/kvdi-${VERSION}.tgz 1> /dev/null
+            fetch --untar https://raw.githubusercontent.com/kvdi/helm-charts/main/charts/kvdi-${VERSION}.tgz 1> /dev/null
 
     echo "${tmpdir}"
 }
@@ -71,7 +71,7 @@ function get-helm-chart() {
     if [[ "${VERSION}" == "" ]] ; then
         dialog --backtitle "kVDI Architect" \
             --infobox "Fetching latest version of kVDI" 5 50
-        export VERSION=$(curl https://tinyzimmer.github.io/kvdi/deploy/charts/index.yaml 2> /dev/null | head | grep appVersion | awk '{print$2}')
+        export VERSION=$(curl https://raw.githubusercontent.com/kvdi/helm-charts/main/charts/index.yaml 2> /dev/null | head | grep appVersion | awk '{print$2}')
         sleep 1
     fi
 
@@ -573,7 +573,7 @@ metadata:
   namespace: kube-system
 spec:
   chart: kvdi
-  repo: https://tinyzimmer.github.io/kvdi/deploy/charts
+  repo: https://raw.githubusercontent.com/kvdi/helm-charts/main/charts
   targetNamespace: default
   valuesContent: |-
 $(sed 's/^/    /g' "${CHART_DIR}/kvdi/values.yaml")
@@ -670,7 +670,7 @@ function print-instructions() {
     fi
     echo
     echo "To install the example DesktopTemplates, run:"
-    echo "    sudo k3s kubectl apply -f https://raw.githubusercontent.com/tinyzimmer/kvdi/main/deploy/examples/example-desktop-templates.yaml"
+    echo "    sudo k3s kubectl apply -f https://raw.githubusercontent.com/kvdi/kvdi/main/deploy/examples/example-desktop-templates.yaml"
     echo
     echo "To uninstall kVDI you can run:"
     echo "    ${0} --uninstall"
