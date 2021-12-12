@@ -314,6 +314,7 @@ export default {
       this.onClickLogin()
       this.pushIfNotCurrent('login')
     }
+    this.onFocusSyncRemoteClipboardListener()
   },
 
   mounted () {
@@ -396,6 +397,10 @@ export default {
   },
 
   methods: {
+
+    onFocusSyncRemoteClipboardListener () {
+      window.addEventListener('focus', this.onPaste)
+    },
 
     async onPaste () {
       try {
