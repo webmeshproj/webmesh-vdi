@@ -18,64 +18,65 @@ helm repo update
 helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
 ```
 
-![](https://github.com/kvdi/kvdi/workflows/Tests/badge.svg)
-![](https://github.com/kvdi/kvdi/workflows/Build/badge.svg)
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/kvdi/kvdi)
+![](https://github.com/webmesh-proj/webmesh-vdi/workflows/Tests/badge.svg)
+![](https://github.com/webmesh-proj/webmesh-vdi/workflows/Build/badge.svg)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/webmesh-proj/webmesh-vdi)
 
-This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there. 
+This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there.
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
 
- - [API Reference](doc/appv1.md)
-   - [RBAC Reference](doc/rbacv1.md)
-   - [Templates Reference](doc/desktopsv1.md)
- - [Installing](#Installing)
-   - [Standalone](#Install-standalone)
-   - [Kubernetes](#Install-to-a-pre-existing-cluster)
-      - [Helm](#helm)
-      - [Bundle](#bundle-manifest)
-      - [Kustomize](#kustomize)
- - [CLI](doc/kvdictl/kvdictl.md)
- - [Upgrading](#Upgrading)
- - [Building Desktop Images](build/desktops/README.md)
- - [Security](#security)
- - [Screenshots/Video](doc/screenshots.md)
- - [Donating](#donating)
+- [API Reference](doc/appv1.md)
+  - [RBAC Reference](doc/rbacv1.md)
+  - [Templates Reference](doc/desktopsv1.md)
+- [Installing](#Installing)
+  - [Standalone](#Install-standalone)
+  - [Kubernetes](#Install-to-a-pre-existing-cluster)
+    - [Helm](#helm)
+    - [Bundle](#bundle-manifest)
+    - [Kustomize](#kustomize)
+- [CLI](doc/kvdictl/kvdictl.md)
+- [Upgrading](#Upgrading)
+- [Building Desktop Images](build/desktops/README.md)
+- [Security](#security)
+- [Screenshots/Video](doc/screenshots.md)
+- [Donating](#donating)
 
-If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues. 
-I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable". 
+If you are interested in helping out or just simply launching a design discussion, feel free to send PRs and/or issues.
+I wrote up a [`CONTRIBUTING`](CONTRIBUTING.md) doc just outlining some of the stuff I have in mind that would need to be acomplished for this to be considered "stable".
 
 ## Features
 
-  - Containerized user desktops running on Kubernetes with no virtualization required (`libvirt` options may come in the future). All traffic between the end user and the "desktop" is encrypted.
+- Containerized user desktops running on Kubernetes with no virtualization required (`libvirt` options may come in the future). All traffic between the end user and the "desktop" is encrypted.
 
-  - Persistent user data
+- Persistent user data
 
-  - Audio playback and microphone support
+- Audio playback and microphone support
 
-  - File transfer to/from "desktop" sessions. Directories get archived into a gzipped tarball prior to download.
+- File transfer to/from "desktop" sessions. Directories get archived into a gzipped tarball prior to download.
 
-  - RBAC system for managing user access to templates, roles, users, namespaces, serviceaccounts, etc.
+- RBAC system for managing user access to templates, roles, users, namespaces, serviceaccounts, etc.
 
-  - MFA Support
+- MFA Support
 
-  - Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
+- Configurable backend for internal secrets. Currently `vault` or Kubernetes Secrets
 
-  - Use built-in local authentication, LDAP, or OpenID.
+- Use built-in local authentication, LDAP, or OpenID.
 
-  - App metrics to either scrape externally or view in the UI. More details in the `helm` doc.
+- App metrics to either scrape externally or view in the UI. More details in the `helm` doc.
+
 ### TODO
 
-  - "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
-  - DOSBox/Game profiles could be cool...same as "App Profiles"
-  - ARM64 support. Should be easy, but the build files will need some shuffling.
-  - UI could use a serious makeover from someone who actually knows what they are doing
+- "App Profiles" - I have a POC implementation on `main` but it is still pretty buggy
+- DOSBox/Game profiles could be cool...same as "App Profiles"
+- ARM64 support. Should be easy, but the build files will need some shuffling.
+- UI could use a serious makeover from someone who actually knows what they are doing
 
 ## Requirements
 
 For building and running locally you will need:
 
-  - `go >= 1.14`
-  - `docker`
+- `go >= 1.14`
+- `docker`
 
 ## Installing
 
@@ -118,10 +119,9 @@ To access the app interface either do a `port-forward` (`make forward-app` is an
 
 By default there are no desktop templates configured. If you'd like, you can apply the ones in `deploy/examples/example-desktop-templates.yaml` to get started quickly.
 
-
 #### Bundle Manifest
 
-There is a manifest in this repository that will **just** lay down the manager instance, its dependencies, and all of the CRDs. 
+There is a manifest in this repository that will **just** lay down the manager instance, its dependencies, and all of the CRDs.
 You can then create a [VDICluster](doc/appv1.md#VDIClusterSpec) object manually to spin up an actual application instance.
 
 To install the manifest:
@@ -145,8 +145,8 @@ Most of the time you can just run a regular helm upgrade to update your deployme
 helm upgrade kvdi kvdi/kvdi --version v0.3.6
 ```
 
-However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible. 
-Due to the way helm manages CRDs, it will ignore changes to those on an existing installation. 
+However, sometimes there may be changes to the CRDs, though I will always do my best to make sure they are backwards compatible.
+Due to the way helm manages CRDs, it will ignore changes to those on an existing installation.
 You can get around this by applying the CRDs for the version you are upgrading to directly from this repo.
 
 For example:
@@ -196,14 +196,14 @@ The UI for the "desktop" containers is placed behind a VNC server listening on a
 
 User authentication is provided by "providers". There are currently three implementations:
 
- * `local-auth` : A `passwd` like file is kept in the Secrets backend (k8s or vault) mapping users to roles and password hashes. This is primarily meant for development, but you could secure your environment in a way to make it viable for a small number of users.
+- `local-auth` : A `passwd` like file is kept in the Secrets backend (k8s or vault) mapping users to roles and password hashes. This is primarily meant for development, but you could secure your environment in a way to make it viable for a small number of users.
 
- * `ldap-auth` : An LDAP/AD server is used for autenticating users. VDIRoles can be tied to 
- security groups in LDAP via annotations. When a user is authenticated, their groups are queried to see if they are bound to any VDIRoles.
+- `ldap-auth` : An LDAP/AD server is used for autenticating users. VDIRoles can be tied to
+  security groups in LDAP via annotations. When a user is authenticated, their groups are queried to see if they are bound to any VDIRoles.
 
- * `oidc-auth` : An OpenID or OAuth provider is used for authenticating users. If using an Oauth provider, it must support the `openid` scope. When a user is authenticated, a configurable `groups` claim is requested from the provider that can be mapped to VDIRoles similarly to `ldap-auth`. If the provider does not support a `groups` claim, you can configure `kVDI` to allow all authenticated users.
+- `oidc-auth` : An OpenID or OAuth provider is used for authenticating users. If using an Oauth provider, it must support the `openid` scope. When a user is authenticated, a configurable `groups` claim is requested from the provider that can be mapped to VDIRoles similarly to `ldap-auth`. If the provider does not support a `groups` claim, you can configure `kVDI` to allow all authenticated users.
 
- All three authentication methods also support MFA.
+All three authentication methods also support MFA.
 
 # Donating
 
@@ -211,8 +211,8 @@ kVDI started as just a fun project, but as more people have started to use it, I
 Unfortunately, it just doesn't pay the bills so I can only really settle into it when I have nothing else going on.
 I've set up a Patreon and an ETH wallet if people would like to support further development:
 
- - Patreon: [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://www.patreon.com/kvdi?fan_landing=true)
+- Patreon: [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dkvdi%26type%3Dpatrons&style=flat)](https://www.patreon.com/kvdi?fan_landing=true)
 
- - ETH: `0xdFC61298BdFe4a6F7fb1eFae5Da27d905c1bD172`
+- ETH: `0xdFC61298BdFe4a6F7fb1eFae5Da27d905c1bD172`
 
 Feel free to email me at the address on my Github profile if you have any other questions.
