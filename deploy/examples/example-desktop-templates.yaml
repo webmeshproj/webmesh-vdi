@@ -4,7 +4,7 @@ metadata:
   name: ubuntu-xfce
 spec:
   desktop:
-    image: ghcr.io/kvdi/ubuntu-xfce4:latest
+    image: ghcr.io/webmeshproj/desktop-ubuntu-base-xfce4:latest
     imagePullPolicy: IfNotPresent
     allowRoot: true
   proxy:
@@ -23,7 +23,7 @@ metadata:
   name: dosbox
 spec:
   desktop:
-    image: ghcr.io/kvdi/dosbox:latest
+    image: ghcr.io/webmeshproj/desktop-dosbox-base:latest
     imagePullPolicy: IfNotPresent
     init: supervisord
   proxy:
