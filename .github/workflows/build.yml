@@ -22,7 +22,7 @@ jobs:
       packages: "write"
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         container:
           - app
@@ -77,6 +77,7 @@ jobs:
           context: .
           file: build/Dockerfile.base
           push: false
+          load: true
           tags: ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
           platforms: ${{ env.PLATFORMS }}
           cache-from: type=registry,ref=ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
