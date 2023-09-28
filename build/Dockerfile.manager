@@ -17,7 +17,10 @@ ARG LDFLAGS
 RUN go build \
   -o /tmp/manager \
   -ldflags="${LDFLAGS}" \
-  ./cmd/manager && upx /tmp/manager
+  ./cmd/manager
+
+ARG TARGETARCH=amd64
+RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/manager || true
 
 ##
 # Build the runtime image

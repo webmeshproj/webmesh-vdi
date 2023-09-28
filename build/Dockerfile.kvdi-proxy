@@ -21,7 +21,9 @@ ARG LDFLAGS
 RUN go build \
   -o /tmp/kvdi-proxy \
   -ldflags="${LDFLAGS}" \
-  ./cmd/kvdi-proxy && upx /tmp/kvdi-proxy
+  ./cmd/kvdi-proxy 
+ARG TARGETARCH=amd64
+RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/kvdi-proxy || true
 
 ###############
 # Final Image #
@@ -29,8 +31,8 @@ RUN go build \
 FROM alpine
 
 RUN apk add --update --no-cache \
-      libpulse gstreamer gst-plugins-good gst-plugins-base \
-      && adduser -D -u 9000 audioproxy
+  libpulse gstreamer gst-plugins-good gst-plugins-base \
+  && adduser -D -u 9000 audioproxy
 
 COPY --from=builder /tmp/kvdi-proxy /kvdi-proxy
 

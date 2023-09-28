@@ -9,7 +9,8 @@ ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
 ARG GO_SWAGGER_VERSION=v0.23.0
-RUN curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64 \
+ARG TARGETARCH=amd64
+RUN curl -JL -o /usr/local/bin/swagger https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_${TARGETARCH} \
   && chmod +x /usr/local/bin/swagger
 
 # Copy go code
@@ -22,9 +23,11 @@ ARG LDFLAGS
 RUN go build -o /tmp/app \
   -ldflags="${LDFLAGS}" \
   ./cmd/app \
-  && upx /tmp/app \
   && cd pkg/api \
   && /usr/local/bin/swagger generate spec -o /tmp/swagger.json --scan-models
+
+ARG TARGETARCH=amd64
+RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/app || true
 
 ##############
 # UI Builder #
