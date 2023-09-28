@@ -18,9 +18,10 @@ helm repo update
 helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
 ```
 
-![](https://github.com/webmesh-proj/webmesh-vdi/workflows/Tests/badge.svg)
-![](https://github.com/webmesh-proj/webmesh-vdi/workflows/Build/badge.svg)
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-rounded)](https://pkg.go.dev/github.com/webmesh-proj/webmesh-vdi)
+[![Go Report Card](https://goreportcard.com/badge/github.com/webmeshproj/webmesh-vdi)](https://goreportcard.com/report/github.com/webmeshproj/webmesh-vdi)
+![Tests](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/tests.yml/badge.svg)
+![Build](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/build.yml/badge.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/webmeshproj/webmesh-vdi.svg)](https://pkg.go.dev/github.com/webmeshproj/webmesh-vdi)
 
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there.
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
