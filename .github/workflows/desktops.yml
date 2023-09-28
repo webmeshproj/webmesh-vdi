@@ -18,6 +18,7 @@ jobs:
       packages: "write"
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         docker-context:
           - build/desktops/ubuntu
