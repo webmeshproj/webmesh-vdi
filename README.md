@@ -2,11 +2,10 @@
 
 A Virtual Desktop Infrastructure running on Kubernetes.
 
----
-
-_Except as I've continued to work on this, I've noticed this is really just a free and open-source VDI solution based on docker containers. Kubernetes just makes it easier to implement :smile:._
-
----
+[![Go Report Card](https://goreportcard.com/badge/github.com/webmeshproj/webmesh-vdi)](https://goreportcard.com/report/github.com/webmeshproj/webmesh-vdi)
+![Tests](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/tests.yml/badge.svg)
+![Build](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/build.yml/badge.svg)
+[![Go Reference](https://pkg.go.dev/badge/github.com/webmeshproj/webmesh-vdi.svg)](https://pkg.go.dev/github.com/webmeshproj/webmesh-vdi)
 
 **ATTENTION:** The `helm` chart repository has been moved to a [separate repo](https://github.com/kvdi/helm-charts) to tidy things up here more. To update your repository you can do the following:
 
@@ -17,11 +16,6 @@ helm repo update
 
 helm install kvdi kvdi/kvdi  # yes, that's a lot of kvdi
 ```
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/webmeshproj/webmesh-vdi)](https://goreportcard.com/report/github.com/webmeshproj/webmesh-vdi)
-![Tests](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/tests.yml/badge.svg)
-![Build](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/build.yml/badge.svg)
-[![Go Reference](https://pkg.go.dev/badge/github.com/webmeshproj/webmesh-vdi.svg)](https://pkg.go.dev/github.com/webmeshproj/webmesh-vdi)
 
 This project has reached a point where I am not going to be making enormous changes all the time anymore. As such I am tagging a "stable" release and incrementing from there.
 That still doesn't mean I highly recommend it's usage, but rather I am relatively confident in its overall stability.
