@@ -1,35 +1,32 @@
 name: Build
 
 on:
-  create:
-    tags:
   push:
-    branches: [ main ]
+    branches: [main]
+    tags: [v*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   build:
     name: Build Images
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
 
-    - uses: actions/checkout@v1
+      - name: Login to container reigstry
+        run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+        if: ${{ github.event_name != 'pull_request' }}
 
-    - name: Login to container reigstry
-      run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
-      if: ${{ github.event_name != 'pull_request' }}
+      - name: Get image version
+        shell: bash
+        run: |
+          echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
+        id: version
 
-    - name: Get image version
-      shell: bash
-      run: |
-        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
-      id: version
+      - name: Build the manager, app, and kvdi-proxy docker images
+        run: VERSION=${{ steps.version.outputs.tag }} make -j 3 build-manager build-app build-kvdi-proxy
 
-    - name: Build the manager, app, and kvdi-proxy docker images
-      run: VERSION=${{ steps.version.outputs.tag }} make -j 3 build-manager build-app build-kvdi-proxy
-
-    - name: Push the manager, app, and kvdi-proxy docker images
-      run: VERSION=${{ steps.version.outputs.tag }} make -j 3 push-manager push-app push-kvdi-proxy
-      if: ${{ github.event_name != 'pull_request' }}
+      - name: Push the manager, app, and kvdi-proxy docker images
+        run: VERSION=${{ steps.version.outputs.tag }} make -j 3 push-manager push-app push-kvdi-proxy
+        if: ${{ github.event_name != 'pull_request' }}

@@ -20,8 +20,8 @@ COPY cmd/app      /build/cmd/app
 # Build the binary and swagger json
 ARG LDFLAGS
 RUN go build -o /tmp/app \
-    -ldflags="${LDFLAGS}" \
-    ./cmd/app \
+  -ldflags="${LDFLAGS}" \
+  ./cmd/app \
   && upx /tmp/app \
   && cd pkg/api \
   && /usr/local/bin/swagger generate spec -o /tmp/swagger.json --scan-models
@@ -29,9 +29,9 @@ RUN go build -o /tmp/app \
 ##############
 # UI Builder #
 ##############
-FROM node:14-alpine as ui-builder
+FROM node:16-alpine as ui-builder
 
-RUN apk add --update python2 build-base \
+RUN apk add --update build-base \
   && mkdir -p /build \
   && yarn global add @quasar/cli
 

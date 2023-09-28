@@ -23,12 +23,12 @@ import (
 	"fmt"
 	"reflect"
 
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 // GetCoreNamespace returns the namespace where kVDI components should be created.
@@ -107,7 +107,7 @@ func (c *VDICluster) GetUserdataSelector() *UserdataSelector {
 
 // GetUserdataVolumeSpec returns the spec for creating PVCs for user persistence.
 func (c *VDICluster) GetUserdataVolumeSpec() *corev1.PersistentVolumeClaimSpec {
-	if c.Spec.UserdataSpec != nil && !reflect.DeepEqual(*c.Spec.UserdataSpec.PersistentVolumeClaimSpec, corev1.PersistentVolumeClaimSpec{}) {
+	if c.Spec.UserdataSpec != nil && c.Spec.UserdataSpec.PersistentVolumeClaimSpec != nil && !reflect.DeepEqual(*c.Spec.UserdataSpec.PersistentVolumeClaimSpec, corev1.PersistentVolumeClaimSpec{}) {
 		return c.Spec.UserdataSpec.PersistentVolumeClaimSpec
 	}
 	return nil
