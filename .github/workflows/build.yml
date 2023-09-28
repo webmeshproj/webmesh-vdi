@@ -88,4 +88,6 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ steps.version.outputs.tag }}
           cache-to: type=inline
-          build-args: LDFLAGS=${{ env.LDFLAGS }}
+          build-args: |
+            LDFLAGS=${{ env.LDFLAGS }}
+            BASE_IMAGE=ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
