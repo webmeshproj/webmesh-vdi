@@ -9,6 +9,7 @@ on:
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
+  ARCHS: amd64,arm64
   IMAGE_PREFIX: ghcr.io/webmeshproj/vdi
 
 jobs:
@@ -63,6 +64,8 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ env.ARCHS }}
 
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
