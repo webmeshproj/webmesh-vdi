@@ -1,16 +1,14 @@
 # Go options
-GO111MODULE ?= on
-GOROOT      ?= `go env GOROOT`
+GOROOT      ?= $(shell go env GOROOT)
 GOPATH      ?= $(shell go env GOPATH)
 GOBIN       ?= $(GOPATH)/bin
-
-GIT_COMMIT ?= `git rev-parse HEAD`
+GIT_COMMIT  ?= $(shell git rev-parse HEAD)
 
 # Image Names
-BASE_IMAGE              ?= ${REPO}/vdi-build-base:${VERSION}
+BASE_IMAGE              ?= ${REPO}/vdi-base:${VERSION}
 MANAGER_IMAGE           ?= ${REPO}/vdi-manager:${VERSION}
 APP_IMAGE               ?= ${REPO}/vdi-app:${VERSION}
-KVDI_PROXY_IMAGE        ?= ${REPO}/vdi-agent:${VERSION}
+KVDI_PROXY_IMAGE        ?= ${REPO}/vdi-proxy:${VERSION}
 UBUNTU_BASE_IMAGE       ?= ${REPO}/ubuntu-base:latest
 APP_PROFILE_BASE_IMAGE  ?= ${REPO}/app-base:latest
 DOSBOX_IMAGE            ?= ${REPO}/dosbox:latest

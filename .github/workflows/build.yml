@@ -11,6 +11,7 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
   ARCHS: amd64,arm64
   IMAGE_PREFIX: ghcr.io/webmeshproj/vdi
+  COSIGN_EXPERIMENTAL: "1"
 
 jobs:
   build:
