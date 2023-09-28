@@ -8,7 +8,6 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
   ARCHS: amd64,arm64
   IMAGE_PREFIX: ghcr.io/webmeshproj/desktop
-  COSIGN_EXPERIMENTAL: "1"
 
 jobs:
   build:
@@ -60,9 +59,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Setup Cosign
-        uses: sigstore/cosign-installer@main
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -83,11 +79,6 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ steps.version.outputs.tag }}
           cache-to: type=inline
 
-      # Sign the image
-      - name: Sign Container Images
-        run: |
-          cosign sign --yes --recursive "${IMAGE_PREFIX}-${{ matrix.tag-suffix }}@${{ steps.docker-build.outputs.digest }}
-
       # Do the same again for XFCE4 if this is the ubuntu build
       - name: ${{ matrix.name }} With XFCE4
         uses: docker/build-push-action@v5
@@ -104,9 +95,3 @@ jobs:
           build-args:
             BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.docker-build.outputs.digest }}
             DESKTOP_PACKAGE=xfce4
-
-      # Sign the image
-      - name: Sign Container Images
-        if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
-        run: |
-          cosign sign --yes --recursive "${IMAGE_PREFIX}-${{ matrix.tag-suffix }}-xfce4@${{ steps.docker-build-xfce4.outputs.digest }}

@@ -60,9 +60,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Setup Cosign
-        uses: sigstore/cosign-installer@main
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:

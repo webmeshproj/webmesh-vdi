@@ -1,5 +1,5 @@
 REPO    ?= ghcr.io/webmeshproj
-VERSION ?= $(shell git describe --tags)
+VERSION ?= latest
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
 
