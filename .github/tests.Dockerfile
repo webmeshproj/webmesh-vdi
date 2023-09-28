@@ -1,6 +1,6 @@
 FROM ubuntu:rolling
 
-ARG GO_VERSION=1.21
+ARG GO_VERSION=1.21.1
 RUN mkdir -p /build \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
