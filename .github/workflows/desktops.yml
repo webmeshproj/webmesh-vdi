@@ -98,7 +98,7 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ steps.version.outputs.tag }}
           cache-to: type=inline
           build-args:
-            BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ steps.version.outputs.tag }}
+            BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.docker-build.outputs.digest }}
             DESKTOP_PACKAGE=xfce4
 
       # Sign the image

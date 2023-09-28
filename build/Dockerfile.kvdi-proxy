@@ -1,7 +1,7 @@
 #################
 # Compile image #
 #################
-ARG BASE_IMAGE=ghcr.io/tinyzimmer/kvdi:build-base-latest
+ARG BASE_IMAGE=ghcr.io/webmeshproj/vdi-base:latest
 FROM ${BASE_IMAGE} as builder
 
 # Go build options
