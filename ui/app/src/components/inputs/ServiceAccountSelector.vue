@@ -39,7 +39,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-select>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'ServiceAccountSelector',
   props: {
@@ -87,7 +87,7 @@ export default {
           this.options = res.data.filter(v => v.toLowerCase().indexOf(needle) > -1)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.loading = false
     }

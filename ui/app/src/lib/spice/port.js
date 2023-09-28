@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2016 by Oliver Gutierrez <ogutsua@gmail.com>
                          Miroslav Chodil <mchodil@redhat.com>

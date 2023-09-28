@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -55,7 +55,7 @@ SpiceInputsConn.prototype.process_channel_message = function(msg)
     {
         var inputs_init = new Messages.SpiceMsgInputsInit(msg.data);
         this.keyboard_modifiers = inputs_init.keyboard_modifiers;
-        DEBUG > 1 && console.log("MsgInputsInit - modifier " + this.keyboard_modifiers);
+        DEBUG > 1 && console.log('MsgInputsInit - modifier ' + this.keyboard_modifiers);
         // FIXME - We don't do anything with the keyboard modifiers...
         return true;
     }
@@ -63,13 +63,13 @@ SpiceInputsConn.prototype.process_channel_message = function(msg)
     {
         var key = new Messages.SpiceMsgInputsKeyModifiers(msg.data);
         this.keyboard_modifiers = key.keyboard_modifiers;
-        DEBUG > 1 && console.log("MsgInputsKeyModifiers - modifier " + this.keyboard_modifiers);
+        DEBUG > 1 && console.log('MsgInputsKeyModifiers - modifier ' + this.keyboard_modifiers);
         // FIXME - We don't do anything with the keyboard modifiers...
         return true;
     }
     if (msg.type == Constants.SPICE_MSG_INPUTS_MOUSE_MOTION_ACK)
     {
-        DEBUG > 1 && console.log("mouse motion ack");
+        DEBUG > 1 && console.log('mouse motion ack');
         this.waiting_for_ack -= Constants.SPICE_INPUT_MOTION_ACK_BUNCH;
         return true;
     }
@@ -92,7 +92,7 @@ function handle_mousemove(e)
         move = new Messages.SpiceMsgcMouseMotion(this.sc, e)
         msg.build_msg(Constants.SPICE_MSGC_INPUTS_MOUSE_MOTION, move);
     }
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
     {
         if (this.sc.inputs.waiting_for_ack < (2 * Constants.SPICE_INPUT_MOTION_ACK_BUNCH))
         {
@@ -101,7 +101,7 @@ function handle_mousemove(e)
         }
         else
         {
-            DEBUG > 0 && this.sc.log_info("Discarding mouse motion");
+            DEBUG > 0 && this.sc.log_info('Discarding mouse motion');
         }
     }
 
@@ -120,7 +120,7 @@ function handle_mousedown(e)
     var press = new Messages.SpiceMsgcMousePress(this.sc, e)
     var msg = new Messages.SpiceMiniData();
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_MOUSE_PRESS, press);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     e.preventDefault();
@@ -137,7 +137,7 @@ function handle_mouseup(e)
     var release = new Messages.SpiceMsgcMouseRelease(this.sc, e)
     var msg = new Messages.SpiceMiniData();
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_MOUSE_RELEASE, release);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     e.preventDefault();
@@ -156,11 +156,11 @@ function handle_mousewheel(e)
 
     var msg = new Messages.SpiceMiniData();
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_MOUSE_PRESS, press);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_MOUSE_RELEASE, release);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     e.preventDefault();
@@ -172,7 +172,7 @@ function handle_keydown(e)
     var msg = new Messages.SpiceMiniData();
     check_and_update_modifiers(e, key.code, this.sc);
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_KEY_DOWN, key);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     e.preventDefault();
@@ -184,7 +184,7 @@ function handle_keyup(e)
     var msg = new Messages.SpiceMiniData();
     check_and_update_modifiers(e, key.code, this.sc);
     msg.build_msg(Constants.SPICE_MSGC_INPUTS_KEY_UP, key);
-    if (this.sc && this.sc.inputs && this.sc.inputs.state === "ready")
+    if (this.sc && this.sc.inputs && this.sc.inputs.state === 'ready')
         this.sc.inputs.send_msg(msg);
 
     e.preventDefault();
@@ -192,7 +192,7 @@ function handle_keyup(e)
 
 function sendCtrlAltDel(sc)
 {
-    if (sc && sc.inputs && sc.inputs.state === "ready"){
+    if (sc && sc.inputs && sc.inputs.state === 'ready'){
         var key = new Messages.SpiceMsgcKeyDown();
         var msg = new Messages.SpiceMiniData();
 
@@ -256,29 +256,29 @@ function check_and_update_modifiers(e, code, sc)
     else if (code === (0x80|0xE0B5))
         Meta_state = false;
 
-    if (sc && sc.inputs && sc.inputs.state === "ready")
+    if (sc && sc.inputs && sc.inputs.state === 'ready')
     {
         if (Shift_state != e.shiftKey)
         {
-            console.log("Shift state out of sync");
+            console.log('Shift state out of sync');
             update_modifier(e.shiftKey, KeyNames.KEY_ShiftL, sc);
             Shift_state = e.shiftKey;
         }
         if (Alt_state != e.altKey)
         {
-            console.log("Alt state out of sync");
+            console.log('Alt state out of sync');
             update_modifier(e.altKey, KeyNames.KEY_Alt, sc);
             Alt_state = e.altKey;
         }
         if (Ctrl_state != e.ctrlKey)
         {
-            console.log("Ctrl state out of sync");
+            console.log('Ctrl state out of sync');
             update_modifier(e.ctrlKey, KeyNames.KEY_LCtrl, sc);
             Ctrl_state = e.ctrlKey;
         }
         if (Meta_state != e.metaKey)
         {
-            console.log("Meta state out of sync");
+            console.log('Meta state out of sync');
             update_modifier(e.metaKey, 0xE0B5, sc);
             Meta_state = e.metaKey;
         }

@@ -28,8 +28,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
                 :nodes="nodes"
                 node-key="fullPath"
                 selected-color="primary"
-                :selected.sync="selected"
-                :expanded.sync="expanded"
+                v-model:selected="selected"
+                v-model:expanded="expanded"
                 accordion
                 @lazy-load="onLazyLoad"
               />
@@ -89,9 +89,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
-import FilePreviewDialog from 'components/dialogs/FilePreview.vue'
-import { getErrorMessage } from 'src/lib/util.js'
+<script lang="ts">
+import FilePreviewDialog from './FilePreview.vue'
+import { getErrorMessage } from '../../lib/util.js'
 import path from 'path'
 
 export default {
@@ -122,7 +122,7 @@ export default {
   computed: {
     urlBase () { return `/api/desktops/fs/${this.desktopNamespace}/${this.desktopName}` },
     homeDir () {
-      const user = this.$userStore.getters.user
+      const user = this.userStore.getters.user
       return `/home/${user.name}`
     },
     downloadLabel () {
@@ -159,7 +159,7 @@ export default {
     },
 
     handleError (err) {
-      this.$root.$emit('notify-error', err)
+      this.configStore.emitter.emit('notify-error', err)
     },
 
     fileSize (bytes) {

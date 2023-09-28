@@ -18,23 +18,30 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
 <template>
-  <div id="swagger-ui"/>
+  <div id="swagger-ui"></div>
 </template>
 
-<script>
+<script lang="ts">
 import SwaggerUIBundle from 'swagger-ui'
+import { useUserStore } from '../stores/user'
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from '../stores/config'
+
+export default defineComponent({
   name: 'APIExplorer',
-  data () {
-    return {
-      ui: null
-    }
+  setup() {
+    const userStore = useUserStore()
+
+    // **only return the whole store** instead of destructuring
+    return { userStore, configStore: useConfigStore(), unsubscribeTokens: () => {}, ui: undefined as (ReturnType<typeof SwaggerUIBundle> | undefined) }
   },
+  
+
   created () {
-    this.unsubscribeTokens = this.$userStore.subscribe(this.onTokenRefresh)
+    this.unsubscribeTokens = this.userStore.$subscribe(this.onTokenRefresh)
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.unsubscribeTokens()
   },
   methods: {
@@ -64,7 +71,7 @@ export default {
         displayRequestDuration: true,
         responseInterceptor: (response) => {
           if (response.status === 401) {
-            return this.$userStore.dispatch('refreshToken')
+            return this.userStore.dispatch('refreshToken')
               .then(() => {
                 response.text = '{"internal": "KVDI: Your access token has been refreshed, please try again"}'
                 response.ok = true
@@ -79,13 +86,13 @@ export default {
           return response
         },
         presets: [
-          SwaggerUIBundle.presets.apis
+          SwaggerUIBundle['presets'].apis
         ],
         plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
+          SwaggerUIBundle.DownloadUrl
         ]
       })
-      if (this.$userStore.getters.isLoggedIn) {
+      if (this.userStore.isLoggedIn) {
         this.ui.authActions.authorize({
           api_key: {
             name: 'api_key',
@@ -95,15 +102,14 @@ export default {
               name: 'X-Session-Token',
               description: ''
             },
-            value: this.$userStore.getters.token
+            value: this.userStore.token
           }
         })
       }
     })
   }
-}
+})
 </script>
-
 <style lang="sass">
 .scheme-container
   background-color: $blue-grey-3

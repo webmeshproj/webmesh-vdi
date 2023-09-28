@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -38,8 +38,8 @@ import { convert_spice_bitmap_to_web } from './bitmap.js';
 **--------------------------------------------------------------------------*/
 function putImageDataWithAlpha(context, d, x, y)
 {
-    var c = document.createElement("canvas");
-    var t = c.getContext("2d");
+    var c = document.createElement('canvas');
+    var t = c.getContext('2d');
     c.setAttribute('width', d.width);
     c.setAttribute('height', d.height);
     t.putImageData(d, 0, 0);
@@ -74,20 +74,20 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 {
     if (msg.type == Constants.SPICE_MSG_DISPLAY_MODE)
     {
-        this.known_unimplemented(msg.type, "Display Mode");
+        this.known_unimplemented(msg.type, 'Display Mode');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_MARK)
     {
         // FIXME - DISPLAY_MARK not implemented (may be hard or impossible)
-        this.known_unimplemented(msg.type, "Display Mark");
+        this.known_unimplemented(msg.type, 'Display Mark');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_RESET)
     {
-        Utils.DEBUG > 2 && console.log("Display reset");
+        Utils.DEBUG > 2 && console.log('Display reset');
         this.surfaces[this.primary_surface].canvas.context.restore();
         return true;
     }
@@ -96,10 +96,10 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     {
         var draw_copy = new Messages.SpiceMsgDisplayDrawCopy(msg.data);
 
-        Utils.DEBUG > 1 && this.log_draw("DrawCopy", draw_copy);
+        Utils.DEBUG > 1 && this.log_draw('DrawCopy', draw_copy);
 
         if (! draw_copy.base.box.is_same_size(draw_copy.data.src_area))
-            this.log_warn("FIXME: DrawCopy src_area is a different size than base.box; we do not handle that yet.");
+            this.log_warn('FIXME: DrawCopy src_area is a different size than base.box; we do not handle that yet.');
         if (draw_copy.base.clip.type != Constants.SPICE_CLIP_TYPE_NONE)
             this.log_warn("FIXME: DrawCopy we don't handle clipping yet");
         if (draw_copy.data.rop_descriptor != Constants.SPICE_ROPD_OP_PUT)
@@ -115,8 +115,8 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                 draw_copy.data.src_bitmap.descriptor.flags != Constants.SPICE_IMAGE_FLAGS_CACHE_ME &&
                 draw_copy.data.src_bitmap.descriptor.flags != Constants.SPICE_IMAGE_FLAGS_HIGH_BITS_SET)
             {
-                this.log_warn("FIXME: DrawCopy unhandled image flags: " + draw_copy.data.src_bitmap.descriptor.flags);
-                Utils.DEBUG <= 1 && this.log_draw("DrawCopy", draw_copy);
+                this.log_warn('FIXME: DrawCopy unhandled image flags: ' + draw_copy.data.src_bitmap.descriptor.flags);
+                Utils.DEBUG <= 1 && this.log_draw('DrawCopy', draw_copy);
             }
 
             if (draw_copy.data.src_bitmap.descriptor.type == Constants.SPICE_IMAGE_TYPE_QUIC)
@@ -124,7 +124,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                 var canvas = this.surfaces[draw_copy.base.surface_id].canvas;
                 if (! draw_copy.data.src_bitmap.quic)
                 {
-                    this.log_warn("FIXME: DrawCopy could not handle this QUIC file.");
+                    this.log_warn('FIXME: DrawCopy could not handle this QUIC file.');
                     return false;
                 }
                 var source_img = Quic.convert_spice_quic_to_web(canvas.context,
@@ -134,7 +134,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                     { base: draw_copy.base,
                       src_area: draw_copy.data.src_area,
                       image_data: source_img,
-                      tag: "copyquic." + draw_copy.data.src_bitmap.quic.type,
+                      tag: 'copyquic.' + draw_copy.data.src_bitmap.quic.type,
                       has_alpha: (draw_copy.data.src_bitmap.quic.type == Quic.Constants.QUIC_IMAGE_TYPE_RGBA ? true : false) ,
                       descriptor : draw_copy.data.src_bitmap.descriptor
                     });
@@ -144,7 +144,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
             {
                 if (! this.cache || ! this.cache[draw_copy.data.src_bitmap.descriptor.id])
                 {
-                    this.log_warn("FIXME: DrawCopy did not find image id " + draw_copy.data.src_bitmap.descriptor.id + " in cache.");
+                    this.log_warn('FIXME: DrawCopy did not find image id ' + draw_copy.data.src_bitmap.descriptor.id + ' in cache.');
                     return false;
                 }
 
@@ -152,7 +152,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                     { base: draw_copy.base,
                       src_area: draw_copy.data.src_area,
                       image_data: this.cache[draw_copy.data.src_bitmap.descriptor.id],
-                      tag: "copycache." + draw_copy.data.src_bitmap.descriptor.id,
+                      tag: 'copycache.' + draw_copy.data.src_bitmap.descriptor.id,
                       has_alpha: true, /* FIXME - may want this to be false... */
                       descriptor : draw_copy.data.src_bitmap.descriptor
                     });
@@ -183,7 +183,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                     { base: draw_copy.base,
                       src_area: computed_src_area,
                       image_data: source_img,
-                      tag: "copysurf." + draw_copy.data.src_bitmap.surface_id,
+                      tag: 'copysurf.' + draw_copy.data.src_bitmap.surface_id,
                       has_alpha: this.surfaces[draw_copy.data.src_bitmap.surface_id].format == Constants.SPICE_SURFACE_FMT_32_xRGB ? false : true,
                       descriptor : draw_copy.data.src_bitmap.descriptor
                     });
@@ -192,13 +192,13 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
             {
                 if (! draw_copy.data.src_bitmap.jpeg)
                 {
-                    this.log_warn("FIXME: DrawCopy could not handle this JPEG file.");
+                    this.log_warn('FIXME: DrawCopy could not handle this JPEG file.');
                     return false;
                 }
 
                 // FIXME - how lame is this.  Be have it in binary format, and we have
                 //         to put it into string to get it back into jpeg.  Blech.
-                var tmpstr = "data:image/jpeg,";
+                var tmpstr = 'data:image/jpeg,';
                 var img = new Image;
                 var i;
                 var qdv = new Uint8Array(draw_copy.data.src_bitmap.jpeg.data);
@@ -212,7 +212,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
                 img.o =
                     { base: draw_copy.base,
-                      tag: "jpeg." + draw_copy.data.src_bitmap.surface_id,
+                      tag: 'jpeg.' + draw_copy.data.src_bitmap.surface_id,
                       descriptor : draw_copy.data.src_bitmap.descriptor,
                       sc : this,
                     };
@@ -225,13 +225,13 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
             {
                 if (! draw_copy.data.src_bitmap.jpeg_alpha)
                 {
-                    this.log_warn("FIXME: DrawCopy could not handle this JPEG ALPHA file.");
+                    this.log_warn('FIXME: DrawCopy could not handle this JPEG ALPHA file.');
                     return false;
                 }
 
                 // FIXME - how lame is this.  Be have it in binary format, and we have
                 //         to put it into string to get it back into jpeg.  Blech.
-                var tmpstr = "data:image/jpeg,";
+                var tmpstr = 'data:image/jpeg,';
                 var img = new Image;
                 var i;
                 var qdv = new Uint8Array(draw_copy.data.src_bitmap.jpeg_alpha.data);
@@ -245,7 +245,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
                 img.o =
                     { base: draw_copy.base,
-                      tag: "jpeg." + draw_copy.data.src_bitmap.surface_id,
+                      tag: 'jpeg.' + draw_copy.data.src_bitmap.surface_id,
                       descriptor : draw_copy.data.src_bitmap.descriptor,
                       sc : this,
                     };
@@ -267,7 +267,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                 var canvas = this.surfaces[draw_copy.base.surface_id].canvas;
                 if (! draw_copy.data.src_bitmap.bitmap)
                 {
-                    this.log_err("null bitmap");
+                    this.log_err('null bitmap');
                     return false;
                 }
 
@@ -275,7 +275,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                                         draw_copy.data.src_bitmap.bitmap);
                 if (! source_img)
                 {
-                    this.log_warn("FIXME: Unable to interpret bitmap of format: " +
+                    this.log_warn('FIXME: Unable to interpret bitmap of format: ' +
                         draw_copy.data.src_bitmap.bitmap.format);
                     return false;
                 }
@@ -284,7 +284,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                     { base: draw_copy.base,
                       src_area: draw_copy.data.src_area,
                       image_data: source_img,
-                      tag: "bitmap." + draw_copy.data.src_bitmap.bitmap.format,
+                      tag: 'bitmap.' + draw_copy.data.src_bitmap.bitmap.format,
                       has_alpha: draw_copy.data.src_bitmap.bitmap == Constants.SPICE_BITMAP_FMT_32BIT ? false : true,
                       descriptor : draw_copy.data.src_bitmap.descriptor
                     });
@@ -294,7 +294,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                 var canvas = this.surfaces[draw_copy.base.surface_id].canvas;
                 if (! draw_copy.data.src_bitmap.lz_rgb)
                 {
-                    this.log_err("null lz_rgb ");
+                    this.log_err('null lz_rgb ');
                     return false;
                 }
 
@@ -302,7 +302,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                                             draw_copy.data.src_bitmap.lz_rgb);
                 if (! source_img)
                 {
-                    this.log_warn("FIXME: Unable to interpret bitmap of type: " +
+                    this.log_warn('FIXME: Unable to interpret bitmap of type: ' +
                         draw_copy.data.src_bitmap.lz_rgb.type);
                     return false;
                 }
@@ -311,20 +311,20 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                     { base: draw_copy.base,
                       src_area: draw_copy.data.src_area,
                       image_data: source_img,
-                      tag: "lz_rgb." + draw_copy.data.src_bitmap.lz_rgb.type,
+                      tag: 'lz_rgb.' + draw_copy.data.src_bitmap.lz_rgb.type,
                       has_alpha: draw_copy.data.src_bitmap.lz_rgb.type == Constants.LZ_IMAGE_TYPE_RGBA ? true : false ,
                       descriptor : draw_copy.data.src_bitmap.descriptor
                     });
             }
             else
             {
-                this.log_warn("FIXME: DrawCopy unhandled image type: " + draw_copy.data.src_bitmap.descriptor.type);
-                this.log_draw("DrawCopy", draw_copy);
+                this.log_warn('FIXME: DrawCopy unhandled image type: ' + draw_copy.data.src_bitmap.descriptor.type);
+                this.log_draw('DrawCopy', draw_copy);
                 return false;
             }
         }
 
-        this.log_warn("FIXME: DrawCopy no src_bitmap.");
+        this.log_warn('FIXME: DrawCopy no src_bitmap.');
         return false;
     }
 
@@ -332,7 +332,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     {
         var draw_fill = new Messages.SpiceMsgDisplayDrawFill(msg.data);
 
-        Utils.DEBUG > 1 && this.log_draw("DrawFill", draw_fill);
+        Utils.DEBUG > 1 && this.log_draw('DrawFill', draw_fill);
 
         if (draw_fill.data.rop_descriptor != Constants.SPICE_ROPD_OP_PUT)
             this.log_warn("FIXME: DrawFill we don't handle ropd type: " + draw_fill.data.rop_descriptor);
@@ -345,7 +345,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
         {
             // FIXME - do brushes ever have alpha?
             var color = draw_fill.data.brush.color & 0xffffff;
-            var color_str = "rgb(" + (color >> 16) + ", " + ((color >> 8) & 0xff) + ", " + (color & 0xff) + ")";
+            var color_str = 'rgb(' + (color >> 16) + ', ' + ((color >> 8) & 0xff) + ', ' + (color & 0xff) + ')';
             this.surfaces[draw_fill.base.surface_id].canvas.context.fillStyle = color_str;
 
             this.surfaces[draw_fill.base.surface_id].canvas.context.fillRect(
@@ -355,12 +355,12 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
             if (Utils.DUMP_DRAWS && this.parent.dump_id)
             {
-                var debug_canvas = document.createElement("canvas");
+                var debug_canvas = document.createElement('canvas');
                 debug_canvas.setAttribute('width', this.surfaces[draw_fill.base.surface_id].canvas.width);
                 debug_canvas.setAttribute('height', this.surfaces[draw_fill.base.surface_id].canvas.height);
-                debug_canvas.setAttribute('id', "fillbrush." + draw_fill.base.surface_id + "." + this.surfaces[draw_fill.base.surface_id].draw_count);
-                debug_canvas.getContext("2d").fillStyle = color_str;
-                debug_canvas.getContext("2d").fillRect(
+                debug_canvas.setAttribute('id', 'fillbrush.' + draw_fill.base.surface_id + '.' + this.surfaces[draw_fill.base.surface_id].draw_count);
+                debug_canvas.getContext('2d').fillStyle = color_str;
+                debug_canvas.getContext('2d').fillRect(
                     draw_fill.base.box.left, draw_fill.base.box.top,
                     draw_fill.base.box.right - draw_fill.base.box.left,
                     draw_fill.base.box.bottom - draw_fill.base.box.top);
@@ -379,55 +379,55 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_OPAQUE)
     {
-        this.known_unimplemented(msg.type, "Display Draw Opaque");
+        this.known_unimplemented(msg.type, 'Display Draw Opaque');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_BLEND)
     {
-        this.known_unimplemented(msg.type, "Display Draw Blend");
+        this.known_unimplemented(msg.type, 'Display Draw Blend');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_BLACKNESS)
     {
-        this.known_unimplemented(msg.type, "Display Draw Blackness");
+        this.known_unimplemented(msg.type, 'Display Draw Blackness');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_WHITENESS)
     {
-        this.known_unimplemented(msg.type, "Display Draw Whiteness");
+        this.known_unimplemented(msg.type, 'Display Draw Whiteness');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_INVERS)
     {
-        this.known_unimplemented(msg.type, "Display Draw Invers");
+        this.known_unimplemented(msg.type, 'Display Draw Invers');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_ROP3)
     {
-        this.known_unimplemented(msg.type, "Display Draw ROP3");
+        this.known_unimplemented(msg.type, 'Display Draw ROP3');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_STROKE)
     {
-        this.known_unimplemented(msg.type, "Display Draw Stroke");
+        this.known_unimplemented(msg.type, 'Display Draw Stroke');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_TRANSPARENT)
     {
-        this.known_unimplemented(msg.type, "Display Draw Transparent");
+        this.known_unimplemented(msg.type, 'Display Draw Transparent');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_ALPHA_BLEND)
     {
-        this.known_unimplemented(msg.type, "Display Draw Alpha Blend");
+        this.known_unimplemented(msg.type, 'Display Draw Alpha Blend');
         return true;
     }
 
@@ -435,7 +435,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     {
         var copy_bits = new Messages.SpiceMsgDisplayCopyBits(msg.data);
 
-        Utils.DEBUG > 1 && this.log_draw("CopyBits", copy_bits);
+        Utils.DEBUG > 1 && this.log_draw('CopyBits', copy_bits);
 
         var source_canvas = this.surfaces[copy_bits.base.surface_id].canvas;
         var source_context = source_canvas.context;
@@ -454,11 +454,11 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
         if (Utils.DUMP_DRAWS && this.parent.dump_id)
         {
-            var debug_canvas = document.createElement("canvas");
+            var debug_canvas = document.createElement('canvas');
             debug_canvas.setAttribute('width', width);
             debug_canvas.setAttribute('height', height);
-            debug_canvas.setAttribute('id', "copybits" + copy_bits.base.surface_id + "." + this.surfaces[copy_bits.base.surface_id].draw_count);
-            debug_canvas.getContext("2d").putImageData(source_img, 0, 0);
+            debug_canvas.setAttribute('id', 'copybits' + copy_bits.base.surface_id + '.' + this.surfaces[copy_bits.base.surface_id].draw_count);
+            debug_canvas.getContext('2d').putImageData(source_img, 0, 0);
             document.getElementById(this.parent.dump_id).appendChild(debug_canvas);
         }
 
@@ -469,45 +469,45 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_INVAL_ALL_PIXMAPS)
     {
-        this.known_unimplemented(msg.type, "Display Inval All Pixmaps");
+        this.known_unimplemented(msg.type, 'Display Inval All Pixmaps');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_INVAL_PALETTE)
     {
-        this.known_unimplemented(msg.type, "Display Inval Palette");
+        this.known_unimplemented(msg.type, 'Display Inval Palette');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_INVAL_ALL_PALETTES)
     {
-        this.known_unimplemented(msg.type, "Inval All Palettes");
+        this.known_unimplemented(msg.type, 'Inval All Palettes');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_SURFACE_CREATE)
     {
-        if (! ("surfaces" in this))
+        if (! ('surfaces' in this))
             this.surfaces = [];
 
         var m = new Messages.SpiceMsgSurfaceCreate(msg.data);
-        Utils.DEBUG > 1 && console.log(this.type + ": MsgSurfaceCreate id " + m.surface.surface_id
-                                    + "; " + m.surface.width + "x" + m.surface.height
-                                    + "; format " + m.surface.format
-                                    + "; flags " + m.surface.flags);
+        Utils.DEBUG > 1 && console.log(this.type + ': MsgSurfaceCreate id ' + m.surface.surface_id
+                                    + '; ' + m.surface.width + 'x' + m.surface.height
+                                    + '; format ' + m.surface.format
+                                    + '; flags ' + m.surface.flags);
         if (m.surface.format != Constants.SPICE_SURFACE_FMT_32_xRGB &&
             m.surface.format != Constants.SPICE_SURFACE_FMT_32_ARGB)
         {
-            this.log_warn("FIXME: cannot handle surface format " + m.surface.format + " yet.");
+            this.log_warn('FIXME: cannot handle surface format ' + m.surface.format + ' yet.');
             return false;
         }
 
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.setAttribute('width', m.surface.width);
         canvas.setAttribute('height', m.surface.height);
-        canvas.setAttribute('id', "spice_surface_" + m.surface.surface_id);
+        canvas.setAttribute('id', 'spice_surface_' + m.surface.surface_id);
         canvas.setAttribute('tabindex', m.surface.surface_id);
-        canvas.context = canvas.getContext("2d");
+        canvas.context = canvas.getContext('2d');
 
         if (Utils.DUMP_CANVASES && this.parent.dump_id)
             document.getElementById(this.parent.dump_id).appendChild(canvas);
@@ -525,7 +525,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
             document.getElementById(this.parent.screen_id).appendChild(canvas);
 
             /* We're going to leave width dynamic, but correctly set the height */
-            document.getElementById(this.parent.screen_id).style.height = m.surface.height + "px";
+            document.getElementById(this.parent.screen_id).style.height = m.surface.height + 'px';
             this.hook_events();
         }
         return true;
@@ -534,7 +534,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_DISPLAY_SURFACE_DESTROY)
     {
         var m = new Messages.SpiceMsgSurfaceDestroy(msg.data);
-        Utils.DEBUG > 1 && console.log(this.type + ": MsgSurfaceDestroy id " + m.surface_id);
+        Utils.DEBUG > 1 && console.log(this.type + ': MsgSurfaceDestroy id ' + m.surface_id);
         this.delete_surface(m.surface_id);
         return true;
     }
@@ -542,21 +542,21 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_DISPLAY_STREAM_CREATE)
     {
         var m = new Messages.SpiceMsgDisplayStreamCreate(msg.data);
-        Utils.STREAM_DEBUG > 0 && console.log(this.type + ": MsgStreamCreate id" + m.id + "; type " + m.codec_type +
-                                        "; width " + m.stream_width + "; height " + m.stream_height +
-                                        "; left " + m.dest.left + "; top " + m.dest.top
+        Utils.STREAM_DEBUG > 0 && console.log(this.type + ': MsgStreamCreate id' + m.id + '; type ' + m.codec_type +
+                                        '; width ' + m.stream_width + '; height ' + m.stream_height +
+                                        '; left ' + m.dest.left + '; top ' + m.dest.top
                                         );
         if (!this.streams)
-            this.streams = new Array();
+            this.streams = [];
         if (this.streams[m.id])
-            console.log("Stream " + m.id + " already exists");
+            console.log('Stream ' + m.id + ' already exists');
         else
             this.streams[m.id] = m;
 
         if (m.codec_type == Constants.SPICE_VIDEO_CODEC_TYPE_VP8)
         {
             var media = new MediaSource();
-            var v = document.createElement("video");
+            var v = document.createElement('video');
             v.src = window.URL.createObjectURL(media);
 
             v.setAttribute('muted', true);
@@ -572,7 +572,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
                 top += this.surfaces[m.surface_id].canvas.offsetTop;
             }
             document.getElementById(this.parent.screen_id).appendChild(v);
-            v.setAttribute('style', "pointer-events:none; position: absolute; top:" + top + "px; left:" + left + "px;");
+            v.setAttribute('style', 'pointer-events:none; position: absolute; top:' + top + 'px; left:' + left + 'px;');
 
             media.addEventListener('sourceopen', handle_video_source_open, false);
             media.addEventListener('sourceended', handle_video_source_ended, false);
@@ -581,7 +581,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
             var s = this.streams[m.id];
             s.video = v;
             s.media = media;
-            s.queue = new Array();
+            s.queue = [];
             s.start_time = 0;
             s.cluster_time = 0;
             s.append_okay = false;
@@ -593,7 +593,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
         else if (m.codec_type == Constants.SPICE_VIDEO_CODEC_TYPE_MJPEG)
             this.streams[m.id].frames_loading = 0;
         else
-            console.log("Unhandled stream codec: "+m.codec_type);
+            console.log('Unhandled stream codec: '+m.codec_type);
         return true;
     }
 
@@ -608,7 +608,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
         if (!this.streams[m.base.id])
         {
-            console.log("no stream for data");
+            console.log('no stream for data');
             return false;
         }
 
@@ -641,7 +641,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_DISPLAY_STREAM_CLIP)
     {
         var m = new Messages.SpiceMsgDisplayStreamClip(msg.data);
-        Utils.STREAM_DEBUG > 1 && console.log(this.type + ": MsgStreamClip id" + m.id);
+        Utils.STREAM_DEBUG > 1 && console.log(this.type + ': MsgStreamClip id' + m.id);
         this.streams[m.id].clip = m.clip;
         return true;
     }
@@ -649,7 +649,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_DISPLAY_STREAM_DESTROY)
     {
         var m = new Messages.SpiceMsgDisplayStreamDestroy(msg.data);
-        Utils.STREAM_DEBUG > 0 && console.log(this.type + ": MsgStreamDestroy id" + m.id);
+        Utils.STREAM_DEBUG > 0 && console.log(this.type + ': MsgStreamDestroy id' + m.id);
 
         if (this.streams[m.id].codec_type == Constants.SPICE_VIDEO_CODEC_TYPE_VP8)
         {
@@ -664,7 +664,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_STREAM_DESTROY_ALL)
     {
-        this.known_unimplemented(msg.type, "Display Stream Destroy All");
+        this.known_unimplemented(msg.type, 'Display Stream Destroy All');
         return true;
     }
 
@@ -672,7 +672,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
     {
         var m = new Messages.SpiceMsgDisplayInvalList(msg.data);
         var i;
-        Utils.DEBUG > 1 && console.log(this.type + ": MsgInvalList " + m.count + " items");
+        Utils.DEBUG > 1 && console.log(this.type + ': MsgInvalList ' + m.count + ' items');
         for (i = 0; i < m.count; i++)
             if (this.cache[m.resources[i].id] != undefined)
                 delete this.cache[m.resources[i].id];
@@ -681,13 +681,13 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_MONITORS_CONFIG)
     {
-        this.known_unimplemented(msg.type, "Display Monitors Config");
+        this.known_unimplemented(msg.type, 'Display Monitors Config');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_DISPLAY_DRAW_COMPOSITE)
     {
-        this.known_unimplemented(msg.type, "Display Draw Composite");
+        this.known_unimplemented(msg.type, 'Display Draw Composite');
         return true;
     }
 
@@ -696,7 +696,7 @@ SpiceDisplayConn.prototype.process_channel_message = function(msg)
 
 SpiceDisplayConn.prototype.delete_surface = function(surface_id)
 {
-    var canvas = document.getElementById("spice_surface_" + surface_id);
+    var canvas = document.getElementById('spice_surface_' + surface_id);
     if (Utils.DUMP_CANVASES && this.parent.dump_id)
         document.getElementById(this.parent.dump_id).removeChild(canvas);
     if (this.primary_surface == surface_id)
@@ -732,25 +732,25 @@ SpiceDisplayConn.prototype.draw_copy_helper = function(o)
 
     if (o.src_area.left > 0 || o.src_area.top > 0)
     {
-        this.log_warn("FIXME: DrawCopy not shifting draw copies just yet...");
+        this.log_warn('FIXME: DrawCopy not shifting draw copies just yet...');
     }
 
     if (o.descriptor && (o.descriptor.flags & Constants.SPICE_IMAGE_FLAGS_CACHE_ME))
     {
-        if (! ("cache" in this))
+        if (! ('cache' in this))
             this.cache = {};
         this.cache[o.descriptor.id] = o.image_data;
     }
 
     if (Utils.DUMP_DRAWS && this.parent.dump_id)
     {
-        var debug_canvas = document.createElement("canvas");
+        var debug_canvas = document.createElement('canvas');
         debug_canvas.setAttribute('width', o.image_data.width);
         debug_canvas.setAttribute('height', o.image_data.height);
-        debug_canvas.setAttribute('id', o.tag + "." +
-            this.surfaces[o.base.surface_id].draw_count + "." +
-            o.base.surface_id + "@" + o.base.box.left + "x" +  o.base.box.top);
-        debug_canvas.getContext("2d").putImageData(o.image_data, 0, 0);
+        debug_canvas.setAttribute('id', o.tag + '.' +
+            this.surfaces[o.base.surface_id].draw_count + '.' +
+            o.base.surface_id + '@' + o.base.box.left + 'x' +  o.base.box.top);
+        debug_canvas.getContext('2d').putImageData(o.image_data, 0, 0);
         document.getElementById(this.parent.dump_id).appendChild(debug_canvas);
     }
 
@@ -762,74 +762,74 @@ SpiceDisplayConn.prototype.draw_copy_helper = function(o)
 
 SpiceDisplayConn.prototype.log_draw = function(prefix, draw)
 {
-    var str = prefix + "." + draw.base.surface_id + "." + this.surfaces[draw.base.surface_id].draw_count + ": ";
-    str += "base.box " + draw.base.box.left + ", " + draw.base.box.top + " to " +
-                           draw.base.box.right + ", " + draw.base.box.bottom;
-    str += "; clip.type " + draw.base.clip.type;
+    var str = prefix + '.' + draw.base.surface_id + '.' + this.surfaces[draw.base.surface_id].draw_count + ': ';
+    str += 'base.box ' + draw.base.box.left + ', ' + draw.base.box.top + ' to ' +
+                           draw.base.box.right + ', ' + draw.base.box.bottom;
+    str += '; clip.type ' + draw.base.clip.type;
 
     if (draw.data)
     {
         if (draw.data.src_area)
-            str += "; src_area " + draw.data.src_area.left + ", " + draw.data.src_area.top + " to "
-                                 + draw.data.src_area.right + ", " + draw.data.src_area.bottom;
+            str += '; src_area ' + draw.data.src_area.left + ', ' + draw.data.src_area.top + ' to '
+                                 + draw.data.src_area.right + ', ' + draw.data.src_area.bottom;
 
         if (draw.data.src_bitmap && draw.data.src_bitmap != null)
         {
-            str += "; src_bitmap id: " + draw.data.src_bitmap.descriptor.id;
-            str += "; src_bitmap width " + draw.data.src_bitmap.descriptor.width + ", height " + draw.data.src_bitmap.descriptor.height;
-            str += "; src_bitmap type " + draw.data.src_bitmap.descriptor.type + ", flags " + draw.data.src_bitmap.descriptor.flags;
+            str += '; src_bitmap id: ' + draw.data.src_bitmap.descriptor.id;
+            str += '; src_bitmap width ' + draw.data.src_bitmap.descriptor.width + ', height ' + draw.data.src_bitmap.descriptor.height;
+            str += '; src_bitmap type ' + draw.data.src_bitmap.descriptor.type + ', flags ' + draw.data.src_bitmap.descriptor.flags;
             if (draw.data.src_bitmap.surface_id !== undefined)
-                str += "; src_bitmap surface_id " + draw.data.src_bitmap.surface_id;
+                str += '; src_bitmap surface_id ' + draw.data.src_bitmap.surface_id;
             if (draw.data.src_bitmap.bitmap)
-                str += "; BITMAP format " + draw.data.src_bitmap.bitmap.format +
-                        "; flags " + draw.data.src_bitmap.bitmap.flags +
-                        "; x " + draw.data.src_bitmap.bitmap.x +
-                        "; y " + draw.data.src_bitmap.bitmap.y +
-                        "; stride " + draw.data.src_bitmap.bitmap.stride ;
+                str += '; BITMAP format ' + draw.data.src_bitmap.bitmap.format +
+                        '; flags ' + draw.data.src_bitmap.bitmap.flags +
+                        '; x ' + draw.data.src_bitmap.bitmap.x +
+                        '; y ' + draw.data.src_bitmap.bitmap.y +
+                        '; stride ' + draw.data.src_bitmap.bitmap.stride ;
             if (draw.data.src_bitmap.quic)
-                str += "; QUIC type " + draw.data.src_bitmap.quic.type +
-                        "; width " + draw.data.src_bitmap.quic.width +
-                        "; height " + draw.data.src_bitmap.quic.height ;
+                str += '; QUIC type ' + draw.data.src_bitmap.quic.type +
+                        '; width ' + draw.data.src_bitmap.quic.width +
+                        '; height ' + draw.data.src_bitmap.quic.height ;
             if (draw.data.src_bitmap.lz_rgb)
-                str += "; LZ_RGB length " + draw.data.src_bitmap.lz_rgb.length +
-                       "; magic " + draw.data.src_bitmap.lz_rgb.magic +
-                       "; version 0x" + draw.data.src_bitmap.lz_rgb.version.toString(16) +
-                       "; type " + draw.data.src_bitmap.lz_rgb.type +
-                       "; width " + draw.data.src_bitmap.lz_rgb.width +
-                       "; height " + draw.data.src_bitmap.lz_rgb.height +
-                       "; stride " + draw.data.src_bitmap.lz_rgb.stride +
-                       "; top down " + draw.data.src_bitmap.lz_rgb.top_down;
+                str += '; LZ_RGB length ' + draw.data.src_bitmap.lz_rgb.length +
+                       '; magic ' + draw.data.src_bitmap.lz_rgb.magic +
+                       '; version 0x' + draw.data.src_bitmap.lz_rgb.version.toString(16) +
+                       '; type ' + draw.data.src_bitmap.lz_rgb.type +
+                       '; width ' + draw.data.src_bitmap.lz_rgb.width +
+                       '; height ' + draw.data.src_bitmap.lz_rgb.height +
+                       '; stride ' + draw.data.src_bitmap.lz_rgb.stride +
+                       '; top down ' + draw.data.src_bitmap.lz_rgb.top_down;
         }
         else
-            str += "; src_bitmap is null";
+            str += '; src_bitmap is null';
 
         if (draw.data.brush)
         {
             if (draw.data.brush.type == Constants.SPICE_BRUSH_TYPE_SOLID)
-                str += "; brush.color 0x" + draw.data.brush.color.toString(16);
+                str += '; brush.color 0x' + draw.data.brush.color.toString(16);
             if (draw.data.brush.type == Constants.SPICE_BRUSH_TYPE_PATTERN)
             {
-                str += "; brush.pat ";
+                str += '; brush.pat ';
                 if (draw.data.brush.pattern.pat != null)
-                    str += "[SpiceImage]";
+                    str += '[SpiceImage]';
                 else
-                    str += "[null]";
-                str += " at " + draw.data.brush.pattern.pos.x + ", " + draw.data.brush.pattern.pos.y;
+                    str += '[null]';
+                str += ' at ' + draw.data.brush.pattern.pos.x + ', ' + draw.data.brush.pattern.pos.y;
             }
         }
 
-        str += "; rop_descriptor " + draw.data.rop_descriptor;
+        str += '; rop_descriptor ' + draw.data.rop_descriptor;
         if (draw.data.scale_mode !== undefined)
-            str += "; scale_mode " + draw.data.scale_mode;
-        str += "; mask.flags " + draw.data.mask.flags;
-        str += "; mask.pos " + draw.data.mask.pos.x + ", " + draw.data.mask.pos.y;
+            str += '; scale_mode ' + draw.data.scale_mode;
+        str += '; mask.flags ' + draw.data.mask.flags;
+        str += '; mask.pos ' + draw.data.mask.pos.x + ', ' + draw.data.mask.pos.y;
         if (draw.data.mask.bitmap != null)
         {
-            str += "; mask.bitmap width " + draw.data.mask.bitmap.descriptor.width + ", height " + draw.data.mask.bitmap.descriptor.height;
-            str += "; mask.bitmap type " + draw.data.mask.bitmap.descriptor.type + ", flags " + draw.data.mask.bitmap.descriptor.flags;
+            str += '; mask.bitmap width ' + draw.data.mask.bitmap.descriptor.width + ', height ' + draw.data.mask.bitmap.descriptor.height;
+            str += '; mask.bitmap type ' + draw.data.mask.bitmap.descriptor.type + ', flags ' + draw.data.mask.bitmap.descriptor.flags;
         }
         else
-            str += "; mask.bitmap is null";
+            str += '; mask.bitmap is null';
     }
 
     console.log(str);
@@ -900,7 +900,7 @@ function handle_draw_jpeg_onload()
     var temp_canvas = null;
     var context;
 
-    if ("streams" in this.o.sc && this.o.sc.streams[this.o.id])
+    if ('streams' in this.o.sc && this.o.sc.streams[this.o.id])
         this.o.sc.streams[this.o.id].frames_loading--;
 
     /*------------------------------------------------------------
@@ -913,19 +913,19 @@ function handle_draw_jpeg_onload()
         // This can happen; if the jpeg image loads after our surface
         //  has been destroyed (e.g. open a menu, close it quickly),
         //  we'll find we have no surface.
-        Utils.DEBUG > 2 && this.o.sc.log_info("Discarding jpeg; presumed lost surface " + this.o.base.surface_id);
-        temp_canvas = document.createElement("canvas");
+        Utils.DEBUG > 2 && this.o.sc.log_info('Discarding jpeg; presumed lost surface ' + this.o.base.surface_id);
+        temp_canvas = document.createElement('canvas');
         temp_canvas.setAttribute('width', this.o.base.box.right);
         temp_canvas.setAttribute('height', this.o.base.box.bottom);
-        context = temp_canvas.getContext("2d");
+        context = temp_canvas.getContext('2d');
     }
     else
         context = this.o.sc.surfaces[this.o.base.surface_id].canvas.context;
 
     if (this.alpha_img)
     {
-        var c = document.createElement("canvas");
-        var t = c.getContext("2d");
+        var c = document.createElement('canvas');
+        var t = c.getContext('2d');
         c.setAttribute('width', this.alpha_img.width);
         c.setAttribute('height', this.alpha_img.height);
         t.putImageData(this.alpha_img, 0, 0);
@@ -937,7 +937,7 @@ function handle_draw_jpeg_onload()
         if (this.o.descriptor &&
             (this.o.descriptor.flags & Constants.SPICE_IMAGE_FLAGS_CACHE_ME))
         {
-            if (! ("cache" in this.o.sc))
+            if (! ('cache' in this.o.sc))
                 this.o.sc.cache = {};
 
             this.o.sc.cache[this.o.descriptor.id] =
@@ -958,7 +958,7 @@ function handle_draw_jpeg_onload()
         if (this.o.descriptor &&
             (this.o.descriptor.flags & Constants.SPICE_IMAGE_FLAGS_CACHE_ME))
         {
-            if (! ("cache" in this.o.sc))
+            if (! ('cache' in this.o.sc))
                 this.o.sc.cache = {};
 
             this.o.sc.cache[this.o.descriptor.id] =
@@ -972,18 +972,18 @@ function handle_draw_jpeg_onload()
     {
         if (Utils.DUMP_DRAWS && this.o.sc.parent.dump_id)
         {
-            var debug_canvas = document.createElement("canvas");
-            debug_canvas.setAttribute('id', this.o.tag + "." +
-                this.o.sc.surfaces[this.o.base.surface_id].draw_count + "." +
-                this.o.base.surface_id + "@" + this.o.base.box.left + "x" +  this.o.base.box.top);
-            debug_canvas.getContext("2d").drawImage(this, 0, 0);
+            var debug_canvas = document.createElement('canvas');
+            debug_canvas.setAttribute('id', this.o.tag + '.' +
+                this.o.sc.surfaces[this.o.base.surface_id].draw_count + '.' +
+                this.o.base.surface_id + '@' + this.o.base.box.left + 'x' +  this.o.base.box.top);
+            debug_canvas.getContext('2d').drawImage(this, 0, 0);
             document.getElementById(this.o.sc.parent.dump_id).appendChild(debug_canvas);
         }
 
         this.o.sc.surfaces[this.o.base.surface_id].draw_count++;
     }
 
-    if (this.o.sc.streams[this.o.id] && "report" in this.o.sc.streams[this.o.id])
+    if (this.o.sc.streams[this.o.id] && 'report' in this.o.sc.streams[this.o.id])
         process_stream_data_report(this.o.sc, this.o.id, this.o.msg_mmtime, this.o.msg_mmtime - this.o.sc.parent.relative_now());
 }
 
@@ -994,12 +994,12 @@ function process_mjpeg_stream_data(sc, m, time_until_due)
        keep up, and provides rate control feedback as well */
     if (time_until_due < 0 && sc.streams[m.base.id].frames_loading > 0)
     {
-        if ("report" in sc.streams[m.base.id])
+        if ('report' in sc.streams[m.base.id])
             sc.streams[m.base.id].report.num_drops++;
         return;
     }
 
-    var tmpstr = "data:image/jpeg,";
+    var tmpstr = 'data:image/jpeg,';
     var img = new Image;
     var i;
     for (i = 0; i < m.data.length; i++)
@@ -1015,7 +1015,7 @@ function process_mjpeg_stream_data(sc, m, time_until_due)
     strm_base.clip = sc.streams[m.base.id].clip;
     img.o =
         { base: strm_base,
-          tag: "mjpeg." + m.base.id,
+          tag: 'mjpeg.' + m.base.id,
           descriptor: null,
           sc : sc,
           id : m.base.id,
@@ -1107,7 +1107,7 @@ function append_video_buffer(sb, mb)
     catch (e)
     {
         var p = sb.spiceconn;
-        p.log_err("Error invoking appendBuffer: " + e.message);
+        p.log_err('Error invoking appendBuffer: ' + e.message);
     }
 }
 
@@ -1115,7 +1115,7 @@ function handle_append_video_buffer_done(e)
 {
     var stream = this.stream;
 
-    if (stream.current_frame && "report" in stream)
+    if (stream.current_frame && 'report' in stream)
     {
         var sc = this.stream.media.spiceconn;
         var t = this.stream.current_frame.msg_mmtime;
@@ -1135,14 +1135,14 @@ function handle_append_video_buffer_done(e)
     if (!stream.video)
     {
         if (Utils.STREAM_DEBUG > 0)
-            console.log("Stream id " + stream.id + " received updateend after video is gone.");
+            console.log('Stream id ' + stream.id + ' received updateend after video is gone.');
         return;
     }
 
     if (stream.video.buffered.length > 0 &&
         stream.video.currentTime < stream.video.buffered.start(stream.video.buffered.length - 1))
     {
-        console.log("Video appears to have fallen behind; advancing to " +
+        console.log('Video appears to have fallen behind; advancing to ' +
             stream.video.buffered.start(stream.video.buffered.length - 1));
         stream.video.currentTime = stream.video.buffered.start(stream.video.buffered.length - 1);
     }
@@ -1152,7 +1152,7 @@ function handle_append_video_buffer_done(e)
         var promise = this.stream.video.play();
 
     if (Utils.STREAM_DEBUG > 1)
-        console.log(stream.video.currentTime + ":id " +  stream.id + " updateend " + Utils.dump_media_element(stream.video));
+        console.log(stream.video.currentTime + ':id ' +  stream.id + ' updateend ' + Utils.dump_media_element(stream.video));
 }
 
 function handle_video_buffer_error(e)
@@ -1222,15 +1222,15 @@ function video_handle_event_debug(e)
     if (s.video)
     {
         if (Utils.STREAM_DEBUG > 0 || s.video.buffered.len > 1)
-            console.log(s.video.currentTime + ":id " +  s.id + " event " + e.type +
+            console.log(s.video.currentTime + ':id ' +  s.id + ' event ' + e.type +
                 Utils.dump_media_element(s.video));
     }
 
     if (Utils.STREAM_DEBUG > 1 && s.media)
-        console.log("  media_source " + Utils.dump_media_source(s.media));
+        console.log('  media_source ' + Utils.dump_media_source(s.media));
 
     if (Utils.STREAM_DEBUG > 1 && s.source_buffer)
-        console.log("  source_buffer " + Utils.dump_source_buffer(s.source_buffer));
+        console.log('  source_buffer ' + Utils.dump_source_buffer(s.source_buffer));
 
     if (Utils.STREAM_DEBUG > 1 || s.queue.length > 1)
         console.log('  queue len ' + s.queue.length + '; append_okay: ' + s.append_okay);
@@ -1244,20 +1244,20 @@ function video_debug_listen_for_one_event(name)
 function listen_for_video_events(stream)
 {
     var video_0_events = [
-        "abort", "error"
+        'abort', 'error'
     ];
 
     var video_1_events = [
-        "loadstart", "suspend", "emptied", "stalled", "loadedmetadata", "loadeddata", "canplay",
-        "canplaythrough", "playing", "waiting", "seeking", "seeked", "ended", "durationchange",
-        "play", "pause", "ratechange"
+        'loadstart', 'suspend', 'emptied', 'stalled', 'loadedmetadata', 'loadeddata', 'canplay',
+        'canplaythrough', 'playing', 'waiting', 'seeking', 'seeked', 'ended', 'durationchange',
+        'play', 'pause', 'ratechange'
     ];
 
     var video_2_events = [
-        "timeupdate",
-        "progress",
-        "resize",
-        "volumechange"
+        'timeupdate',
+        'progress',
+        'resize',
+        'volumechange'
     ];
 
     video_0_events.forEach(video_debug_listen_for_one_event, stream.video);

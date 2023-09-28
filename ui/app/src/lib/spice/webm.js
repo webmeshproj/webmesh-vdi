@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2014 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -172,7 +172,7 @@ function EBML_write_data(id, data, dv, at)
         at = EBML_write_u1_data_len(data.length, dv, at);
     else
         at = EBML_write_u64_data_len(data.length, dv, at);
-    if ((typeof data) == "string")
+    if ((typeof data) == 'string')
         at = EBML_write_string(data, dv, at);
     else
         at = EBML_write_array(data, dv, at);
@@ -190,7 +190,7 @@ function EBMLHeader()
     this.ReadVersion = 1;
     this.MaxIDLength = 4;
     this.MaxSizeLength = 8;
-    this.DocType = "webm";
+    this.DocType = 'webm';
     this.DocTypeVersion = 2;  /* Not well specified by the WebM guys, but functionally required for Firefox */
     this.DocTypeReadVersion = 2;
 }
@@ -246,8 +246,8 @@ function webm_SegmentInformation()
 {
     this.id = WEBM_SEGMENT_INFORMATION;
     this.timecode_scale = 1000000; /* 1 ms */
-    this.muxing_app = "spice";
-    this.writing_app = "spice-html5";
+    this.muxing_app = 'spice';
+    this.writing_app = 'spice-html5';
 
 }
 
@@ -412,7 +412,7 @@ function webm_AudioTrackEntry()
     this.codec_decode_all = 0; // fixme - check
     this.seek_pre_roll = 0; // 80000000; // fixme - check
     this.codec_delay =   80000000; // Must match codec_private.preskip
-    this.codec_id = "A_OPUS";
+    this.codec_id = 'A_OPUS';
     this.audio = new webm_Audio(Constants.OPUS_FREQUENCY);
 
     // See:  http://tools.ietf.org/html/draft-terriberry-oggopus-01
@@ -495,7 +495,7 @@ function webm_VideoTrackEntry(width, height)
     this.flag_lacing = 1;
     this.min_cache = 0;
     this.max_block_addition_id = 0;
-    this.codec_id = "V_VP8";
+    this.codec_id = 'V_VP8';
     this.codec_decode_all = 1;
     this.seek_pre_roll = 0;
 

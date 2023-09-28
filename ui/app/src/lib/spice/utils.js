@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -33,7 +33,7 @@ var DUMP_CANVASES = false;
 **  We use an Image temporarily, and the image/src does not get garbage
 **   collected as quickly as we might like.  This blank image helps with that.
 **--------------------------------------------------------------------------*/
-var EMPTY_GIF_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+var EMPTY_GIF_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
 /*----------------------------------------------------------------------------
 **  combine_array_buffers
@@ -62,18 +62,18 @@ function combine_array_buffers(a1, a2)
 function hexdump_buffer(a)
 {
     var mg = new Uint8Array(a);
-    var hex = "";
-    var str = "";
+    var hex = '';
+    var str = '';
     var last_zeros = 0;
     for (var i = 0; i < mg.length; i++)
     {
         var h = Number(mg[i]).toString(16);
         if (h.length == 1)
-            hex += "0";
-        hex += h + " ";
+            hex += '0';
+        hex += h + ' ';
 
         if (mg[i] == 10 || mg[i] == 13 || mg[i] == 8)
-            str += ".";
+            str += '.';
         else
             str += String.fromCharCode(mg[i]);
 
@@ -81,18 +81,18 @@ function hexdump_buffer(a)
         {
             while (i % 16 != 15)
             {
-                hex += "   ";
+                hex += '   ';
                 i++;
             }
 
             if (last_zeros == 0)
-                console.log(hex + " | " + str);
+                console.log(hex + ' | ' + str);
 
-            if (hex == "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ")
+            if (hex == '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ')
             {
                 if (last_zeros == 1)
                 {
-                    console.log(".");
+                    console.log('.');
                     last_zeros++;
                 }
                 else if (last_zeros == 0)
@@ -101,7 +101,7 @@ function hexdump_buffer(a)
             else
                 last_zeros = 0;
 
-            hex = str = "";
+            hex = str = '';
         }
     }
 }
@@ -255,7 +255,7 @@ function get_scancode(code)
 {
     if (common_scanmap[code] === undefined)
     {
-        if (navigator.userAgent.indexOf("Firefox") != -1)
+        if (navigator.userAgent.indexOf('Firefox') != -1)
             return firefox_scanmap[code];
         else
             return DOM_scanmap[code];
@@ -292,35 +292,35 @@ function keycode_to_end_scan(code)
 function dump_media_element(m)
 {
     var ret =
-            "[networkState " + m.networkState +
-            "|readyState " + m.readyState +
-            "|error " + m.error +
-            "|seeking " + m.seeking +
-            "|duration " + m.duration +
-            "|paused " + m.paused +
-            "|ended " + m.error +
-            "|buffered " + dump_timerange(m.buffered) +
-            "]";
+            '[networkState ' + m.networkState +
+            '|readyState ' + m.readyState +
+            '|error ' + m.error +
+            '|seeking ' + m.seeking +
+            '|duration ' + m.duration +
+            '|paused ' + m.paused +
+            '|ended ' + m.error +
+            '|buffered ' + dump_timerange(m.buffered) +
+            ']';
     return ret;
 }
 
 function dump_media_source(ms)
 {
     var ret =
-            "[duration " + ms.duration +
-            "|readyState " + ms.readyState + "]";
+            '[duration ' + ms.duration +
+            '|readyState ' + ms.readyState + ']';
     return ret;
 }
 
 function dump_source_buffer(sb)
 {
     var ret =
-            "[appendWindowStart " + sb.appendWindowStart +
-            "|appendWindowEnd " + sb.appendWindowEnd +
-            "|buffered " + dump_timerange(sb.buffered) +
-            "|timeStampOffset " + sb.timeStampOffset +
-            "|updating " + sb.updating +
-            "]";
+            '[appendWindowStart ' + sb.appendWindowStart +
+            '|appendWindowEnd ' + sb.appendWindowEnd +
+            '|buffered ' + dump_timerange(sb.buffered) +
+            '|timeStampOffset ' + sb.timeStampOffset +
+            '|updating ' + sb.updating +
+            ']';
     return ret;
 }
 
@@ -331,13 +331,13 @@ function dump_timerange(tr)
     if (tr)
     {
         var i = tr.length;
-        ret = "{len " + i;
+        ret = '{len ' + i;
         if (i > 0)
-            ret += "; start " + tr.start(0) + "; end " + tr.end(i - 1);
-        ret += "}";
+            ret += '; start ' + tr.start(0) + '; end ' + tr.end(i - 1);
+        ret += '}';
     }
     else
-        ret = "N/A";
+        ret = 'N/A';
 
     return ret;
 }

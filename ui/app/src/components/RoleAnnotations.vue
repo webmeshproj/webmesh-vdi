@@ -57,7 +57,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </div>
 </template>
 
-<script>
+<script lang="ts">
 const LDAPGroupAnnotation = 'kvdi.io/ldap-groups'
 const OIDCGroupAnnotation = 'kvdi.io/oidc-groups'
 
@@ -90,7 +90,7 @@ export default {
       return this.$configStore.getters.authMethod === 'local'
     },
     configuredLdapGroups () {
-      const ldapGroups = []
+      const ldapGroups: any[] = []
       if (this.annotations !== undefined) {
         if (this.annotations[LDAPGroupAnnotation] !== undefined) {
           const val = this.annotations[LDAPGroupAnnotation]
@@ -102,7 +102,7 @@ export default {
       return ldapGroups
     },
     configuredOidcGroups () {
-      const oidcGroups = []
+      const oidcGroups: any[] = []
       if (this.annotations !== undefined) {
         if (this.annotations[OIDCGroupAnnotation] !== undefined) {
           const val = this.annotations[OIDCGroupAnnotation]

@@ -26,12 +26,19 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useConfigStore } from '../stores/config'
+export default defineComponent({
   name: 'VDIConfigPanel',
+
+  setup (){
+
+    return { configStore: useConfigStore()}
+  },
   computed: {
     serverConfig () {
-      const cfg = this.$configStore.getters.serverConfig
+      const cfg = this.configStore.serverConfig
       return `
 \`\`\`js
 ${JSON.stringify(cfg, undefined, 4)}
@@ -39,5 +46,6 @@ ${JSON.stringify(cfg, undefined, 4)}
 `
     }
   }
-}
+})
 </script>
+../stores/config

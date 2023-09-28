@@ -1,58 +1,47 @@
 {
-  "name": "app",
-  "version": "v0.0.30",
-  "description": "A Kubernetes-Native VDI",
-  "productName": "kvdi",
-  "cordovaId": "org.cordova.quasar.app",
-  "capacitorId": "",
-  "author": "tinyzimmer <38474291+tinyzimmer@users.noreply.github.com>",
+  "name": "webmesh-desktop",
+  "version": "0.0.1",
+  "description": "A Quasar Project",
+  "productName": "Webmesh Desktop",
+  "author": "_",
   "private": true,
   "scripts": {
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ./",
-    "test": "echo \"No test specified\" && exit 0"
+    "lint": "eslint --ext .js,.ts,.vue ./",
+    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0",
+    "dev": "quasar dev",
+    "build": "quasar build"
   },
   "dependencies": {
-    "@babel/parser": "^7.12.7",
-    "@mdi/font": "^5.0.45",
-    "@novnc/novnc": "^1.3.0",
-    "@quasar/extras": "^1.11.2",
-    "@spice-project/spice-html5": "^0.2.1",
-    "async-retry": "^1.3.1",
-    "axios": "^0.21.4",
-    "core-js": "^3.6.5",
-    "howler": "^2.1.3",
-    "js-yaml": "^3.13.1",
-    "opus-recorder": "^8.0.3",
-    "qrcode.vue": "^1.7.0",
-    "quasar": "^1.16.0",
-    "swagger-ui": "^3.52.5",
-    "vue2-ace-editor": "^0.0.15",
-    "vuex": "^3.1.3"
+    "@quasar/extras": "^1.16.4",
+    "quasar": "^2.6.0",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
+    "@novnc/novnc": "^1.4.0",
+    "ace-builds": "^1.28.0",
+    "brace": "^0.11.1",
+    "opus-recorder": "^8.0.5",
+    "qrcode.vue": "^3.4.1",
+    "swagger-ui": "^5.7.2",
+    "vue3-ace-editor": "^2.2.3",
+    "pinia" :"^2.1.6",
+    "mitt":"^3.0.1"
   },
   "devDependencies": {
-    "@quasar/app": "^2.2.10",
-    "@quasar/quasar-app-extension-qmarkdown": "^1.4.3",
-    "babel-eslint": "^10.0.1",
-    "defer-to-connect": "^2.0.0",
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-loader": "^3.0.3",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-node": "^11.0.0",
-    "eslint-plugin-promise": "^4.0.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "eslint-plugin-vue": "^6.1.2",
-    "strip-ansi": "=3.0.1"
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "eslint": "^8.10.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "eslint-config-prettier": "^8.1.0",
+    "prettier": "^2.5.1",
+    "@types/node": "^12.20.21",
+    "@quasar/app-vite": "^1.3.0",
+    "autoprefixer": "^10.4.2",
+    "typescript": "^4.5.4"
   },
   "engines": {
-    "node": ">= 10.18.1",
+    "node": "^18 || ^16 || ^14.19",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
-  },
-  "browserslist": [
-    "last 1 version, not dead, ie >= 11"
-  ],
-  "resolutions": {
-    "@babel/parser": "^7.12.7"
   }
 }

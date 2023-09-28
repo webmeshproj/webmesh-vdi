@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -37,7 +37,7 @@ function SpiceWireReader(sc, callback)
     this.buffers = [];
 
     this.sc.ws.wire_reader = this;
-    this.sc.ws.binaryType = "arraybuffer";
+    this.sc.ws.binaryType = 'arraybuffer';
     this.sc.ws.addEventListener('message', wire_blob_catcher);
 }
 
@@ -121,8 +121,8 @@ SpiceWireReader.prototype =
 
 function wire_blob_catcher(e)
 {
-    DEBUG > 1 && console.log(">> WebSockets.onmessage");
-    DEBUG > 1 && console.log("id " + this.wire_reader.sc.connection_id +"; type " + this.wire_reader.sc.type);
+    DEBUG > 1 && console.log('>> WebSockets.onmessage');
+    DEBUG > 1 && console.log('id ' + this.wire_reader.sc.connection_id +'; type ' + this.wire_reader.sc.type);
     SpiceWireReader.prototype.inbound.call(this.wire_reader, e.data);
 }
 

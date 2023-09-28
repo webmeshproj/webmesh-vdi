@@ -37,7 +37,7 @@
 function Arcfour() {
   this.i = 0;
   this.j = 0;
-  this.S = new Array();
+  this.S = [];
 }
 
 // Initialize arcfour context from key, an array of ints, each from [0..255]

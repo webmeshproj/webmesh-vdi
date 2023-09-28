@@ -49,11 +49,17 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-btn-dropdown>
 </template>
 
-<script>
-import LogViewerDialog from 'components/dialogs/LogViewer.vue'
+<script lang="ts">
+import { useDesktopSessions } from 'src/stores/desktop'
+import LogViewerDialog from '../components/dialogs/LogViewer.vue'
+import { useConfigStore } from 'src/stores/config'
 
 export default {
   name: 'SessionTab',
+
+  setup: () => {
+     return {configStore: useConfigStore(), desktopSessions: useDesktopSessions()}
+  },
 
   props: {
     name: {
@@ -76,9 +82,9 @@ export default {
   methods: {
     onConnect () {
       console.log(`Setting active session to ${this.namespace}/${this.name}`)
-      this.$desktopSessions.dispatch('setActiveSession', this)
-      if (this.$router.currentRoute.name !== 'control') {
-        this.$root.$emit('set-control')
+      this.desktopSessions.setActiveSession(this)
+      if (this.$router.currentRoute.value.name !== 'control') {
+        this.configStore.emitter.emit('set-control')
         this.$router.push('control')
       }
     },
@@ -94,7 +100,7 @@ export default {
       })
     },
     onDisconnect () {
-      this.$desktopSessions.dispatch('deleteSession', this)
+      this.desktopSessions.deleteSession(this)
     }
   }
 }

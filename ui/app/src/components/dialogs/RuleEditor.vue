@@ -49,9 +49,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
-import PatternSelector from 'components/inputs/PatternSelector.vue'
-import NamespaceSelector from 'components/inputs/NamespaceSelector.vue'
+<script lang="ts">
+import PatternSelector from '../inputs/PatternSelector.vue'
+import NamespaceSelector from '../inputs/NamespaceSelector.vue'
 
 export default {
   name: 'RuleEditor',

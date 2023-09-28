@@ -223,7 +223,7 @@ export default class DisplayManager extends Emitter {
 
             // If the desktop is ready then create a connection, clear the status, and close this socket
             if (this._statusIsReady(st)) {
-                console.log(`Desktop is ready, connecting`)
+                console.log('Desktop is ready, connecting')
                 this._createConnection()
                     .catch((err) => {
                         console.error(err)
@@ -325,7 +325,7 @@ export default class DisplayManager extends Emitter {
                 } catch {
                     this._sessionStore.dispatch('deleteSessionOffline', this._currentSession)
                     this._currentSession = null
-                    this.emit(Events.error, new Error("The desktop session has ended"))
+                    this.emit(Events.error, new Error('The desktop session has ended'))
                 }
             }
         } else {

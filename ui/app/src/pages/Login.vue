@@ -19,7 +19,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 <template>
   <div class="fixed-center text-center">
-    <div class="text-h6"><q-icon name="error_outline" color="primary" x-large />&nbsp;&nbsp;Please login to use kVDI</div>
+    <div class="text-h6">Please login to use<br/>Webmesh Desktop</div>
     <br />
     <q-form
       @submit="onSubmit"
@@ -48,24 +48,27 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </template>
 
 <script >
-import MFADialog from 'components/dialogs/MFADialog.vue'
+import MFADialog from '../components/dialogs/MFADialog.vue'
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from '../stores/config'
+export default defineComponent({
   name: 'Login',
 
   data () {
     return {
       username: null,
       password: null,
-      loading: false
+      loading: false,
+      configStore: useConfigStore()
     }
   },
 
   methods: {
     async initAuthFlow () {
       try {
-        await this.$userStore.dispatch('initStore')
-        const requiresMFA = this.$userStore.getters.requiresMFA
+        await this.userStore.dispatch('initStore')
+        const requiresMFA = this.userStore.getters.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
@@ -80,14 +83,14 @@ export default {
         }
         await this.notifyLoggedIn()
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
     async onSubmit () {
       try {
-        await this.$userStore.dispatch('login', { username: this.username, password: this.password })
-        const requiresMFA = this.$userStore.getters.requiresMFA
+        await this.userStore.dispatch('login', { username: this.username, password: this.password })
+        const requiresMFA = this.userStore.getters.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
@@ -103,7 +106,7 @@ export default {
         await this.notifyLoggedIn()
       } catch (err) {
         console.error(err)
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
@@ -113,9 +116,9 @@ export default {
     },
 
     async notifyLoggedIn () {
-      await this.$configStore.dispatch('getServerConfig')
-      this.$root.$emit('set-logged-in', this.username)
-      this.$root.$emit('set-active-title', 'Desktop Templates')
+      await this.configStore.getServerConfig()
+      this.configStore.emitter.emit('set-logged-in', this.username)
+      this.configStore.emitter.emit('set-active-title', 'Desktop Templates')
       this.$router.push('templates')
       this.$q.notify({
         color: 'green-4',
@@ -128,8 +131,8 @@ export default {
 
   mounted () {
     this.$nextTick().then(() => {
-      this.$root.$emit('set-active-title', 'Login')
+      this.configStore.emitter.emit('set-active-title', 'Login')
     })
   }
-}
+})
 </script>

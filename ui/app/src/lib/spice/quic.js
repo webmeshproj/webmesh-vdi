@@ -206,7 +206,7 @@ function quic_image_bpc(type)
         return 8;
     case Constants.QUIC_IMAGE_TYPE_INVALID:
     default:
-        console.log("quic: bad image type\n");
+        console.log('quic: bad image type\n');
         return 0;
     }
 }
@@ -282,10 +282,10 @@ function QuicModel(bpc)
         case 0:
         case 2:
         case 4:
-            console.log("quic: findmodelparams(): evol value obsolete!!!\n");
+            console.log('quic: findmodelparams(): evol value obsolete!!!\n');
             break;
         default:
-            console.log("quic: findmodelparams(): evol out of range!!!\n");
+            console.log('quic: findmodelparams(): evol out of range!!!\n');
     }
 
     this.n_buckets = 0;
@@ -447,7 +447,7 @@ QuicChannel.prototype = {
                 this.family_stat_8bpc.buckets_buf[j].reste(4);
             this.buckets_ptrs = this.family_stat_5bpc.buckets_ptrs;
         } else {
-            console.log("quic: %s: bad bpc %d\n", __FUNCTION__, bpc);
+            console.log('quic: %s: bad bpc %d\n', __FUNCTION__, bpc);
             return false;
         }
 
@@ -514,7 +514,7 @@ function QuicEncoder()
         this.channels[i] = new QuicChannel(this.model_8bpc, this.model_5bpc);
         if (!this.channels[i])
         {
-            console.log("quic: failed to create channel");
+            console.log('quic: failed to create channel');
             return undefined;
         }
     }
@@ -547,7 +547,7 @@ QuicEncoder.prototype.reste = function(io_ptr)
 QuicEncoder.prototype.read_io_word = function()
 {
     if (this.io_idx >= this.io_end)
-        throw("quic: out of data");
+        throw('quic: out of data');
     this.io_next_word = this.io_now[this.io_idx++] | this.io_now[this.io_idx++]<<8 | this.io_now[this.io_idx++]<<16 | this.io_now[this.io_idx++]<<24;
 }
 
@@ -601,14 +601,14 @@ QuicEncoder.prototype.quic_decode_begin = function(io_ptr)
     var magic = this.io_word;
     this.decode_eat32bits();
     if (magic != 0x43495551) /*QUIC*/ {
-        console.log("quic: bad magic "+magic.toString(16));
+        console.log('quic: bad magic '+magic.toString(16));
         return false;
     }
 
     var version = this.io_word;
     this.decode_eat32bits();
     if (version != ((0 << 16) | (0 & 0xffff))) {
-        console.log("quic: bad version "+version.toString(16));
+        console.log('quic: bad version '+version.toString(16));
         return false;
     }
 
@@ -1212,7 +1212,7 @@ QuicEncoder.prototype.quic_decode = function(buf, stride)
             };
             break;
         case Constants.QUIC_IMAGE_TYPE_RGB16:
-            console.log("quic: unsupported output format\n");
+            console.log('quic: unsupported output format\n');
             return false;
             break;
         case Constants.QUIC_IMAGE_TYPE_RGBA:
@@ -1241,13 +1241,13 @@ QuicEncoder.prototype.quic_decode = function(buf, stride)
             break;
 
         case Constants.QUIC_IMAGE_TYPE_GRAY:
-            console.log("quic: unsupported output format\n");
+            console.log('quic: unsupported output format\n');
             return false;
             break;
 
         case Constants.QUIC_IMAGE_TYPE_INVALID:
         default:
-            console.log("quic: bad image type\n");
+            console.log('quic: bad image type\n');
             return false;
     }
     return true;
@@ -1277,7 +1277,7 @@ SpiceQuic.prototype =
     from_dv: function(dv, at, mb)
     {
         if (!encoder)
-            throw("quic: no quic encoder");
+            throw('quic: no quic encoder');
         this.data_size = dv.getUint32(at, true);
         at += 4;
         var buf = new Uint8Array(mb.slice(at));
@@ -1335,7 +1335,7 @@ if (need_init)
     encoder = new QuicEncoder;
 
     if (!encoder)
-        throw("quic: failed to create encoder");
+        throw('quic: failed to create encoder');
 }
 
 export {

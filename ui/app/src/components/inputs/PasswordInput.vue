@@ -36,7 +36,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-input>
 </template>
 
-<script>
+<script lang="ts">
 const CharacterSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789![]{}()%&*$#^<>~@|'
 const PasswordSize = 16
 
@@ -78,7 +78,7 @@ export default {
   methods: {
     onEditPassword () {
       this.passwordIsDisabled = !this.passwordIsDisabled
-      this.$root.$emit('edit-password')
+      this.configStore.emitter.emit('edit-password')
     },
 
     validatePassword (val) {

@@ -66,9 +66,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-card>
 </template>
 
-<script>
-import PasswordInput from 'components/inputs/PasswordInput.vue'
-import MFAConfig from 'components/inputs/MFAConfig.vue'
+<script lang="ts">
+import PasswordInput from './inputs/PasswordInput.vue'
+import MFAConfig from './inputs/MFAConfig.vue'
 
 export default {
   name: 'UserEditor',
@@ -143,9 +143,9 @@ export default {
           message: `New user '${this.username}' created`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
-      this.$root.$emit('reload-users')
+      this.configStore.emitter.emit('reload-users')
     },
 
     async updateUser () {
@@ -164,9 +164,9 @@ export default {
           message: `User '${this.userToEdit}' updated successfully`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
-      this.$root.$emit('reload-users')
+      this.configStore.emitter.emit('reload-users')
     },
 
     async filterFn (val, update) {
@@ -186,7 +186,7 @@ export default {
           this.roles = roles.filter(v => v.toLowerCase().indexOf(needle) > -1)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
 
@@ -205,7 +205,7 @@ export default {
             this.$refs.password.password = '*******************'
           })
           .catch((err) => {
-            this.$root.$emit('notify-error', err)
+            this.configStore.emitter.emit('notify-error', err)
           })
       } else {
         this.loading = false

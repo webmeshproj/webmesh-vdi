@@ -37,7 +37,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
+<script lang="ts">
 
 export default {
   name: 'MFADialog',
@@ -96,11 +96,11 @@ export default {
       await new Promise((resolve, reject) => setTimeout(resolve, 1000))
       const otp = `${this.d1}${this.d2}${this.d3}${this.d4}${this.d5}${this.d6}`
       try {
-        await this.$userStore.dispatch('authorize', otp)
+        await this.userStore.dispatch('authorize', otp)
         this.onOKClick()
       } catch (err) {
         this.loading = false
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
   }

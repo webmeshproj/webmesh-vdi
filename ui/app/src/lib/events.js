@@ -19,7 +19,7 @@
 
 */
 
-export const Events = Object.freeze({"connected": 1, "disconnected": 2, "update": 3, "error": 4})
+export const Events = Object.freeze({'connected': 1, 'disconnected': 2, 'update': 3, 'error': 4})
 
 export class Emitter {
     constructor() {

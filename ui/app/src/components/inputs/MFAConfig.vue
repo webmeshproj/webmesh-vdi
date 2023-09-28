@@ -44,7 +44,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import QrcodeVue from 'qrcode.vue'
 
 export default {
@@ -76,7 +76,7 @@ export default {
         this.provisioningURI = ''
       }
       if (this.$configStore.getters.authMethod !== 'oidc') {
-        this.$root.$emit('reload-users')
+        this.configStore.emitter.emit('reload-users')
       }
     },
     enableMFA (val) {
@@ -85,7 +85,7 @@ export default {
           this.setMFAData(res.data)
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
     },
     async verifyMFA () {
@@ -102,7 +102,7 @@ export default {
           })
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
       this.verifying = false
     }
@@ -114,7 +114,7 @@ export default {
           this.setMFAData(res.data)
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
     })
   }

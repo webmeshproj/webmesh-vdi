@@ -20,29 +20,35 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 <template>
   <q-layout view="hHh lpR fFf">
 
-    <q-header :value="revealHeader" reveal elevated class="bg-primary text-white" height-hint="98">
-      <q-toolbar class="glossy">
+    <q-header :value="revealHeader"  class="bg-grey-9 text-white" height-hint="98">
+      <q-toolbar class="flat">
         <q-btn dense flat round icon="menu" @click="openDrawer = !openDrawer" />
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="statics/icons/quasar.svg">
+            <img src="../assets/logo.png">
           </q-avatar>
           kVDI
         </q-toolbar-title>
 
         <q-space />
 
-        <q-btn type="a" href="https://github.com/kvdi/kvdi" target="_blank" stretch flat icon="img:statics/github.png" label="Github" />
-
+        <q-btn type="a" href="https://discord.gg/vpkFjGuwYC" target="_blank" stretch flat icon-right="img:https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg" label="Get help at Discord" />
+        <q-btn type="a" href="https://github.com/webmeshproj/webmesh-vdi" target="_blank" stretch flat label="Github"    >
+          <svg style="margin-left: 12px" height="32" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="32" data-view-component="true" class="octicon octicon-mark-github v-align-middle color-fg-default">
+            <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+         </svg>
+        </q-btn>
+       
       </q-toolbar>
 
+
       <q-tabs align="center" v-if="controlSessions.length != 0">
-        <SessionTab v-for="tab in controlSessions" v-bind="tab" :key="tab.name" />
+        <SessionTab v-for="tab in controlSessions" v-bind="tab" :key="(tab as any).name" />
       </q-tabs>
     </q-header>
 
-    <q-drawer show-if-above v-model="openDrawer" side="left" behavior="desktop" elevated>
+    <q-drawer  v-model="openDrawer" side="left" behavior="desktop">
       <q-list>
         <q-item-label
           header
@@ -272,27 +278,40 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-layout>
 </template>
 
-<script>
-import SessionTab from 'components/SessionTab.vue'
-import MFADialog from 'components/dialogs/MFADialog.vue'
-import FileTransferDialog from 'components/dialogs/FileTransfer.vue'
-import { getErrorMessage } from 'src/lib/util.js'
+<script lang="ts">
 
-var menuTimeout = null
+import SessionTab from '../components/SessionTab.vue'
+import MFADialog from '../components/dialogs/MFADialog.vue'
+import FileTransferDialog from '../components/dialogs/FileTransfer.vue'
+import { getErrorMessage } from '../lib/util.js'
+import { defineComponent }from 'vue'
+import { useConfigStore } from '../stores/config'
+import { useUserStore } from '../stores/user'
+import { useDesktopSessions } from '../stores/desktop'
 
-export default {
+var menuTimeout: any = null
+
+export default  defineComponent({
   name: 'MainLayout',
-
   components: { SessionTab },
+  setup() {
+    const configStore = useConfigStore()
+    const userStore = useUserStore()
+    const desktopSessions = useDesktopSessions()
+
+    // **only return the whole store** instead of destructuring
+    return { configStore , userStore,desktopSessions,unsubscribeSessions: () => {},unsubscribeUsers: () => {} }
+  },
+  
 
   async created () {
     this.subscribeToBuses()
     document.onfullscreenchange = this.handleFullScreenChange
-    this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
-    // this.unsubscribeUsers = this.$userStore.subscribe(this.handleAuthChange)
-    await this.$userStore.dispatch('initStore')
+    this.unsubscribeSessions = this.desktopSessions.$subscribe(this.handleSessionsChange)
+    // this.unsubscribeUsers = this.userStore.$subscribe(this.handleAuthChange)
+    await this.userStore.initStore()
     try {
-      if (this.$userStore.getters.requiresMFA) {
+      if (this.userStore.requiresMFA) {
         await this.$q.dialog({
           component: MFADialog,
           parent: this
@@ -303,14 +322,14 @@ export default {
         })
         return
       }
-      if (this.$userStore.getters.isLoggedIn) {
+      if (this.userStore.isLoggedIn) {
         this.handleLoggedIn()
       } else {
         this.onClickLogin()
         this.pushIfNotCurrent('login')
       }
     } catch (err) {
-      this.$root.$emit('notify-error', err)
+      this.$root?.$emit('notify-error', err)
       this.onClickLogin()
       this.pushIfNotCurrent('login')
     }
@@ -321,7 +340,7 @@ export default {
     window.addEventListener('mousemove', this.onMouseOver)
   },
 
-  beforeDestroy () {
+  beforeUnmount () {
     this.unsubscribeFromBuses()
     this.unsubscribeSessions()
     this.unsubscribeUsers()
@@ -329,7 +348,7 @@ export default {
 
   data () {
     return {
-      openDrawer: true,
+      openDrawer: this.$q.screen.width < 1023?false:true,
       revealHeader: true,
 
       desktopTemplatesActive: false,
@@ -347,7 +366,7 @@ export default {
 
   computed: {
     userInitial () {
-      const user = this.$userStore.getters.user
+      const user = this.userStore.user
       if (user.name !== undefined) {
         return user.name[0]
       }
@@ -389,11 +408,11 @@ export default {
       }
       return 'mic_off'
     },
-    audioEnabled () { return this.$desktopSessions.getters.audioEnabled },
-    recordingEnabled () { return this.$desktopSessions.getters.recordingEnabled },
-    user () { return this.$userStore.getters.user },
-    isLoggedIn () { return this.$userStore.getters.isLoggedIn },
-    grafanaEnabled () { return this.$configStore.getters.grafanaEnabled }
+    audioEnabled () { return this.desktopSessions.audioEnabled },
+    recordingEnabled () { return this.desktopSessions.recordingEnabled },
+    user () { return this.userStore.user },
+    isLoggedIn () { return this.userStore.isLoggedIn },
+    grafanaEnabled () {  console.log(this.configStore);  return this.configStore.grafanaEnabled }
   },
 
   methods: {
@@ -405,15 +424,15 @@ export default {
     async onPaste () {
       try {
         const text = await navigator.clipboard.readText()
-        this.$root.$emit('paste-clipboard', text)
+        this.$root?.$emit('paste-clipboard', text)
       } catch (err) {
         console.log(err)
-        this.$root.$emit('notify-error', new Error('This browser does not appear to support retrieving clipboard text'))
+        this.$root?.$emit('notify-error', new Error('This browser does not appear to support retrieving clipboard text'))
       }
     },
 
     async onFileTransfer () {
-      const activeSession = this.$desktopSessions.getters.activeSession
+      const activeSession = this.desktopSessions.activeSession
       if (activeSession === undefined) {
         return
       }
@@ -506,50 +525,50 @@ export default {
     },
 
     onClickAudio () {
-      this.$desktopSessions.dispatch('toggleAudio', !this.audioEnabled)
+      this.desktopSessions.toggleAudio(!this.audioEnabled)
     },
 
     onClickRecord () {
-      this.$desktopSessions.dispatch('toggleRecording', !this.recordingEnabled)
+      this.desktopSessions.toggleRecording(!this.recordingEnabled)
     },
 
     async handleLoggedIn () {
-      await this.$configStore.dispatch('getServerConfig')
+      await this.configStore.getServerConfig()
       this.onClickDesktopTemplates()
       this.pushIfNotCurrent('templates')
     },
 
     async onClickLogout () {
-      this.$desktopSessions.dispatch('clearSessions')
-      this.$userStore.dispatch('logout')
+      this.desktopSessions.clearSessions()
+      this.userStore.logout()
       this.onClickLogin()
       this.pushIfNotCurrent('login')
     },
 
-    pushIfNotCurrent (route) {
+    pushIfNotCurrent (route: any) {
       if (this.$router.currentRoute.name !== route) {
         this.$router.push(route)
       }
     },
 
     subscribeToBuses () {
-      this.$root.$on('notify-error', this.notifyError)
-      this.$root.$on('set-control', this.onClickControl)
-      this.unsubscribeSessions = this.$desktopSessions.subscribe(this.handleSessionsChange)
+      this.configStore.emitter.on('notify-error', this.notifyError)
+      this.configStore.emitter.on('set-control', this.onClickControl)
+      this.unsubscribeSessions = this.desktopSessions.$subscribe(this.handleSessionsChange)
     },
 
     unsubscribeFromBuses () {
-      this.$root.$off('notify-error', this.notifyError)
-      this.$root.$off('set-control', this.onClickControl)
+      this.configStore.emitter.off('notify-error', this.notifyError)
+      this.configStore.emitter.off('set-control', this.onClickControl)
       this.unsubscribeSessions()
     },
 
-    handleSessionsChange (mutation, state) {
+    handleSessionsChange (_mutation: any, state: any) {
       this.audioExpanded = state.audioEnabled
       this.controlSessions = state.sessions
     },
 
-    async notifyError (err) {
+    async notifyError (err: any) {
       const errMsg = await getErrorMessage(err)
       this.$q.notify({
         color: 'red-4',
@@ -559,7 +578,7 @@ export default {
       })
     },
 
-    onMouseOver (event) {
+    onMouseOver (event: any) {
       if (document.fullscreenElement) {
         if (event.pageX < 20) {
           // Show the menu if mouse is within 20 pixels
@@ -576,19 +595,19 @@ export default {
       }
     },
 
-    handleFullScreenChange (event) {
+    handleFullScreenChange () {
       if (document.fullscreenElement) {
         console.log('Entered fullscreen mode')
         this.openDrawer = false
         this.revealHeader = false
-        this.$root.$emit('set-fullscreen', true)
+        this.$root?.$emit('set-fullscreen', true)
       } else {
         console.log('Leaving full-screen mode')
         this.openDrawer = true
         this.revealHeader = true
-        this.$root.$emit('set-fullscreen', false)
+        this.$root?.$emit('set-fullscreen', false)
       }
     }
   }
-}
+})
 </script>

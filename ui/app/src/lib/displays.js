@@ -183,13 +183,13 @@ export class SPICEDisplay extends Display {
         window.spice_connection = sc
         resize_helper(sc)
         if (window.File && window.FileReader && window.FileList && window.Blob) {
-            const spice_xfer_area = document.createElement("div")
+            const spice_xfer_area = document.createElement('div')
             spice_xfer_area.setAttribute('id', 'spice-xfer-area')
             document.getElementById('view-area').appendChild(spice_xfer_area)
             document.getElementById('view-area').addEventListener('dragover', handle_file_dragover, false)
             document.getElementById('view-area').addEventListener('drop', handle_file_drop, false)
         } else {
-            console.log("File API is not supported")
+            console.log('File API is not supported')
         }
     }
 }

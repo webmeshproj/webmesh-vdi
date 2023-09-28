@@ -45,10 +45,10 @@ function parseBigInt(str,r) {
 }
 
 function linebrk(s,n) {
-  var ret = "";
+  var ret = '';
   var i = 0;
   while(i + n < s.length) {
-    ret += s.substring(i,i+n) + "\n";
+    ret += s.substring(i,i+n) + '\n';
     i += n;
   }
   return ret + s.substring(i,s.length);
@@ -56,7 +56,7 @@ function linebrk(s,n) {
 
 function byte2Hex(b) {
   if(b < 0x10)
-    return "0" + b.toString(16);
+    return '0' + b.toString(16);
   else
     return b.toString(16);
 }
@@ -64,10 +64,10 @@ function byte2Hex(b) {
 // PKCS#1 (type 2, random) pad input string s to n bytes, and return a bigint
 function pkcs1pad2(s,n) {
   if(n < s.length + 11) { // TODO: fix for utf-8
-    alert("Message too long for RSA");
+    alert('Message too long for RSA');
     return null;
   }
-  var ba = new Array();
+  var ba = [];
   var i = s.length - 1;
   while(i >= 0 && n > 0) {
     var c = s.charCodeAt(i--);
@@ -86,7 +86,7 @@ function pkcs1pad2(s,n) {
   }
   ba[--n] = 0;
   var rng = new SecureRandom();
-  var x = new Array();
+  var x = [];
   while(n > 2) { // random non-zero pad
     x[0] = 0;
     while(x[0] == 0) rng.nextBytes(x);
@@ -116,7 +116,7 @@ function RSASetPublic(N,E) {
     this.e = parseInt(E,16);
   }
   else
-    alert("Invalid RSA public key");
+    alert('Invalid RSA public key');
 }
 
 // Perform raw public operation on "x": return x^e (mod n)
@@ -131,7 +131,7 @@ function RSAEncrypt(text) {
   var c = this.doPublic(m);
   if(c == null) return null;
   var h = c.toString(16);
-  if((h.length & 1) == 0) return h; else return "0" + h;
+  if((h.length & 1) == 0) return h; else return '0' + h;
 }
 
 // Return the PKCS#1 RSA encryption of "text" as a Base64-encoded string

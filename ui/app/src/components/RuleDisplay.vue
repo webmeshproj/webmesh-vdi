@@ -42,8 +42,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
-import RuleEditor from 'components/dialogs/RuleEditor.vue'
+<script lang="ts">
+import RuleEditor from './dialogs/RuleEditor.vue'
 
 export default {
   name: 'RuleDisplay',
@@ -76,7 +76,7 @@ export default {
   },
   methods: {
     onDeleteRule () {
-      this.$root.$emit(this.roleName, {
+      this.configStore.emitter.emit(this.roleName, {
         roleIdx: this.roleIdx,
         ruleIdx: this.ruleIdx,
         deleteRule: true
@@ -93,7 +93,7 @@ export default {
         resourcePatterns: this.resourcePatterns,
         namespaces: this.namespaces
       }).onOk((payload) => {
-        this.$root.$emit(this.roleName, {
+        this.configStore.emitter.emit(this.roleName, {
           roleIdx: this.roleIdx,
           ruleIdx: this.ruleIdx,
           rulePayload: payload

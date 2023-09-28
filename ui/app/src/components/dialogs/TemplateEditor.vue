@@ -39,7 +39,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
+<script lang="ts">
 import jsyaml from 'js-yaml'
 
 const boilerplate = `apiVersion: desktops.kvdi.io/v1
@@ -54,7 +54,7 @@ spec:
 
 export default {
   name: 'TemplateEditor',
-  components: { editor: require('vue2-ace-editor') },
+  components: { editor: await import('vue3-ace-editor') },
   props: {
     existing: {
       type: Object
@@ -94,7 +94,7 @@ export default {
           message: `Created new DesktopTemplate '${payload.metadata.name}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
@@ -109,7 +109,7 @@ export default {
           message: `Successfully updated DesktopTemplate '${payload.metadata.name}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 

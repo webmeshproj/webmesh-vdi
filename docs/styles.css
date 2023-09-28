@@ -1,0 +1,11 @@
+.markdown-section {
+	padding: 2rem 20px;
+}
+/* scrollbar color */
+::-webkit-scrollbar {
+    background: #262e32;
+    width: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+}

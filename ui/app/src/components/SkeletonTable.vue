@@ -67,7 +67,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-markup-table>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   data () {
     return {
