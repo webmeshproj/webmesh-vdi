@@ -1,4 +1,4 @@
-REPO    ?= ghcr.io/kvdi
+REPO    ?= ghcr.io/webmeshproj
 VERSION ?= $(shell git describe --tags)
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"

@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 name: Build kvdictl release
 
@@ -10,14 +10,13 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Set up Go 1.16
+      - name: Set up Go 1.21
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16
+          go-version: 1.21
         id: go
 
       - name: Install upx

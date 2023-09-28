@@ -2,28 +2,26 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   setup:
     name: Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Build test image
+        run: |
+          make test-docker-build
 
-    - name: Build test image
-      run: |
-        make test-docker-build
+      - name: Lint all packages
+        run: |
+          make lint-in-docker
 
-    - name: Lint all packages
-      run: |
-        make lint-in-docker
-
-    - name: Run all unit tests
-      run: |
-        make test-in-docker
+      - name: Run all unit tests
+        run: |
+          make test-in-docker

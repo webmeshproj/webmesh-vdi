@@ -2,37 +2,35 @@ name: Desktops
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-
   build:
     name: Build Images
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
 
-    - uses: actions/checkout@v1
+      - name: Login to container reigstry
+        run: echo ${{ github.token }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Login to container reigstry
-      run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+      - name: Get image version
+        shell: bash
+        run: |
+          echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
+        id: version
 
-    - name: Get image version
-      shell: bash
-      run: |
-        echo ::set-output name=tag::$([[ "${GITHUB_REF##*/}" == "main" ]] && echo latest || echo ${GITHUB_REF##*/})
-      id: version
+      - name: Build and push the ubuntu base image
+        run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-base push-ubuntu-base
 
-    - name: Build and push the ubuntu base image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-base push-ubuntu-base
+      - name: Build and push the app-profile base image
+        run: VERSION=${{ steps.version.outputs.tag }} make build-app-base push-app-base
 
-    - name: Build and push the app-profile base image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-app-base push-app-base
+      - name: Build and push the dosbox image
+        run: VERSION=${{ steps.version.outputs.tag }} make build-dosbox push-dosbox
 
-    - name: Build and push the dosbox image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-dosbox push-dosbox
+      - name: Build and push the qemu image
+        run: VERSION=${{ steps.version.outputs.tag }} make build-qemu push-qemu
 
-    - name: Build and push the qemu image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-qemu push-qemu
-
-    - name: Build and push the ubuntu xfce4 image
-      run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-xfce4 push-ubuntu-xfce4
+      - name: Build and push the ubuntu xfce4 image
+        run: VERSION=${{ steps.version.outputs.tag }} make build-ubuntu-xfce4 push-ubuntu-xfce4
