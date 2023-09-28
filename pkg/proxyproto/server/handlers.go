@@ -26,7 +26,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -34,6 +33,7 @@ import (
 	"time"
 
 	"github.com/kennygrant/sanitize"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 	"github.com/kvdi/kvdi/pkg/audio"
 	"github.com/kvdi/kvdi/pkg/audio/pa"
@@ -220,16 +220,24 @@ func (p *Server) handleStat(conn *proxyproto.Conn) {
 	}
 	if finfo.IsDir() {
 		resp.Stat.Contents = make([]*types.FileStat, 0)
-		files, err := ioutil.ReadDir(path)
+		files, err := os.ReadDir(path)
 		if err != nil {
 			conn.WriteError(err)
 			return
 		}
 		for _, file := range files {
+			var size int64
+			if !file.IsDir() {
+				// Get the size
+				finfo, err := file.Info()
+				if err == nil {
+					size = finfo.Size()
+				}
+			}
 			resp.Stat.Contents = append(resp.Stat.Contents, &types.FileStat{
 				Name:        file.Name(),
 				IsDirectory: file.IsDir(),
-				Size:        file.Size(),
+				Size:        size,
 			})
 		}
 

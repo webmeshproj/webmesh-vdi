@@ -22,7 +22,7 @@ package local
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
@@ -77,7 +77,7 @@ func TestGetPasswdFile(t *testing.T) {
 	if err != nil {
 		t.Fatal("Expected no error fetching passwd data, got", err)
 	}
-	data, err := ioutil.ReadAll(rdr)
+	data, err := io.ReadAll(rdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestUpdatePasswdFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	body, err := ioutil.ReadAll(passwdFile)
+	body, err := io.ReadAll(passwdFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestUpdatePasswdFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	body, err = ioutil.ReadAll(passwdFile)
+	body, err = io.ReadAll(passwdFile)
 	if err != nil {
 		t.Fatal(err)
 	}

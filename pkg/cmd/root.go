@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 
@@ -169,7 +168,7 @@ func initClient() {
 	if caCertBody := viper.GetString("server.caCert"); caCertBody != "" {
 		tlsCA = []byte(caCertBody)
 	} else if caCertFile := viper.GetString("server.caFile"); caCertFile != "" {
-		tlsCA, err = ioutil.ReadFile(caCertFile)
+		tlsCA, err = os.ReadFile(caCertFile)
 		cobra.CheckErr(err)
 	}
 

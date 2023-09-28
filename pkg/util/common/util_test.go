@@ -20,7 +20,6 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package common
 
 import (
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -100,11 +99,12 @@ search default.svc.cluster.local svc.cluster.local cluster.local
 ndots ...
 `)
 	}
-	file, err := ioutil.TempFile("", "")
+	file, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", err
 	}
-	if err := ioutil.WriteFile(file.Name(), fakeResolvConf, 0644); err != nil {
+	_, err = file.Write(fakeResolvConf)
+	if err != nil {
 		return "", err
 	}
 	return file.Name(), nil

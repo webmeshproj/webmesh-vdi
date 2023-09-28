@@ -24,11 +24,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/hashicorp/vault/api"
+
 	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 )
 
@@ -46,7 +48,7 @@ type AuthRequest struct {
 // getClientToken will read the k8s serviceaccount token and use it to request
 // a vault login token.
 func getK8sAuth(crConfig *appv1.VaultConfig, vaultConfig *api.Config) (*api.Secret, error) {
-	tokenBytes, err := ioutil.ReadFile(DefaultTokenPath)
+	tokenBytes, err := os.ReadFile(DefaultTokenPath)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func getK8sAuth(crConfig *appv1.VaultConfig, vaultConfig *api.Config) (*api.Secr
 		return nil, err
 	}
 	defer res.Body.Close()
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

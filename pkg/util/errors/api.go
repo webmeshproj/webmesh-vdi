@@ -21,7 +21,7 @@ package errors
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -55,7 +55,7 @@ func CheckAPIError(r *http.Response) error {
 		return nil
 	}
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}

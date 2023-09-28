@@ -160,7 +160,7 @@ func (a *APIAction) String() string {
 	if a.Verb == "" && a.ResourceType == "" {
 		return ""
 	}
-	str := fmt.Sprintf("%s %s", strings.ToUpper(string(a.Verb)), strings.Title(string(a.ResourceType)))
+	str := fmt.Sprintf("%s %s", strings.ToUpper(string(a.Verb)), strings.ToTitle(string(a.ResourceType)))
 	if resourceName := a.ResourceNameString(); resourceName != "" {
 		str = str + fmt.Sprintf(" %s", resourceName)
 	}

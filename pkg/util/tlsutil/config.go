@@ -25,14 +25,14 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
-
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 // serverCertMountPath redeclared locally for mocking
@@ -127,7 +127,7 @@ func ClientKeypair() (string, string) {
 // mount point.
 func getCACertPool(mountPath string) (*x509.CertPool, error) {
 	caCertFile := filepath.Join(mountPath, v1.CACertKey)
-	caCert, err := ioutil.ReadFile(caCertFile)
+	caCert, err := os.ReadFile(caCertFile)
 	if err != nil {
 		return nil, err
 	}

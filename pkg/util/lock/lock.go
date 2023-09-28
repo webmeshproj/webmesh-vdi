@@ -23,25 +23,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"time"
-
-	"github.com/kvdi/kvdi/pkg/util/common"
-	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-)
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
+	"github.com/kvdi/kvdi/pkg/util/common"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
+)
 
 // expireKey is the key in the configmap where we store the expiry data
 const expireKey = "expiresAt"

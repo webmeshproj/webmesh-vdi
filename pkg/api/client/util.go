@@ -24,11 +24,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/websocket"
+
 	"github.com/kvdi/kvdi/pkg/util/apiutil"
 	"github.com/kvdi/kvdi/pkg/util/errors"
 )
@@ -97,7 +97,7 @@ func (c *Client) do(method, endpoint string, req, resp interface{}, retry ...boo
 		return err
 	}
 
-	body, err := ioutil.ReadAll(rawRes.Body)
+	body, err := io.ReadAll(rawRes.Body)
 	if err != nil {
 		return err
 	}

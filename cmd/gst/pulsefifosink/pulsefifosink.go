@@ -24,14 +24,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 
-	"github.com/kvdi/kvdi/pkg/audio/pa"
 	"github.com/tinyzimmer/go-glib/glib"
 	"github.com/tinyzimmer/go-gst/gst"
+
+	"github.com/kvdi/kvdi/pkg/audio/pa"
 )
 
 type pulsefifosink struct {
@@ -292,7 +292,7 @@ func (p *pulsefifosink) capsValuesToPulseSourceOpts(self *gst.Element, values ma
 		rate = 16000
 	}
 	if p.settings.devicePath == "" {
-		dir, err := ioutil.TempDir("", "")
+		dir, err := os.MkdirTemp("", "")
 		if err != nil {
 			self.Error("Could not get temp directory", err)
 			return nil

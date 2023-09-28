@@ -22,34 +22,33 @@ package tlsutil
 import (
 	"context"
 	"crypto/tls"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
-
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 func writeTLSCerts(t *testing.T) (string, func(), error) {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", nil, err
 	}
 	clean := func() { os.RemoveAll(dir) }
-	if err := ioutil.WriteFile(filepath.Join(dir, corev1.TLSCertKey), testCert, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, corev1.TLSCertKey), testCert, 0644); err != nil {
 		clean()
 		return "", nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, corev1.TLSPrivateKeyKey), testKey, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, corev1.TLSPrivateKeyKey), testKey, 0644); err != nil {
 		clean()
 		return "", nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, v1.CACertKey), testCA, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, v1.CACertKey), testCA, 0644); err != nil {
 		clean()
 		return "", nil, err
 	}

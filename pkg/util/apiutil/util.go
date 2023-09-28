@@ -22,7 +22,7 @@ package apiutil
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
@@ -103,7 +103,7 @@ func WriteJSON(i interface{}, w http.ResponseWriter) {
 // the given interface.
 func UnmarshalRequest(r *http.Request, in interface{}) error {
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}

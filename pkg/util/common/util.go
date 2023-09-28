@@ -26,7 +26,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -35,12 +34,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kvdi/kvdi/pkg/version"
-
 	"github.com/go-logr/logr"
 	"golang.org/x/crypto/bcrypt"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/kvdi/kvdi/pkg/version"
 )
 
 // BoolPointer returns a pointer to the given boolean
@@ -115,7 +114,7 @@ var resolvConf = "/etc/resolv.conf"
 // If we cannot read the file we return an empty string. This is a safeguard
 // against irregular short-name resolution inside different cluster setups.
 func GetClusterSuffix() string {
-	resolvconf, err := ioutil.ReadFile(resolvConf)
+	resolvconf, err := os.ReadFile(resolvConf)
 	if err != nil {
 		return ""
 	}
@@ -190,7 +189,7 @@ func Retry(attempts int, sleep time.Duration, f func() error) error {
 // TarDirectoryToTempFile will create a gzipped tarball of the given directory,
 // write it to a tempfile, and return the path to the file.
 func TarDirectoryToTempFile(srcPath string) (string, error) {
-	targetDir, err := ioutil.TempDir("", "")
+	targetDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", err
 	}

@@ -21,7 +21,7 @@ package local
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 )
@@ -38,7 +38,7 @@ func TestAddUserToBuffer(t *testing.T) {
 		t.Fatal("Expected no error adding user to buffer, got", err)
 	}
 
-	body, err := ioutil.ReadAll(newBuf)
+	body, err := io.ReadAll(newBuf)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -21,13 +21,14 @@ package apiutil
 
 import (
 	"bufio"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/kvdi/kvdi/pkg/util/errors"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // WebsocketWatcher implements a wrapper around websocket connections,
@@ -133,7 +134,7 @@ func (w *GorillaReadWriter) Read(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	body, err := ioutil.ReadAll(rdr)
+	body, err := io.ReadAll(rdr)
 	if err != nil {
 		return 0, err
 	}

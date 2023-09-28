@@ -23,19 +23,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
 )
 
 func readResponseBody(res *http.Response) ([]byte, error) {
 	defer res.Body.Close()
-	return ioutil.ReadAll(res.Body)
+	return io.ReadAll(res.Body)
 }
 
 // TestWriteOrLogError tests the generic response writer
