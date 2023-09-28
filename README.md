@@ -1,6 +1,6 @@
-# kVDI
+# Webmesh Desktop
 
-A Virtual Desktop Infrastructure running on Kubernetes.
+A Virtual Desktop Infrastructure running on Kubernetes. With soon to come webmesh integration.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/webmeshproj/webmesh-vdi)](https://goreportcard.com/report/github.com/webmeshproj/webmesh-vdi)
 ![Tests](https://github.com/webmeshproj/webmesh-vdi/actions/workflows/tests.yml/badge.svg)
