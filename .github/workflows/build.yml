@@ -15,6 +15,10 @@ jobs:
   build:
     name: Build Images
     runs-on: ubuntu-latest
+    permissions:
+      contents: "write"
+      id-token: "write"
+      packages: "write"
     strategy:
       fail-fast: false
       max-parallel: 1
