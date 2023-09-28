@@ -141,7 +141,7 @@ func (l *Lock) Acquire() error {
 
 		if l.GetTimeout() > 0 && time.Now().After(failTimeout) {
 			lockLogger.Info("Timeout reached before we could acquire a lock")
-			return &common.StopRetry{Err: errors.New("Failed to acquire lock in the given time limit")}
+			return &common.StopRetry{Err: errors.New("failed to acquire lock in the given time limit")}
 		}
 
 		// This should be unreachable, but try another create
@@ -188,10 +188,10 @@ func (l *Lock) Release() error {
 	}
 	ref := cm.GetOwnerReferences()
 	if len(ref) != 1 {
-		return fmt.Errorf("Owner references on found lock is malformed: %+v", ref)
+		return fmt.Errorf("owner references on found lock is malformed: %+v", ref)
 	}
 	if ref[0].UID != l.pod.GetUID() {
-		return fmt.Errorf("Present lock is not owned by this pod, owned by: %s", ref[0].Name)
+		return fmt.Errorf("present lock is not owned by this pod, owned by: %s", ref[0].Name)
 	}
 	return l.releaseLock(context.Background(), cm)
 }
