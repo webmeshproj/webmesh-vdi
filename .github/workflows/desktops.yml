@@ -19,7 +19,7 @@ jobs:
       packages: "write"
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         docker-context:
           - build/desktops/ubuntu
@@ -81,8 +81,7 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ steps.version.outputs.tag }}
           cache-to: type=inline
-          load: true
-
+s
       # Sign the image
       - name: Sign Container Images
         if: ${{ github.event_name != 'pull_request' }}
