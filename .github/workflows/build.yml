@@ -70,19 +70,6 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Base Image
-        uses: docker/build-push-action@v5
-        id: docker-build-base
-        with:
-          context: .
-          file: build/Dockerfile.base
-          push: false
-          load: true
-          tags: ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
-          platforms: ${{ env.PLATFORMS }}
-          cache-from: type=registry,ref=ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
-          cache-to: type=inline
-
       - name: ${{ matrix.name }}
         uses: docker/build-push-action@v5
         id: docker-build
@@ -98,4 +85,3 @@ jobs:
           cache-to: type=inline
           build-args: |
             LDFLAGS=${{ env.LDFLAGS }}
-            BASE_IMAGE=ghcr.io/webmeshproj/vdi-base:${{ steps.version.outputs.tag }}
