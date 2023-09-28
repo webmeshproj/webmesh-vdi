@@ -39,11 +39,10 @@ jobs:
             name: Build Manager Image
 
     steps:
-      - uses: actions/checkout@v1
-
-      - name: Login to container reigstry
-        run: echo ${{ github.token }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        if: ${{ github.event_name != 'pull_request' }}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get image version
         shell: bash
