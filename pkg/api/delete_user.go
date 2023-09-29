@@ -30,20 +30,22 @@ import (
 // ---
 // summary: Delete the specified user.
 // parameters:
-// - name: user
-//   in: path
-//   description: The user to delete
-//   type: string
-//   required: true
+//   - name: user
+//     in: path
+//     description: The user to delete
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/boolResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/boolResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 	if err := d.auth.DeleteUser(username); err != nil {

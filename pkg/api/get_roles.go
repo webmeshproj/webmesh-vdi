@@ -30,9 +30,10 @@ import (
 // swagger:route GET /api/roles Roles getRoles
 // Retrieves a list of the authorization roles in kVDI.
 // responses:
-//   200: rolesResponse
-//   400: error
-//   403: error
+//
+//	200: rolesResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {
@@ -47,20 +48,22 @@ func (d *desktopAPI) GetRoles(w http.ResponseWriter, r *http.Request) {
 // summary: Retrieve the specified role.
 // description: Details include the grants, namespaces, and template patterns for the role.
 // parameters:
-// - name: role
-//   in: path
-//   description: The role to retrieve details about
-//   type: string
-//   required: true
+//   - name: role
+//     in: path
+//     description: The role to retrieve details about
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/roleResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/roleResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetRole(w http.ResponseWriter, r *http.Request) {
 	roles, err := d.vdiCluster.GetRoles(d.client)
 	if err != nil {

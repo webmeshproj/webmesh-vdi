@@ -36,25 +36,27 @@ import (
 // summary: Update the specified DesktopTemplate.
 // description: Only attributes defined in the payload will be applied.
 // parameters:
-// - name: template
-//   in: path
-//   description: The DesktopTemplate to update
-//   type: string
-//   required: true
-// - in: body
-//   name: templateDetails
-//   description: The manifest to merge with the existing template.
-//   schema:
+//   - name: template
+//     in: path
+//     description: The DesktopTemplate to update
+//     type: string
+//     required: true
+//   - in: body
+//     name: templateDetails
+//     description: The manifest to merge with the existing template.
+//     schema:
 //     "$ref": "#/definitions/DesktopTemplate"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/boolResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/boolResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) PutDesktopTemplate(w http.ResponseWriter, r *http.Request) {
 	tmplName := apiutil.GetTemplateFromRequest(r)
 	nn := types.NamespacedName{Name: tmplName, Namespace: metav1.NamespaceAll}

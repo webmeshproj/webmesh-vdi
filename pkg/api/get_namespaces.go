@@ -32,9 +32,10 @@ import (
 // swagger:route GET /api/namespaces Miscellaneous getNamespaces
 // Retrieves a list of namespaces the requesting user is allowed to provision desktops in.
 // responses:
-//   200: namespacesResponse
-//   400: error
-//   403: error
+//
+//	200: namespacesResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) GetNamespaces(w http.ResponseWriter, r *http.Request) {
 	sess := apiutil.GetRequestUserSession(r)
 	namespaces, err := d.ListKubernetesNamespaces()

@@ -39,30 +39,32 @@ import (
 // ---
 // summary: Retrieve the logs for a container in a desktop session.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session.
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session.
-//   type: string
-//   required: true
-// - name: container
-//   in: path
-//   description: The container to retrieve logs for. Can be 'kvdi-proxy' or 'desktop'.
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session.
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session.
+//     type: string
+//     required: true
+//   - name: container
+//     in: path
+//     description: The container to retrieve logs for. Can be 'kvdi-proxy' or 'desktop'.
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/getLogsResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/getLogsResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopLogs(w http.ResponseWriter, r *http.Request) {
 	pod, err := d.getDesktopPodForRequest(r)
 	if err != nil {
@@ -96,34 +98,36 @@ type swaggerGetLogsResponse struct {
 // ---
 // summary: Follow the logs for a desktop over a websocket.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session.
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session.
-//   type: string
-//   required: true
-// - name: container
-//   in: path
-//   description: The container to retrieve logs for. Can be 'kvdi-proxy' or 'desktop'.
-//   type: string
-//   required: true
-// - name: token
-//   in: query
-//   description: The X-Session-Token of the requesting client.
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session.
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session.
+//     type: string
+//     required: true
+//   - name: container
+//     in: path
+//     description: The container to retrieve logs for. Can be 'kvdi-proxy' or 'desktop'.
+//     type: string
+//     required: true
+//   - name: token
+//     in: query
+//     description: The X-Session-Token of the requesting client.
+//     type: string
+//     required: true
+//
 // responses:
-//   "UPGRADE": {}
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"UPGRADE": {}
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopLogsWebsocket(wsconn *websocket.Conn) {
 	defer wsconn.Close()
 

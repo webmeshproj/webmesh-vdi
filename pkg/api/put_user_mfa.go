@@ -33,25 +33,27 @@ import (
 // ---
 // summary: Updates MFA configuration for the specified user.
 // parameters:
-// - name: user
-//   in: path
-//   description: The user to update
-//   type: string
-//   required: true
-// - in: body
-//   name: putUserMFARequest
-//   description: The user details to update.
-//   schema:
+//   - name: user
+//     in: path
+//     description: The user to update
+//     type: string
+//     required: true
+//   - in: body
+//     name: putUserMFARequest
+//     description: The user details to update.
+//     schema:
 //     "$ref": "#/definitions/UpdateMFARequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/updateMFAResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/updateMFAResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) PutUserMFA(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 

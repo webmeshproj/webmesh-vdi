@@ -32,9 +32,10 @@ import (
 // swagger:route POST /api/authorize Auth authorizeRequest
 // Authorizes a JWT token with a one time password.
 // responses:
-//   200: sessionResponse
-//   400: error
-//   403: error
+//
+//	200: sessionResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) PostAuthorize(w http.ResponseWriter, r *http.Request) {
 	userSession := apiutil.GetRequestUserSession(r)
 

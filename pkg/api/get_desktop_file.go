@@ -36,30 +36,32 @@ import (
 // ---
 // summary: Retrieve filesystem info for the given path inside a desktop session.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session
-//   type: string
-//   required: true
-// - name: fpath
-//   in: path
-//   description: The path to retrieve information about
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session
+//     type: string
+//     required: true
+//   - name: fpath
+//     in: path
+//     description: The path to retrieve information about
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/statDesktopFileResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/statDesktopFileResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetStatDesktopFile(w http.ResponseWriter, r *http.Request) {
 	proxy, err := d.getProxyClientForRequest(r)
 	if err != nil {
@@ -95,33 +97,35 @@ type swaggerStatDesktopFileResponse struct {
 // ---
 // summary: Download the given file from a desktop session.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session
-//   type: string
-//   required: true
-// - name: fpath
-//   in: path
-//   description: The file path to download
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session
+//     type: string
+//     required: true
+//   - name: fpath
+//     in: path
+//     description: The file path to download
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     content:
-//       "application/octet-stream":
-//         type: string
-//         format: binary
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  content:
+//	    "application/octet-stream":
+//	      type: string
+//	      format: binary
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetDownloadDesktopFile(w http.ResponseWriter, r *http.Request) {
 	proxy, err := d.getProxyClientForRequest(r)
 	if err != nil {

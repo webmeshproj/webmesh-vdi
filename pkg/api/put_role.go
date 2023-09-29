@@ -40,25 +40,27 @@ import (
 // summary: Update the specified role.
 // description: All properties will be overwritten with those provided in the payload, even if undefined.
 // parameters:
-// - name: role
-//   in: path
-//   description: The role to update
-//   type: string
-//   required: true
-// - in: body
-//   name: roleDetails
-//   description: The role details to update.
-//   schema:
+//   - name: role
+//     in: path
+//     description: The role to update
+//     type: string
+//     required: true
+//   - in: body
+//     name: roleDetails
+//     description: The role details to update.
+//     schema:
 //     "$ref": "#/definitions/UpdateRoleRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/boolResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/boolResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	role := apiutil.GetRoleFromRequest(r)
 	nn := ktypes.NamespacedName{Name: role, Namespace: metav1.NamespaceAll}

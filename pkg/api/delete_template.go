@@ -35,20 +35,22 @@ import (
 // ---
 // summary: Delete the specified DesktopTemplate.
 // parameters:
-// - name: template
-//   in: path
-//   description: The DesktopTemplate to delete
-//   type: string
-//   required: true
+//   - name: template
+//     in: path
+//     description: The DesktopTemplate to delete
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/boolResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/boolResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) DeleteDesktopTemplate(w http.ResponseWriter, r *http.Request) {
 	tmplName := apiutil.GetTemplateFromRequest(r)
 	nn := types.NamespacedName{Name: tmplName, Namespace: metav1.NamespaceAll}

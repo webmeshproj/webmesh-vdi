@@ -33,6 +33,7 @@ import (
 )
 
 // GrafanaDashboard is the JSON of the Grafana dashboard.
+//
 //go:embed grafana-dashboard.json
 var GrafanaDashboard string
 

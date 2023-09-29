@@ -31,9 +31,10 @@ import (
 // swagger:route POST /api/templates Templates postTemplateRequest
 // Create a new DesktopTemplate in kVDI.
 // responses:
-//   200: boolResponse
-//   400: error
-//   403: error
+//
+//	200: boolResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) PostDesktopTemplates(w http.ResponseWriter, r *http.Request) {
 	tmpl := apiutil.GetRequestObject(r).(*desktopsv1.Template)
 	if tmpl == nil {

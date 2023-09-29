@@ -20,8 +20,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 // Package v1 contains API Schema definitions for the app v1 API group
-//+kubebuilder:object:generate=true
-//+groupName=app.kvdi.io
+// +kubebuilder:object:generate=true
+// +groupName=app.kvdi.io
 package v1
 
 import (

@@ -43,9 +43,10 @@ type swaggerCreateRoleRequest struct {
 // swagger:route POST /api/roles Roles postRoleRequest
 // Create a new role in kVDI.
 // responses:
-//   200: boolResponse
-//   400: error
-//   403: error
+//
+//	200: boolResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) CreateRole(w http.ResponseWriter, r *http.Request) {
 	req := apiutil.GetRequestObject(r).(*types.CreateRoleRequest)
 	if req == nil {

@@ -34,18 +34,20 @@ import (
 // ---
 // summary: Retrieve the service accounts in the given namespace that the user is allowed to use
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace to list service accounts in
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace to list service accounts in
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/serviceAccountsResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/serviceAccountsResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetServiceAccounts(w http.ResponseWriter, r *http.Request) {
 	namespace := apiutil.GetNamespaceFromRequest(r)
 	sess := apiutil.GetRequestUserSession(r)

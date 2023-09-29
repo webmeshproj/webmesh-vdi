@@ -33,10 +33,11 @@ const userAnonymous = "anonymous"
 // swagger:route POST /api/login Auth loginRequest
 // Retrieves a new JWT token. This route may behave differently depending on the auth provider.
 // responses:
-//   200: sessionResponse
-//   400: error
-//   403: error
-//   500: error
+//
+//	200: sessionResponse
+//	400: error
+//	403: error
+//	500: error
 func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 
 	// If this is a GET request, we are at the second-phase of a redirect auth-flow.

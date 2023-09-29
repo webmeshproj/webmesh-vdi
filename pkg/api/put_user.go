@@ -32,25 +32,27 @@ import (
 // summary: Update the specified user.
 // description: Only the provided attributes will be updated.
 // parameters:
-// - name: user
-//   in: path
-//   description: The user to update
-//   type: string
-//   required: true
-// - in: body
-//   name: userDetails
-//   description: The user details to update.
-//   schema:
+//   - name: user
+//     in: path
+//     description: The user to update
+//     type: string
+//     required: true
+//   - in: body
+//     name: userDetails
+//     description: The user details to update.
+//     schema:
 //     "$ref": "#/definitions/UpdateUserRequest"
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/boolResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/boolResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) PutUser(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 	req := apiutil.GetRequestObject(r).(*types.UpdateUserRequest)

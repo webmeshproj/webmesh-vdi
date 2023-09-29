@@ -30,9 +30,10 @@ import (
 // swagger:route GET /api/users Users getUsers
 // Retrieves all the users currently known to kVDI.
 // responses:
-//   200: usersResponse
-//   400: error
-//   403: error
+//
+//	200: usersResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := d.auth.GetUsers()
 	if err != nil {
@@ -64,20 +65,22 @@ func (d *desktopAPI) GetUsers(w http.ResponseWriter, r *http.Request) {
 // summary: Retrieve the specified user.
 // description: Details include the roles and grants for the user.
 // parameters:
-// - name: user
-//   in: path
-//   description: The username to retrieve details about
-//   type: string
-//   required: true
+//   - name: user
+//     in: path
+//     description: The username to retrieve details about
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/userResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/userResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 	user, err := d.auth.GetUser(username)

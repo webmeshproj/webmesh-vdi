@@ -30,9 +30,10 @@ import (
 // swagger:route POST /api/users Users postUserRequest
 // Create a new user in kVDI.
 // responses:
-//   200: boolResponse
-//   400: error
-//   403: error
+//
+//	200: boolResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) PostUsers(w http.ResponseWriter, r *http.Request) {
 	req := apiutil.GetRequestObject(r).(*types.CreateUserRequest)
 	if req == nil {

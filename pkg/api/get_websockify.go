@@ -40,29 +40,31 @@ import (
 // summary: Start an mTLS noVNC connection with the provided Desktop.
 // description: Assumes the requesting client is a noVNC RFB object.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session
-//   type: string
-//   required: true
-// - name: token
-//   in: query
-//   description: The X-Session-Token of the requesting client
-//   type: string
-//   required: true
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session
+//     type: string
+//     required: true
+//   - name: token
+//     in: query
+//     description: The X-Session-Token of the requesting client
+//     type: string
+//     required: true
+//
 // responses:
-//   "UPGRADE": {}
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"UPGRADE": {}
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 	lockName := fmt.Sprintf(
 		"display-%s",
@@ -90,29 +92,31 @@ func (d *desktopAPI) GetWebsockify(w http.ResponseWriter, r *http.Request) {
 // ---
 // summary: Retrieve the audio stream from the given desktop session.
 // parameters:
-// - name: namespace
-//   in: path
-//   description: The namespace of the desktop session
-//   type: string
-//   required: true
-// - name: name
-//   in: path
-//   description: The name of the desktop session
-//   type: string
-//   required: true
-// - name: token
-//   in: query
-//   description: The X-Session-Token of the requesting client. Can also be provided in the header.
-//   type: string
-//   required: false
+//   - name: namespace
+//     in: path
+//     description: The namespace of the desktop session
+//     type: string
+//     required: true
+//   - name: name
+//     in: path
+//     description: The name of the desktop session
+//     type: string
+//     required: true
+//   - name: token
+//     in: query
+//     description: The X-Session-Token of the requesting client. Can also be provided in the header.
+//     type: string
+//     required: false
+//
 // responses:
-//   "UPGRADE": {}
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"UPGRADE": {}
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetWebsockifyAudio(w http.ResponseWriter, r *http.Request) {
 	lockName := fmt.Sprintf(
 		"audio-%s",

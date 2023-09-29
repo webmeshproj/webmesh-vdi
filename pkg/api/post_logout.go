@@ -33,9 +33,10 @@ import (
 // swagger:route POST /api/logout Auth logout
 // Ends the current user session.
 // responses:
-//   200: boolResponse
-//   400: error
-//   403: error
+//
+//	200: boolResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) PostLogout(w http.ResponseWriter, r *http.Request) {
 	// userSession := apiutil.GetRequestUserSession(r)
 	// if err := d.CleanupUserDesktops(userSession.User.GetName()); err != nil {

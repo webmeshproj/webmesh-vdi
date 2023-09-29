@@ -38,9 +38,10 @@ import (
 // swagger:route GET /api/sessions Sessions getDesktopSessions
 // Retrieves a list of currently active desktop sessions and their status.
 // responses:
-//   200: desktopSessionsResponse
-//   400: error
-//   403: error
+//
+//	200: desktopSessionsResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) GetDesktopSessions(w http.ResponseWriter, r *http.Request) {
 	desktops := &desktopsv1.SessionList{}
 	displayLocks := &corev1.ConfigMapList{}

@@ -35,9 +35,10 @@ import (
 // swagger:route GET /api/templates Templates getTemplates
 // Retrieves available templates to boot desktops from.
 // responses:
-//   200: templatesResponse
-//   400: error
-//   403: error
+//
+//	200: templatesResponse
+//	400: error
+//	403: error
 func (d *desktopAPI) GetDesktopTemplates(w http.ResponseWriter, r *http.Request) {
 	sess := apiutil.GetRequestUserSession(r)
 	tmpls, err := d.getAllDesktopTemplates()
@@ -58,20 +59,22 @@ func (d *desktopAPI) getAllDesktopTemplates() (*desktopsv1.TemplateList, error) 
 // ---
 // summary: Retrieve the specified DesktopTemplate.
 // parameters:
-// - name: template
-//   in: path
-//   description: The DesktopTemplate to retrieve details about
-//   type: string
-//   required: true
+//   - name: template
+//     in: path
+//     description: The DesktopTemplate to retrieve details about
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/templateResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/templateResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetDesktopTemplate(w http.ResponseWriter, r *http.Request) {
 	tmplName := apiutil.GetTemplateFromRequest(r)
 	nn := types.NamespacedName{Name: tmplName, Namespace: metav1.NamespaceAll}

@@ -34,9 +34,10 @@ import (
 // swagger:route GET /api/whoami Miscellaneous whoAmI
 // Retrieves information about the current user session.
 // responses:
-//   200: userResponse
-//   403: error
-//   500: error
+//
+//	200: userResponse
+//	403: error
+//	500: error
 func (d *desktopAPI) GetWhoAmI(w http.ResponseWriter, r *http.Request) {
 	// retrieve the user session from the request
 	session := apiutil.GetRequestUserSession(r)

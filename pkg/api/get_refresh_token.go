@@ -30,10 +30,11 @@ import (
 // swagger:route GET /api/refresh_token Auth refreshTokenRequest
 // Retrieves a new JWT access token. It uses the HttpOnly cookie included in the request.
 // responses:
-//   200: sessionResponse
-//   400: error
-//   403: error
-//   500: error
+//
+//	200: sessionResponse
+//	400: error
+//	403: error
+//	500: error
 func (d *desktopAPI) GetRefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	if d.vdiCluster.IsUsingOIDCAuth() {

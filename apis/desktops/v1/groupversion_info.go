@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1 contains API Schema definitions for the desktops v1 API group
-//+kubebuilder:object:generate=true
-//+groupName=desktops.kvdi.io
+// +kubebuilder:object:generate=true
+// +groupName=desktops.kvdi.io
 package v1
 
 import (

@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
   name: vdiclusters.app.kvdi.io
 spec:
@@ -305,8 +304,8 @@ spec:
                           are usually discarded after identify information is retrieved
                           from them. If you set this to true, these fields will be
                           available for mapping in desktops at the following paths:
-                          \n   - `{{ .Session.Data.access_token }}`   - `{{ .Session.Data.token_type
-                          }}`   - `{{ .Session.Data.refresh_token }}`   - `{{ .Session.Data.expiry
+                          \n - `{{ .Session.Data.access_token }}` - `{{ .Session.Data.token_type
+                          }}` - `{{ .Session.Data.refresh_token }}` - `{{ .Session.Data.expiry
                           }}` \n **NOTE:** This should be considered an insecure option
                           and only turned on taking into account the inherent risks.
                           If the access token used for authorizing actions against
@@ -378,6 +377,7 @@ spec:
                         TODO: Add other useful fields. apiVersion, kind, uid?'
                       type: string
                   type: object
+                  x-kubernetes-map-type: atomic
                 type: array
               metrics:
                 description: Metrics configurations.
@@ -545,6 +545,7 @@ spec:
                     - kind
                     - name
                     type: object
+                    x-kubernetes-map-type: atomic
                   dataSourceRef:
                     description: 'Specifies the object from which to populate the
                       volume with data, if a non-empty volume is desired. This may
@@ -559,10 +560,10 @@ spec:
                       if one of them is empty and the other is non-empty. There are
                       two important differences between DataSource and DataSourceRef:
                       * While DataSource only allows two specific types of objects,
-                      DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim
+                      DataSourceRef allows any non-core object, as well as PersistentVolumeClaim
                       objects. * While DataSource ignores disallowed values (dropping
-                      them), DataSourceRef   preserves all values, and generates an
-                      error if a disallowed value is   specified. (Alpha) Using this
+                      them), DataSourceRef preserves all values, and generates an
+                      error if a disallowed value is specified. (Alpha) Using this
                       field requires the AnyVolumeDataSource feature gate to be enabled.'
                     properties:
                       apiGroup:
@@ -581,6 +582,7 @@ spec:
                     - kind
                     - name
                     type: object
+                    x-kubernetes-map-type: atomic
                   resources:
                     description: 'Resources represents the minimum resources the volume
                       should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
@@ -660,6 +662,7 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
+                    x-kubernetes-map-type: atomic
                   storageClassName:
                     description: 'Name of the StorageClass required by the claim.
                       More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1'
@@ -683,9 +686,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

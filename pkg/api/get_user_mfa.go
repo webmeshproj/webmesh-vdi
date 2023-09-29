@@ -33,20 +33,22 @@ import (
 // ---
 // summary: Retrieves MFA status for the given user.
 // parameters:
-// - name: user
-//   in: path
-//   description: The user to query
-//   type: string
-//   required: true
+//   - name: user
+//     in: path
+//     description: The user to query
+//     type: string
+//     required: true
+//
 // responses:
-//   "200":
-//     "$ref": "#/responses/getMFAResponse"
-//   "400":
-//     "$ref": "#/responses/error"
-//   "403":
-//     "$ref": "#/responses/error"
-//   "404":
-//     "$ref": "#/responses/error"
+//
+//	"200":
+//	  "$ref": "#/responses/getMFAResponse"
+//	"400":
+//	  "$ref": "#/responses/error"
+//	"403":
+//	  "$ref": "#/responses/error"
+//	"404":
+//	  "$ref": "#/responses/error"
 func (d *desktopAPI) GetUserMFA(w http.ResponseWriter, r *http.Request) {
 	username := apiutil.GetUserFromRequest(r)
 
