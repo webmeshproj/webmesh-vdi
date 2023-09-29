@@ -57,5 +57,4 @@ jobs:
 
       - name: Sign Container Images
         if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          cosign sign --yes --recursive ${{ env.IMAGE }}@${{ steps.proxy-build.outputs.digest }}
+        run: cosign sign --yes --recursive ${{ env.IMAGE }}@${{ steps.proxy-build.outputs.digest }}

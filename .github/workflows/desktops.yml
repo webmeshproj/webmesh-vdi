@@ -5,10 +5,10 @@ on:
     branches: [main]
 
 env:
+  IMAGE_PREFIX: ghcr.io/webmeshproj/desktop
   PLATFORMS: linux/amd64,linux/arm64
   ARCHS: amd64,arm64
-  IMAGE_PREFIX: ghcr.io/webmeshproj/desktop
-  VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
+  VERSION: latest
   COSIGN_EXPERIMENTAL: 1
 
 jobs:
@@ -21,7 +21,6 @@ jobs:
       packages: "write"
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         docker-context:
           - build/desktops/ubuntu
@@ -76,8 +75,7 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ matrix.tag-suffix }}-${{ hashFiles(matrix.cache-dep-path) }}
           restore-keys: ${{ runner.os }}-${{ matrix.tag-suffix }}-
-          path: |
-            /tmp/.buildx-cache
+          path: /tmp/.buildx-cache
 
       - name: Build ${{ matrix.name }}
         uses: docker/build-push-action@v5
@@ -92,10 +90,11 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Sign ${{ matrix.name }}
-        run: |
-          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
+        run: cosign sign --yes --recursive \
+          ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
 
       # Do the same again for Xfce4 if this is the ubuntu build
+
       - name: Build ${{ matrix.name }} With Xfce4
         uses: docker/build-push-action@v5
         if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
@@ -114,5 +113,5 @@ jobs:
 
       - name: Sign ${{ matrix.name }} With Xfce4
         if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
-        run: |
-          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-xfce4@${{ steps.xfce4-build.outputs.digest }}
+        run: cosign sign --yes --recursive \
+          ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-xfce4@${{ steps.xfce4-build.outputs.digest }}
