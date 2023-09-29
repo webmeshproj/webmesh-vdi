@@ -146,6 +146,7 @@ build-manager:
 ## make build-app          # Build the app docker image.
 build-app:
 	VERSION=$(VERSION) $(GORELEASER) build --single-target --id app $(BUILD_ARGS)
+	cd ui/app && yarn install && quasar build
 	$(call build_docker,app,${APP_IMAGE})
 
 ## make build-proxy  # Build the proxy image without audio support.

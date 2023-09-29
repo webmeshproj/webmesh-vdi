@@ -13,6 +13,7 @@ env:
   IMAGE_PREFIX: ghcr.io/webmeshproj/vdi
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
   GO_VERSION: 1.21
+  NODE_VERSION: 16
   BUILD_IDS: --id app --id manager --id proxy
   CACHE_DEP_PATH: go.sum
   BUILD_PARALLELISM: 4
@@ -39,14 +40,20 @@ jobs:
           check-latest: true
           cache: false
 
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       - name: Setup Build Cache
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-build-go-${{ env.GO_VERSION }}-${{ hashFiles(env.CACHE_DEP_PATH) }}
-          restore-keys: ${{ runner.os }}-build-go-${{ env.GO_VERSION }}-
+          key: ${{ runner.os }}-build-${{ hashFiles(env.CACHE_DEP_PATH) }}
+          restore-keys: ${{ runner.os }}-build-${{ env.GO_VERSION }}-
           path: |
             ~/go/pkg
             ~/.cache/go-build
+            ui/app/node_modules
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -81,6 +88,12 @@ jobs:
           version: latest
           args: build --clean --fail-fast --parallelism=${{ env.BUILD_PARALLELISM }} ${{ env.BUILD_IDS }}
 
+      - name: Build UI Assets
+        shell: bash
+        run: |
+          yarn global add @quasar/cli
+          cd ui/app && yarn install && quasar build
+
       - name: Build and Push Manager Image
         uses: docker/build-push-action@v5
         id: manager-build
@@ -100,8 +113,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_PREFIX }}-app:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
-          cache-to: type=gha,mode=max
-          cache-from: type=gha
 
       - name: Build and Push Proxy Image
         uses: docker/build-push-action@v5
