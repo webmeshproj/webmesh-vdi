@@ -47,8 +47,6 @@ jobs:
       - name: Build Proxy Images
         uses: docker/build-push-action@v5
         id: docker-build
-        env:
-          LDFLAGS: -s -w -X github.com/kvdi/kvdi/pkg/version.Version=${{ env.VERSION }} -X github.com/kvdi/kvdi/pkg/version.GitCommit=${{ github.sha }}
         with:
           context: .
           file: build/Dockerfile.kvdi-proxy
@@ -57,5 +55,3 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           cache-to: type=local,dest=/home/runner/.buildx-proxy-cache
           cache-from: type=local,src=/home/runner/.buildx-proxy-cache
-          build-args: |
-            LDFLAGS=${{ env.LDFLAGS }}

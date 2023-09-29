@@ -1,9 +1,11 @@
-#################
-# Compile image #
-#################
+# Proxy build image
 FROM golang:1.21-alpine as builder
 
-RUN apk --update-cache add curl
+RUN apk --update-cache add \
+  curl pkgconfig gcc musl-dev \
+  pulseaudio-dev glib-dev \
+  gstreamer-dev gst-plugins-base-dev
+
 ARG TARGETARCH=amd64
 RUN [[ "${TARGETARCH}" == "amd64" ]] && apk add upx || true
 
@@ -16,30 +18,23 @@ COPY go.mod /build/go.mod
 COPY go.sum /build/go.sum
 RUN go mod download
 
-# Go build options
-ENV GO111MODULE=on
-## CGO is required for GST bindings
-ENV CGO_ENABLED=1
-
-RUN apk add pulseaudio-dev glib-dev gstreamer-dev gst-plugins-base-dev pkgconfig gcc musl-dev
-
 # Copy go code
 COPY apis/        /build/apis
 COPY pkg/         /build/pkg
 COPY cmd/kvdi-proxy  /build/cmd/kvdi-proxy
 
 # Build the binary
-ARG LDFLAGS
-RUN go build \
+RUN CGO_ENABLED=1 go build \
   -o /tmp/kvdi-proxy \
-  -ldflags="${LDFLAGS}" \
+  -trimpath \
+  -ldflags "-s -w" \
   ./cmd/kvdi-proxy 
+
+# Compress on AMD64
 ARG TARGETARCH=amd64
 RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/kvdi-proxy || true
 
-###############
-# Final Image #
-###############
+# Final image with just runtime dependencies
 FROM alpine
 
 RUN apk add --update --no-cache \
