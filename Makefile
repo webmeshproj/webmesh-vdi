@@ -257,7 +257,7 @@ CLUSTER_NAME         ?= kvdi
 KUBERNETES_VERSION   ?= v1.22.2
 KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
 HELM_DOWNLOAD_URL    ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
-CLUSTER_KUBECONFIG    ?= bin/kubeconfig.yaml
+CLUSTER_KUBECONFIG   ?= bin/kubeconfig.yaml
 
 KUBECTL ?= kubectl
 HELM    ?= helm
@@ -273,6 +273,7 @@ test-cluster:
 		-p 443:443@loadbalancer -p 5556:5556@loadbalancer
 	mkdir -p $(shell dirname $(CLUSTER_KUBECONFIG))
 	$(K3D) kubeconfig get $(CLUSTER_NAME) > $(CLUSTER_KUBECONFIG)
+	chmod 0600 $(CLUSTER_KUBECONFIG)
 
 ##
 ## make load-all               # Load all the docker images into the local k3d cluster.
@@ -290,15 +291,14 @@ load-app: build-app
 load-proxy: build-proxy
 	$(call load_image,${KVDI_PROXY_IMAGE})
 
-KUBECTL_K3D = $(KUBECTL) --kubeconfig ${CLUSTER_KUBECONFIG}
-HELM_K3D = $(HELM) --kubeconfig ${CLUSTER_KUBECONFIG}
+KUBECTL_K3D := $(KUBECTL) --kubeconfig ${CLUSTER_KUBECONFIG}
+HELM_K3D    := $(HELM) --kubeconfig ${CLUSTER_KUBECONFIG}
 
 define VAULT_POLICY
 path "kvdi/*" {
     capabilities = ["create", "read", "update", "delete", "list"]
 }
 endef
-
 export VAULT_POLICY
 
 ## make test-vault             # Deploys a vault instance into the k3d cluster.
