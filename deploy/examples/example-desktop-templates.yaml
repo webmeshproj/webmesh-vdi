@@ -8,6 +8,7 @@ spec:
     imagePullPolicy: IfNotPresent
     allowRoot: true
   proxy:
+    image: ghcr.io/webmeshproj/vdi-proxy:latest
     allowFileTransfer: true
   dind: 
     image: "docker:19-dind" # Defaults to latest which may have issues depending on your runtime
@@ -27,6 +28,7 @@ spec:
     imagePullPolicy: IfNotPresent
     init: supervisord
   proxy:
+    image: ghcr.io/webmeshproj/vdi-proxy:latest
     pulseServer: unix:///var/run/kvdi/pulse-server
   tags:
     os: ubuntu
