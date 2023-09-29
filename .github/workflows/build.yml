@@ -28,7 +28,6 @@ jobs:
       matrix:
         container:
           - app
-          - kvdi-proxy
           - manager
         include:
           - container: app
