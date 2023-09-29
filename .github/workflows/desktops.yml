@@ -74,8 +74,8 @@ jobs:
       - name: Setup Buildx Cache
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-${{ matrix.name }}-${{ hashFiles(matrix.cache-dep-path) }}
-          restore-keys: ${{ runner.os }}-${{ matrix.name }}-
+          key: ${{ runner.os }}-${{ matrix.tag-suffix }}-${{ hashFiles(matrix.cache-dep-path) }}
+          restore-keys: ${{ runner.os }}-${{ matrix.tag-suffix }}-
           path: |
             /tmp/.buildx-cache
 
