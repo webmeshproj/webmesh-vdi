@@ -2,7 +2,7 @@
 # Compile image #
 #################
 FROM golang:1.21-alpine as builder
-RUN uname -a ; exit 1
+
 RUN apk --update-cache add curl
 ARG TARGETARCH=amd64
 RUN [[ "${TARGETARCH}" == "amd64" ]] && apk add upx || true
