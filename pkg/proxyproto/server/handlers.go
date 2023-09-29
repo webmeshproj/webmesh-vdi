@@ -89,8 +89,7 @@ func (p *Server) handleDisplay(conn *proxyproto.Conn) {
 	if err != nil {
 		p.log.Error(err, "Failed to setup pulseaudio, playback will not function")
 	}
-
-	if paDevices != nil {
+	if err == nil {
 		defer func() {
 			if derr := paDevices.Destroy(); derr != nil {
 				p.log.Error(derr, "Failed to cleanup device manager")
