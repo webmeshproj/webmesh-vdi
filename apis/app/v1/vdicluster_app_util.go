@@ -22,11 +22,11 @@ package v1
 import (
 	"fmt"
 
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-	"github.com/kvdi/kvdi/pkg/version"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/version"
 )
 
 // GetAppName returns the name of the kVDI app deployment for this VDICluster.
@@ -70,7 +70,7 @@ func (c *VDICluster) GetAppImage() string {
 	if c.Spec.App != nil && c.Spec.App.Image != "" {
 		return c.Spec.App.Image
 	}
-	return fmt.Sprintf("ghcr.io/kvdi/app:%s", version.Version)
+	return fmt.Sprintf("ghcr.io/webmeshproj/vdi-app:%s", version.Version)
 }
 
 // GetAppPullPolicy returns the ImagePullPolicy to use for the app deployment.

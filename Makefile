@@ -338,7 +338,9 @@ REPO_URL  ?= https://kvdi.github.io/helm-charts/charts
 deploy: $(HELM)
 	$(HELM_K3D) repo add kvdi $(REPO_URL)
 	$(HELM_K3D) upgrade --install kvdi kvdi/kvdi \
+		--set manager.image.repository=$(REPO)/vdi-manager \
 		--set manager.image.tag=$(VERSION) \
+		--set vdi.spec.app.image=$(APP_IMAGE) \
 		--wait ${HELM_ARGS}
 
 ## make deploy-crds            # Deploys just the CRDs into the k3d cluster.

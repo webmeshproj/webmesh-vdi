@@ -28,10 +28,10 @@ import (
 	"strconv"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 	"github.com/kvdi/kvdi/pkg/version"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 // FileTransferEnabled returns true if desktops booted from the template should
@@ -56,7 +56,7 @@ func (t *Template) GetKVDIVNCProxyImage() string {
 	if t.Spec.ProxyConfig != nil && t.Spec.ProxyConfig.Image != "" {
 		return t.Spec.ProxyConfig.Image
 	}
-	return fmt.Sprintf("ghcr.io/kvdi/proxy:%s", version.Version)
+	return fmt.Sprintf("ghcr.io/webmeshproj/vdi-proxy:%s", version.Version)
 }
 
 // IsTCPDisplaySocket returns true if the VNC server is listening on a TCP socket.
