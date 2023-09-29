@@ -136,7 +136,7 @@ LDFLAGS ?= -s -w \
 build: build-all
 
 ## make build-all          # Build the manager, app, and nonvnc-proxy images.
-build-all: build-manager build-app build-kvdi-proxy
+build-all: build-manager build-app build-proxy
 
 ## make build-manager      # Build the manager docker image.
 build-manager:
@@ -148,9 +148,14 @@ build-app:
 	VERSION=$(VERSION) $(GORELEASER) build --single-target --id app $(BUILD_ARGS)
 	$(call build_docker,app,${APP_IMAGE})
 
-## make build-kvdi-proxy  # Build the kvdi-proxy image.
-build-kvdi-proxy:
-	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
+## make build-proxy  # Build the proxy image without audio support.
+build-proxy:
+	VERSION=$(VERSION) $(GORELEASER) build --single-target --id proxy $(BUILD_ARGS)
+	$(call build_docker,proxy,${KVDI_PROXY_IMAGE})
+
+## make build-audio-proxy # Build the proxy image with audio support.
+build-audio-proxy:
+	$(call build_docker,audio-proxy,${KVDI_PROXY_IMAGE})
 
 build-kvdictl:
 	cp deploy/bundle.yaml pkg/cmd/
@@ -186,10 +191,10 @@ license-headers:
 ##
 
 ## make push               # Alias to make push-all.
-push: build-manager push-manager push-kvdi-proxy
+push: build-manager push-manager push-proxy
 
-## make push-all           # Push the manager, app, and kvdi-proxy images.
-push-all: push-manager push-app push-kvdi-proxy
+## make push-all           # Push the manager, app, and proxy images.
+push-all: push-manager push-app push-proxy
 
 ## make push-manager       # Push the manager docker image.
 push-manager: build-manager
@@ -199,8 +204,8 @@ push-manager: build-manager
 push-app: build-app
 	docker push ${APP_IMAGE}
 
-## make push-kvdi-proxy  # Push the kvdi-proxy docker image.
-push-kvdi-proxy: build-kvdi-proxy
+## make push-proxy  # Push the proxy docker image.
+push-proxy: build-proxy
 	docker push ${KVDI_PROXY_IMAGE}
 
 ##
@@ -252,7 +257,7 @@ test-cluster: $(K3D)
 
 ##
 ## make load-all               # Load all the docker images into the local k3d cluster.
-load-all: load-manager load-app load-kvdi-proxy
+load-all: load-manager load-app load-proxy
 
 ## make load-manager
 load-manager: $(K3D) build-manager
@@ -262,8 +267,8 @@ load-manager: $(K3D) build-manager
 load-app: $(K3D) build-app
 	$(call load_image,${APP_IMAGE})
 
-## make load-kvdi-proxy
-load-kvdi-proxy: $(K3D) build-kvdi-proxy
+## make load-proxy
+load-proxy: $(K3D) build-proxy
 	$(call load_image,${KVDI_PROXY_IMAGE})
 
 KUBECTL_K3D = $(KUBECTL) --kubeconfig ${CLUSTER_KUBECONFIG}

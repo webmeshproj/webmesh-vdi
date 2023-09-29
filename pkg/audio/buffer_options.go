@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-logr/logr"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
@@ -58,63 +59,63 @@ type BufferOpts struct {
 	PulseMicChannels int
 }
 
-func (o *BufferOpts) getLogger() logr.Logger {
+func (o *BufferOpts) GetLogger() logr.Logger {
 	return o.Logger
 }
 
-func (o *BufferOpts) getPulseFormat() string {
+func (o *BufferOpts) GetPulseFormat() string {
 	if o.PulseFormat == "" {
 		return "S16LE"
 	}
 	return o.PulseFormat
 }
 
-func (o *BufferOpts) getPulseMicRate() int {
+func (o *BufferOpts) GetPulseMicRate() int {
 	if o.PulseMicSampleRate == 0 {
 		return 16000
 	}
 	return o.PulseMicSampleRate
 }
 
-func (o *BufferOpts) getPulseMicChannels() int {
+func (o *BufferOpts) GetPulseMicChannels() int {
 	if o.PulseMicChannels == 0 {
 		return 1
 	}
 	return o.PulseMicChannels
 }
 
-func (o *BufferOpts) getPulsePlaybackRate() int {
+func (o *BufferOpts) GetPulsePlaybackRate() int {
 	if o.PulseMonitorSampleRate == 0 {
 		return 24000
 	}
 	return o.PulseMonitorSampleRate
 }
 
-func (o *BufferOpts) getPulseMonitorChannels() int {
+func (o *BufferOpts) GetPulseMonitorChannels() int {
 	if o.PulseMonitorChannels == 0 {
 		return 2
 	}
 	return o.PulseMonitorChannels
 }
 
-func (o *BufferOpts) getPulseMonitorName() string {
+func (o *BufferOpts) GetPulseMonitorName() string {
 	// gstreamer will attempt to use the default if this is empty
 	return o.PulseMonitorName
 }
 
-func (o *BufferOpts) getPulseServer() string {
+func (o *BufferOpts) GetPulseServer() string {
 	// gstreamer will attempt to use the default if this is empty
 	return o.PulseServer
 }
 
-func (o *BufferOpts) getMicName() string {
+func (o *BufferOpts) GetMicName() string {
 	if o.PulseMicName == "" {
 		return "virtmic"
 	}
 	return o.PulseMicName
 }
 
-func (o *BufferOpts) getMicPath() string {
+func (o *BufferOpts) GetMicPath() string {
 	if o.PulseMicPath == "" {
 		return filepath.Join(v1.DesktopRunDir, "mic.fifo")
 	}

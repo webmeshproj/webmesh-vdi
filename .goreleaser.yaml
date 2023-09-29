@@ -53,6 +53,29 @@ builds:
     main: cmd/kvdi-proxy/main.go
     binary: proxy
     tags:
+      - osusergo
+      - netgo
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w 
+      - -X github.com/kvdi/kvdi/pkg/version.Version={{ .Env.VERSION }}
+      - -X github.com/kvdi/kvdi/pkg/version.Commit={{ .Commit }}
+      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{ .Date }}
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=1
+
+  - id: audio-proxy
+    main: cmd/kvdi-proxy/main.go
+    binary: audio-proxy
+    tags:
+      - audio
+      - osusergo
       - netgo
     flags:
       - -trimpath
@@ -70,11 +93,9 @@ builds:
      - >-
       CGO_ENABLED=1
       {{ if eq .Arch "arm64" }}
-      CC=${PWD}/bin/toolchains/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc
-      CXX=${PWD}/bin/toolchains/aarch64-linux-musl-cross/bin/aarch64-linux-musl-g++
+      CC=aarch64-linux-gnu-gcc
       {{ else if eq .Arch "amd64" }}
-      CC=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
-      CXX=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-g++
+      CC=x86_64-linux-gnu-gcc
       {{ end }}
 
 

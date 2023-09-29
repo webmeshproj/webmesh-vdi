@@ -43,31 +43,6 @@ import (
 	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
-func (p *Server) setupPulseAudio(manager *pa.DeviceManager) error {
-	if err := manager.WaitForReady(time.Second * 2); err != nil {
-		return err
-	}
-	if _, err := manager.AddSink(p.opts.PlaybackDeviceName, p.opts.PlaybackDeviceDescription); err != nil {
-		return err
-	}
-
-	if _, err := manager.AddSource(&pa.SourceOpts{
-		Name:         p.opts.RecordingDeviceName,
-		Description:  p.opts.RecordingDeviceDescription,
-		FifoPath:     p.opts.RecordingDevicePath,
-		SampleFormat: p.opts.RecordingDeviceFormat,
-		SampleRate:   p.opts.RecordingDeviceSampleRate,
-		Channels:     p.opts.RecordingDeviceChannels,
-	}); err != nil {
-		return err
-	}
-
-	if err := manager.SetDefaultSource(p.opts.RecordingDeviceName); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (p *Server) handleDisplay(conn *proxyproto.Conn) {
 	addr := fmt.Sprintf("%s://%s", p.opts.DisplayProto, p.opts.DisplayAddress)
 	p.log.Info(fmt.Sprintf("Received display proxy request, connecting to %s", addr))
@@ -188,6 +163,31 @@ func (p *Server) handleAudio(conn *proxyproto.Conn) {
 	// Block on the audio pipeline
 	audioBuffer.RunLoop()
 	p.log.Info("Audio stream proxy ended")
+}
+
+func (p *Server) setupPulseAudio(manager pa.DeviceManager) error {
+	if err := manager.WaitForReady(time.Second * 2); err != nil {
+		return err
+	}
+	if _, err := manager.AddSink(p.opts.PlaybackDeviceName, p.opts.PlaybackDeviceDescription); err != nil {
+		return err
+	}
+
+	if _, err := manager.AddSource(&pa.SourceOpts{
+		Name:         p.opts.RecordingDeviceName,
+		Description:  p.opts.RecordingDeviceDescription,
+		FifoPath:     p.opts.RecordingDevicePath,
+		SampleFormat: p.opts.RecordingDeviceFormat,
+		SampleRate:   p.opts.RecordingDeviceSampleRate,
+		Channels:     p.opts.RecordingDeviceChannels,
+	}); err != nil {
+		return err
+	}
+
+	if err := manager.SetDefaultSource(p.opts.RecordingDeviceName); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *Server) handleStat(conn *proxyproto.Conn) {

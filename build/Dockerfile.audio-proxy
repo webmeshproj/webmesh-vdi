@@ -27,6 +27,7 @@ COPY cmd/kvdi-proxy  /build/cmd/kvdi-proxy
 RUN CGO_ENABLED=1 go build \
   -o /tmp/kvdi-proxy \
   -trimpath \
+  -tags audio \
   -ldflags "-s -w" \
   ./cmd/kvdi-proxy 
 

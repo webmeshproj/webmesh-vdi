@@ -1,3 +1,5 @@
+//go:build audio
+
 /*
 Copyright 2020,2021 Avi Zimmerman
 
@@ -27,9 +29,24 @@ package pa
 #include <pulse/introspect.h>
 #include <pulse/thread-mainloop.h>
 
-extern void success_cb (pa_context *c, int success, void *userdata);
-extern void state_change_cb (pa_context *c, void *userdata);
-extern void new_module_cb (pa_context *c, uint32_t idx, void *userdata);
+extern void successCb(int success, void *userdata);
+extern void moduleIDCb(uint idx, void *userdata);
+extern void stateChanged (void* userdata);
+
+void manager_success_cb (pa_context *c, int success, void *userdata) {
+	successCb(success, userdata);
+};
+
+void new_module_cb(pa_context *c, uint32_t idx, void *userdata)
+{
+	moduleIDCb(idx, userdata);
+};
+
+void state_change_cb(pa_context *c, void *userdata)
+{
+	stateChanged(userdata);
+};
+
 */
 import "C"
 
@@ -44,15 +61,10 @@ import (
 	gopointer "github.com/mattn/go-pointer"
 )
 
-// DeviceManagerOpts represent options to pass to the device manager.
-type DeviceManagerOpts struct {
-	PulseServer string
-}
-
 // DeviceManager is an object for managing virtual PulseAudio devices.
-type DeviceManager struct {
+type deviceManager struct {
 	server   string
-	devices  []*Device
+	devices  []*device
 	state    C.pa_context_state_t
 	mainLoop *C.pa_threaded_mainloop
 	paCtx    *C.pa_context
@@ -61,10 +73,10 @@ type DeviceManager struct {
 }
 
 // NewDeviceManager returns a new DeviceManager.
-func NewDeviceManager(opts *DeviceManagerOpts) (*DeviceManager, error) {
-	devManager := &DeviceManager{
+func newDeviceManager(opts *DeviceManagerOpts) (*deviceManager, error) {
+	devManager := &deviceManager{
 		server:   opts.PulseServer,
-		devices:  make([]*Device, 0),
+		devices:  make([]*device, 0),
 		mainLoop: C.pa_threaded_mainloop_new(),
 	}
 	if err := devManager.connect(); err != nil {
@@ -75,7 +87,7 @@ func NewDeviceManager(opts *DeviceManagerOpts) (*DeviceManager, error) {
 }
 
 // connect will create a new context and start the main loop.
-func (p *DeviceManager) connect() error {
+func (p *deviceManager) connect() error {
 	// build args
 	cname := C.CString("kvdi_device_manager")
 	defer C.free(unsafe.Pointer(cname))
@@ -116,12 +128,12 @@ func (p *DeviceManager) connect() error {
 }
 
 // getState returns the `pa_context_state_t` of the current context.
-func (p *DeviceManager) getState() C.pa_context_state_t { return p.state }
+func (p *deviceManager) getState() C.pa_context_state_t { return p.state }
 
 // stateChanged is fired everytime there is a change to the underlying pulse context.
 // It sets the current state locally, and a switch statement is templated out for further
 // fine-grained control.
-func (p *DeviceManager) stateChanged() {
+func (p *deviceManager) stateChanged() {
 	p.state = C.pa_context_get_state((*C.pa_context)(p.nativeCtx()))
 	switch p.state {
 	case C.PA_CONTEXT_UNCONNECTED:
@@ -136,7 +148,7 @@ func (p *DeviceManager) stateChanged() {
 
 // disconnect will disconnect from the pulse audio server and free
 // all associated resources.
-func (p *DeviceManager) disconnect() {
+func (p *deviceManager) disconnect() {
 	if p.getState() == C.PA_CONTEXT_READY {
 		C.pa_context_disconnect((*C.pa_context)(p.nativeCtx()))
 	}
@@ -147,24 +159,24 @@ func (p *DeviceManager) disconnect() {
 }
 
 // nativeCtx returns the native `pa_context`.
-func (p *DeviceManager) nativeCtx() *C.pa_context { return p.paCtx }
+func (p *deviceManager) nativeCtx() *C.pa_context { return p.paCtx }
 
 // getMainLoop returns the mainloop for this context.
-func (p *DeviceManager) getMainLoop() *C.pa_threaded_mainloop { return p.mainLoop }
+func (p *deviceManager) getMainLoop() *C.pa_threaded_mainloop { return p.mainLoop }
 
 // getMainLoopAPI returns the `pa_mainloop_api` object for this context's mainloop.
-func (p *DeviceManager) getMainLoopAPI() *C.pa_mainloop_api {
+func (p *deviceManager) getMainLoopAPI() *C.pa_mainloop_api {
 	return C.pa_threaded_mainloop_get_api(p.getMainLoop())
 }
 
 // getServer returns the path to the current pulse audio server.
-func (p *DeviceManager) getServer() string { return p.server }
+func (p *deviceManager) getServer() string { return p.server }
 
 // appendDevice adds the given device to the internal memory of devices.
-func (p *DeviceManager) appendDevice(device *Device) { p.devices = append(p.devices, device) }
+func (p *deviceManager) appendDevice(device *device) { p.devices = append(p.devices, device) }
 
 // loadMoudle is a synchronous go wrapper around `pa_context_load_module`.
-func (p *DeviceManager) loadModule(name, args string) (int, error) {
+func (p *deviceManager) loadModule(name, args string) (int, error) {
 	// setup arguments
 	cModType := C.CString(name)
 	cModArgs := C.CString(args)
@@ -193,7 +205,7 @@ func (p *DeviceManager) loadModule(name, args string) (int, error) {
 }
 
 // AddSink adds a new null-sink with the given name and description.
-func (p *DeviceManager) AddSink(name, description string) (*Device, error) {
+func (p *deviceManager) AddSink(name, description string) (Device, error) {
 	p.mux.Lock()
 	defer p.mux.Unlock()
 
@@ -202,7 +214,7 @@ func (p *DeviceManager) AddSink(name, description string) (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	device := &Device{
+	device := &device{
 		pulseCtx:    p.nativeCtx(),
 		id:          deviceID,
 		name:        name,
@@ -212,22 +224,12 @@ func (p *DeviceManager) AddSink(name, description string) (*Device, error) {
 	return device, nil
 }
 
-// SourceOpts represents options for a creating a new virtual source.
-type SourceOpts struct {
-	Name                 string
-	Description          string
-	FifoPath             string
-	SampleFormat         string
-	Channels, SampleRate int
-}
-
 var idFailed = 4294967295
 
 // AddSource adds a new pipe-source with the given name, description, and FIFO path.
-func (p *DeviceManager) AddSource(opts *SourceOpts) (*Device, error) {
+func (p *deviceManager) AddSource(opts *SourceOpts) (Device, error) {
 	p.mux.Lock()
 	defer p.mux.Unlock()
-
 	args := fmt.Sprintf(`source_name="%s" source_properties=device.description="%s" file="%s" format="%s" rate=%d channels=%d`,
 		opts.Name, opts.Description, opts.FifoPath, opts.SampleFormat, opts.SampleRate, opts.Channels,
 	)
@@ -238,7 +240,7 @@ func (p *DeviceManager) AddSource(opts *SourceOpts) (*Device, error) {
 	if deviceID == idFailed {
 		return nil, errors.New("Device parameters were incorrect")
 	}
-	device := &Device{
+	device := &device{
 		pulseCtx:    p.nativeCtx(),
 		id:          deviceID,
 		name:        opts.Name,
@@ -249,7 +251,7 @@ func (p *DeviceManager) AddSource(opts *SourceOpts) (*Device, error) {
 }
 
 // SetDefaultSource will set the default source for recording clients.
-func (p *DeviceManager) SetDefaultSource(name string) error {
+func (p *deviceManager) SetDefaultSource(name string) error {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -263,7 +265,7 @@ func (p *DeviceManager) SetDefaultSource(name string) error {
 	op := C.pa_context_set_default_source(
 		(*C.pa_context)(p.nativeCtx()),
 		(*C.char)(cName),
-		C.pa_context_success_cb_t(C.success_cb), chPtr,
+		C.pa_context_success_cb_t(C.manager_success_cb), chPtr,
 	)
 
 	errFailed := fmt.Errorf("Failed to set %s as the default source", name)
@@ -278,12 +280,12 @@ func (p *DeviceManager) SetDefaultSource(name string) error {
 }
 
 // Devices returns a list of the current devices managed by this instance.
-func (p *DeviceManager) Devices() []*Device { return p.devices }
+func (p *deviceManager) Devices() []*device { return p.devices }
 
 // WaitForReady waits for the DeviceManager to be able to execute operations
 // against the PulseAudio server. Since all calls are async, this method SHOULD
 // be run after a new DeviceManager is created.
-func (p *DeviceManager) WaitForReady(timeout time.Duration) error {
+func (p *deviceManager) WaitForReady(timeout time.Duration) error {
 	var ctx context.Context
 	var cancel func()
 	if timeout > 1 {
@@ -311,7 +313,7 @@ func (p *DeviceManager) WaitForReady(timeout time.Duration) error {
 
 // Destroy will unload all currently managed PA devices and close the connection
 // to the pulse server.
-func (p *DeviceManager) Destroy() error {
+func (p *deviceManager) Destroy() error {
 	p.mux.Lock()
 	defer p.mux.Unlock()
 	for _, dev := range p.Devices() {

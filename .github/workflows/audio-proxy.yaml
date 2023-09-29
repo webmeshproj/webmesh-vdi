@@ -1,4 +1,4 @@
-name: Build Proxy Image
+name: Build Audio Proxy Image
 
 on:
   push:
@@ -10,14 +10,14 @@ on:
 env:
   PLATFORMS: linux/amd64,linux/arm64
   ARCHS: amd64,arm64
-  IMAGE: ghcr.io/webmeshproj/vdi-proxy
+  IMAGE: ghcr.io/webmeshproj/vdi-audio-proxy
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
   COSIGN_EXPERIMENTAL: "1"
 
 jobs:
   build:
     name: Build Proxy Images
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: "write"
       packages: "write"
@@ -49,7 +49,7 @@ jobs:
         id: docker-build
         with:
           context: .
-          file: build/Dockerfile.kvdi-proxy
+          file: build/Dockerfile.audio-proxy
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE }}:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}

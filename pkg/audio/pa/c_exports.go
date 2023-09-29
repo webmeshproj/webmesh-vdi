@@ -1,3 +1,5 @@
+//go:build audio
+
 /*
 Copyright 2020,2021 Avi Zimmerman
 
@@ -42,7 +44,7 @@ func moduleIDCb(idx C.uint32_t, chPtr unsafe.Pointer) {
 //export stateChanged
 func stateChanged(managerPtr unsafe.Pointer) {
 	ptr := gopointer.Restore(managerPtr)
-	manager := ptr.(*DeviceManager)
+	manager := ptr.(*deviceManager)
 	manager.stateChanged()
 }
 

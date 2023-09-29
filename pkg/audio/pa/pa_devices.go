@@ -1,3 +1,5 @@
+//go:build audio
+
 /*
 Copyright 2020,2021 Avi Zimmerman
 
@@ -25,7 +27,12 @@ package pa
 #include <pulse/context.h>
 #include <pulse/introspect.h>
 
-extern void success_cb (pa_context *c, int success, void *userdata);
+extern void successCb(int success, void *userdata);
+
+void device_success_cb(pa_context *c, int success, void *userdata)
+{
+	successCb(success, userdata);
+};
 */
 import "C"
 
@@ -38,7 +45,7 @@ import (
 // Device is a go wrapper around a loaded pulse audio module.
 // It contains internal pointers to the context that created it
 // as well as additional metadata.
-type Device struct {
+type device struct {
 	pulseCtx          *C.pa_context
 	id                int
 	name, description string
@@ -46,22 +53,22 @@ type Device struct {
 }
 
 // nativeCtx returns the native pulse-audio context backing this instance.
-func (d *Device) nativeCtx() *C.pa_context { return d.pulseCtx }
+func (d *device) nativeCtx() *C.pa_context { return d.pulseCtx }
 
 // ID returns the ID of this module.
-func (d *Device) ID() int { return d.id }
+func (d *device) ID() int { return d.id }
 
 // Name returns the name of this module.
-func (d *Device) Name() string { return d.name }
+func (d *device) Name() string { return d.name }
 
 // Description returns the description for this module.
-func (d *Device) Description() string { return d.description }
+func (d *device) Description() string { return d.description }
 
 // IsUnloaded returns true if this module has been unloaded.
-func (d *Device) IsUnloaded() bool { return d.unloaded }
+func (d *device) IsUnloaded() bool { return d.unloaded }
 
 // Unload will unload this pulse device.
-func (d *Device) Unload() error {
+func (d *device) Unload() error {
 	resChan, chPtr := newSuccessChan()
 	defer gopointer.Unref(chPtr)
 
@@ -69,7 +76,7 @@ func (d *Device) Unload() error {
 	op := C.pa_context_unload_module(
 		(*C.pa_context)(d.nativeCtx()),
 		(C.uint32_t)(d.ID()),
-		C.pa_context_success_cb_t(C.success_cb),
+		C.pa_context_success_cb_t(C.device_success_cb),
 		chPtr,
 	)
 

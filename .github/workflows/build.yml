@@ -1,4 +1,4 @@
-name: Build App and Manager
+name: Build Images
 
 on:
   push:
@@ -13,11 +13,12 @@ env:
   IMAGE_PREFIX: ghcr.io/webmeshproj/vdi
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
   COSIGN_EXPERIMENTAL: "1"
+  BUILD_IDS: --id app --id manager --id proxy
 
 jobs:
   build:
-    name: Build App and Manager Images
-    runs-on: self-hosted
+    name: Build Images
+    runs-on: ubuntu-latest
     permissions:
       contents: "write"
       packages: "write"
@@ -33,7 +34,7 @@ jobs:
         with:
           go-version: 1.21
           check-latest: true
-          cache: false
+          cache: true
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -56,14 +57,14 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: latest
-          args: build --snapshot --clean --id app --id manager
+          args: build --snapshot --clean ${{ env.BUILD_IDS }}
 
       - name: Run Container Release
         uses: goreleaser/goreleaser-action@v5
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: latest
-          args: build --clean --id app --id manager
+          args: build --clean ${{ env.BUILD_IDS }}
 
       - name: Build and Push Manager Image
         uses: docker/build-push-action@v5
@@ -82,5 +83,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_PREFIX }}-app:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
-          cache-to: type=local,dest=/home/runner/.buildx-app-cache
-          cache-from: type=local,src=/tmp/runner/.buildx-app-cache
+
+      - name: Build and Push Proxy Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: build/Dockerfile.proxy
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}-proxy:${{ env.VERSION }}
+          platforms: ${{ env.PLATFORMS }}

@@ -1,0 +1,6 @@
+# Just copy release assets to scratch image
+FROM scratch
+
+ARG TARGETOS TARGETARCH
+ADD dist/proxy_${TARGETOS}_${TARGETARCH}*/proxy /proxy
+ENTRYPOINT ["/proxy"]

@@ -1,3 +1,5 @@
+//go:build audio
+
 /*
 
    Copyright 2020,2021 Avi Zimmerman
@@ -22,8 +24,9 @@
 package main
 
 import (
-	"github.com/kvdi/kvdi/pkg/audio/pa"
 	"github.com/tinyzimmer/go-gst/gst"
+
+	"github.com/kvdi/kvdi/pkg/audio/pa"
 )
 
 type state struct {
