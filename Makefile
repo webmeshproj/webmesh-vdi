@@ -12,13 +12,6 @@ endif
 
 all: build
 
-# Run tests
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: generate fmt vet manifests
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
-
 # Build manager binary
 manager: generate fmt vet
 	go build -o bin/manager main.go
@@ -90,6 +83,9 @@ $(TOOLCHAINS): $(LOCALBIN)
 	curl -SsL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -C $(TOOLCHAINS) -xz
 	curl -SsL https://musl.cc/x86_64-linux-musl-cross.tgz | tar -C $(TOOLCHAINS) -xz
 
+clean-toolchains:
+	rm -rf $(TOOLCHAINS)
+	$(MAKE) $(TOOLCHAINS)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -127,7 +123,9 @@ bundle: manifests kustomize
 ##
 ## # Building Images
 ##
-
+GO ?= go
+GORELEASER ?= $(GO) run github.com/goreleaser/goreleaser@latest
+BUILD_ARGS ?= --snapshot --clean
 LDFLAGS ?= -s -w \
 			-X 'github.com/kvdi/kvdi/pkg/version.Version=$(VERSION)' \
 			-X 'github.com/kvdi/kvdi/pkg/version.GitCommit=$(shell git rev-parse HEAD)'
@@ -140,20 +138,18 @@ build: build-all
 ## make build-all          # Build the manager, app, and nonvnc-proxy images.
 build-all: build-manager build-app build-kvdi-proxy
 
-## make build-base         # Builds the base image that contains common go build dependies.
-build-base:
-	$(call build_docker,base,$(BASE_IMAGE))
-
 ## make build-manager      # Build the manager docker image.
-build-manager: build-base
+build-manager:
+	VERSION=$(VERSION) $(GORELEASER) build --single-target --id manager $(BUILD_ARGS)
 	$(call build_docker,manager,${MANAGER_IMAGE})
 
 ## make build-app          # Build the app docker image.
-build-app: build-base
+build-app:
+	VERSION=$(VERSION) $(GORELEASER) build --single-target --id app $(BUILD_ARGS)
 	$(call build_docker,app,${APP_IMAGE})
 
 ## make build-kvdi-proxy  # Build the kvdi-proxy image.
-build-kvdi-proxy: build-base
+build-kvdi-proxy:
 	$(call build_docker,kvdi-proxy,${KVDI_PROXY_IMAGE})
 
 build-kvdictl:
@@ -220,28 +216,12 @@ $(GOLANGCI_LINT):
 lint: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run -v --timeout 600s
 
-TEST_DOCKER_IMAGE ?= "kvdi-tests"
-test-docker-build:
-	docker build . \
-		-f .github/tests.Dockerfile \
-		-t $(TEST_DOCKER_IMAGE)
-
-TEST_CMD ?= /bin/bash
-run-in-docker: test-docker-build
-	docker run --rm --privileged \
-		-v /lib/modules:/lib/modules:ro \
-		-v /sys:/sys:ro \
-		-v /usr/src:/usr/src:ro \
-		-v "$(PWD)":/workspace \
-			-w /workspace \
-			-e HOME=/tmp \
-		$(TEST_DOCKER_IMAGE) $(TEST_CMD)
-
-test-in-docker:
-	$(MAKE) run-in-docker TEST_CMD="make test"
-
-lint-in-docker:
-	$(MAKE) run-in-docker TEST_CMD="make lint"
+# Run tests
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test: generate fmt vet manifests
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 ##
 ## # Local Testing with k3d

@@ -12,11 +12,13 @@ builds:
     tags:
       - osusergo
       - netgo
+    flags:
+      - -trimpath
     ldflags:
       - -s -w 
-      - -X github.com/kvdi/kvdi/pkg/version.Version={{.Version}}
-      - -X github.com/kvdi/kvdi/pkg/version.Commit={{.Commit}}
-      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{.Date}}
+      - -X github.com/kvdi/kvdi/pkg/version.Version={{ .Env.VERSION }}
+      - -X github.com/kvdi/kvdi/pkg/version.Commit={{ .Commit }}
+      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{ .Date }}
     goos:
       - linux
       - darwin
@@ -24,19 +26,7 @@ builds:
       - amd64
       - arm64
     env:
-     - CGO_ENABLED=1
-    overrides:
-      - goarch: arm64
-        env:
-          - >-
-            CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/arm-linux-musleabi-cross/bin/aarch64-linux-musleabi-gcc
-            CXX=${PWD}/bin/toolchains/arm-linux-musleabi-cross/bin/aarch64-linux-musleabi-g++
-      - goarch: amd64
-        env:
-          - CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
-            CXX=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-g++
+     - CGO_ENABLED=0
 
   - id: manager
     main: cmd/manager/main.go
@@ -44,63 +34,49 @@ builds:
     tags:
       - osusergo
       - netgo
+    flags:
+      - -trimpath
     ldflags:
       - -s -w 
-      - -X github.com/kvdi/kvdi/pkg/version.Version={{.Version}}
-      - -X github.com/kvdi/kvdi/pkg/version.Commit={{.Commit}}
-      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{.Date}}
+      - -X github.com/kvdi/kvdi/pkg/version.Version={{ .Env.VERSION }}
+      - -X github.com/kvdi/kvdi/pkg/version.Commit={{ .Commit }}
+      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{ .Date }}
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
       - arm64
     env:
-     - CGO_ENABLED=1
-    overrides:
-      - goarch: arm64
-        env:
-          - >-
-            CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/arm-linux-musleabi-cross/bin/aarch64-linux-musleabi-gcc
-            CXX=${PWD}/bin/toolchains/arm-linux-musleabi-cross/bin/aarch64-linux-musleabi-g++
-      - goarch: amd64
-        env:
-          - CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
-            CXX=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-g++
+     - CGO_ENABLED=0
 
   - id: proxy
     main: cmd/kvdi-proxy/main.go
     binary: proxy
     tags:
-      - osusergo
       - netgo
+    flags:
+      - -trimpath
     ldflags:
       - -s -w 
-      - -X github.com/kvdi/kvdi/pkg/version.Version={{.Version}}
-      - -X github.com/kvdi/kvdi/pkg/version.Commit={{.Commit}}
-      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{.Date}}
+      - -X github.com/kvdi/kvdi/pkg/version.Version={{ .Env.VERSION }}
+      - -X github.com/kvdi/kvdi/pkg/version.Commit={{ .Commit }}
+      - -X github.com/kvdi/kvdi/pkg/version.BuildDate={{ .Date }}
     goos:
       - linux
     goarch:
       - amd64
       - arm64
     env:
-     - CGO_ENABLED=1
-    overrides:
-      - goos: linux
-        goarch: arm64
-        env:
-          - >-
-            CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc
-      - goos: linux
-        goarch: amd64
-        env:
-          - >-
-            CGO_ENABLED=1
-            CC=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
+     - >-
+      CGO_ENABLED=1
+      {{ if eq .Arch "arm64" }}
+      CC=${PWD}/bin/toolchains/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc
+      CXX=${PWD}/bin/toolchains/aarch64-linux-musl-cross/bin/aarch64-linux-musl-g++
+      {{ else if eq .Arch "amd64" }}
+      CC=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc
+      CXX=${PWD}/bin/toolchains/x86_64-linux-musl-cross/bin/x86_64-linux-musl-g++
+      {{ end }}
+
 
 checksum:
   name_template: 'checksums.txt'

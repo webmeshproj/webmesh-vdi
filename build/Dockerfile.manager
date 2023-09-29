@@ -1,47 +1,5 @@
-#################
-# Compile image #
-#################
-FROM golang:1.21-alpine as builder
-
-RUN apk --update-cache add curl
-ARG TARGETARCH=amd64
-RUN [[ "${TARGETARCH}" == "amd64" ]] && apk add upx || true
-
-# Setup build directory
-RUN mkdir -p /build
-WORKDIR /build
-
-# Fetch deps first as they don't change frequently
-COPY go.mod /build/go.mod
-COPY go.sum /build/go.sum
-RUN go mod download
-
-# Go build options
-ENV GO111MODULE=on
-ENV CGO_ENABLED=0
-
-# Copy go code
-COPY apis/         /build/apis
-COPY pkg/          /build/pkg
-COPY controllers/  /build/controllers
-COPY cmd/manager   /build/cmd/manager
-
-# Build the binary
-ARG LDFLAGS
-RUN go build \
-  -o /tmp/manager \
-  -ldflags="${LDFLAGS}" \
-  ./cmd/manager
-
-ARG TARGETARCH=amd64
-RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/manager || true
-
-##
-# Build the runtime image
-##
 FROM scratch
 
-# Install operator binary
-COPY --from=builder /tmp/manager /manager
-
+ARG TARGETOS TARGETARCH
+ADD dist/manager_${TARGETOS}_${TARGETARCH}*/manager /manager
 ENTRYPOINT ["/manager"]

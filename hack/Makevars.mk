@@ -44,11 +44,13 @@ define get_helm
 	chmod +x $(HELM)
 endef
 
+TARGETOS   ?= $(shell go env GOOS)
 TARGETARCH ?= $(shell go env GOARCH)
 define build_docker
 	docker build . \
 		-f build/Dockerfile.$(1) \
 		-t $(2) \
+		--build-arg TARGETOS=$(TARGETOS) \
 		--build-arg TARGETARCH=$(TARGETARCH) \
 		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg LDFLAGS="$(LDFLAGS)"

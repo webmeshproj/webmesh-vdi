@@ -1,39 +1,3 @@
-#################
-# Compile image #
-#################
-FROM golang:1.21-alpine as builder
-
-RUN apk --update-cache add curl
-ARG TARGETARCH=amd64
-RUN [[ "${TARGETARCH}" == "amd64" ]] && apk add upx || true
-
-# Setup build directory
-RUN mkdir -p /build
-WORKDIR /build
-
-# Fetch deps first as they don't change frequently
-COPY go.mod /build/go.mod
-COPY go.sum /build/go.sum
-RUN go mod download
-
-# Go build options
-ENV GO111MODULE=on
-ENV CGO_ENABLED=0
-
-# Copy go code
-COPY apis/        /build/apis
-COPY pkg/         /build/pkg
-COPY cmd/app      /build/cmd/app
-
-# Build the binary
-ARG LDFLAGS
-RUN go build -o /tmp/app \
-  -ldflags="${LDFLAGS}" \
-  ./cmd/app
-
-ARG TARGETARCH=amd64
-RUN [[ "${TARGETARCH}" == "amd64" ]] && upx /tmp/app || true
-
 ##############
 # UI Builder #
 ##############
@@ -55,10 +19,10 @@ RUN cd /build && quasar build
 ###############
 FROM scratch
 
-COPY --from=builder /tmp/app /app
+ARG TARGETARCH TARGETOS
+ADD dist/app_${TARGETOS}_${TARGETARCH}*/app /app
 COPY --from=ui-builder /build/dist/spa /static
-COPY swagger.json /static/swagger.json
-# Latest quasar does not currently copy statics into dist
+ADD swagger.json /static/swagger.json
 COPY ui/app/src/statics /static/statics
 
 ENTRYPOINT ["/app"]
