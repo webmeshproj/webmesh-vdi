@@ -10,7 +10,7 @@ env:
   ARCHS: amd64,arm64
   IMAGE: ghcr.io/webmeshproj/vdi-audio-proxy
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
-  COSIGN_EXPERIMENTAL: "1"
+  COSIGN_EXPERIMENTAL: 1
 
 jobs:
   build:
@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: "write"
+      id-token: "write"
       packages: "write"
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,17 +39,23 @@ jobs:
         with:
           platforms: ${{ env.ARCHS }}
 
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@main
+
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Proxy Images
         uses: docker/build-push-action@v5
-        id: docker-build
+        id: proxy-build
         with:
           context: .
           file: build/Dockerfile.audio-proxy
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE }}:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
-          cache-to: type=local,dest=/home/runner/.buildx-proxy-cache
-          cache-from: type=local,src=/home/runner/.buildx-proxy-cache
+
+      - name: Sign Container Images
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE }}@${{ steps.proxy-build.outputs.digest }}

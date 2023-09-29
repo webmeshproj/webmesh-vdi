@@ -12,10 +12,11 @@ env:
   ARCHS: amd64,arm64
   IMAGE_PREFIX: ghcr.io/webmeshproj/vdi
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
-  COSIGN_EXPERIMENTAL: "1"
   GO_VERSION: 1.21
   BUILD_IDS: --id app --id manager --id proxy
   CACHE_DEP_PATH: go.sum
+  BUILD_PARALLELISM: 4
+  COSIGN_EXPERIMENTAL: 1
 
 jobs:
   build:
@@ -23,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: "write"
+      id-token: "write"
       packages: "write"
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -63,6 +64,9 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@main
+
       - name: Run Snapshot Container Release
         uses: goreleaser/goreleaser-action@v5
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
@@ -75,10 +79,11 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: latest
-          args: build --clean ${{ env.BUILD_IDS }}
+          args: build --clean --fail-fast --parallelism=${{ env.BUILD_PARALLELISM }} ${{ env.BUILD_IDS }}
 
       - name: Build and Push Manager Image
         uses: docker/build-push-action@v5
+        id: manager-build
         with:
           context: .
           file: build/Dockerfile.manager
@@ -88,18 +93,29 @@ jobs:
 
       - name: Build and Push App Image
         uses: docker/build-push-action@v5
+        id: app-build
         with:
           context: .
           file: build/Dockerfile.app
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_PREFIX }}-app:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
+          cache-to: type=gha,mode=max
+          cache-from: type=gha
 
       - name: Build and Push Proxy Image
         uses: docker/build-push-action@v5
+        id: proxy-build
         with:
           context: .
           file: build/Dockerfile.proxy
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ env.IMAGE_PREFIX }}-proxy:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
+
+      - name: Sign Container Images
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-manager@${{ steps.manager-build.outputs.digest }}
+          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-app@${{ steps.app-build.outputs.digest }}
+          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-proxy@${{ steps.proxy-build.outputs.digest }}
