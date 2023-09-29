@@ -349,7 +349,7 @@ HELM_ARGS ?=
 REPO_URL  ?= https://kvdi.github.io/helm-charts/charts
 
 .PHONY: deploy
-deploy: $(HELM)
+deploy:
 	$(HELM_K3D) repo add kvdi $(REPO_URL)
 	$(HELM_K3D) upgrade --install kvdi kvdi/kvdi \
 		--set manager.image.repository=$(REPO)/vdi-manager \
@@ -378,29 +378,29 @@ deploy-with-oidc:
 
 ##
 ## make example-vdi-templates  # Deploys the example VDITemplates into the k3d cluster.
-example-vdi-templates: $(KUBECTL)
+example-vdi-templates:
 	$(KUBECTL_K3D) apply \
 		-f deploy/examples/example-desktop-templates.yaml
 
 ##
 ## make restart-manager    # Restart the manager pod.
-restart-manager: $(KUBECTL)
+restart-manager:
 	$(KUBECTL_K3D) delete pod -l app.kubernetes.io/name=kvdi
 
 ## make restart-app        # Restart the app pod.
-restart-app: $(KUBECTL)
+restart-app:
 	$(KUBECTL_K3D) delete pod -l vdiComponent=app
 
 ## make restart            # Restart the manager and app pod.
 restart: restart-manager restart-app
 
 ## make clean-cluster      # Remove all kVDI components from the cluster for a fresh start.
-clean-cluster: $(KUBECTL) $(HELM)
+clean-cluster:
 	$(KUBECTL_K3D) delete --ignore-not-found certificate --all
 	$(HELM_K3D) del kvdi
 
 ## make remove-cluster     # Deletes the k3d cluster.
-remove-cluster: $(K3D)
+remove-cluster:
 	$(K3D) cluster delete $(CLUSTER_NAME)
 	rm -f $(CLUSTER_KUBECONFIG)
 
@@ -409,17 +409,17 @@ remove-cluster: $(K3D)
 ##
 
 ## make forward-app         # Run a kubectl port-forward to the app pod.
-forward-app: $(KUBECTL)
+forward-app:
 	$(KUBECTL_K3D) port-forward --address 0.0.0.0 svc/kvdi-app 8443:443
 
 ## make get-app-secret      # Get the app client TLS certificate for debugging.
-get-app-secret: $(KUBECTL)
+get-app-secret:
 	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["ca.crt"]' | base64 -d > _bin/ca.crt
 	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["tls.crt"]' | base64 -d > _bin/tls.crt
 	$(KUBECTL_K3D) get secret kvdi-app-client -o json | jq -r '.data["tls.key"]' | base64 -d > _bin/tls.key
 
 ## make get-admin-password  # Get the generated admin password for kVDI.
-get-admin-password: $(KUBECTL)
+get-admin-password:
 	$(KUBECTL_K3D) get secret kvdi-admin-secret -o json | jq -r .data.password | base64 -d && echo
 
 ##
