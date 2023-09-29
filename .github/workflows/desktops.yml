@@ -59,9 +59,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Setup Cosign
-        uses: sigstore/cosign-installer@main
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -82,9 +79,6 @@ jobs:
           cache-from: type=local,src=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
           cache-to: type=local,dest=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
 
-      - name: Sign ${{ matrix.name }}
-        run: cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
-
       # Do the same again for Xfce4 if this is the ubuntu build
 
       - name: Build ${{ matrix.name }} With Xfce4
@@ -102,8 +96,3 @@ jobs:
           build-args:
             BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ env.VERSION }}
             DESKTOP_PACKAGE=xfce4
-
-      - name: Sign ${{ matrix.name }} With Xfce4
-        if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
-        run: cosign sign --yes --recursive \
-          ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-xfce4@${{ steps.xfce4-build.outputs.digest }}
