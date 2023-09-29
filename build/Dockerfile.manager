@@ -1,3 +1,4 @@
+# Just copy release assets to scratch image
 FROM scratch
 
 ARG TARGETOS TARGETARCH

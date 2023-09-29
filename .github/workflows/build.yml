@@ -1,4 +1,4 @@
-name: Build
+name: Build App and Manager
 
 on:
   push:
@@ -16,26 +16,11 @@ env:
 
 jobs:
   build:
-    name: Build Images
+    name: Build App and Manager Images
     runs-on: self-hosted
     permissions:
       contents: "write"
-      id-token: "write"
       packages: "write"
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        container:
-          - app
-          - manager
-        include:
-          - container: app
-            tag-suffix: app
-            name: Build App Image
-          - container: manager
-            tag-suffix: manager
-            name: Build Manager Image
 
     steps:
       - name: Checkout Code
@@ -71,21 +56,31 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: latest
-          args: build --snapshot --clean --id ${{ matrix.container }}
+          args: build --snapshot --clean --id app --id manager
 
       - name: Run Container Release
         uses: goreleaser/goreleaser-action@v5
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: latest
-          args: build --clean --id ${{ matrix.container }}
+          args: build --clean --id app --id manager
 
-      - name: ${{ matrix.name }}
+      - name: Build and Push Manager Image
         uses: docker/build-push-action@v5
-        id: docker-build
         with:
           context: .
-          file: build/Dockerfile.${{ matrix.container }}
+          file: build/Dockerfile.manager
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ env.VERSION }}
+          tags: ${{ env.IMAGE_PREFIX }}-manager:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
+
+      - name: Build and Push App Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: build/Dockerfile.app
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_PREFIX }}-app:${{ env.VERSION }}
+          platforms: ${{ env.PLATFORMS }}
+          cache-to: type=local,dest=/home/runner/.buildx-app-cache
+          cache-from: type=local,src=/tmp/runner/.buildx-app-cache

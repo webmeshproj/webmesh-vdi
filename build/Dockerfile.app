@@ -1,6 +1,4 @@
-##############
-# UI Builder #
-##############
+# Build the UI
 FROM node:16-alpine as ui-builder
 
 RUN apk add --update build-base \
@@ -14,9 +12,7 @@ RUN cd /build && yarn
 COPY ui/app/ /build/
 RUN cd /build && quasar build
 
-###############
-# Final Image #
-###############
+# Copy release asssets to scratch image
 FROM scratch
 
 ARG TARGETARCH TARGETOS
