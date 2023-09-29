@@ -27,9 +27,7 @@ jobs:
       max-parallel: 3
       matrix:
         container:
-          - app
           - kvdi-proxy
-          - manager
         include:
           - container: kvdi-proxy
             tag-suffix: proxy
@@ -50,7 +48,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v3s
         with:
           platforms: ${{ env.ARCHS }}
 
