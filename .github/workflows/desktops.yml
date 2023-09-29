@@ -90,8 +90,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Sign ${{ matrix.name }}
-        run: cosign sign --yes --recursive \
-          ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
+        run: cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
 
       # Do the same again for Xfce4 if this is the ubuntu build
 

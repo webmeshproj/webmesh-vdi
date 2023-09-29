@@ -56,13 +56,13 @@ push-app-%: build-app-%
 # Loaders
 
 load-ubuntu-%: $(K3D) build-ubuntu-%
-	$(call load_image,${REPO}/ubuntu-$*:latest)
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(REPO)/ubuntu-$*:latest
 
 load-app-%: $(K3D) build-app-%
-	$(call load_image,${REPO}/app-$*:latest)
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(REPO)/app-$*:latest
 
 load-dosbox: $(K3D) build-dosbox
-	$(call load_image,${DOSBOX_IMAGE})
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(DOSBOX_IMAGE)
 
 load-qemu: $(K3D) build-qemu
-	$(call load_image,${QEMU_IMAGE})
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(QEMU_IMAGE)

@@ -1,14 +1,19 @@
+SHELL   := /bin/bash
 REPO    ?= ghcr.io/webmeshproj
 VERSION ?= latest
 
 CRD_OPTIONS ?= "crd:preserveUnknownFields=false"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+GO ?= go
+ifeq (,$(shell $(GO) env GOBIN))
+GOBIN=$(shell $(GO) env GOPATH)/bin
 else
-GOBIN=$(shell go env GOBIN)
+GOBIN=$(shell $(GO) env GOBIN)
 endif
+GOROOT      ?= $(shell $(GO) env GOROOT)
+GOPATH      ?= $(shell $(GO) env GOPATH)
+GIT_COMMIT  ?= $(shell git rev-parse HEAD)
 
 all: build
 
@@ -74,19 +79,6 @@ $(KUSTOMIZE): $(LOCALBIN)
 	fi
 	test -s $(LOCALBIN)/kustomize || { curl -Ss $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
 
-TOOLCHAINS := $(LOCALBIN)/toolchains
-
-.PHONY: toolchains
-toolchains: $(TOOLCHAINS)
-$(TOOLCHAINS): $(LOCALBIN)
-	mkdir -p $(TOOLCHAINS)
-	curl -SsL https://musl.cc/aarch64-linux-musl-cross.tgz | tar -C $(TOOLCHAINS) -xz
-	curl -SsL https://musl.cc/x86_64-linux-musl-cross.tgz | tar -C $(TOOLCHAINS) -xz
-
-clean-toolchains:
-	rm -rf $(TOOLCHAINS)
-	$(MAKE) $(TOOLCHAINS)
-
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-get-tool
@@ -101,18 +93,11 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-
-## BEGIN CUSTOM TARGETS
-
 # includes
 -include hack/Makevars.mk
 -include hack/MakeDesktops.mk
 
-# specifically needed for tests in github actions
-# uses modified shell that doesn't support pipefail
-SHELL := /bin/bash
-
-BUNDLE = $(CURDIR)/deploy/bundle.yaml
+BUNDLE := $(CURDIR)/deploy/bundle.yaml
 # Create a single yaml file bundle
 bundle: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${MANAGER_IMAGE}
@@ -123,7 +108,18 @@ bundle: manifests kustomize
 ##
 ## # Building Images
 ##
-GO ?= go
+BASE_IMAGE              ?= ${REPO}/vdi-base:${VERSION}
+MANAGER_IMAGE           ?= ${REPO}/vdi-manager:${VERSION}
+APP_IMAGE               ?= ${REPO}/vdi-app:${VERSION}
+KVDI_PROXY_IMAGE        ?= ${REPO}/vdi-proxy:${VERSION}
+KVDI_AUDIO_PROXY_IMAGE  ?= ${REPO}/vdi-audio-proxy:${VERSION}
+UBUNTU_BASE_IMAGE       ?= ${REPO}/ubuntu-base:latest
+APP_PROFILE_BASE_IMAGE  ?= ${REPO}/app-base:latest
+DOSBOX_IMAGE            ?= ${REPO}/dosbox:latest
+QEMU_IMAGE              ?= ${REPO}/qemu:latest
+
+TARGETOS   ?= $(shell go env GOOS)
+TARGETARCH ?= $(shell go env GOARCH)
 GORELEASER ?= $(GO) run github.com/goreleaser/goreleaser@latest
 BUILD_ARGS ?= --snapshot --clean
 LDFLAGS ?= -s -w \
@@ -141,22 +137,46 @@ build-all: build-manager build-app build-proxy
 ## make build-manager      # Build the manager docker image.
 build-manager:
 	VERSION=$(VERSION) $(GORELEASER) build --single-target --id manager $(BUILD_ARGS)
-	$(call build_docker,manager,${MANAGER_IMAGE})
+	docker build . \
+		-f build/Dockerfile.manager \
+		-t $(MANAGER_IMAGE) \
+		--build-arg TARGETOS=$(TARGETOS) \
+		--build-arg TARGETARCH=$(TARGETARCH) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg LDFLAGS="$(LDFLAGS)"
 
 ## make build-app          # Build the app docker image.
 build-app:
 	VERSION=$(VERSION) $(GORELEASER) build --single-target --id app $(BUILD_ARGS)
 	cd ui/app && yarn install && quasar build
-	$(call build_docker,app,${APP_IMAGE})
+	docker build . \
+		-f build/Dockerfile.app \
+		-t $(APP_IMAGE) \
+		--build-arg TARGETOS=$(TARGETOS) \
+		--build-arg TARGETARCH=$(TARGETARCH) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg LDFLAGS="$(LDFLAGS)"
 
 ## make build-proxy  # Build the proxy image without audio support.
 build-proxy:
 	VERSION=$(VERSION) $(GORELEASER) build --single-target --id proxy $(BUILD_ARGS)
-	$(call build_docker,proxy,${KVDI_PROXY_IMAGE})
+	docker build . \
+		-f build/Dockerfile.proxy \
+		-t $(KVDI_PROXY_IMAGE) \
+		--build-arg TARGETOS=$(TARGETOS) \
+		--build-arg TARGETARCH=$(TARGETARCH) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg LDFLAGS="$(LDFLAGS)"
 
 ## make build-audio-proxy # Build the proxy image with audio support.
 build-audio-proxy:
-	$(call build_docker,audio-proxy,${KVDI_PROXY_IMAGE})
+	docker build . \
+		-f build/Dockerfile.audio-proxy \
+		-t $(KVDI_AUDIO_PROXY_IMAGE) \
+		--build-arg TARGETOS=$(TARGETOS) \
+		--build-arg TARGETARCH=$(TARGETARCH) \
+		--build-arg BASE_IMAGE=$(BASE_IMAGE) \
+		--build-arg LDFLAGS="$(LDFLAGS)"
 
 build-kvdictl:
 	cp deploy/bundle.yaml pkg/cmd/
@@ -232,21 +252,19 @@ test: generate fmt vet manifests
 ##
 ## # Local Testing with k3d
 ##
+HELM_VERSION         ?= v3.7.0
+CLUSTER_NAME         ?= kvdi
+KUBERNETES_VERSION   ?= v1.22.2
+KUBECTL_DOWNLOAD_URL ?= https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/$(shell uname | tr A-Z a-z)/amd64/kubectl
+HELM_DOWNLOAD_URL    ?= https://get.helm.sh/helm-${HELM_VERSION}-$(shell uname | tr A-Z a-z)-amd64.tar.gz
+CLUSTER_KUBECONFIG    ?= bin/kubeconfig.yaml
 
-K3D ?= $(GOBIN)/k3d
-$(K3D):
-	curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | K3D_INSTALL_DIR=$(GOBIN) bash -s -- --no-sudo
-
-# Ensures a repo-local installation of kubectl
-$(KUBECTL):
-	$(call download_bin,$(KUBECTL),${KUBECTL_DOWNLOAD_URL})
-
-# Ensures a repo-local installation of helm
-$(HELM):
-	$(call get_helm)
+KUBECTL ?= kubectl
+HELM    ?= helm
+K3D     ?= k3d
 
 ## make test-cluster           # Make a local k3d cluster for testing.
-test-cluster: $(K3D)
+test-cluster:
 	$(K3D) cluster create $(CLUSTER_NAME) \
 		--kubeconfig-update-default=false \
 		--k3s-arg --disable=traefik@server:0 \
@@ -261,22 +279,30 @@ test-cluster: $(K3D)
 load-all: load-manager load-app load-proxy
 
 ## make load-manager
-load-manager: $(K3D) build-manager
+load-manager: build-manager
 	$(call load_image,${MANAGER_IMAGE})
 
 ## make load-app
-load-app: $(K3D) build-app
+load-app: build-app
 	$(call load_image,${APP_IMAGE})
 
 ## make load-proxy
-load-proxy: $(K3D) build-proxy
+load-proxy: build-proxy
 	$(call load_image,${KVDI_PROXY_IMAGE})
 
 KUBECTL_K3D = $(KUBECTL) --kubeconfig ${CLUSTER_KUBECONFIG}
 HELM_K3D = $(HELM) --kubeconfig ${CLUSTER_KUBECONFIG}
 
+define VAULT_POLICY
+path "kvdi/*" {
+    capabilities = ["create", "read", "update", "delete", "list"]
+}
+endef
+
+export VAULT_POLICY
+
 ## make test-vault             # Deploys a vault instance into the k3d cluster.
-test-vault: $(KUBECTL) $(HELM)
+test-vault:
 	$(HELM) repo add hashicorp https://helm.releases.hashicorp.com
 	$(HELM_K3D) upgrade --install vault hashicorp/vault \
 		--set server.dev.enabled=true \
@@ -318,9 +344,11 @@ test-image-populator:
 
 ##
 ## make deploy                 # Deploys kVDI into the local k3d cluster.
-.PHONY: deploy
+
 HELM_ARGS ?=
 REPO_URL  ?= https://kvdi.github.io/helm-charts/charts
+
+.PHONY: deploy
 deploy: $(HELM)
 	$(HELM_K3D) repo add kvdi $(REPO_URL)
 	$(HELM_K3D) upgrade --install kvdi kvdi/kvdi \
@@ -397,6 +425,9 @@ get-admin-password: $(KUBECTL)
 ##
 ## # Doc generation
 ##
+
+REFDOCS ?= bin/refdocs
+REFDOCS_CLONE ?= $(dir ${REFDOCS})/gen-crd-api-reference-docs
 
 ${REFDOCS_CLONE}:
 	mkdir -p $(dir ${REFDOCS})
