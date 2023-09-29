@@ -9,10 +9,7 @@ env:
   ARCHS: amd64,arm64
   IMAGE_PREFIX: ghcr.io/webmeshproj/desktop
   VERSION: ${{ startswith(github.ref, 'refs/tags/v') && github.ref || 'latest' }}
-  CACHE_DEP_PATH: |
-    build/desktops/ubuntu/Dockerfile.base
-    build/desktops/app-profiles/Dockerfile.base
-    build/desktops/dosbox/Dockerfile.base
+  COSIGN_EXPERIMENTAL: 1
 
 jobs:
   build:
@@ -31,18 +28,23 @@ jobs:
           - build/desktops/app-profiles
           - build/desktops/dosbox
         include:
-          - docker-context: build/desktops/ubuntu
+          - name: Ubuntu Base Image
+            docker-context: build/desktops/ubuntu
             dockerfile: Dockerfile.base
             tag-suffix: ubuntu-base
-            name: Build Ubuntu Base Image
-          - docker-context: build/desktops/app-profiles
+            cache-dep-path: build/desktops/ubuntu/Dockerfile.base
+
+          - name: App Base Image
+            docker-context: build/desktops/app-profiles
             dockerfile: Dockerfile.base
             tag-suffix: apps-base
-            name: Build App Base Image
-          - docker-context: build/desktops/dosbox
+            cache-dep-path: build/desktops/app-profiles/Dockerfile.base
+
+          - name: DOSBox Image
+            docker-context: build/desktops/dosbox
             dockerfile: Dockerfile.base
             tag-suffix: dosbox-base
-            name: Build DOSBox Image
+            cache-dep-path: build/desktops/dosbox/Dockerfile.base
 
     steps:
       - name: Checkout Code
@@ -58,6 +60,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
+      - name: Setup Cosign
+        uses: sigstore/cosign-installer@main
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -69,13 +74,14 @@ jobs:
       - name: Setup Buildx Cache
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-desktops-${{ hashFiles(env.CACHE_DEP_PATH) }}
-          restore-keys: ${{ runner.os }}-desktops-
+          key: ${{ runner.os }}-${{ matrix.name }}-${{ hashFiles(matrix.cache-dep-path) }}
+          restore-keys: ${{ runner.os }}-${{ matrix.name }}-
           path: |
             /tmp/.buildx-cache
 
-      - name: ${{ matrix.name }}
+      - name: Build ${{ matrix.name }}
         uses: docker/build-push-action@v5
+        id: base-build
         with:
           context: ${{ matrix.docker-context }}
           file: ${{ matrix.docker-context }}/${{ matrix.dockerfile }}
@@ -85,10 +91,15 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      # Do the same again for XFCE4 if this is the ubuntu build
-      - name: ${{ matrix.name }} With XFCE4
+      - name: Sign ${{ matrix.name }}
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}@${{ steps.base-build.outputs.digest }}
+
+      # Do the same again for Xfce4 if this is the ubuntu build
+      - name: Build ${{ matrix.name }} With Xfce4
         uses: docker/build-push-action@v5
         if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
+        id: xfce4-build
         with:
           context: ${{ matrix.docker-context }}
           file: ${{ matrix.docker-context }}/${{ matrix.dockerfile }}
@@ -100,3 +111,8 @@ jobs:
           build-args:
             BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ env.VERSION }}
             DESKTOP_PACKAGE=xfce4
+
+      - name: Sign ${{ matrix.name }} With Xfce4
+        if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
+        run: |
+          cosign sign --yes --recursive ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-xfce4@${{ steps.xfce4-build.outputs.digest }}
