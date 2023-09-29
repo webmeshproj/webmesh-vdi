@@ -2,5 +2,5 @@
 FROM scratch
 
 ARG TARGETOS TARGETARCH
-ADD dist/proxy_${TARGETOS}_${TARGETARCH}*/proxy /proxy
-ENTRYPOINT ["/proxy"]
+ADD dist/proxy_${TARGETOS}_${TARGETARCH}*/proxy /kvdi-proxy
+ENTRYPOINT ["/kvdi-proxy"]
