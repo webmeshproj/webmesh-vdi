@@ -38,7 +38,7 @@ export default defineComponent({
   },
   computed: {
     serverConfig () {
-      const cfg = this.configStore.serverConfig
+      const cfg = this.configStore._serverConfig
       return `
 \`\`\`js
 ${JSON.stringify(cfg, undefined, 4)}

@@ -71,7 +71,7 @@ export default defineComponent({
         displayRequestDuration: true,
         responseInterceptor: (response) => {
           if (response.status === 401) {
-            return this.userStore.dispatch('refreshToken')
+            return this.userStore.refreshToken()
               .then(() => {
                 response.text = '{"internal": "KVDI: Your access token has been refreshed, please try again"}'
                 response.ok = true
@@ -102,7 +102,7 @@ export default defineComponent({
               name: 'X-Session-Token',
               description: ''
             },
-            value: this.userStore.token
+            value: this.userStore._token
           }
         })
       }

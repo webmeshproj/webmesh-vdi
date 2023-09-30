@@ -91,9 +91,11 @@ export default {
     onLogs () {
       this.$q.dialog({
         component: LogViewerDialog,
-        parent: this,
+        componentProps: {
+          parent: this,
         name: this.name,
         namespace: this.namespace
+        }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {

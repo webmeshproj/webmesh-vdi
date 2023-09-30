@@ -36,7 +36,8 @@ module.exports = configure(function (/* ctx */) {
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: [
-      'app.scss'
+      'app.scss',
+      'swagger-material.css'
     ],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
@@ -83,12 +84,22 @@ module.exports = configure(function (/* ctx */) {
       // vitePlugins: [
       //   [ 'package-name', { ..options.. } ]
       // ]
-    },
 
-    // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#devServer
-    devServer: {
-      // https: true
-      open: true // opens browser window automatically
+      extendWebpack (cfg) {
+        cfg.module.rules.push({
+          enforce: 'pre',
+          test: /\.(js|vue)$/,
+          loader: 'eslint-loader',
+          exclude: /node_modules/,
+          options: {
+            formatter: require('eslint').CLIEngine.getFormatter('stylish')
+          }
+        })
+        cfg.module.rules.push({
+          test: /encoderWorker\.min\.js$/,
+          use: [{ loader: 'file-loader' }]
+        })
+      }
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#framework
@@ -96,9 +107,13 @@ module.exports = configure(function (/* ctx */) {
       config: {
         dark: true
       },
+      iconSet: 'material-icons', // Quasar icon set
+      lang: 'en-us', // Quasar language pack
 
-      // iconSet: 'material-icons', // Quasar icon set
-      // lang: 'en-US', // Quasar language pack
+      components: [
+        "QIcon",
+      ],
+      directives: [],
 
       // For special cases outside of where the auto-import strategy can have an impact
       // (like functional components as one of the examples),
@@ -110,9 +125,15 @@ module.exports = configure(function (/* ctx */) {
       // Quasar plugins
       plugins: [
         'AppFullscreen',
+        'Loading',
+        'Notify',
         'Dialog'
       ]
     },
+
+    // https://quasar.dev/quasar-cli/cli-documentation/supporting-ie
+    supportIE: false,
+
 
     // animations: 'all', // --- includes all animations
     // https://v2.quasar.dev/options/animations
@@ -212,6 +233,32 @@ module.exports = configure(function (/* ctx */) {
 
       // extendBexScriptsConf (esbuildConf) {}
       // extendBexManifestJson (json) {}
-    }
+    },
+    devServer: {
+      https: true,
+      port: 8080,
+      open: true, // opens browser window automatically
+      proxy: {
+         '/api/desktops/ws': {
+          target: 'wss://localhost:443',
+          changeOrigin: true,
+          ws: true,
+          secure: false
+        }, 
+        '/api': {
+          target: 'https://localhost:443',
+          changeOrigin: true,
+          secure: false,
+
+        },
+        '/swagger.json': {
+          target: 'https://localhost:8443',
+          changeOrigin: true,
+          secure: false
+        }
+      }
+    },
+
   }
+  
 });

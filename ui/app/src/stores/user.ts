@@ -35,64 +35,64 @@ const broadcastNewToken = new BroadcastChannel('kvdi_new_token')
 export const useUserStore = defineStore('userStore',{
 
 
-  state: (): {status: string, token: string, renewable: boolean, requiresMFA: boolean, user:any, stateToken:string} =>  ({
-    status: '',
-    token: localStorage.getItem('token') || '',
-    renewable: localStorage.getItem('renewable') === 'true' || false,
-    requiresMFA: false,
-    user: {},
-    stateToken: ''
+  state: (): {_status: string, _token: string, _renewable: boolean, _requiresMFA: boolean, _user:any, _stateToken:string} =>  ({
+    _status: '',
+    _token: localStorage.getItem('token') || '',
+    _renewable: localStorage.getItem('renewable') === 'true' || false,
+    _requiresMFA: false,
+    _user: {},
+    _stateToken: ''
   }),
 
   actions: {
     async auth_request () {
-      this.status = 'loading'
+      this._status = 'loading'
       const stateToken = localStorage.getItem('state')
       if (stateToken) {
-        this.stateToken = stateToken
+        this._stateToken = stateToken
         return
       }
-      this.stateToken = uuidv4()
-      localStorage.setItem('state', this.stateToken)
+      this._stateToken = uuidv4()
+      localStorage.setItem('state', this._stateToken)
     },
 
     auth_got_user (user: any) {
-      this.user = user
+      this._user = user
     },
 
     auth_success ( { token, renewable }: any) {
-      this.status = 'success'
-      this.token = token
-      this.renewable = renewable
+      this._status = 'success'
+      this._token = token
+      this._renewable = renewable
       localStorage.setItem('token', token)
       localStorage.setItem('renewable', String(renewable))
 
-      this.stateToken = ''
-      this.requiresMFA = false
+      this._stateToken = ''
+      this._requiresMFA = false
       localStorage.removeItem('state')
     },
 
     auth_need_mfa () {
-      this.requiresMFA = true
+      this._requiresMFA = true
     },
 
     auth_error () {
-      this.status = 'error'
-      this.user = {}
-      this.token = ''
-      this.stateToken = ''
-      this.renewable = false
+      this._status = 'error'
+      this._user = {}
+      this._token = ''
+      this._stateToken = ''
+      this._renewable = false
       localStorage.removeItem('token')
       localStorage.removeItem('state')
       localStorage.removeItem('renewable')
     },
 
     logout_mut () {
-      this.status = ''
-      this.user = {}
-      this.token = ''
-      this.stateToken = ''
-      this.renewable = false
+      this._status = ''
+      this._user = {}
+      this._token = ''
+      this._stateToken = ''
+      this._renewable = false
       localStorage.removeItem('token')
       localStorage.removeItem('state')
       localStorage.removeItem('renewable')
@@ -127,7 +127,7 @@ export const useUserStore = defineStore('userStore',{
           console.log('Could not authenticate as anonymous')
         }
       } else {
-        useConfigStore().axios.defaults.headers.common['X-Session-Token'] = this.token
+        useConfigStore().axios.defaults.headers.common['X-Session-Token'] = this._token
         try {
           console.log('Retrieving user information')
           const res = await useConfigStore().axios.get('/api/whoami')
@@ -162,11 +162,14 @@ export const useUserStore = defineStore('userStore',{
     async login( credentials: any) {
       try {
         await this.auth_request()
-        credentials.state = this.stateToken
+        credentials.state = this._stateToken
+        console.log("A")
+
         const res = await axios({ url: '/api/login', data: credentials, method: 'POST' })
+        console.log("B")
 
         const resState = res.data.state
-        if (this.stateToken !== resState) {
+        if (this._stateToken !== resState) {
           console.log('State token was malformed during request flow!')
           this.auth_error()
           throw new Error('State token was malformed during request flow!')
@@ -190,6 +193,7 @@ export const useUserStore = defineStore('userStore',{
         }
        this.auth_need_mfa()
       } catch (err) {
+        console.error(err)
         this.auth_error()
         throw err
       }
@@ -226,9 +230,9 @@ export const useUserStore = defineStore('userStore',{
     },
 
     async authorize ( otp: any ) {
-      const res = await axios({ url: '/api/authorize', data: { otp: otp, state: this.stateToken }, method: 'POST' })
+      const res = await axios({ url: '/api/authorize', data: { otp: otp, state: this._stateToken }, method: 'POST' })
       const resState = res.data.state
-      if (this.stateToken !== resState) {
+      if (this._stateToken !== resState) {
         console.log('State token was malformed during request flow!')
        this.auth_error()
         throw new Error('State token was malformed during request flow!')
@@ -269,13 +273,13 @@ export const useUserStore = defineStore('userStore',{
   },
 
   getters: {
-    isLoggedIn: (state) => !!state.token,
-    requiresMFA: state => state.requiresMFA,
-    authStatus: state => state.status,
-    user: state => state.user,
-    token: state => state.token,
-    stateToken: state => state.stateToken,
-    renewable: state => state.renewable
+    isLoggedIn: (state) => !!state._token,
+    requiresMFA: state => state._requiresMFA,
+    authStatus: state => state._status,
+    user: state => state._user,
+    token: state => state._token,
+    stateToken: state => state._stateToken,
+    renewable: state => state._renewable
   }
 
 })

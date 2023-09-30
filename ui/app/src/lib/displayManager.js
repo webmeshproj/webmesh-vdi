@@ -47,24 +47,24 @@ export default class DisplayManager extends Emitter {
         // The audio player for streaming playback
         this._audioManager = null
         // Subscribe to changes to desktop sessions
-        this._unsubscribeSessions = this._sessionStore.subscribe((mutation) => {
+        this._unsubscribeSessions = this._sessionStore.$subscribe((mutation) => {
             this._handleSessionChange(mutation)
         })
     }
 
     // _getActiveSession returns the session currently marked as active in the session store.
     _getActiveSession () {
-        return this._sessionStore.getters.activeSession
+        return this._sessionStore.activeSession
     }
 
 
     // _audioIsEnabled returns true if audio is currently enabled
     _audioIsEnabled () {
-        return this._sessionStore.getters.audioEnabled
+        return this._sessionStore.audioEnabled
     }
 
     _recordingIsEnabled () {
-        return this._sessionStore.getters.recordingEnabled
+        return this._sessionStore.recordingEnabled
     }
 
     // _getSessionURLs returns an object that can easily retrieve URLs for the different
@@ -81,6 +81,7 @@ export default class DisplayManager extends Emitter {
     // _handleSessionChange handles a change in the current session status in the session
     // vuex store.
     _handleSessionChange (mutation) {
+        console.log("HANDLE SESION CHANGE", mutation)
         if (mutation.type === 'set_active_session') {
             this._handleActiveSessionChange()
         } else if (mutation.type === 'delete_session') {
@@ -228,7 +229,7 @@ export default class DisplayManager extends Emitter {
                     .catch((err) => {
                         console.error(err)
                         console.log('Retrying connection with new token')
-                        return this._userStore.dispatch('refreshToken')
+                        return this._userStore.refreshToken()
                             .then(() => {
                                 // only retry once
                                 return this._createConnection()
@@ -260,7 +261,7 @@ export default class DisplayManager extends Emitter {
                 console.log(`[status] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
             } else {
                 if (event.code === 1006 && !retry) {
-                    this._userStore.dispatch('refreshToken')
+                    this._userStore.refreshToken()
                         .then(() => {
                             this._doStatusWebsocket(true)
                         })
@@ -321,9 +322,9 @@ export default class DisplayManager extends Emitter {
                 try {
                     // check if the desktop still exists, if we get an error back
                     // it was deleted.
-                    await this._sessionStore.getters.sessionStatus(this._currentSession)
+                    await this._sessionStore.sessionStatus(this._currentSession)
                 } catch {
-                    this._sessionStore.dispatch('deleteSessionOffline', this._currentSession)
+                    this._sessionStore.deleteSessionOffline(this._currentSession)
                     this._currentSession = null
                     this.emit(Events.error, new Error('The desktop session has ended'))
                 }
@@ -346,8 +347,8 @@ export default class DisplayManager extends Emitter {
 
     // _resetAudioStatus will reset the audio toggles in the Vuex store
     _resetAudioStatus () {
-        this._sessionStore.dispatch('toggleAudio', false)
-        this._sessionStore.dispatch('toggleRecording', false)
+        this._sessionStore.toggleAudio(false)
+        this._sessionStore.toggleRecording(false)
     }
 
     // _disconnect will close any connections currently open

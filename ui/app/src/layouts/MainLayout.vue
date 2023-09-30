@@ -48,7 +48,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
       </q-tabs>
     </q-header>
 
-    <q-drawer  v-model="openDrawer" side="left" behavior="desktop">
+    <q-drawer ref="drawer"  v-model="openDrawer" side="left" behavior="desktop">
       <q-list>
         <q-item-label
           header
@@ -284,12 +284,15 @@ import SessionTab from '../components/SessionTab.vue'
 import MFADialog from '../components/dialogs/MFADialog.vue'
 import FileTransferDialog from '../components/dialogs/FileTransfer.vue'
 import { getErrorMessage } from '../lib/util.js'
-import { defineComponent }from 'vue'
+import { defineComponent, ref }from 'vue'
 import { useConfigStore } from '../stores/config'
 import { useUserStore } from '../stores/user'
 import { useDesktopSessions } from '../stores/desktop'
+import { onClickOutside } from '@vueuse/core'
 
 var menuTimeout: any = null
+
+
 
 export default  defineComponent({
   name: 'MainLayout',
@@ -298,9 +301,30 @@ export default  defineComponent({
     const configStore = useConfigStore()
     const userStore = useUserStore()
     const desktopSessions = useDesktopSessions()
+    const drawer = ref(null)
+    const openDrawer = ref(false)
 
-    // **only return the whole store** instead of destructuring
-    return { configStore , userStore,desktopSessions,unsubscribeSessions: () => {},unsubscribeUsers: () => {} }
+    onClickOutside(drawer,()=> openDrawer.value = false )
+    // **only return the whole store** instead of destructurin  g
+    return { 
+      configStore , 
+      userStore,desktopSessions,unsubscribeSessions: () => {},
+      unsubscribeUsers: () => {},
+      openDrawer,/* this.$q.screen.width < 1023?false:true, */
+      revealHeader: true,
+      drawer,
+      desktopTemplatesActive: false,
+      controlActive: false,
+      settingsActive: false,
+      apiExplorerActive: false,
+      loginActive: false,
+      profileActive: false,
+      metricsActive: false,
+      audioExpanded: false,
+
+      controlSessions: []
+    
+    }
   },
   
 
@@ -311,10 +335,12 @@ export default  defineComponent({
     // this.unsubscribeUsers = this.userStore.$subscribe(this.handleAuthChange)
     await this.userStore.initStore()
     try {
-      if (this.userStore.requiresMFA) {
+      if (this.userStore._requiresMFA) {
         await this.$q.dialog({
           component: MFADialog,
+         componentProps: {
           parent: this
+         }
         }).onOk(() => {
           this.handleLoggedIn()
         }).onCancel(() => {
@@ -346,27 +372,11 @@ export default  defineComponent({
     this.unsubscribeUsers()
   },
 
-  data () {
-    return {
-      openDrawer: this.$q.screen.width < 1023?false:true,
-      revealHeader: true,
 
-      desktopTemplatesActive: false,
-      controlActive: false,
-      settingsActive: false,
-      apiExplorerActive: false,
-      loginActive: false,
-      profileActive: false,
-      metricsActive: false,
-      audioExpanded: false,
-
-      controlSessions: []
-    }
-  },
 
   computed: {
     userInitial () {
-      const user = this.userStore.user
+      const user = this.userStore._user
       if (user.name !== undefined) {
         return user.name[0]
       }
@@ -408,9 +418,9 @@ export default  defineComponent({
       }
       return 'mic_off'
     },
-    audioEnabled () { return this.desktopSessions.audioEnabled },
-    recordingEnabled () { return this.desktopSessions.recordingEnabled },
-    user () { return this.userStore.user },
+    audioEnabled () { return this.desktopSessions._audioEnabled },
+    recordingEnabled () { return this.desktopSessions._recordingEnabled },
+    user () { return this.userStore._user },
     isLoggedIn () { return this.userStore.isLoggedIn },
     grafanaEnabled () {  console.log(this.configStore);  return this.configStore.grafanaEnabled }
   },
@@ -438,9 +448,11 @@ export default  defineComponent({
       }
       await this.$q.dialog({
         component: FileTransferDialog,
-        parent: this,
-        desktopNamespace: activeSession.namespace,
-        desktopName: activeSession.name
+        componentProps: {
+          parent: this,
+          desktopNamespace: activeSession.namespace,
+          desktopName: activeSession.name
+        }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -546,7 +558,7 @@ export default  defineComponent({
     },
 
     pushIfNotCurrent (route: any) {
-      if (this.$router.currentRoute.name !== route) {
+      if (this.$router.currentRoute.value.name !== route) {
         this.$router.push(route)
       }
     },
@@ -564,6 +576,7 @@ export default  defineComponent({
     },
 
     handleSessionsChange (_mutation: any, state: any) {
+      console.log("HANDLE SESION CHANGE", state.session)
       this.audioExpanded = state.audioEnabled
       this.controlSessions = state.sessions
     },

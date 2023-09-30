@@ -26,10 +26,10 @@ const equal = function (o1: any, o2: any) {
 
 export const  useDesktopSessions = defineStore('desktopSession', {
 
-  state: (): {sessions: any[], audioEnabled:boolean, recordingEnabled: boolean}  =>  ({
+  state: (): {sessions: any[], _audioEnabled:boolean, _recordingEnabled: boolean}  =>  ({
     sessions: [], // deciding against local storage here, but it is still an option
-    audioEnabled: false,
-    recordingEnabled: false
+    _audioEnabled: false,
+    _recordingEnabled: false
   }),
 
   actions: {
@@ -56,16 +56,17 @@ export const  useDesktopSessions = defineStore('desktopSession', {
       }
     },
     toggleAudio ( data: any) {
-      this.audioEnabled = data
+      this._audioEnabled = data
     },
 
     toggleRecording (data: any) {
-      this.recordingEnabled = data
+      this._recordingEnabled = data
     },
 
     addExistingSession (data: any) {
       data.active = true
       this.sessions.push(data)
+
     },
 
     async newSession ( { template, namespace, serviceAccount }: any) {
@@ -76,7 +77,7 @@ export const  useDesktopSessions = defineStore('desktopSession', {
         }
 
         // TODO
-        const session = await (this as any).$axios.post('/api/sessions', data)
+        const session = await useConfigStore().axios.post('/api/sessions', data)
         session.data.template = template
 
         data.active = true
@@ -100,10 +101,9 @@ export const  useDesktopSessions = defineStore('desktopSession', {
   },
 
   getters: {
-    sessions: state => state.sessions,
     activeSession: state => state.sessions.filter(sess => sess.active)[0],
-    audioEnabled: state => state.audioEnabled,
-    recordingEnabled: state => state.recordingEnabled,
+    audioEnabled: state => state._audioEnabled,
+    recordingEnabled: state => state._recordingEnabled,
     sessionStatus: () => async (data: any ) => {
       try {
 

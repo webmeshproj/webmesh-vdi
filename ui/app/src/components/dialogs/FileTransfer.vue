@@ -93,6 +93,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 import FilePreviewDialog from './FilePreview.vue'
 import { getErrorMessage } from '../../lib/util.js'
 import path from 'path'
+import { useUserStore } from 'src/stores/user'
 
 export default {
   name: 'FileTransferDialog',
@@ -115,14 +116,15 @@ export default {
       downloading: false,
       downloaded: false,
       downloadProgress: 0,
-      downloadIndeterminate: true
+      downloadIndeterminate: true,
+      userStore: useUserStore()
     }
   },
 
   computed: {
     urlBase () { return `/api/desktops/fs/${this.desktopNamespace}/${this.desktopName}` },
     homeDir () {
-      const user = this.userStore.getters.user
+      const user = this.userStore.user
       return `/home/${user.name}`
     },
     downloadLabel () {
@@ -177,7 +179,7 @@ export default {
       const formData = new FormData()
       formData.append('file', this.fileToUpload)
       try {
-        await this.$axios.put(`${this.urlBase}/put`, formData, {
+        await this.configStore.axios.put(`${this.urlBase}/put`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -270,13 +272,15 @@ export default {
       this.previewing = true
       await new Promise((resolve, reject) => setTimeout(resolve, 250))
       try {
-        const res = await this.$axios.get(`${this.urlBase}/get/${fpath}`)
+        const res = await this.configStore.axios.get(`${this.urlBase}/get/${fpath}`)
         this.previewing = false
         await this.$q.dialog({
           component: FilePreviewDialog,
+        componentProps: {
           parent: this,
           src: res.data,
           name: path.basename(fpath)
+        }
         }).onOk(() => {
         }).onCancel(() => {
         }).onDismiss(() => {
@@ -314,7 +318,7 @@ export default {
       this.downloaded = false
       try {
         // Use a longer timeout to give the server time to archive in case it's a directory
-        const res = await this.$axios.get(`${this.urlBase}/get/${fpath}`, {
+        const res = await this.configStore.axios.get(`${this.urlBase}/get/${fpath}`, {
           timeout: 300 * 1000,
           responseType: 'blob',
           onDownloadProgress: this.onDownloadProgress
@@ -364,7 +368,7 @@ export default {
     async statPath (fpath) {
       try {
         fpath = fpath.replace(this.homeDir, '.')
-        const res = await this.$axios.get(`${this.urlBase}/stat/${fpath}`)
+        const res = await this.configStore.axios.get(`${this.urlBase}/stat/${fpath}`)
         return res.data.stat
       } catch (err) {
         this.handleError(err)

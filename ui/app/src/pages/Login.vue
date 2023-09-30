@@ -52,6 +52,7 @@ import MFADialog from '../components/dialogs/MFADialog.vue'
 
 import { defineComponent } from 'vue'
 import { useConfigStore } from '../stores/config'
+import { useUserStore } from 'src/stores/user'
 export default defineComponent({
   name: 'Login',
 
@@ -60,6 +61,7 @@ export default defineComponent({
       username: null,
       password: null,
       loading: false,
+      userStore: useUserStore(),
       configStore: useConfigStore()
     }
   },
@@ -67,13 +69,15 @@ export default defineComponent({
   methods: {
     async initAuthFlow () {
       try {
-        await this.userStore.dispatch('initStore')
-        const requiresMFA = this.userStore.getters.requiresMFA
+        await this.userStore.initStore()
+        const requiresMFA = this.userStore.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
             component: MFADialog,
-            parent: this
+            componentProps: {
+              parent: this
+            }
           }).onOk(() => {
             this.notifyLoggedIn()
           }).onCancel(() => {
@@ -89,13 +93,15 @@ export default defineComponent({
 
     async onSubmit () {
       try {
-        await this.userStore.dispatch('login', { username: this.username, password: this.password })
-        const requiresMFA = this.userStore.getters.requiresMFA
+        await this.userStore.login({ username: this.username, password: this.password })
+        const requiresMFA = this.userStore.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
             component: MFADialog,
+           componentProps: {
             parent: this
+           }
           }).onOk(() => {
             this.notifyLoggedIn()
           }).onCancel(() => {

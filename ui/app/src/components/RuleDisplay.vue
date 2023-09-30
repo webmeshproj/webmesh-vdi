@@ -43,9 +43,11 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </template>
 
 <script lang="ts">
+import { useConfigStore } from 'src/stores/config'
 import RuleEditor from './dialogs/RuleEditor.vue'
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
   name: 'RuleDisplay',
   props: {
     ruleIdx: { type: Number },
@@ -69,14 +71,15 @@ export default {
       default: false
     }
   },
-  data () {
+  setup () {
     return {
-      editorOpen: false
+      editorOpen: false,
+      configStore: useConfigStore()
     }
   },
   methods: {
     onDeleteRule () {
-      this.configStore.emitter.emit(this.roleName, {
+      this.configStore.emitter.emit(this.roleName!, {
         roleIdx: this.roleIdx,
         ruleIdx: this.ruleIdx,
         deleteRule: true
@@ -87,11 +90,13 @@ export default {
       this.editorOpen = true
       this.$q.dialog({
         component: RuleEditor,
+       componentProps: {
         parent: this,
         verbs: this.verbs,
         resources: this.resources,
         resourcePatterns: this.resourcePatterns,
         namespaces: this.namespaces
+       }
       }).onOk((payload) => {
         this.configStore.emitter.emit(this.roleName, {
           roleIdx: this.roleIdx,
@@ -168,7 +173,7 @@ export default {
 
   }
 
-}
+})
 </script>
 
 <style scoped>

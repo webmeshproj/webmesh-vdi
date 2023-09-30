@@ -216,8 +216,10 @@ export default defineComponent(
       if (this.doAdminCheck(roleName)) { return }
       this.$q.dialog({
         component: ConfirmDelete,
-         parent: this,
+        componentProps: {
+          parent: this,
         resourceName: roleName 
+        }
       }).onOk(() => {
         this.doDeleteRole(roleName)
       }).onCancel(() => {
@@ -253,14 +255,14 @@ export default defineComponent(
         return 'Name is required'
       }
       try {
-        await this.$axios.get(`/api/roles/${val}`)
+        await this.configStore.axios.get(`/api/roles/${val}`)
         return 'Role already exists'
       } catch (err) {}
     },
 
     async doCreateRole () {
       try {
-        await this.$axios.post('/api/roles', { name: this.newRoleName })
+        await this.configStore.axios.post('/api/roles', { name: this.newRoleName })
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -281,7 +283,7 @@ export default defineComponent(
           rules: this.data[roleIdx].rules || [],
           annotations: roleAnnotations
         }
-        await this.$axios.put(`/api/roles/${roleName}`, payload)
+        await this.configStore.axios.put(`/api/roles/${roleName}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -296,7 +298,7 @@ export default defineComponent(
 
     async doDeleteRole (roleName) {
       try {
-        await this.$axios.delete(`/api/roles/${roleName}`)
+        await this.configStore.axios.delete(`/api/roles/${roleName}`)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -311,7 +313,7 @@ export default defineComponent(
 
     async fetchData () {
       try {
-        const res = await this.$axios.get('/api/roles')
+        const res = await this.configStore.axios.get('/api/roles')
         this.data = []
         res.data.forEach((val, idx) => {
           const item = { idx: idx, editable: false, ...val }

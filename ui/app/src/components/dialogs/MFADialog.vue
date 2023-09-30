@@ -96,7 +96,7 @@ export default {
       await new Promise((resolve, reject) => setTimeout(resolve, 1000))
       const otp = `${this.d1}${this.d2}${this.d3}${this.d4}${this.d5}${this.d6}`
       try {
-        await this.userStore.dispatch('authorize', otp)
+        await this.userStore.authorize(otp)
         this.onOKClick()
       } catch (err) {
         this.loading = false

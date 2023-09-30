@@ -86,7 +86,7 @@ export default {
     async doCreate () {
       const payload = this.getPayload()
       try {
-        await this.$axios.post('/api/templates', payload)
+        await this.configStore.axios.post('/api/templates', payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -101,7 +101,7 @@ export default {
     async doUpdate () {
       const payload = this.getPayload()
       try {
-        await this.$axios.put(`/api/templates/${payload.metadata.name}`, payload)
+        await this.configStore.axios.put(`/api/templates/${payload.metadata.name}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',

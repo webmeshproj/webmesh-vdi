@@ -67,7 +67,7 @@ export default {
     async filterFn (val, update) {
       this.loading = true
       try {
-        const res = await this.$axios.get('/api/namespaces')
+        const res = await this.configStore.axios.get('/api/namespaces')
         if (res.data.length === 1) {
           this.options = [res.data[0]]
         }

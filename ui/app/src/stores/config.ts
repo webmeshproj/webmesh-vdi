@@ -23,15 +23,15 @@ import mitt from 'mitt';
 const emitter = mitt()
 export const  useConfigStore =  defineStore('configStore', {
 
-  state: (): {serverConfig: any, axios: axios.Axios,emitter: ReturnType<typeof mitt>} => ({
-    serverConfig: {},
+  state: (): {_serverConfig: any, axios: axios.Axios,emitter: ReturnType<typeof mitt>} => ({
+    _serverConfig: {},
     axios: axios.default,
     emitter: emitter
   }),
 
   actions: {
     set_server_config (data: any) {
-      this.serverConfig = data
+      this._serverConfig = data
     },
     async getServerConfig () {
       try {
@@ -46,20 +46,20 @@ export const  useConfigStore =  defineStore('configStore', {
   },
 
   getters: {
-    serverConfig: (state) => {return state.serverConfig},
+    serverConfig: (state) => {return state._serverConfig},
     grafanaEnabled: state => {
       console.log(state)
-      if (state.serverConfig?.metrics && state.serverConfig.metrics.grafana) {
-        return state.serverConfig.metrics.grafana.enabled || false
+      if (state._serverConfig?.metrics && state._serverConfig.metrics.grafana) {
+        return state._serverConfig.metrics.grafana.enabled || false
       }
       return false
     },
     authMethod: state => {
-      if (state.serverConfig.auth !== undefined) {
-        if (state.serverConfig.auth.ldapAuth !== undefined && state.serverConfig.auth.ldapAuth.URL) {
+      if (state._serverConfig.auth !== undefined) {
+        if (state._serverConfig.auth.ldapAuth !== undefined && state._serverConfig.auth.ldapAuth.URL) {
           return 'ldap'
         }
-        if (state.serverConfig.auth.oidcAuth !== undefined && state.serverConfig.auth.oidcAuth.IssuerURL) {
+        if (state._serverConfig.auth.oidcAuth !== undefined && state._serverConfig.auth.oidcAuth.IssuerURL) {
           return 'oidc'
         }
       }

@@ -67,7 +67,8 @@ import PasswordInput from '../components/inputs/PasswordInput.vue'
 import MFAConfig from '../components/inputs/MFAConfig.vue'
 
 import { defineComponent } from 'vue'
-import { useConfigStore } from 'src/stores/config'
+import { useConfigStore } from 'src/stores/config';
+import { useUserStore } from 'src/stores/user'
 export default defineComponent({
   name: 'Profile',
   components: { PasswordInput, MFAConfig },
@@ -77,12 +78,13 @@ export default defineComponent({
   data () {
     return {
       passwordSubmitDisabled: true,
-      configStore: useConfigStore()
+      configStore: useConfigStore(),
+      userStore: useUserStore()
     }
   },
   computed: {
     username () {
-      return this.userStore.getters.user.name
+      return this.userStore.user.name
     }
   },
   methods: {
@@ -101,7 +103,7 @@ export default defineComponent({
       }
       const user = this.username
       try {
-        await this.$axios.put(`/api/users/${user}`, payload)
+        await this.configStore.axios.put(`/api/users/${user}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',

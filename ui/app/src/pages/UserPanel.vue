@@ -158,17 +158,20 @@ const userColumns = [
 ]
 
 import { defineComponent } from 'vue'
+import { useConfigStore } from 'src/stores/config'
 export default defineComponent({
   name: 'UserPanel',
   components: { SkeletonTable, RuleDisplay },
 
-  data () {
+  setup () {
     return {
       loading: true,
       data: [],
       columns: userColumns,
       editUserDialog: false,
-      editUser: ''
+      editUser: '',
+      configStore: useConfigStore()
+      
     }
   },
 
@@ -182,7 +185,7 @@ export default defineComponent({
 
   computed: {
     editUsersDisabled () {
-      const auth = this.$configStore.getters.authMethod
+      const auth = this.configStore.authMethod
       if (auth === 'ldap') {
         return true
       }
@@ -194,7 +197,9 @@ export default defineComponent({
     onNewUser () {
       this.$q.dialog({
         component: NewUserDialog,
-        parent: this
+        componentProps: {
+          parent: this
+        }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -204,8 +209,10 @@ export default defineComponent({
     onEditUser (username) {
       this.$q.dialog({
         component: EditUserDialog,
+       componentProps: {
         parent: this,
         name: username
+       }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -225,8 +232,10 @@ export default defineComponent({
       }
       this.$q.dialog({
         component: ConfirmDelete,
-        parent: this,
-        resourceName: userName
+        componentProps: {
+          parent: this,
+            resourceName: userName
+        }
       }).onOk(() => {
         this.doDeleteUser(userName)
       }).onCancel(() => {
@@ -236,7 +245,7 @@ export default defineComponent({
 
     async doDeleteUser (userName) {
       try {
-        await this.$axios.delete(`/api/users/${userName}`)
+        await this.configStore.axios.delete(`/api/users/${userName}`)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -251,7 +260,7 @@ export default defineComponent({
 
     async fetchData () {
       try {
-        const res = await this.$axios.get('/api/users')
+        const res = await this.configStore.axios.get('/api/users')
         this.data = res.data
       } catch (err) {
         this.configStore.emitter.emit('notify-error', err)

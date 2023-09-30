@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
-    "quasar": "^2.6.0",
+    "quasar": "^2.12.7",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5",
     "@novnc/novnc": "^1.4.0",
@@ -25,7 +25,8 @@
     "swagger-ui": "^5.7.2",
     "vue3-ace-editor": "^2.2.3",
     "pinia" :"^2.1.6",
-    "mitt":"^3.0.1"
+    "mitt":"^3.0.1",
+    "@vueuse/core":"^10.4.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.10.0",

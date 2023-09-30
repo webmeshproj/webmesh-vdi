@@ -58,6 +58,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </template>
 
 <script lang="ts">
+import { useConfigStore } from 'src/stores/config'
+
 const LDAPGroupAnnotation = 'kvdi.io/ldap-groups'
 const OIDCGroupAnnotation = 'kvdi.io/oidc-groups'
 
@@ -73,21 +75,22 @@ export default {
       default: false
     }
   },
-  data () {
+  setup () {
     return {
-      ldapGroupSelection: [],
-      oidcGroupSelection: []
+      ldapGroupSelection: [] as any[],
+      oidcGroupSelection: [] as any[],
+      configStore: useConfigStore()
     }
   },
   computed: {
     isUsingOIDC () {
-      return this.$configStore.getters.authMethod === 'oidc'
+      return this.configStore.authMethod === 'oidc'
     },
     isUsingLDAP () {
-      return this.$configStore.getters.authMethod === 'ldap'
+      return this.configStore.authMethod === 'ldap'
     },
     isUsingLocalAuth () {
-      return this.$configStore.getters.authMethod === 'local'
+      return this.configStore.authMethod === 'local'
     },
     configuredLdapGroups () {
       const ldapGroups: any[] = []
