@@ -81,7 +81,7 @@ export default class DisplayManager extends Emitter {
     // _handleSessionChange handles a change in the current session status in the session
     // vuex store.
     _handleSessionChange (mutation) {
-        console.log("HANDLE SESION CHANGE", mutation)
+        console.log('HANDLE SESION CHANGE', mutation)
         if (mutation.type === 'set_active_session') {
             this._handleActiveSessionChange()
         } else if (mutation.type === 'delete_session') {

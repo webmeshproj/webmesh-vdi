@@ -576,7 +576,7 @@ export default  defineComponent({
     },
 
     handleSessionsChange (_mutation: any, state: any) {
-      console.log("HANDLE SESION CHANGE", state.session)
+      console.log('HANDLE SESION CHANGE', state.session)
       this.audioExpanded = state.audioEnabled
       this.controlSessions = state.sessions
     },

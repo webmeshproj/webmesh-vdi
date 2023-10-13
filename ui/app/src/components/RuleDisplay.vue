@@ -79,11 +79,13 @@ export default defineComponent({
   },
   methods: {
     onDeleteRule () {
-      this.configStore.emitter.emit(this.roleName!, {
-        roleIdx: this.roleIdx,
-        ruleIdx: this.ruleIdx,
-        deleteRule: true
-      })
+      if (this.roleName) {
+        this.configStore.emitter.emit(this.roleName, {
+          roleIdx: this.roleIdx,
+          ruleIdx: this.ruleIdx,
+          deleteRule: true
+        })
+      }
     },
     onEditRule () {
       if (!this.editable) { return }
@@ -98,11 +100,13 @@ export default defineComponent({
         namespaces: this.namespaces
        }
       }).onOk((payload) => {
-        this.configStore.emitter.emit(this.roleName, {
-          roleIdx: this.roleIdx,
-          ruleIdx: this.ruleIdx,
-          rulePayload: payload
-        })
+        if (this.roleName) {
+          this.configStore.emitter.emit(this.roleName, {
+            roleIdx: this.roleIdx,
+            ruleIdx: this.ruleIdx,
+            rulePayload: payload
+          })
+        }
       }).onCancel(() => {
         console.log('Cancelled rule edit')
       }).onDismiss(() => {

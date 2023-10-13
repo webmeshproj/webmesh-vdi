@@ -70,7 +70,12 @@ export default defineComponent({
       this.loading = true
       try {
         let namespace
-        const nsRef = this.parentRefs![`ns-${this.tmplName}`]
+        const parentRefs = this.parentRefs
+        if (parentRefs === undefined || parentRefs === null) {
+          this.configStore.emitter.emit('notify-error', new Error(`Unable to find namespace selector for ${this.tmplName}`))
+          return
+        }
+        const nsRef = parentRefs[`ns-${this.tmplName}`]
         if (!nsRef.selection || typeof (nsRef.selection) === 'object' || nsRef.selection === '' || nsRef.selection.length === 0) {
           namespace = this.configStore.serverConfig.appNamespace || 'default'
         } else {

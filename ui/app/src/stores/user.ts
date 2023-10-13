@@ -163,10 +163,10 @@ export const useUserStore = defineStore('userStore',{
       try {
         await this.auth_request()
         credentials.state = this._stateToken
-        console.log("A")
+        console.log('A')
 
         const res = await axios({ url: '/api/login', data: credentials, method: 'POST' })
-        console.log("B")
+        console.log('B')
 
         const resState = res.data.state
         if (this._stateToken !== resState) {
