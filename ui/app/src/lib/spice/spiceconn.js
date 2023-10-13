@@ -218,7 +218,6 @@ SpiceConn.prototype =
                     if (DEBUG > 0)
                     {
                         alert('Something has gone very wrong; we think we have message of type ' + msg.type);
-                        debugger;
                     }
                 }
 
