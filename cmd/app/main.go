@@ -105,29 +105,24 @@ func formatLog(writer io.Writer, params handlers.LogFormatterParams) {
 }
 
 func newServer(cfg *rest.Config, vdiCluster string, enableCORS bool) (*http.Server, error) {
+	r := mux.NewRouter()
 	// build the api router with our kubeconfig
 	apiRouter, err := api.NewFromConfig(cfg, vdiCluster)
 	if err != nil {
 		return nil, err
 	}
-
-	r := mux.NewRouter()
-
 	// api routes
 	r.PathPrefix("/api").Handler(apiRouter)
 	// vue frontend
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("/static")))
-
+	r.PathPrefix("/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("/static"))))
 	wrappedRouter := handlers.ProxyHeaders(
 		handlers.CompressHandler(
 			handlers.CustomLoggingHandler(os.Stdout, r, formatLog),
 		),
 	)
-
 	if enableCORS {
 		wrappedRouter = handlers.CORS()(wrappedRouter)
 	}
-
 	return &http.Server{
 		Handler: wrappedRouter,
 		Addr:    fmt.Sprintf(":%d", v1.WebPort),
