@@ -13,7 +13,7 @@ env:
 jobs:
   setup:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -25,15 +25,15 @@ jobs:
           check-latest: true
           cache: false
 
-      - name: Setup Test Cache
-        uses: actions/cache@v3
-        with:
-          key: ${{ runner.os }}-tests-go-${{ env.GO_VERSION }}-${{ hashFiles(env.CACHE_DEP_PATH) }}
-          restore-keys: ${{ runner.os }}-tests-go-${{ env.GO_VERSION }}-
-          path: |
-            ~/go/pkg
-            ~/go/bin
-            ~/.cache/go-build
+      # - name: Setup Test Cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     key: ${{ runner.os }}-tests-go-${{ env.GO_VERSION }}-${{ hashFiles(env.CACHE_DEP_PATH) }}
+      #     restore-keys: ${{ runner.os }}-tests-go-${{ env.GO_VERSION }}-
+      #     path: |
+      #       ~/go/pkg
+      #       ~/go/bin
+      #       ~/.cache/go-build
 
       - name: Static Analysis
         uses: golangci/golangci-lint-action@v3
