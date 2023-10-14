@@ -92,7 +92,7 @@ jobs:
         shell: bash
         run: |
           yarn global add @quasar/cli
-          cd ui/app && yarn install && quasar build
+          cd ui/app && yarn install && $(yarn global bin)/quasar build
 
       - name: Build and Push Manager Image
         uses: docker/build-push-action@v5
