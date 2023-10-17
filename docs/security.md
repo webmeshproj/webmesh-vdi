@@ -1,9 +1,9 @@
-## Security
+# Security
 
 All traffic between processes is encrypted with mTLS.
 The UI for the "desktop" containers is placed behind a VNC server listening on a UNIX socket and a sidecar to the container will proxy validated websocket connections to it.
 
-![img](doc/kvdi_arch.png)
+![img](/kvdi_arch.png)
 
 User authentication is provided by "providers". There are currently three implementations:
 

@@ -4,7 +4,7 @@ Documentation
 - [Getting started](/getting-started.md)
 - [Upgrading](/upgrading.md)
 - [Security](/security.md)
-- [Screenshots/Video](doc/screenshots.md)
+- [Screenshots/Video](/screenshots.md)
 - [Developing](/developing.md)
 
 - [API Reference](/appv1.md)
