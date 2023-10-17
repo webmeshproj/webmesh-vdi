@@ -1,6 +1,6 @@
 
-Documentation
-- [Introduction](/)
+
+- [Introduction](/README.md)
 - [Getting started](/getting-started.md)
 - [Upgrading](/upgrading.md)
 - [Security](/security.md)
