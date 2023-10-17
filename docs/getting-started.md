@@ -4,7 +4,7 @@
 
 For building and running locally you will need:
 
-  - `go >= 1.14`
+  - `go >= 1.21`
   - `docker`
 
 ## Installing
