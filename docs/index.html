@@ -27,9 +27,10 @@
 	<script>
 		window.$docsify = {
 			name: 'Webmesh Desktop',
-			repo: 'https://github.com/webmeshproj/webmesh-vdi',
 			routerMode: 'hash',
-			coverpage: 'coverpage.md',
+			 coverpage: 'coverpage.md', 
+		/* 	coverpage: '_coverpage.html', */
+
 			/* 	onlyCover: true, */
 			auto2top: true,
 			executeScript: true,
@@ -69,10 +70,18 @@
 		/*  Without this, code comments look dull */
 		--code-theme-comment: #00b5ff !important;
 		/* Backround colors */
-		--mono-hue: 30 !important;
-		--mono-saturation: 10% !important;
-		--cover-background-image: radial-gradient(ellipse at center top, var(--mono-tint3), transparent) !important;
+		--mono-hue: 3 !important;
+		--mono-saturation: 1% !important;
+/* 		--cover-background-image: url("bg.gif") radial-gradient(ellipse at center top, var(--mono-tint3), transparent) !important;
+ */		
 	}
+	:root {
+	 	--base-background-color: unset  !important; 
+	}
+	main {
+		background-color: var(--mono-base);
+	}
+
 </style>
 
 </html>
