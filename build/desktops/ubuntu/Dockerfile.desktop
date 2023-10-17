@@ -1,5 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/webmeshproj/desktop-ubuntu-base:latest
-FROM ${BASE_IMAGE}
+FROM ghcr.io/webmeshproj/desktop-ubuntu-base:latest
 
 # Window manager install
 ARG DESKTOP_PACKAGE=xfce4
