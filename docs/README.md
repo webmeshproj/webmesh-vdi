@@ -8,6 +8,9 @@ A Virtual Desktop Infrastructure on top of Webmesh.
 
 **It is easy to use!**
 
+![gif](/screenshots/demo.gif?raw=true)
+
+
 
 ## Features
 
