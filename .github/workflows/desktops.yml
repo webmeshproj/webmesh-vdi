@@ -87,7 +87,7 @@ jobs:
         id: xfce4-build
         with:
           context: ${{ matrix.docker-context }}
-          file: ${{ matrix.docker-context }}/${{ matrix.dockerfile }}
+          file: ${{ matrix.docker-context }}/Dockerfile.desktop
           push: true
           tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-xfce4:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}
@@ -103,7 +103,7 @@ jobs:
         id: kde-build
         with:
           context: ${{ matrix.docker-context }}
-          file: ${{ matrix.docker-context }}/${{ matrix.dockerfile }}
+          file: ${{ matrix.docker-context }}/Dockerfile.desktop
           push: true
           tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-kde:${{ env.VERSION }}
           platforms: ${{ env.PLATFORMS }}

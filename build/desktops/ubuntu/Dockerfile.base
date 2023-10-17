@@ -1,4 +1,4 @@
-FROM ubuntu:latest as base-system
+FROM ubuntu:rolling as base-system
 
 RUN sed -i 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
 
@@ -7,9 +7,11 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
   && apt-get dist-upgrade -y \
   && apt-get install -y --no-install-recommends \
-  coreutils iputils-ping sudo software-properties-common curl net-tools zenity xz-utils apt-utils \
-  dbus-x11 x11-utils alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
-  systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty ca-certificates \
+  apt-utils ca-certificates software-properties-common \
+  && apt-get install -y --no-install-recommends \
+  coreutils iputils-ping sudo curl net-tools zenity xz-utils dbus-x11 x11-utils \
+  alsa-utils mesa-utils libgl1-mesa-dri \tigervnc-standalone-server xpra \
+  systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty \
   && apt-get autoclean -y \
   && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
