@@ -8,4 +8,4 @@
 
 [Introduction](/README.md)
 [Get Started](/getting-started)
-[Demo](/demo)
+[Demo](/screenshots.md)
