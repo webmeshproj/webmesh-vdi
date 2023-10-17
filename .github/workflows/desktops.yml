@@ -79,7 +79,7 @@ jobs:
           cache-from: type=local,src=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
           cache-to: type=local,dest=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
 
-      # Do the same again for Xfce4 if this is the ubuntu build
+      # Do the same again for Xfce4 and KDE if this is the ubuntu build
 
       - name: Build ${{ matrix.name }} With Xfce4
         uses: docker/build-push-action@v5
@@ -96,3 +96,19 @@ jobs:
           build-args:
             BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ env.VERSION }}
             DESKTOP_PACKAGE=xfce4
+
+      - name: Build ${{ matrix.name }} With KDE
+        uses: docker/build-push-action@v5
+        if: ${{ matrix.docker-context == 'build/desktops/ubuntu' }}
+        id: kde-build
+        with:
+          context: ${{ matrix.docker-context }}
+          file: ${{ matrix.docker-context }}/${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}-kde:${{ env.VERSION }}
+          platforms: ${{ env.PLATFORMS }}
+          cache-from: type=local,src=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
+          cache-to: type=local,dest=/home/runner/.${{ matrix.tag-suffix }}.buildx-cache
+          build-args:
+            BASE_IMAGE=${{ env.IMAGE_PREFIX }}-${{ matrix.tag-suffix }}:${{ env.VERSION }}
+            DESKTOP_PACKAGE=kde-standard

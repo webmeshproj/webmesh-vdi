@@ -11,7 +11,6 @@ RUN apt-get update \
   && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-
 COPY systemd/${DESKTOP_PACKAGE}.service /etc/systemd/user/desktop.service
 
 RUN systemctl --user --global enable desktop.service \

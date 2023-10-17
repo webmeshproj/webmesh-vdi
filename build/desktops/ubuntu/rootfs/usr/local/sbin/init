@@ -2,12 +2,6 @@
 
 export HOME="${HOME:-/home/$USER}"
 
-# simple function for ensuring a basedir then writing a file from stdin
-write () {
-    mkdir -p "$(dirname ${1})"
-    cp /dev/stdin "${1}"
-}
-
 echo "** Setting up user account: ${USER}"
 useradd --uid ${UID} --no-create-home --home-dir "${HOME}" --shell /bin/bash --user-group --groups adm ${USER}
 passwd -d ${USER}
@@ -26,7 +20,8 @@ if [[ "${ENABLE_ROOT}" == "true" ]] ; then
     echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 fi
 
-# Set the VNC socket dir - this will effectivelt do nothing if the UNIX socket env var is not set
+echo "** Setting up user environment"
+# Set the VNC socket dir - this will effectively do nothing if the UNIX socket env var is not set
 if [[ -z "${DISPLAY_SOCK_ADDR}" ]] ; then
     if [[ -n "${VNC_SOCK_ADDR}" ]] ; then
         export DISPLAY_SOCK_ADDR="${VNC_SOCK_ADDR}"
@@ -51,7 +46,7 @@ env >> /etc/default/kvdi
 
 # Allow an automatic shell at the pts. This will trigger systemd-user as described
 # below.
-cat << EOF | write /etc/pam.d/login
+cat << EOF | tee /etc/pam.d/login
 auth       sufficient   pam_listfile.so item=tty sense=allow file=/etc/securetty onerr=fail apply=${USER}
 auth       required     pam_securetty.so
 auth       requisite    pam_nologin.so
@@ -60,5 +55,6 @@ auth       requisite    pam_nologin.so
 EOF
 echo pts/1 >> /etc/securetty
 
+echo "** Starting systemd user instance"
 export container=docker
 exec /usr/lib/systemd/systemd
