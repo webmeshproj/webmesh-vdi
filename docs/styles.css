@@ -9,3 +9,14 @@
 ::-webkit-scrollbar-thumb {
     background: #888;
 }
+
+.cover {
+    background-image: url("bg.gif") !important;
+    background-size: cover  !important;
+    background-color: unset !important;
+    height: 100vh;
+    padding:0;
+    margin:0;
+    --base-background-color: unset !important; 
+
+}

@@ -3,8 +3,6 @@
 </p> 
 
 # Webmesh Desktop 
-**Desktops at scale**
-
 
 [Introduction](/README.md)
 [Get Started](/getting-started)
