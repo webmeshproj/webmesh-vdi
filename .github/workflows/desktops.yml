@@ -1,8 +1,9 @@
 name: Desktops
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
+    tags: [v*]
 
 env:
   IMAGE_PREFIX: ghcr.io/webmeshproj/desktop
