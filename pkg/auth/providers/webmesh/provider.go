@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"slices"
 	"strings"
 
 	"github.com/go-jose/go-jose/v3/jwt"
@@ -35,9 +34,9 @@ import (
 
 	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-	"github.com/kvdi/kvdi/pkg/auth/common"
 	"github.com/kvdi/kvdi/pkg/types"
 	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 // AuthProvider implements an auth provider that uses a webmesh cluster as the
@@ -50,7 +49,7 @@ type AuthProvider struct {
 }
 
 // New returns a new AuthProvider.
-func New() common.AuthProvider {
+func New() *AuthProvider {
 	return &AuthProvider{}
 }
 
@@ -126,7 +125,7 @@ func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult,
 					}
 					groups := strings.Split(groupstr, v1.AuthGroupSeparator)
 					for _, group := range groups {
-						if slices.Contains(claims.Groups, group) {
+						if common.StringSliceContains(claims.Groups, group) {
 							bound = append(bound, role.GetName())
 							continue Roles
 						}
