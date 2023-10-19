@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/go-jose/go-jose/v3 v3.0.0
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-logr/logr v0.4.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -222,6 +223,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
-
-// replace github.com/tinyzimmer/go-gst => ../go-gst
-// replace github.com/tinyzimmer/go-glib => ../go-glib
