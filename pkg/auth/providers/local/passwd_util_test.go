@@ -50,7 +50,3 @@ func TestAddUserToBuffer(t *testing.T) {
 		t.Error("Expected error for user already existing")
 	}
 }
-
-func TestGetUserFromBuffer(t *testing.T)  {}
-func TestUpdateUserInBuffer(t *testing.T) {}
-func TestDeleteUserInBuffer(t *testing.T) {}

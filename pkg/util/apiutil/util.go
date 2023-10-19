@@ -76,7 +76,7 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
-	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Forbidden: %s", msg), errors.Forbidden).JSON(), w, http.StatusForbidden)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("forbidden: %s", msg), errors.Forbidden).JSON(), w, http.StatusForbidden)
 }
 
 // ReturnAPIUnauthorized returns an Unauthorized status with a json encoded error message.
@@ -85,7 +85,7 @@ func ReturnAPIUnauthorized(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
 		fmt.Println("Forbidden request due to:", err.Error())
 	}
-	WriteOrLogError(errors.ToAPIError(fmt.Errorf("Unauthorized: %s", msg), errors.Unauthorized).JSON(), w, http.StatusUnauthorized)
+	WriteOrLogError(errors.ToAPIError(fmt.Errorf("unauthorized: %s", msg), errors.Unauthorized).JSON(), w, http.StatusUnauthorized)
 }
 
 // WriteJSON encodes the provided interface to JSON and writes it to the response
@@ -118,7 +118,7 @@ func WriteOK(w http.ResponseWriter) {
 }
 
 // FilterUserRolesByNames returns a list of UserRoles matching the provided names
-// and clusterw
+// and cluster roles.
 func FilterUserRolesByNames(roles []*rbacv1.VDIRole, names []string) []*types.VDIUserRole {
 	userRoles := make([]*types.VDIUserRole, 0)
 	for _, name := range names {

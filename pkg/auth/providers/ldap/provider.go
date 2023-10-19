@@ -26,20 +26,18 @@ import (
 	"crypto/tls"
 	"strings"
 
+	"github.com/go-logr/logr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 	"github.com/kvdi/kvdi/pkg/auth/common"
 	"github.com/kvdi/kvdi/pkg/secrets"
-
-	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AuthProvider implements an auth provider that uses an LDAP server as the
 // authentication backend. Access to groups in LDAP is supplied through annotations
 // on VDIRoles.
 type AuthProvider struct {
-	common.AuthProvider
-
 	// k8s client
 	client client.Client
 	// our cluster instance

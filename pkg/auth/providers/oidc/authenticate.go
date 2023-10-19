@@ -26,16 +26,15 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
-
 	"github.com/kvdi/kvdi/pkg/types"
 	"github.com/kvdi/kvdi/pkg/util/apiutil"
 	"github.com/kvdi/kvdi/pkg/util/common"
 	"github.com/kvdi/kvdi/pkg/util/errors"
 	"github.com/kvdi/kvdi/pkg/util/rbac"
-
-	"golang.org/x/oauth2"
 )
 
 // Authenticate is called for API authentication requests. It should generate
@@ -215,7 +214,7 @@ func getUsernameFromClaims(claims map[string]interface{}) (string, error) {
 			return strings.Split(emailStr, "@")[0], nil
 		}
 	}
-	return "", fmt.Errorf("Could not parse username from claims: %+v", claims)
+	return "", fmt.Errorf("could not parse username from claims: %+v", claims)
 }
 
 func appendRoleIfBound(boundRoles, userGroups []string, role *rbacv1.VDIRole) []string {
