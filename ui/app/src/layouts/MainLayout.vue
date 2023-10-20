@@ -85,7 +85,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
         >
 
           <q-list>
-            <q-item dense clickable @click="() => { this.$q.fullscreen.request() }">
+            <q-item dense clickable @click="() => { q.fullscreen.request() }">
 
               <q-item-section avatar>
                 <q-icon name="fullscreen" />
@@ -280,11 +280,12 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 <script lang="ts">
 
+import { useQuasar } from 'quasar'
 import SessionTab from '../components/SessionTab.vue'
 import MFADialog from '../components/dialogs/MFADialog.vue'
 import FileTransferDialog from '../components/dialogs/FileTransfer.vue'
 import { getErrorMessage } from '../lib/util.js'
-import { defineComponent, ref }from 'vue'
+import { defineComponent, ref }from 'vue'
 import { useConfigStore } from '../stores/config'
 import { useUserStore } from '../stores/user'
 import { useDesktopSessions } from '../stores/desktop'
@@ -303,10 +304,12 @@ export default  defineComponent({
     const desktopSessions = useDesktopSessions()
     const drawer = ref(null)
     const openDrawer = ref(false)
+    const q = useQuasar();
 
     onClickOutside(drawer,()=> openDrawer.value = false )
     // **only return the whole store** instead of destructurin  g
     return { 
+      q,
       configStore , 
       userStore,desktopSessions,unsubscribeSessions: () => {},
       unsubscribeUsers: () => {},
@@ -321,18 +324,14 @@ export default  defineComponent({
       profileActive: false,
       metricsActive: false,
       audioExpanded: false,
-
       controlSessions: []
-    
     }
   },
   
-
   async created () {
     this.subscribeToBuses()
     document.onfullscreenchange = this.handleFullScreenChange
     this.unsubscribeSessions = this.desktopSessions.$subscribe(this.handleSessionsChange)
-    // this.unsubscribeUsers = this.userStore.$subscribe(this.handleAuthChange)
     await this.userStore.initStore()
     try {
       if (this.userStore._requiresMFA) {
@@ -371,8 +370,6 @@ export default  defineComponent({
     this.unsubscribeSessions()
     this.unsubscribeUsers()
   },
-
-
 
   computed: {
     userInitial () {
