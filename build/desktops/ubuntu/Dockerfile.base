@@ -8,7 +8,7 @@ RUN apt-get update \
   apt-utils ca-certificates software-properties-common \
   && apt-get install -y --no-install-recommends \
   coreutils iputils-ping sudo curl net-tools zenity xz-utils dbus-x11 x11-utils \
-  alsa-utils mesa-utils libgl1-mesa-dri \tigervnc-standalone-server xpra \
+  alsa-utils mesa-utils libgl1-mesa-dri tigervnc-standalone-server xpra \
   systemd systemd-sysv pulseaudio pavucontrol firefox vim expect-dev mingetty \
   && apt-get autoclean -y \
   && apt-get autoremove -y \
