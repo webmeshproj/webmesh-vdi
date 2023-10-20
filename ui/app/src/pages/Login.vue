@@ -47,12 +47,13 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script >
+<script lang="ts">
 import MFADialog from '../components/dialogs/MFADialog.vue'
 
 import { defineComponent } from 'vue'
 import { useConfigStore } from '../stores/config'
 import { useUserStore } from 'src/stores/user'
+
 export default defineComponent({
   name: 'Login',
 
@@ -138,6 +139,15 @@ export default defineComponent({
   mounted () {
     this.$nextTick().then(() => {
       this.configStore.emitter.emit('set-active-title', 'Login')
+      const authMethod = this.configStore.authMethod
+      if (authMethod === 'webmesh') {
+        // TODO: try webmesh id token login
+        this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
+          console.log(res)
+        }).catch((err) => {
+          console.error(err)
+        })
+      }
     })
   }
 })

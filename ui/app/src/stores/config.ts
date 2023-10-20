@@ -56,11 +56,14 @@ export const  useConfigStore =  defineStore('configStore', {
     },
     authMethod: state => {
       if (state._serverConfig.auth !== undefined) {
-        if (state._serverConfig.auth.ldapAuth !== undefined && state._serverConfig.auth.ldapAuth.URL) {
+        if (state._serverConfig.auth.ldapAuth !== undefined && state._serverConfig.auth.ldapAuth.url) {
           return 'ldap'
         }
-        if (state._serverConfig.auth.oidcAuth !== undefined && state._serverConfig.auth.oidcAuth.IssuerURL) {
+        if (state._serverConfig.auth.oidcAuth !== undefined && state._serverConfig.auth.oidcAuth.issuerURL) {
           return 'oidc'
+        }
+        if (state._serverConfig.auth.webmeshAuth !== undefined && state._serverConfig.auth.webmeshAuth.metadataURL) {
+          return 'webmesh'
         }
       }
       return 'local'

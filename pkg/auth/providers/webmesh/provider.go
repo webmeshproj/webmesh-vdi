@@ -82,7 +82,7 @@ type Claims struct {
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
 func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult, error) {
-	token := req.GetRequest().Header.Get("Authorization")
+	token := req.Password
 	if token == "" {
 		return nil, fmt.Errorf("no Authorization header provided")
 	}

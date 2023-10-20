@@ -159,15 +159,11 @@ export const useUserStore = defineStore('userStore',{
       }
     },
 
-    async login( credentials: any) {
+    async login(credentials: any) {
       try {
         await this.auth_request()
         credentials.state = this._stateToken
-        console.log('A')
-
         const res = await axios({ url: '/api/login', data: credentials, method: 'POST' })
-        console.log('B')
-
         const resState = res.data.state
         if (this._stateToken !== resState) {
           console.log('State token was malformed during request flow!')
