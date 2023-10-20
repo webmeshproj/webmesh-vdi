@@ -1,9 +1,0 @@
-#!/bin/bash
-
-faketty () {
-    script -qfec "$(printf "%q " "$@")"
-}
-
-# faketty /sbin/agetty --autologin ${USER} --noclear pts/1 xterm
-sudo -E -u ${USER} localectl set-locale LANG="en_US.UTF-8"
-faketty sudo -E -u ${USER} /bin/bash -c 'export $(dbus-launch) ; gnome-shell'

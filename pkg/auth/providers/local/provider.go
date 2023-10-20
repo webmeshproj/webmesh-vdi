@@ -23,19 +23,17 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package local
 
 import (
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	appv1 "github.com/kvdi/kvdi/apis/app/v1"
 	"github.com/kvdi/kvdi/pkg/auth/common"
 	"github.com/kvdi/kvdi/pkg/secrets"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AuthProvider implements an AuthProvider that uses a local secret similar
 // to a passwd file to authenticate users and map them to roles. This is primarily
 // intended for testing and ideally external auth providers would be supported.
 type AuthProvider struct {
-	common.AuthProvider
-
 	// k8s client
 	client client.Client
 	// our cluster instance

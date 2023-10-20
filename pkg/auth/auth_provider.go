@@ -27,6 +27,7 @@ import (
 	"github.com/kvdi/kvdi/pkg/auth/providers/ldap"
 	"github.com/kvdi/kvdi/pkg/auth/providers/local"
 	"github.com/kvdi/kvdi/pkg/auth/providers/oidc"
+	"github.com/kvdi/kvdi/pkg/auth/providers/webmesh"
 	"github.com/kvdi/kvdi/pkg/secrets"
 )
 
@@ -38,6 +39,9 @@ func GetAuthProvider(cluster *appv1.VDICluster, s *secrets.SecretEngine) common.
 	}
 	if cluster.IsUsingOIDCAuth() {
 		return oidc.New(s)
+	}
+	if cluster.IsUsingWebmeshAuth() {
+		return webmesh.New()
 	}
 	return local.New(s)
 }

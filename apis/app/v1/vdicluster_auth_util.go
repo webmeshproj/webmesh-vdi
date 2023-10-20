@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetAdminSecret returns the name of the secret for storing the admin password.
@@ -55,6 +55,15 @@ func (c *VDICluster) IsUsingLocalAuth() bool {
 		return c.Spec.Auth.LocalAuth != nil && !c.IsUsingLDAPAuth() && !c.IsUsingOIDCAuth()
 	}
 	return true
+}
+
+// IsUsingWebmeshAuth returns true if the cluster is using the webmesh authentication
+// driver.
+func (c *VDICluster) IsUsingWebmeshAuth() bool {
+	if c.Spec.Auth != nil {
+		return c.Spec.Auth.WebmeshAuth != nil && c.Spec.Auth.WebmeshAuth.MetadataURL != ""
+	}
+	return false
 }
 
 // AuthIsUsingSecretEngine returns true if the secrets for the configured auth

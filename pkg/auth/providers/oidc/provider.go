@@ -27,22 +27,20 @@ import (
 	"net/http"
 	"strings"
 
-	appv1 "github.com/kvdi/kvdi/apis/app/v1"
-	"github.com/kvdi/kvdi/pkg/auth/common"
-	"github.com/kvdi/kvdi/pkg/secrets"
-
 	gooidc "github.com/coreos/go-oidc"
 	"github.com/go-logr/logr"
 	"golang.org/x/oauth2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/auth/common"
+	"github.com/kvdi/kvdi/pkg/secrets"
 )
 
 // AuthProvider implements an auth provider that uses an OIDC provider as the
 // authentication backend. Access to groups provided in the claims is supplied
 // through annotations on VDIRoles.
 type AuthProvider struct {
-	common.AuthProvider
-
 	// k8s client
 	client client.Client
 	// our cluster instance

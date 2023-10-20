@@ -1,16 +1,14 @@
-ARG BASE_IMAGE=ghcr.io/webmeshproj/desktop-ubuntu-base:latest
-FROM ${BASE_IMAGE}
+FROM ghcr.io/webmeshproj/desktop-ubuntu-base:latest
 
-# Window manager install
-ARG DESKTOP_PACKAGE=xfce4
-ENV DESKTOP_PACKAGE ${DESKTOP_PACKAGE}
+ARG DESKTOP_PACKAGE
+ENV DESKTOP_PACKAGE=${DESKTOP_PACKAGE}
+
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
   && apt-get install -y ${DESKTOP_PACKAGE} \
   && apt-get autoclean -y \
   && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/*
-
 
 COPY systemd/${DESKTOP_PACKAGE}.service /etc/systemd/user/desktop.service
 

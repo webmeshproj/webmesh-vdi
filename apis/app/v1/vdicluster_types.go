@@ -22,9 +22,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package v1
 
 import (
-	v1 "github.com/kvdi/kvdi/apis/rbac/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	v1 "github.com/kvdi/kvdi/apis/rbac/v1"
 )
 
 // VDIClusterSpec defines the desired state of VDICluster
@@ -186,6 +187,8 @@ type AuthConfig struct {
 	LDAPAuth *LDAPConfig `json:"ldapAuth,omitempty"`
 	// Use OIDC for authentication
 	OIDCAuth *OIDCConfig `json:"oidcAuth,omitempty"`
+	// Use Webmesh for authentication
+	WebmeshAuth *WebmeshConfig `json:"webmeshAuth,omitempty"`
 }
 
 // SecretsConfig configurese the backend for secrets management.
@@ -200,6 +203,14 @@ type SecretsConfig struct {
 
 // LocalAuthConfig represents a local, 'passwd'-like authentication driver.
 type LocalAuthConfig struct{}
+
+// WebmeshConfig represents configurations for using a webmesh cluster as the
+// authentication backend.
+type WebmeshConfig struct {
+	// MetadataURL is the URL to the webmesh metadata endpoint. This is used for
+	// validating the JWT token.
+	MetadataURL string `json:"metadataURL,omitempty"`
+}
 
 // LDAPConfig represents the configurations for using LDAP as the authentication
 // backend.

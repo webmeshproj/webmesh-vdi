@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kvdi/kvdi/pkg/types"
-	"github.com/kvdi/kvdi/pkg/util/errors"
-
 	"github.com/golang-jwt/jwt"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/kvdi/kvdi/pkg/types"
+	"github.com/kvdi/kvdi/pkg/util/errors"
 )
 
 // GenerateJWT will create a new JWT with the given user object's fields
@@ -62,7 +62,7 @@ func DecodeAndVerifyJWT(secret []byte, authToken string) (*types.JWTClaims, erro
 	parser := &jwt.Parser{UseJSONNumber: true}
 	token, err := parser.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("Incorrect signing algorithm on token")
+			return nil, errors.New("incorrect signing algorithm on token")
 		}
 		// use cache for the JWT secret, since we use it for every request
 		return secret, nil
@@ -70,7 +70,7 @@ func DecodeAndVerifyJWT(secret []byte, authToken string) (*types.JWTClaims, erro
 	// Check if token is nil and return error. The error will also be populated
 	// if the token was parsed successfully but is invalid.
 	if token == nil {
-		return nil, fmt.Errorf("Could not parse provided token: %s", err.Error())
+		return nil, fmt.Errorf("could not parse provided token: %s", err.Error())
 	}
 
 	// check token validity
@@ -91,14 +91,14 @@ func DecodeAndVerifyJWT(secret []byte, authToken string) (*types.JWTClaims, erro
 		}
 
 		// Unhandled token error - generic message
-		return nil, fmt.Errorf("Token is invalid: %s", err.Error())
+		return nil, fmt.Errorf("token is invalid: %s", err.Error())
 	}
 
 	// Retrieve the token claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		// The claims in the token weren't as expected
-		return nil, errors.New("Could not coerce token claims to MapClaims")
+		return nil, errors.New("could not coerce token claims to MapClaims")
 	}
 
 	// decode the claims into a session object

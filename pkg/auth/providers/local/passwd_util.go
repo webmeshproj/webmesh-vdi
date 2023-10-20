@@ -42,7 +42,7 @@ func addUserToBuffer(file io.Reader, newUser *User) (io.Reader, error) {
 			continue
 		}
 		if user.Username == newUser.Username {
-			return nil, fmt.Errorf("A user with the name %s already exists", user.Username)
+			return nil, fmt.Errorf("a user with the name %s already exists", user.Username)
 		}
 		if _, err := buf.Write(user.Encode()); err != nil {
 			return nil, err

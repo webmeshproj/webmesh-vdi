@@ -23,15 +23,14 @@ import (
 	"fmt"
 	"strings"
 
+	ldapv3 "github.com/go-ldap/ldap/v3"
+
 	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
-
 	"github.com/kvdi/kvdi/pkg/types"
 	"github.com/kvdi/kvdi/pkg/util/apiutil"
 	"github.com/kvdi/kvdi/pkg/util/common"
 	"github.com/kvdi/kvdi/pkg/util/errors"
-
-	ldapv3 "github.com/go-ldap/ldap/v3"
 )
 
 // Authenticate is called for API authentication requests. It should generate
@@ -73,7 +72,7 @@ func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult,
 
 	if a.cluster.GetLDAPDoUserStatusCheck() {
 		if strings.EqualFold(user.GetAttributeValue(a.cluster.GetLDAPUserStatusAttribute()), a.cluster.GetLDAPUserStatusDisabledValue()) {
-			return nil, fmt.Errorf("User account %s is disabled", user.GetAttributeValue(a.cluster.GetLDAPUserIDAttribute()))
+			return nil, fmt.Errorf("user account %s is disabled", user.GetAttributeValue(a.cluster.GetLDAPUserIDAttribute()))
 		}
 	}
 

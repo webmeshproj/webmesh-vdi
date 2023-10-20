@@ -41,6 +41,9 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
+swagger:
+	$(GO) run github.com/go-swagger/go-swagger/cmd/swagger@latest generate spec -o ui/swagger.json --scan-models
+
 # Run go fmt against code
 fmt:
 	go fmt ./...
@@ -113,10 +116,10 @@ MANAGER_IMAGE           ?= ${REPO}/vdi-manager:${VERSION}
 APP_IMAGE               ?= ${REPO}/vdi-app:${VERSION}
 KVDI_PROXY_IMAGE        ?= ${REPO}/vdi-proxy:${VERSION}
 KVDI_AUDIO_PROXY_IMAGE  ?= ${REPO}/vdi-audio-proxy:${VERSION}
-UBUNTU_BASE_IMAGE       ?= ${REPO}/ubuntu-base:latest
-APP_PROFILE_BASE_IMAGE  ?= ${REPO}/app-base:latest
-DOSBOX_IMAGE            ?= ${REPO}/dosbox:latest
-QEMU_IMAGE              ?= ${REPO}/qemu:latest
+UBUNTU_BASE_IMAGE       ?= ${REPO}/desktop-ubuntu-base:latest
+APP_PROFILE_BASE_IMAGE  ?= ${REPO}/desktop-apps-base:latest
+DOSBOX_IMAGE            ?= ${REPO}/desktop-dosbox-base:latest
+QEMU_IMAGE              ?= ${REPO}/desktop-qemu-base:latest
 
 TARGETOS   ?= $(shell go env GOOS)
 TARGETARCH ?= $(shell go env GOARCH)

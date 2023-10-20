@@ -40,6 +40,10 @@ const (
 	// to groups provided in claims from an OIDC provider. A semicolon separated list can
 	// bind a role to multiple groups.
 	OIDCGroupRoleAnnotation = "kvdi.io/oidc-groups"
+	// WebmeshGroupRoleAnnotation is the annotation applied to VDIRoles to "bind" them
+	// to groups provided in claims from a Webmesh provider. A semicolon separated list can
+	// bind a role to multiple groups.
+	WebmeshGroupRoleAnnotation = "kvdi.io/webmesh-groups"
 	// AuthGroupSeparator is the separator used when parsing lists of groups from a string.
 	AuthGroupSeparator = ";"
 	// VDIClusterLabel is the label attached to resources to reference their parents VDI cluster

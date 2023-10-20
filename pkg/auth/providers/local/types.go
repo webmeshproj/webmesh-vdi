@@ -49,7 +49,7 @@ func (u *User) Encode() []byte {
 func ParseUser(text string) (*User, error) {
 	fields := strings.Split(text, ":")
 	if len(fields) < 3 {
-		return nil, errors.New("Not enough fields to parse in text")
+		return nil, errors.New("not enough fields to parse in text")
 	}
 	user := &User{
 		Username:     fields[0],

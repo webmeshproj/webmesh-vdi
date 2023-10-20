@@ -349,6 +349,14 @@ spec:
                       (e.g. 8-10h) since the refresh token flow will not be able to
                       lookup a user's grants from the provider. Defaults to `15m`.
                     type: string
+                  webmeshAuth:
+                    description: Use Webmesh for authentication
+                    properties:
+                      metadataURL:
+                        description: MetadataURL is the URL to the webmesh metadata
+                          endpoint. This is used for validating the JWT token.
+                        type: string
+                    type: object
                 type: object
               desktops:
                 description: Global desktop configurations

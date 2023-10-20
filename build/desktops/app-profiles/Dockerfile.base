@@ -1,10 +1,10 @@
-FROM ubuntu:latest
+FROM ubuntu:rolling
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
     && apt-get -y -u dist-upgrade \
     && apt-get -y --no-install-recommends install \
-        tigervnc-standalone-server xpra lwm supervisor pulseaudio \
+    tigervnc-standalone-server xpra lwm supervisor pulseaudio \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && useradd -M -d /var/run/kvdi -u 9000 kvdi \
     && mkdir -p /var/log/supervisor \

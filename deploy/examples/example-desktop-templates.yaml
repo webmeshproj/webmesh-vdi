@@ -1,3 +1,4 @@
+---
 apiVersion: desktops.kvdi.io/v1
 kind: Template
 metadata:
@@ -16,7 +17,23 @@ spec:
     os: ubuntu
     desktop: xfce4
     applications: minimal
-
+---
+apiVersion: desktops.kvdi.io/v1
+kind: Template
+metadata:
+  name: ubuntu-kde
+spec:
+  desktop:
+    image: ghcr.io/webmeshproj/desktop-ubuntu-base-kde:latest
+    imagePullPolicy: IfNotPresent
+    allowRoot: true
+  proxy:
+    image: ghcr.io/webmeshproj/vdi-proxy:latest
+    allowFileTransfer: true
+  tags:
+    os: ubuntu
+    desktop: xfce4
+    applications: minimal
 ---
 apiVersion: desktops.kvdi.io/v1
 kind: Template
@@ -33,19 +50,3 @@ spec:
   tags:
     os: ubuntu
     desktop: dosbox
-
-# ---
-# apiVersion: desktops.kvdi.io/v1
-# kind: Template
-# metadata:
-#   name: qemu-kvm
-# spec:
-#   qemu:
-#     diskImage: ghcr.io/kvdi/ubuntu-qemu:latest
-#     diskImagePullPolicy: IfNotPresent
-#     cpus: 4
-#     memory: 4096
-#     useCSI: false
-#   tags:
-#     kvm: "true"
-#     os: ubuntu

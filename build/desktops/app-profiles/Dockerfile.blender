@@ -1,0 +1,15 @@
+FROM ghcr.io/webmeshproj/desktop-apps-base:latest
+
+ARG ARCH=x64
+ENV ARCH=${ARCH}
+RUN apt-get update && apt-get install -y curl libxss1 libnss3 xz-utils \
+    && curl -JLO \
+    https://ftp.halifax.rwth-aachen.de/blender/release/Blender3.6/blender-3.6.5-linux-${ARCH}.tar.xz \
+    && tar -C /usr/local -xf blender-3.6.5-linux-${ARCH}.tar.xz \
+    && rm blender-3.6.5-linux-${ARCH}.tar.xz \
+    && apt-get -y remove curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY appconfs/blender.conf /etc/supervisor/conf.d/blender.conf
+RUN sed -i "s/%ARCH%/${ARCH}/g" /etc/supervisor/conf.d/blender.conf

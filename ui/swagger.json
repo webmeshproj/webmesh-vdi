@@ -96,19 +96,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {},
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/fs/{namespace}/{name}/put": {
@@ -142,21 +130,7 @@
             "name": "file",
             "in": "formData"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/fs/{namespace}/{name}/stat/{fpath}": {
@@ -188,21 +162,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/statDesktopFileResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/ws/{namespace}/{name}/audio": {
@@ -233,18 +193,7 @@
             "name": "token",
             "in": "query"
           }
-        ],
-        "responses": {
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/ws/{namespace}/{name}/display": {
@@ -277,18 +226,7 @@
             "in": "query",
             "required": true
           }
-        ],
-        "responses": {
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/ws/{namespace}/{name}/logs/{container}": {
@@ -327,18 +265,7 @@
             "in": "query",
             "required": true
           }
-        ],
-        "responses": {
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/ws/{namespace}/{name}/status": {
@@ -364,18 +291,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/desktops/{namespace}/{name}/logs/{container}": {
@@ -407,21 +323,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/getLogsResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/login": {
@@ -582,21 +484,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/roleResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "put": {
         "description": "All properties will be overwritten with those provided in the payload, even if undefined.",
@@ -617,28 +505,12 @@
             }
           },
           {
+            "$ref": "#/definitions/UpdateRoleRequest",
             "description": "The role details to update.",
             "name": "roleDetails",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/UpdateRoleRequest"
-            }
+            "in": "body"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "delete": {
         "tags": [
@@ -654,21 +526,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/serviceaccounts/{namespace}": {
@@ -686,18 +544,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/serviceAccountsResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/sessions": {
@@ -770,21 +617,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/getSessionResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "delete": {
         "tags": [
@@ -807,21 +640,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/templates": {
@@ -886,21 +705,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/templateResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "put": {
         "description": "Only attributes defined in the payload will be applied.",
@@ -921,28 +726,12 @@
             }
           },
           {
+            "$ref": "#/definitions/DesktopTemplate",
             "description": "The manifest to merge with the existing template.",
             "name": "templateDetails",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/DesktopTemplate"
-            }
+            "in": "body"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "delete": {
         "tags": [
@@ -958,21 +747,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/users": {
@@ -1038,21 +813,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/userResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "put": {
         "description": "Only the provided attributes will be updated.",
@@ -1073,28 +834,12 @@
             }
           },
           {
+            "$ref": "#/definitions/UpdateUserRequest",
             "description": "The user details to update.",
             "name": "userDetails",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/UpdateUserRequest"
-            }
+            "in": "body"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "delete": {
         "tags": [
@@ -1110,21 +855,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/boolResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/users/{user}/mfa": {
@@ -1142,21 +873,7 @@
             "in": "path",
             "required": true
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/getMFAResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       },
       "put": {
         "tags": [
@@ -1176,28 +893,12 @@
             }
           },
           {
+            "$ref": "#/definitions/UpdateMFARequest",
             "description": "The user details to update.",
             "name": "putUserMFARequest",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/UpdateMFARequest"
-            }
+            "in": "body"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/updateMFAResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/users/{user}/mfa/verify": {
@@ -1216,28 +917,12 @@
             "required": true
           },
           {
+            "$ref": "#/definitions/AuthorizeRequest",
             "description": "The MFA token generated by the app",
             "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/AuthorizeRequest"
-            }
+            "in": "body"
           }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/verifyUserMFAResponse"
-          },
-          "400": {
-            "$ref": "#/responses/error"
-          },
-          "403": {
-            "$ref": "#/responses/error"
-          },
-          "404": {
-            "$ref": "#/responses/error"
-          }
-        }
+        ]
       }
     },
     "/api/whoami": {
@@ -1386,6 +1071,9 @@
           "description": "How long issued access tokens should be valid for. When using OIDC auth\nyou may want to set this to a higher value (e.g. 8-10h) since the refresh token\nflow will not be able to lookup a user's grants from the provider. Defaults to `15m`.",
           "type": "string",
           "x-go-name": "TokenDuration"
+        },
+        "webmeshAuth": {
+          "$ref": "#/definitions/WebmeshConfig"
         }
       },
       "x-go-package": "github.com/kvdi/kvdi/apis/app/v1"
@@ -2646,7 +2334,9 @@
           "x-go-name": "Subresource"
         },
         "time": {
-          "$ref": "#/definitions/Time"
+          "description": "Time is timestamp of when these fields were set. It should always be empty if Operation is 'Apply'\n+optional",
+          "type": "string",
+          "x-go-name": "Time"
         }
       },
       "x-go-package": "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -2888,7 +2578,9 @@
           "x-go-name": "ClusterName"
         },
         "creationTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "CreationTimestamp is a timestamp representing the server time when this object was\ncreated. It is not guaranteed to be set in happens-before order across separate operations.\nClients may not set this value. It is represented in RFC3339 form and is in UTC.\n\nPopulated by the system.\nRead-only.\nNull for lists.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "CreationTimestamp"
         },
         "deletionGracePeriodSeconds": {
           "description": "Number of seconds allowed for this object to gracefully terminate before\nit will be removed from the system. Only set when deletionTimestamp is also set.\nMay only be shortened.\nRead-only.\n+optional",
@@ -2897,7 +2589,9 @@
           "x-go-name": "DeletionGracePeriodSeconds"
         },
         "deletionTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "DeletionTimestamp is RFC 3339 date and time at which this resource will be deleted. This\nfield is set by the server when a graceful deletion is requested by the user, and is not\ndirectly settable by a client. The resource is expected to be deleted (no longer visible\nfrom resource lists, and not reachable by name) after the time in this field, once the\nfinalizers list is empty. As long as the finalizers list contains items, deletion is blocked.\nOnce the deletionTimestamp is set, this value may not be unset or be set further into the\nfuture, although it may be shortened or the resource may be deleted prior to this time.\nFor example, a user may request that a pod is deleted in 30 seconds. The Kubelet will react\nby sending a graceful termination signal to the containers in the pod. After that 30 seconds,\nthe Kubelet will send a hard termination signal (SIGKILL) to the container and after cleanup,\nremove the pod from the API. In the presence of network partitions, this object may still\nexist after this timestamp, until an administrator or automated process can determine the\nresource is fully terminated.\nIf not set, graceful deletion of the object has not been requested.\n\nPopulated by the system when a graceful deletion is requested.\nRead-only.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "DeletionTimestamp"
         },
         "finalizers": {
           "description": "Must be empty before the object is deleted from the registry. Each entry\nis an identifier for the responsible component that will remove the entry\nfrom the list. If the deletionTimestamp of the object is non-nil, entries\nin this list can only be removed.\nFinalizers may be processed and removed in any order.  Order is NOT enforced\nbecause it introduces significant risk of stuck finalizers.\nfinalizers is a shared field, any actor with permission can reorder it.\nIf the finalizer list is processed in order, then this can lead to a situation\nin which the component responsible for the first finalizer in the list is\nwaiting for a signal (field value, external system, or other) produced by a\ncomponent responsible for a finalizer later in the list, resulting in a deadlock.\nWithout enforced ordering finalizers are free to order amongst themselves and\nare not vulnerable to ordering changes in the list.\n+optional\n+patchStrategy=merge",
@@ -3704,7 +3398,9 @@
           "x-go-name": "ClusterName"
         },
         "creationTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "CreationTimestamp is a timestamp representing the server time when this object was\ncreated. It is not guaranteed to be set in happens-before order across separate operations.\nClients may not set this value. It is represented in RFC3339 form and is in UTC.\n\nPopulated by the system.\nRead-only.\nNull for lists.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "CreationTimestamp"
         },
         "deletionGracePeriodSeconds": {
           "description": "Number of seconds allowed for this object to gracefully terminate before\nit will be removed from the system. Only set when deletionTimestamp is also set.\nMay only be shortened.\nRead-only.\n+optional",
@@ -3713,7 +3409,9 @@
           "x-go-name": "DeletionGracePeriodSeconds"
         },
         "deletionTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "DeletionTimestamp is RFC 3339 date and time at which this resource will be deleted. This\nfield is set by the server when a graceful deletion is requested by the user, and is not\ndirectly settable by a client. The resource is expected to be deleted (no longer visible\nfrom resource lists, and not reachable by name) after the time in this field, once the\nfinalizers list is empty. As long as the finalizers list contains items, deletion is blocked.\nOnce the deletionTimestamp is set, this value may not be unset or be set further into the\nfuture, although it may be shortened or the resource may be deleted prior to this time.\nFor example, a user may request that a pod is deleted in 30 seconds. The Kubelet will react\nby sending a graceful termination signal to the containers in the pod. After that 30 seconds,\nthe Kubelet will send a hard termination signal (SIGKILL) to the container and after cleanup,\nremove the pod from the API. In the presence of network partitions, this object may still\nexist after this timestamp, until an administrator or automated process can determine the\nresource is fully terminated.\nIf not set, graceful deletion of the object has not been requested.\n\nPopulated by the system when a graceful deletion is requested.\nRead-only.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "DeletionTimestamp"
         },
         "finalizers": {
           "description": "Must be empty before the object is deleted from the registry. Each entry\nis an identifier for the responsible component that will remove the entry\nfrom the list. If the deletionTimestamp of the object is non-nil, entries\nin this list can only be removed.\nFinalizers may be processed and removed in any order.  Order is NOT enforced\nbecause it introduces significant risk of stuck finalizers.\nfinalizers is a shared field, any actor with permission can reorder it.\nIf the finalizer list is processed in order, then this can lead to a situation\nin which the component responsible for the first finalizer in the list is\nwaiting for a signal (field value, external system, or other) produced by a\ncomponent responsible for a finalizer later in the list, resulting in a deadlock.\nWithout enforced ordering finalizers are free to order amongst themselves and\nare not vulnerable to ordering changes in the list.\n+optional\n+patchStrategy=merge",
@@ -3834,12 +3532,6 @@
         }
       },
       "x-go-package": "github.com/kvdi/kvdi/apis/desktops/v1"
-    },
-    "Time": {
-      "description": "+protobuf.options.marshal=false\n+protobuf.as=Timestamp\n+protobuf.options.(gogoproto.goproto_stringer)=false",
-      "type": "object",
-      "title": "Time is a wrapper around time.Time which supports correct\nmarshaling to YAML and JSON.  Wrappers are provided for many\nof the factory methods that the time package offers.",
-      "x-go-package": "k8s.io/apimachinery/pkg/apis/meta/v1"
     },
     "TypedLocalObjectReference": {
       "description": "TypedLocalObjectReference contains enough information to let you locate the\ntyped referenced object inside the same namespace.\n+structType=atomic",
@@ -4024,7 +3716,9 @@
           "x-go-name": "ClusterName"
         },
         "creationTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "CreationTimestamp is a timestamp representing the server time when this object was\ncreated. It is not guaranteed to be set in happens-before order across separate operations.\nClients may not set this value. It is represented in RFC3339 form and is in UTC.\n\nPopulated by the system.\nRead-only.\nNull for lists.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "CreationTimestamp"
         },
         "deletionGracePeriodSeconds": {
           "description": "Number of seconds allowed for this object to gracefully terminate before\nit will be removed from the system. Only set when deletionTimestamp is also set.\nMay only be shortened.\nRead-only.\n+optional",
@@ -4033,7 +3727,9 @@
           "x-go-name": "DeletionGracePeriodSeconds"
         },
         "deletionTimestamp": {
-          "$ref": "#/definitions/Time"
+          "description": "DeletionTimestamp is RFC 3339 date and time at which this resource will be deleted. This\nfield is set by the server when a graceful deletion is requested by the user, and is not\ndirectly settable by a client. The resource is expected to be deleted (no longer visible\nfrom resource lists, and not reachable by name) after the time in this field, once the\nfinalizers list is empty. As long as the finalizers list contains items, deletion is blocked.\nOnce the deletionTimestamp is set, this value may not be unset or be set further into the\nfuture, although it may be shortened or the resource may be deleted prior to this time.\nFor example, a user may request that a pod is deleted in 30 seconds. The Kubelet will react\nby sending a graceful termination signal to the containers in the pod. After that 30 seconds,\nthe Kubelet will send a hard termination signal (SIGKILL) to the container and after cleanup,\nremove the pod from the API. In the presence of network partitions, this object may still\nexist after this timestamp, until an administrator or automated process can determine the\nresource is fully terminated.\nIf not set, graceful deletion of the object has not been requested.\n\nPopulated by the system when a graceful deletion is requested.\nRead-only.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata\n+optional",
+          "type": "string",
+          "x-go-name": "DeletionTimestamp"
         },
         "finalizers": {
           "description": "Must be empty before the object is deleted from the registry. Each entry\nis an identifier for the responsible component that will remove the entry\nfrom the list. If the deletionTimestamp of the object is non-nil, entries\nin this list can only be removed.\nFinalizers may be processed and removed in any order.  Order is NOT enforced\nbecause it introduces significant risk of stuck finalizers.\nfinalizers is a shared field, any actor with permission can reorder it.\nIf the finalizer list is processed in order, then this can lead to a situation\nin which the component responsible for the first finalizer in the list is\nwaiting for a signal (field value, external system, or other) produced by a\ncomponent responsible for a finalizer later in the list, resulting in a deadlock.\nWithout enforced ordering finalizers are free to order amongst themselves and\nare not vulnerable to ordering changes in the list.\n+optional\n+patchStrategy=merge",
@@ -4406,6 +4102,18 @@
         }
       },
       "x-go-package": "k8s.io/api/core/v1"
+    },
+    "WebmeshConfig": {
+      "description": "WebmeshConfig represents configurations for using a webmesh cluster as the\nauthentication backend.",
+      "type": "object",
+      "properties": {
+        "metadataURL": {
+          "description": "MetadataURL is the URL to the webmesh metadata endpoint. This is used for\nvalidating the JWT token.",
+          "type": "string",
+          "x-go-name": "MetadataURL"
+        }
+      },
+      "x-go-package": "github.com/kvdi/kvdi/apis/app/v1"
     }
   },
   "responses": {
@@ -4488,9 +4196,7 @@
       "description": "Session status response",
       "schema": {
         "type": "object",
-        "additionalProperties": {
-          "type": "object"
-        }
+        "additionalProperties": {}
       }
     },
     "namespacesResponse": {

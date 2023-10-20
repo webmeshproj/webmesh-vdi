@@ -23,15 +23,13 @@ build-dosbox:
 build-ubuntu-%: build-ubuntu-base
 	cd build/desktops/ubuntu && docker build . \
 		-f Dockerfile.desktop \
-		--build-arg BASE_IMAGE=${UBUNTU_BASE_IMAGE} \
 		--build-arg DESKTOP_PACKAGE=$* \
-		-t ${REPO}/ubuntu-$*:latest
+		-t ${REPO}/desktop-ubuntu-base-$*:latest
 
 build-app-%:
 	cd build/desktops/app-profiles && docker build . \
 		-f Dockerfile.$* \
-		--build-arg BASE_IMAGE=${APP_PROFILE_BASE_IMAGE} \
-		-t ${REPO}/app-$*:latest
+		-t ${REPO}/desktop-app-$*:latest
 
 # Pushers
 
@@ -48,7 +46,7 @@ push-qemu: build-qemu
 	docker push ${QEMU_IMAGE}
 
 push-ubuntu-%: build-ubuntu-%
-	docker push ${REPO}/ubuntu-$*:latest
+	docker push ${REPO}/desktop-ubuntu-base-$*:latest
 
 push-app-%: build-app-%
 	docker push ${REPO}/app-$*:latest
@@ -56,7 +54,7 @@ push-app-%: build-app-%
 # Loaders
 
 load-ubuntu-%: $(K3D) build-ubuntu-%
-	$(K3D) image import --cluster=$(CLUSTER_NAME) $(REPO)/ubuntu-$*:latest
+	$(K3D) image import --cluster=$(CLUSTER_NAME) $(REPO)/desktop-ubuntu-base-$*:latest
 
 load-app-%: $(K3D) build-app-%
 	$(K3D) image import --cluster=$(CLUSTER_NAME) $(REPO)/app-$*:latest

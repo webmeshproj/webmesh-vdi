@@ -25,13 +25,13 @@ import (
 	"context"
 	"fmt"
 
-	appv1 "github.com/kvdi/kvdi/apis/app/v1"
-	"github.com/kvdi/kvdi/pkg/secrets"
-	"github.com/kvdi/kvdi/pkg/util/k8sutil"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	"github.com/kvdi/kvdi/pkg/secrets"
+	"github.com/kvdi/kvdi/pkg/util/k8sutil"
 )
 
 // GetAuthSecrets is a helper function for retrieving multiple secrets required for
@@ -47,9 +47,7 @@ func GetAuthSecrets(c client.Client, cluster *appv1.VDICluster, secrets *secrets
 			}
 			results[key] = string(res)
 		}
-
 	} else {
-
 		secretName := cluster.GetAuthK8sSecret()
 		secretNamespace, err := k8sutil.GetThisPodNamespace()
 		if err != nil {
@@ -61,18 +59,16 @@ func GetAuthSecrets(c client.Client, cluster *appv1.VDICluster, secrets *secrets
 			return nil, err
 		}
 		if secret.Data == nil {
-			return nil, fmt.Errorf("Provided secret %s is empty", secretName)
+			return nil, fmt.Errorf("provided secret %s is empty", secretName)
 		}
 
 		for _, key := range keys {
 			res, ok := secret.Data[key]
 			if !ok {
-				return nil, fmt.Errorf("There is no key %s in secret %s", key, secretName)
+				return nil, fmt.Errorf("there is no key %s in secret %s", key, secretName)
 			}
 			results[key] = string(res)
 		}
-
 	}
-
 	return results, nil
 }
