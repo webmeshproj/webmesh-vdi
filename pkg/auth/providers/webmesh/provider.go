@@ -110,7 +110,12 @@ func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult,
 	}
 	return &types.AuthResult{
 		User: &types.VDIUser{
-			Name: claims.ID,
+			Name: func() string {
+				if claims.ID == ":sub" {
+					return claims.Subject
+				}
+				return claims.ID
+			}(),
 			Roles: func() []*types.VDIUserRole {
 				bound := make([]string, 0)
 			Roles:
