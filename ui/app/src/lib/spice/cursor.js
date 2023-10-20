@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -43,7 +43,7 @@ SpiceCursorConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_CURSOR_INIT)
     {
         var cursor_init = new SpiceMsgCursorInit(msg.data);
-        DEBUG > 1 && console.log("SpiceMsgCursorInit");
+        DEBUG > 1 && console.log('SpiceMsgCursorInit');
         if (this.parent && this.parent.inputs &&
             this.parent.inputs.mouse_mode == Constants.SPICE_MOUSE_MODE_SERVER)
         {
@@ -61,19 +61,19 @@ SpiceCursorConn.prototype.process_channel_message = function(msg)
     if (msg.type == Constants.SPICE_MSG_CURSOR_SET)
     {
         var cursor_set = new SpiceMsgCursorSet(msg.data);
-        DEBUG > 1 && console.log("SpiceMsgCursorSet");
+        DEBUG > 1 && console.log('SpiceMsgCursorSet');
         if (cursor_set.flags & Constants.SPICE_CURSOR_FLAGS_NONE)
         {
-            document.getElementById(this.parent.screen_id).style.cursor = "none";
+            document.getElementById(this.parent.screen_id).style.cursor = 'none';
             return true;
         }
 
         if (cursor_set.flags > 0)
-            this.log_warn("FIXME: No support for cursor flags " + cursor_set.flags);
+            this.log_warn('FIXME: No support for cursor flags ' + cursor_set.flags);
 
         if (cursor_set.cursor.header.type != Constants.SPICE_CURSOR_TYPE_ALPHA)
         {
-            this.log_warn("FIXME: No support for cursor type " + cursor_set.cursor.header.type);
+            this.log_warn('FIXME: No support for cursor type ' + cursor_set.cursor.header.type);
             return false;
         }
 
@@ -84,39 +84,39 @@ SpiceCursorConn.prototype.process_channel_message = function(msg)
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_MOVE)
     {
-        this.known_unimplemented(msg.type, "Cursor Move");
+        this.known_unimplemented(msg.type, 'Cursor Move');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_HIDE)
     {
-        DEBUG > 1 && console.log("SpiceMsgCursorHide");
-        document.getElementById(this.parent.screen_id).style.cursor = "none";
+        DEBUG > 1 && console.log('SpiceMsgCursorHide');
+        document.getElementById(this.parent.screen_id).style.cursor = 'none';
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_TRAIL)
     {
-        this.known_unimplemented(msg.type, "Cursor Trail");
+        this.known_unimplemented(msg.type, 'Cursor Trail');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_RESET)
     {
-        DEBUG > 1 && console.log("SpiceMsgCursorReset");
-        document.getElementById(this.parent.screen_id).style.cursor = "auto";
+        DEBUG > 1 && console.log('SpiceMsgCursorReset');
+        document.getElementById(this.parent.screen_id).style.cursor = 'auto';
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_INVAL_ONE)
     {
-        this.known_unimplemented(msg.type, "Cursor Inval One");
+        this.known_unimplemented(msg.type, 'Cursor Inval One');
         return true;
     }
 
     if (msg.type == Constants.SPICE_MSG_CURSOR_INVAL_ALL)
     {
-        DEBUG > 1 && console.log("SpiceMsgCursorInvalAll");
+        DEBUG > 1 && console.log('SpiceMsgCursorInvalAll');
         // FIXME - There may be something useful to do here...
         return true;
     }
@@ -128,7 +128,7 @@ SpiceCursorConn.prototype.set_cursor = function(cursor)
 {
     var pngstr = create_rgba_png(cursor.header.width, cursor.header.height, cursor.data);
     var curstr = 'url(data:image/png,' + pngstr + ') ' +
-        cursor.header.hot_spot_x + ' ' + cursor.header.hot_spot_y + ", default";
+        cursor.header.hot_spot_x + ' ' + cursor.header.hot_spot_y + ', default';
     var screen = document.getElementById(this.parent.screen_id);
     screen.style.cursor = 'auto';
     screen.style.cursor = curstr;

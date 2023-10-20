@@ -44,10 +44,12 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import QrcodeVue from 'qrcode.vue'
+import { useConfigStore } from 'src/stores/config';
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
   name: 'MFAConfig',
   components: { QrcodeVue },
   props: {
@@ -55,13 +57,15 @@ export default {
       type: String
     }
   },
-  data () {
+  setup () {
     return {
       enabled: false,
       provisioningURI: '',
       verifyToken: '',
       verifying: false,
-      finishedVerifying: false
+      finishedVerifying: false,
+      verified: false,
+      configStore: useConfigStore()
     }
   },
   methods: {
@@ -75,23 +79,23 @@ export default {
         this.verified = false
         this.provisioningURI = ''
       }
-      if (this.$configStore.getters.authMethod !== 'oidc') {
-        this.$root.$emit('reload-users')
+      if (this.configStore.authMethod !== 'oidc') {
+        this.configStore.emitter.emit('reload-users')
       }
     },
     enableMFA (val) {
-      this.$axios.put(`/api/users/${this.username}/mfa`, { enabled: val })
+      this.configStore.axios.put(`/api/users/${this.username}/mfa`, { enabled: val })
         .then((res) => {
           this.setMFAData(res.data)
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
     },
     async verifyMFA () {
       this.verifying = true
       await new Promise(resolve => setTimeout(resolve, 500))
-      this.$axios.put(`/api/users/${this.username}/mfa/verify`, { otp: this.verifyToken })
+      this.configStore.axios.put(`/api/users/${this.username}/mfa/verify`, { otp: this.verifyToken })
         .then((res) => {
           this.setMFAData(res.data)
           this.$q.notify({
@@ -102,23 +106,23 @@ export default {
           })
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
       this.verifying = false
     }
   },
   mounted () {
     this.$nextTick().then(() => {
-      this.$axios.get(`/api/users/${this.username}/mfa`)
+      this.configStore.axios.get(`/api/users/${this.username}/mfa`)
         .then((res) => {
           this.setMFAData(res.data)
         })
         .catch((err) => {
-          this.$root.$emit('notify-error', err)
+          this.configStore.emitter.emit('notify-error', err)
         })
     })
   }
-}
+})
 </script>
 
 <style scoped>

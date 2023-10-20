@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -69,11 +69,11 @@ function RSA_padding_add_PKCS1_OAEP(tolen, from, param)
     var i;
 
     if (param === undefined)
-        param = "";
+        param = '';
 
     if (padlen < SHA_DIGEST_LENGTH)
     {
-        console.log("Error - data too large for key size.");
+        console.log('Error - data too large for key size.');
         return null;
     }
 
@@ -135,7 +135,7 @@ function find_sequence(u8, at)
     at = at || 0;
     if (u8[at++] != 0x30)
     {
-        console.log("Error:  public key should start with a sequence flag.");
+        console.log('Error:  public key should start with a sequence flag.');
         return null;
     }
 
@@ -171,7 +171,7 @@ function create_rsa_from_mb(mb, at)
     at = seq[0] + seq[1];
     if (u8[at++] != 0x3)
     {
-        console.log("Error: expecting bit string next.");
+        console.log('Error: expecting bit string next.');
         return null;
     }
 
@@ -183,7 +183,7 @@ function create_rsa_from_mb(mb, at)
     at = lenblock[0];
     if (u8[at] != 0 && u8[at + 1] != 0x30)
     {
-        console.log("Error: unexpected values in bit string.");
+        console.log('Error: unexpected values in bit string.');
         return null;
     }
 
@@ -195,7 +195,7 @@ function create_rsa_from_mb(mb, at)
     at = seq[0];
     if (u8[at++] != 0x02)
     {
-        console.log("Error: expecting integer n next.");
+        console.log('Error: expecting integer n next.');
         return null;
     }
     lenblock = asn_get_length(u8, at);
@@ -214,7 +214,7 @@ function create_rsa_from_mb(mb, at)
 
     if (u8[at++] != 0x02)
     {
-        console.log("Error: expecting integer e next.");
+        console.log('Error: expecting integer e next.');
         return null;
     }
     lenblock = asn_get_length(u8, at);
@@ -248,7 +248,7 @@ function rsa_encrypt(rsa, str)
     var enc = rsa.doPublic(bigint);
     var h = enc.toString(16);
     if ((h.length & 1) != 0)
-        h = "0" + h;
+        h = '0' + h;
     for (i = 0; i < h.length; i += 2)
         ret[i / 2] = parseInt(h.substring(i, i + 2), 16);
     return ret;

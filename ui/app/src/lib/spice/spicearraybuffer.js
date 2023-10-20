@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -54,5 +54,5 @@ function SpiceArrayBufferSlice(start, end)
 if (! ArrayBuffer.prototype.slice)
 {
     ArrayBuffer.prototype.slice = SpiceArrayBufferSlice;
-    console.log("WARNING:  ArrayBuffer.slice() is missing; we are extending ArrayBuffer to compensate");
+    console.log('WARNING:  ArrayBuffer.slice() is missing; we are extending ArrayBuffer to compensate');
 }

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2014 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -44,10 +44,10 @@ function resize_helper(sc)
     /* Screen height based on debug console visibility  */
     if (m != null)
     {
-        if (window.getComputedStyle(m).getPropertyValue("display") == 'none')
+        if (window.getComputedStyle(m).getPropertyValue('display') == 'none')
         {
             /* Get console height from spice.css .spice-message */
-            var mh = parseInt(window.getComputedStyle(m).getPropertyValue("height"), 10);
+            var mh = parseInt(window.getComputedStyle(m).getPropertyValue('height'), 10);
             h = h - mh;
         }
         else

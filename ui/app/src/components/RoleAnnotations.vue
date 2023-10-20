@@ -57,7 +57,9 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 </div>
 </template>
 
-<script>
+<script lang="ts">
+import { useConfigStore } from 'src/stores/config'
+
 const LDAPGroupAnnotation = 'kvdi.io/ldap-groups'
 const OIDCGroupAnnotation = 'kvdi.io/oidc-groups'
 
@@ -73,24 +75,25 @@ export default {
       default: false
     }
   },
-  data () {
+  setup () {
     return {
-      ldapGroupSelection: [],
-      oidcGroupSelection: []
+      ldapGroupSelection: [] as any[],
+      oidcGroupSelection: [] as any[],
+      configStore: useConfigStore()
     }
   },
   computed: {
     isUsingOIDC () {
-      return this.$configStore.getters.authMethod === 'oidc'
+      return this.configStore.authMethod === 'oidc'
     },
     isUsingLDAP () {
-      return this.$configStore.getters.authMethod === 'ldap'
+      return this.configStore.authMethod === 'ldap'
     },
     isUsingLocalAuth () {
-      return this.$configStore.getters.authMethod === 'local'
+      return this.configStore.authMethod === 'local'
     },
     configuredLdapGroups () {
-      const ldapGroups = []
+      const ldapGroups: any[] = []
       if (this.annotations !== undefined) {
         if (this.annotations[LDAPGroupAnnotation] !== undefined) {
           const val = this.annotations[LDAPGroupAnnotation]
@@ -102,7 +105,7 @@ export default {
       return ldapGroups
     },
     configuredOidcGroups () {
-      const oidcGroups = []
+      const oidcGroups: any[] = []
       if (this.annotations !== undefined) {
         if (this.annotations[OIDCGroupAnnotation] !== undefined) {
           const val = this.annotations[OIDCGroupAnnotation]

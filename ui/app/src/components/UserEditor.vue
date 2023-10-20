@@ -66,11 +66,13 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-card>
 </template>
 
-<script>
-import PasswordInput from 'components/inputs/PasswordInput.vue'
-import MFAConfig from 'components/inputs/MFAConfig.vue'
+<script lang="ts">
+import PasswordInput from './inputs/PasswordInput.vue'
+import MFAConfig from './inputs/MFAConfig.vue'
+import { defineComponent } from 'vue';
+import { useConfigStore } from 'src/stores/config';
 
-export default {
+export default defineComponent({
   name: 'UserEditor',
   components: { PasswordInput, MFAConfig },
   props: {
@@ -84,13 +86,16 @@ export default {
       required: false
     }
   },
-  data () {
+  setup () {
     return {
       username: null,
       password: null,
-      roleSelection: [],
-      roles: [],
-      loading: true
+      roleSelection: [] as any,
+      roles: []  as any,
+      loading: true,
+      configStore: useConfigStore(),
+      editPassword:false,
+
     }
   },
   computed: {
@@ -123,7 +128,7 @@ export default {
         return 'Username is required'
       }
       try {
-        await this.$axios.get(`/api/users/${val}`)
+        await this.configStore.axios.get(`/api/users/${val}`)
         return 'User already exists'
       } catch (err) {}
     },
@@ -131,11 +136,11 @@ export default {
     async addUser () {
       const payload = {
         username: this.username,
-        password: this.$refs.password.password,
+        password: (this.$refs.password as any).password,
         roles: this.roleSelection
       }
       try {
-        await this.$axios.post('/api/users', payload)
+        await this.configStore.axios.post('/api/users', payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -143,20 +148,20 @@ export default {
           message: `New user '${this.username}' created`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
-      this.$root.$emit('reload-users')
+      this.configStore.emitter.emit('reload-users')
     },
 
     async updateUser () {
-      const payload = {
+      const payload: any = {
         roles: this.roleSelection
       }
       if (this.editPassword) {
-        payload.password = this.$refs.password.password
+        payload.password = (this.$refs.password as any).password
       }
       try {
-        await this.$axios.put(`/api/users/${this.userToEdit}`, payload)
+        await this.configStore.axios.put(`/api/users/${this.userToEdit}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -164,15 +169,15 @@ export default {
           message: `User '${this.userToEdit}' updated successfully`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
-      this.$root.$emit('reload-users')
+      this.configStore.emitter.emit('reload-users')
     },
 
     async filterFn (val, update) {
       try {
-        const res = await this.$axios.get('/api/roles')
-        const roles = []
+        const res = await this.configStore.axios.get('/api/roles')
+        const roles: any[] = []
         res.data.forEach((role) => {
           roles.push(role.metadata.name)
         })
@@ -186,7 +191,7 @@ export default {
           this.roles = roles.filter(v => v.toLowerCase().indexOf(needle) > -1)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
 
@@ -194,23 +199,23 @@ export default {
   mounted () {
     this.$nextTick().then(() => {
       if (this.isUpdating) {
-        this.$axios.get(`/api/users/${this.userToEdit}`)
+        this.configStore.axios.get(`/api/users/${this.userToEdit}`)
           .then((res) => {
-            const roles = []
+            const roles: any[] = []
             res.data.roles.forEach((role) => {
               roles.push(role.name)
             })
             this.roleSelection = roles
             this.loading = false
-            this.$refs.password.password = '*******************'
+            (this.$refs.password as any).password = '*******************'
           })
           .catch((err) => {
-            this.$root.$emit('notify-error', err)
+            this.configStore.emitter.emit('notify-error', err)
           })
       } else {
         this.loading = false
       }
     })
   }
-}
+})
 </script>

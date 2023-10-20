@@ -1277,8 +1277,8 @@ if (typeof document != 'undefined' && document.getElementsByTagName) {
         // anonymous modules supported via a custom naming scheme and registry
         else {
           var uri = './<anon' + ++anonCnt + '>.js';
-          if (script.id !== ""){
-            uri = "./" + script.id;
+          if (script.id !== ''){
+            uri = './' + script.id;
           }
 
           var anonName = resolveIfNotPlain(uri, baseURI);
@@ -1356,7 +1356,7 @@ function xhrFetch(url, resolve, reject) {
       }
     }
   };
-  xhr.open("GET", url, true);
+  xhr.open('GET', url, true);
   xhr.send(null);
 }
 
@@ -1367,15 +1367,15 @@ var WorkerPool = function (script, size) {
     // Find an entry with out basename
     var scripts = document.getElementsByTagName('script');
     for (var i = 0; i < scripts.length; i++) {
-      if (scripts[i].src.indexOf("browser-es-module-loader.js") !== -1) {
+      if (scripts[i].src.indexOf('browser-es-module-loader.js') !== -1) {
         current = scripts[i];
         break;
       }
     }
     if (!current)
-      throw Error("Could not find own <script> element");
+      throw Error('Could not find own <script> element');
   }
-  script = current.src.substr(0, current.src.lastIndexOf("/")) + "/" + script;
+  script = current.src.substr(0, current.src.lastIndexOf('/')) + '/' + script;
   this._workers = new Array(size);
   this._ind = 0;
   this._size = size;

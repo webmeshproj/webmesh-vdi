@@ -78,9 +78,10 @@ func (d *desktopAPI) PostLogin(w http.ResponseWriter, r *http.Request) {
 	// Pass the request to the provider
 	result, err := d.auth.Authenticate(req)
 	if err != nil {
-		apiLogger.Error(err, "Authentication failed, checking if anonymous is allowed")
+		apiLogger.Error(err, "Authentication failed")
 		// Allow anonymous if set in the configuration
 		if req.GetUsername() == userAnonymous && d.vdiCluster.AnonymousAllowed() {
+			apiLogger.Info("Anonymous login was requested and is allowed")
 			result := &types.AuthResult{
 				User: &types.VDIUser{
 					Name:  userAnonymous,

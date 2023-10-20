@@ -61,7 +61,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-expansion-item>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'MenuItem',
   data () {
@@ -109,11 +109,11 @@ export default {
   },
 
   created () {
-    this.$root.$on('set-active-title', this.setActive)
+    this.configStore.emitter.on('set-active-title', this.setActive)
   },
 
-  beforeDestroy () {
-    this.$root.$off('set-active-title', this.setActive)
+  beforeUnmount () {
+    this.configStore.emitter.off('set-active-title', this.setActive)
   },
 
   methods: {

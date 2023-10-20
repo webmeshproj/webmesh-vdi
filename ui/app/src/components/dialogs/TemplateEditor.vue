@@ -39,7 +39,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
+<script lang="ts">
 import jsyaml from 'js-yaml'
 
 const boilerplate = `apiVersion: desktops.kvdi.io/v1
@@ -54,7 +54,7 @@ spec:
 
 export default {
   name: 'TemplateEditor',
-  components: { editor: require('vue2-ace-editor') },
+  components: { editor: await import('vue3-ace-editor') },
   props: {
     existing: {
       type: Object
@@ -86,7 +86,7 @@ export default {
     async doCreate () {
       const payload = this.getPayload()
       try {
-        await this.$axios.post('/api/templates', payload)
+        await this.configStore.axios.post('/api/templates', payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -94,14 +94,14 @@ export default {
           message: `Created new DesktopTemplate '${payload.metadata.name}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
     async doUpdate () {
       const payload = this.getPayload()
       try {
-        await this.$axios.put(`/api/templates/${payload.metadata.name}`, payload)
+        await this.configStore.axios.put(`/api/templates/${payload.metadata.name}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -109,7 +109,7 @@ export default {
           message: `Successfully updated DesktopTemplate '${payload.metadata.name}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 

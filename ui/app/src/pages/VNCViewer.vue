@@ -36,41 +36,46 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-page>
 </template>
 
-<script>
-import DisplayManager from 'src/lib/displayManager.js'
-import { Events } from 'src/lib/events.js'
+<script lang="ts">
+import DisplayManager from '../lib/displayManager.js'
+import { Events } from '../lib/events.js'
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from '../stores/config'
+import { useUserStore } from '../stores/user'
+import { useDesktopSessions } from '../stores/desktop'
+
+export default defineComponent({
   name: 'VNCViewer',
+  data (){
 
-  data () {
-    return {
+  return { 
+      configStore: useConfigStore(), 
+      displayManager:  new DisplayManager({
+      userStore: useUserStore(),
+      sessionStore: useDesktopSessions()}),
       status: 'disconnected',
       statusLines: [],
       className: 'info',
       statusText: '',
-      currentSession: null,
-      displayManager: null
+      currentSession: null
     }
   },
 
   created () {
-    this.displayManager = new DisplayManager({
-      userStore: this.$userStore,
-      sessionStore: this.$desktopSessions
-    })
+  
     this.displayManager.on(Events.connected, this.onConnect)
     this.displayManager.on(Events.disconnected, this.onDisconnect)
     this.displayManager.on(Events.update, this.onStatusUpdate)
     this.displayManager.on(Events.error, this.onError)
-    this.$root.$on('set-fullscreen', this.setFullscreen)
-    this.$root.$on('paste-clipboard', this.onPaste)
+    this.configStore.emitter.on('set-fullscreen', this.setFullscreen)
+    this.configStore.emitter.on('paste-clipboard', this.onPaste)
     this.setCurrentSession()
   },
 
-  beforeDestroy () {
-    this.$root.$off('set-fullscreen', this.setFullscreen)
-    this.$root.$off('paste-clipboard', this.onPaste)
+  beforeUnmount () {
+    this.configStore.emitter.off('set-fullscreen', this.setFullscreen)
+    this.configStore.emitter.off('paste-clipboard', this.onPaste)
     this.displayManager.destroy()
   },
 
@@ -110,7 +115,7 @@ export default {
 
     onError (err) {
       this.setCurrentSession()
-      this.$root.$emit('notify-error', err)
+      this.configStore.emitter.emit('notify-error', err)
     }
 
   },
@@ -118,7 +123,7 @@ export default {
   mounted () {
     this.$nextTick(() => { this.displayManager.connect() })
   }
-}
+})
 </script>
 
 <style scoped>

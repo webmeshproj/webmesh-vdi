@@ -39,8 +39,11 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-select>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { useConfigStore } from 'src/stores/config'
+import { defineComponent  } from 'vue';
+
+export default defineComponent({
   name: 'ServiceAccountSelector',
   props: {
     tmplName: {
@@ -54,11 +57,12 @@ export default {
       default: 'ServiceAccounts'
     }
   },
-  data () {
+  setup () {
     return {
       loading: false,
       selection: '',
-      options: []
+      options: [] as any[],
+      configStore: useConfigStore()
     }
   },
   methods: {
@@ -66,14 +70,18 @@ export default {
       this.loading = true
       try {
         let namespace
-        console.log(this.parentRefs)
-        const nsRef = this.parentRefs[`ns-${this.tmplName}`]
-        if (!nsRef.selection || typeof (nsRef.selection) === 'object' || nsRef.selection === '' || nsRef.selection === []) {
-          namespace = this.$configStore.getters.serverConfig.appNamespace || 'default'
+        const parentRefs = this.parentRefs
+        if (parentRefs === undefined || parentRefs === null) {
+          this.configStore.emitter.emit('notify-error', new Error(`Unable to find namespace selector for ${this.tmplName}`))
+          return
+        }
+        const nsRef = parentRefs[`ns-${this.tmplName}`]
+        if (!nsRef.selection || typeof (nsRef.selection) === 'object' || nsRef.selection === '' || nsRef.selection.length === 0) {
+          namespace = this.configStore.serverConfig.appNamespace || 'default'
         } else {
           namespace = nsRef.selection
         }
-        const res = await this.$axios.get(`/api/serviceaccounts/${namespace}`)
+        const res = await this.configStore.axios.get(`/api/serviceaccounts/${namespace}`)
         if (res.data.length === 1) {
           this.options = [res.data[0]]
         }
@@ -87,10 +95,10 @@ export default {
           this.options = res.data.filter(v => v.toLowerCase().indexOf(needle) > -1)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.loading = false
     }
   }
-}
+})
 </script>

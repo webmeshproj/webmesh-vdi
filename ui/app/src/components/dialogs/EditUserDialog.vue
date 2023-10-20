@@ -32,8 +32,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
-import UserEditor from 'components/UserEditor'
+<script lang="ts">
+import UserEditor from '../UserEditor.vue'
 
 export default {
   name: 'EditUserDialog',

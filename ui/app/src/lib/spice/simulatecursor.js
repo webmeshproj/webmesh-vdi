@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2013 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -31,8 +31,8 @@ import { hex_sha1 } from './thirdparty/sha1.js';
 
 var SpiceSimulateCursor = {
 
-cursors : new Array(),
-unknown_cursors : new Array(),
+cursors : [],
+unknown_cursors : [],
 warned: false,
 
 add_cursor: function(sha1, value)
@@ -45,12 +45,12 @@ unknown_cursor: function(sha1, curdata)
     if (! SpiceSimulateCursor.warned)
     {
         SpiceSimulateCursor.warned = true;
-        alert("Internet Explorer does not support dynamic cursors.  " +
-              "This page will now simulate cursors with images, " +
-              "which will be imperfect.  We recommend using Chrome or Firefox instead.  " +
-              "\n\nIf you need to use Internet Explorer, you can create a static cursor " +
-              "file for each cursor your application uses.  " +
-              "View the console log for more information on creating static cursors for your environment.");
+        alert('Internet Explorer does not support dynamic cursors.  ' +
+              'This page will now simulate cursors with images, ' +
+              'which will be imperfect.  We recommend using Chrome or Firefox instead.  ' +
+              '\n\nIf you need to use Internet Explorer, you can create a static cursor ' +
+              'file for each cursor your application uses.  ' +
+              'View the console log for more information on creating static cursors for your environment.');
     }
 
     if (! SpiceSimulateCursor.unknown_cursors[sha1])
@@ -100,7 +100,7 @@ simulate_cursor: function (spicecursor, cursor, screen, pngstr)
         spicecursor.spice_simulated_cursor.spice_hot_x = cursor.header.hot_spot_x;
         spicecursor.spice_simulated_cursor.spice_hot_y = cursor.header.hot_spot_y;
 
-        spicecursor.spice_simulated_cursor.style.pointerEvents = "none";
+        spicecursor.spice_simulated_cursor.style.pointerEvents = 'none';
     }
     else
     {
@@ -121,7 +121,7 @@ handle_sim_mousemove: function(e)
 
 duplicate_mouse_event: function(e, target)
 {
-    var evt = document.createEvent("mouseevent");
+    var evt = document.createEvent('mouseevent');
     evt.initMouseEvent(e.type, true, true, e.view, e.detail,
         e.screenX, e.screenY, e.clientX, e.clientY,
         e.ctrlKey, e.altKey, e.shiftKey, e.metaKey, e.button, e.relatedTarget);
@@ -153,12 +153,12 @@ create_icondir: function (width, height, bytes, hot_x, hot_y)
     at = entry.to_buffer(mb, at);
 
     var u8 = new Uint8Array(mb);
-    var str = "";
+    var str = '';
     for (i = 0; i < at; i++)
     {
-        str += "%";
+        str += '%';
         if (u8[i] < 16)
-            str += "0";
+            str += '0';
         str += u8[i].toString(16);
     }
     return str;

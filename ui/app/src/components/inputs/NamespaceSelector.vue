@@ -41,7 +41,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-select>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'NamespaceSelector',
   props: {
@@ -67,7 +67,7 @@ export default {
     async filterFn (val, update) {
       this.loading = true
       try {
-        const res = await this.$axios.get('/api/namespaces')
+        const res = await this.configStore.axios.get('/api/namespaces')
         if (res.data.length === 1) {
           this.options = [res.data[0]]
         }
@@ -85,7 +85,7 @@ export default {
           this.options = res.data.filter(v => v.toLowerCase().indexOf(needle) > -1)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.loading = false
     }

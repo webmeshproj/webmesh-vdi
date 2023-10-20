@@ -116,13 +116,15 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
-import SkeletonTable from 'components/SkeletonTable.vue'
+<script lang="ts">
+import SkeletonTable from '../components/SkeletonTable.vue'
 
-import RuleDisplay from 'components/RuleDisplay.vue'
-import RoleAnnotations from 'components/RoleAnnotations.vue'
+import RuleDisplay from '../components/RuleDisplay.vue'
+import RoleAnnotations from '../components/RoleAnnotations.vue'
 
-import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
+import ConfirmDelete from '../components/dialogs/ConfirmDelete.vue'
+import { defineComponent} from 'vue';
+import { useConfigStore } from 'src/stores/config';
 
 const roleColumns = [
   {
@@ -152,26 +154,28 @@ const roleColumns = [
   }
 ]
 
-export default {
+export default defineComponent(
+  {
   name: 'RolesPanel',
   components: { SkeletonTable, RuleDisplay, RoleAnnotations },
 
   data () {
     return {
       loading: true,
-      data: [],
+      data: [] as any[],
       columns: roleColumns,
       newRolePrompt: false,
-      newRoleName: ''
+      newRoleName: '',
+      configStore: useConfigStore()
     }
   },
 
   created () {
-    this.$root.$on('reload-roles', this.fetchData)
+    this.configStore.emitter.on('reload-roles', this.fetchData)
   },
 
-  beforeDestroy () {
-    this.$root.$off('reload-roles', this.fetchData)
+  beforeUnmount () {
+    this.configStore.emitter.off('reload-roles', this.fetchData)
   },
 
   methods: {
@@ -181,17 +185,17 @@ export default {
     },
 
     onEditRole (roleIdx, roleName) {
-      this.$root.$on(roleName, this.doUpdateRole)
+      this.configStore.emitter.on(roleName, this.doUpdateRole)
       this.data[roleIdx].editable = true
     },
 
     onSaveRole (roleIdx, roleName) {
-      this.$root.$off(roleName, this.doUpdateRole)
+      this.configStore.emitter.off(roleName, this.doUpdateRole)
       this.data[roleIdx].editable = false
       this.doSaveRole(roleIdx, roleName)
     },
 
-    onAddRule (roleIdx, roleName) {
+    onAddRule (roleIdx, _roleName) {
       if (this.data[roleIdx].rules !== undefined) {
         this.data[roleIdx].rules.push({ verbs: [], resources: [], resourcePatterns: [], namespaces: [] })
         return
@@ -200,20 +204,22 @@ export default {
     },
 
     onCancelEdit (roleIdx, roleName) {
-      this.$root.$off(roleName, this.doUpdateRole)
+      this.configStore.emitter.off(roleName, this.doUpdateRole)
       this.data[roleIdx].editable = false
-      const annotationRef = this.$refs[`annotations-${roleIdx}`]
+      const annotationRef: any = this.$refs[`annotations-${roleIdx}`]
       annotationRef.reset()
       this.fetchData()
     },
 
-    onConfirmDeleteRole (roleIdx, roleName) {
+    onConfirmDeleteRole (_roleIdx, roleName) {
       // TODO: There is no server-side check for this yet - and there should be
-      if (this.doAdminCheck()) { return }
+      if (this.doAdminCheck(roleName)) { return }
       this.$q.dialog({
         component: ConfirmDelete,
-        parent: this,
-        resourceName: roleName
+        componentProps: {
+          parent: this,
+        resourceName: roleName 
+        }
       }).onOk(() => {
         this.doDeleteRole(roleName)
       }).onCancel(() => {
@@ -249,14 +255,14 @@ export default {
         return 'Name is required'
       }
       try {
-        await this.$axios.get(`/api/roles/${val}`)
+        await this.configStore.axios.get(`/api/roles/${val}`)
         return 'Role already exists'
       } catch (err) {}
     },
 
     async doCreateRole () {
       try {
-        await this.$axios.post('/api/roles', { name: this.newRoleName })
+        await this.configStore.axios.post('/api/roles', { name: this.newRoleName })
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -264,7 +270,7 @@ export default {
           message: `Created role '${this.newRoleName}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.fetchData()
     },
@@ -277,7 +283,7 @@ export default {
           rules: this.data[roleIdx].rules || [],
           annotations: roleAnnotations
         }
-        await this.$axios.put(`/api/roles/${roleName}`, payload)
+        await this.configStore.axios.put(`/api/roles/${roleName}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -285,14 +291,14 @@ export default {
           message: `Successfully updated role '${roleName}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.fetchData()
     },
 
     async doDeleteRole (roleName) {
       try {
-        await this.$axios.delete(`/api/roles/${roleName}`)
+        await this.configStore.axios.delete(`/api/roles/${roleName}`)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -300,14 +306,14 @@ export default {
           message: `Deleted role '${roleName}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.fetchData()
     },
 
     async fetchData () {
       try {
-        const res = await this.$axios.get('/api/roles')
+        const res = await this.configStore.axios.get('/api/roles')
         this.data = []
         res.data.forEach((val, idx) => {
           const item = { idx: idx, editable: false, ...val }
@@ -317,7 +323,7 @@ export default {
           this.data.push(item)
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
 
@@ -326,24 +332,21 @@ export default {
   async mounted () {
     await this.$nextTick()
     this.loading = true
-    await new Promise((resolve, reject) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     await this.fetchData()
     this.loading = false
   }
 }
+)
 </script>
-
+ 
 <style lang="sass" scoped>
 .rule-wrapper
   position: relative
   width: 100vh
 
 .roles-table
-  background-color: $grey-3
-
-  /* height or max-height is important */
-  max-height: 500px
-
+ 
   // /* specifying max-width so the example can
   //   highlight the sticky column on any browser window */
   // max-width: 600px

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -24,7 +24,7 @@
 **      'constants' for Spice
 **--------------------------------------------------------------------------*/
 export var Constants = {
-  SPICE_MAGIC         : "REDQ",
+  SPICE_MAGIC         : 'REDQ',
   SPICE_VERSION_MAJOR : 2,
   SPICE_VERSION_MINOR : 2,
 

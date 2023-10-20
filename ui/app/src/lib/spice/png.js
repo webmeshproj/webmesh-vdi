@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -137,7 +137,7 @@ function PngIDAT(width, height, bytes)
 {
     if (bytes.byteLength > 65535)
     {
-        throw new Error("Cannot handle more than 64K");
+        throw new Error('Cannot handle more than 64K');
     }
     this.data = bytes;
     this.width = width;
@@ -244,17 +244,17 @@ function create_rgba_png(width, height, bytes)
     at = iend.to_buffer(mb, at);
 
     var u8 = new Uint8Array(mb);
-    var str = "";
+    var str = '';
     for (i = 0; i < at; i++)
     {
-        str += "%";
+        str += '%';
         if (u8[i] < 16)
-            str += "0";
+            str += '0';
         str += u8[i].toString(16);
     }
 
 
-    return "%89PNG%0D%0A%1A%0A" + str;
+    return '%89PNG%0D%0A%1A%0A' + str;
 }
 
 export {

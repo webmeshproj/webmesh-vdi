@@ -19,7 +19,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
 <template>
   <div class="fixed-center text-center">
-    <div class="text-h6"><q-icon name="error_outline" color="primary" x-large />&nbsp;&nbsp;Please login to use kVDI</div>
+    <div class="text-h6">Please login to use<br/>Webmesh Desktop</div>
     <br />
     <q-form
       @submit="onSubmit"
@@ -47,30 +47,38 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script >
-import MFADialog from 'components/dialogs/MFADialog.vue'
+<script lang="ts">
+import MFADialog from '../components/dialogs/MFADialog.vue'
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from '../stores/config'
+import { useUserStore } from 'src/stores/user'
+
+export default defineComponent({
   name: 'Login',
 
   data () {
     return {
       username: null,
       password: null,
-      loading: false
+      loading: false,
+      userStore: useUserStore(),
+      configStore: useConfigStore()
     }
   },
 
   methods: {
     async initAuthFlow () {
       try {
-        await this.$userStore.dispatch('initStore')
-        const requiresMFA = this.$userStore.getters.requiresMFA
+        await this.userStore.initStore()
+        const requiresMFA = this.userStore.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
             component: MFADialog,
-            parent: this
+            componentProps: {
+              parent: this
+            }
           }).onOk(() => {
             this.notifyLoggedIn()
           }).onCancel(() => {
@@ -80,19 +88,21 @@ export default {
         }
         await this.notifyLoggedIn()
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
     async onSubmit () {
       try {
-        await this.$userStore.dispatch('login', { username: this.username, password: this.password })
-        const requiresMFA = this.$userStore.getters.requiresMFA
+        await this.userStore.login({ username: this.username, password: this.password })
+        const requiresMFA = this.userStore.requiresMFA
         if (requiresMFA) {
           // MFA Required
           await this.$q.dialog({
             component: MFADialog,
+           componentProps: {
             parent: this
+           }
           }).onOk(() => {
             this.notifyLoggedIn()
           }).onCancel(() => {
@@ -103,7 +113,7 @@ export default {
         await this.notifyLoggedIn()
       } catch (err) {
         console.error(err)
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
@@ -112,10 +122,26 @@ export default {
       this.password = null
     },
 
+    async getAuthMethod(): Promise<string> {
+      const res = await this.configStore.axios.get('/api/auth_methods')
+      const data = res.data
+      if (data.local) {
+        return 'local'
+      } else if (data.ldap) {
+        return 'ldap'
+      } else if (data.oidc) {
+        return 'oidc'
+      } else if (data.webmesh) {
+        return 'webmesh'
+      } else {
+        return 'local'
+      }
+    },
+
     async notifyLoggedIn () {
-      await this.$configStore.dispatch('getServerConfig')
-      this.$root.$emit('set-logged-in', this.username)
-      this.$root.$emit('set-active-title', 'Desktop Templates')
+      await this.configStore.getServerConfig()
+      this.configStore.emitter.emit('set-logged-in', this.username)
+      this.configStore.emitter.emit('set-active-title', 'Desktop Templates')
       this.$router.push('templates')
       this.$q.notify({
         color: 'green-4',
@@ -128,8 +154,19 @@ export default {
 
   mounted () {
     this.$nextTick().then(() => {
-      this.$root.$emit('set-active-title', 'Login')
+      this.configStore.emitter.emit('set-active-title', 'Login')
+      this.getAuthMethod().then((authMethod) => {
+        if (authMethod === 'webmesh') {
+          this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
+              this.username = res.data.id
+              this.password = res.data.token
+              this.onSubmit()
+          }).catch((err: Error) => {
+            console.error(err)
+          })
+        }
+      })
     })
   }
-}
+})
 </script>

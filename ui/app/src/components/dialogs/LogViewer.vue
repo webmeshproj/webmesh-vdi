@@ -44,8 +44,8 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
-import DesktopAddressGetter from 'src/lib/addresses.js'
+<script lang="ts">
+import DesktopAddressGetter from '../../lib/addresses.js'
 
 export default {
   name: 'LogViewerDialog',
@@ -72,7 +72,7 @@ export default {
     }
   },
 
-  beforeDestroy () {
+  beforeUnmount () {
     if (this.socket) {
       this.socket.close()
     }
@@ -137,7 +137,7 @@ export default {
       })
       this.socket.addEventListener('close', (ev) => {
         if (!ev.wasClean && ev.code === 1006 && !retry) {
-          this.$userStore.dispatch('refreshToken')
+          this.userStore.refreshToken()
             .then(() => {
               this.socket = null
               this.streamLogData(true)

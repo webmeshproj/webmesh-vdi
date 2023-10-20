@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	rbacv1 "github.com/kvdi/kvdi/apis/rbac/v1"
@@ -37,7 +38,7 @@ func WriteOrLogError(out []byte, w http.ResponseWriter, statusCode int) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if _, err := w.Write(append(out, []byte("\n")...)); err != nil {
-		fmt.Println("Failed to write API response:", string(out), "error", err)
+		log.Println("Failed to write API response:", string(out), "error", err)
 	}
 }
 
@@ -52,7 +53,7 @@ func ReturnAPIErrors(errs []error, w http.ResponseWriter) {
 		"errors": out,
 	})
 	if err != nil {
-		fmt.Println("Failed to marshal errors to json:", err)
+		log.Println("Failed to marshal errors to json:", err)
 		jout = []byte(`{"error": "Multiple errors happened while processing the request"}`)
 	}
 	WriteOrLogError(jout, w, http.StatusBadRequest)
@@ -74,7 +75,7 @@ func ReturnAPINotFound(err error, w http.ResponseWriter) {
 // message. If the denial happened due to an error, it logs the error server side.
 func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
-		fmt.Println("Forbidden request due to:", err.Error())
+		log.Println("Forbidden request due to:", err.Error())
 	}
 	WriteOrLogError(errors.ToAPIError(fmt.Errorf("forbidden: %s", msg), errors.Forbidden).JSON(), w, http.StatusForbidden)
 }
@@ -83,7 +84,7 @@ func ReturnAPIForbidden(err error, msg string, w http.ResponseWriter) {
 // If the denial happened due to an error, it is logged server side.
 func ReturnAPIUnauthorized(err error, msg string, w http.ResponseWriter) {
 	if err != nil {
-		fmt.Println("Forbidden request due to:", err.Error())
+		log.Println("Unauthorized request due to:", err.Error())
 	}
 	WriteOrLogError(errors.ToAPIError(fmt.Errorf("unauthorized: %s", msg), errors.Unauthorized).JSON(), w, http.StatusUnauthorized)
 }

@@ -30,7 +30,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-dialog>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'FilePreviewDialog',
   props: {

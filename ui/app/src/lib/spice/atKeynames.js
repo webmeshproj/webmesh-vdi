@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Aric Stewart <aric@codeweavers.com>
 

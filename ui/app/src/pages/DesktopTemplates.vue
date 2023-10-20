@@ -29,11 +29,10 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
     <div style="clear: right">
       <SkeletonTable v-if="loading"/>
-
       <q-table
         class="templates-table"
         title="Desktop Templates"
-        :data="data"
+        :rows="data"
         :columns="columns"
         row-key="name"
         v-if="!loading"
@@ -56,6 +55,17 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 
             <q-td key="name" :props="props">
               <strong>{{ props.row.metadata.name }}</strong>
+            </q-td>
+            <q-td key="useTemplate" :props="props">
+              <q-btn round dense flat icon="cast"  size="md" color="blue" @click="onLaunchTemplate(props.row)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Launch Template</q-tooltip>
+              </q-btn>
+              <q-btn round dense flat icon="create"  size="md" color="orange" @click="onEditTemplate(props.row)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit Template</q-tooltip>
+              </q-btn>
+              <q-btn round dense flat icon="remove_circle"  size="md" color="red" @click="onConfirmDeleteTemplate(props.row.metadata.name)">
+                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete Template</q-tooltip>
+              </q-btn>
             </q-td>
 
             <q-td key="image" :props="props">
@@ -86,18 +96,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
               <NamespaceSelector :ref="`ns-${props.row.metadata.name}`" :multiSelect="false" :showAllOption="false" :label="`Launch Namespace (${defaultNamespace})`" />
             </q-td>
 
-            <q-td key="useTemplate" :props="props">
-              <q-btn round dense flat icon="cast"  size="md" color="blue" @click="onLaunchTemplate(props.row)">
-                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Launch Template</q-tooltip>
-              </q-btn>
-              <q-btn round dense flat icon="create"  size="md" color="orange" @click="onEditTemplate(props.row)">
-                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Edit Template</q-tooltip>
-              </q-btn>
-              <q-btn round dense flat icon="remove_circle"  size="md" color="red" @click="onConfirmDeleteTemplate(props.row.metadata.name)">
-                <q-tooltip anchor="bottom middle" self="top middle" :offset="[10, 10]">Delete Template</q-tooltip>
-              </q-btn>
-            </q-td>
-
+ 
           </q-tr>
         </template>
       </q-table>
@@ -106,30 +105,36 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-page>
 </template>
 
-<script>
-import SkeletonTable from 'components/SkeletonTable.vue'
-import NamespaceSelector from 'components/inputs/NamespaceSelector.vue'
-import ServiceAccountSelector from 'components/inputs/ServiceAccountSelector.vue'
-import TemplateEditor from 'components/dialogs/TemplateEditor.vue'
-import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
+<script lang="ts">
+import SkeletonTable from '../components/SkeletonTable.vue'
+import NamespaceSelector from '../components/inputs/NamespaceSelector.vue'
+import ServiceAccountSelector from '../components/inputs/ServiceAccountSelector.vue'
+import TemplateEditor from '../components/dialogs/TemplateEditor.vue'
+import ConfirmDelete from '../components/dialogs/ConfirmDelete.vue'
 
 const templateColums = [
   {
     name: 'name',
     required: true,
     label: 'Template',
-    align: 'left',
+    align: 'left' as const,
     field: row => row.name,
     format: val => `${val}`,
-    sortable: true,
+    sortable: true,/* 
     classes: 'bg-grey-2 ellipsis',
-    headerClasses: 'bg-primary text-white'
+    headerClasses: 'bg-primary text-white'  */
   },
+  {
+    name: 'useTemplate',
+    align: 'center',
+    label: 'Actions'
+  } ,
   {
     name: 'image',
     align: 'left',
     label: 'Image'
   },
+
   {
     name: 'root',
     align: 'center',
@@ -155,27 +160,28 @@ const templateColums = [
     align: 'center',
     label: 'Namespace'
   },
-  {
-    name: 'useTemplate',
-    align: 'center'
-  }
+  
 ]
-
-export default {
+import { defineComponent,reactive,ref } from 'vue'
+import { useConfigStore } from 'src/stores/config'
+import { useDesktopSessions } from 'src/stores/desktop'
+export default defineComponent({
   name: 'DesktopTemplates',
   components: { SkeletonTable, NamespaceSelector, ServiceAccountSelector },
 
-  data () {
+  setup () {
     return {
-      loading: false,
+      configStore: useConfigStore(),
+      desktopSessions: useDesktopSessions(),
+      loading: ref(false),
       refreshLoading: false,
       columns: templateColums,
-      data: []
+      data: ref([] as any[])
     }
   },
 
   computed: {
-    defaultNamespace () { return this.$configStore.getters.serverConfig.appNamespace || 'default' }
+    defaultNamespace () { return this.configStore._serverConfig.appNamespace || 'default' }
   },
 
   methods: {
@@ -191,9 +197,11 @@ export default {
     async onNewTemplate () {
       this.$q.dialog({
         component: TemplateEditor,
+       componentProps:{
         parent: this
+       }
       }).onOk(async () => {
-        await new Promise((resolve, reject) => setTimeout(resolve, 300))
+        await new Promise((resolve) => setTimeout(resolve, 300))
         this.refreshData()
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -204,7 +212,7 @@ export default {
       console.log(`Launching: ${template.metadata.name}`)
       const ns = this.$refs[`ns-${template.metadata.name}`].selection
       const sa = this.$refs[`sa-${template.metadata.name}`].selection
-      const payload = { template: template }
+      const payload: any = { template: template }
       // When the attribute comes back as an object, it actually means
       // no selection
       if (typeof ns !== 'object') {
@@ -212,7 +220,7 @@ export default {
       } else {
         // default to the app namespace for now.
         // this is so read-only users select the correct namespace by default.
-        payload.namespace = this.$configStore.getters.serverConfig.appNamespace
+        payload.namespace = this.configStore._serverConfig.appNamespace
       }
       if (typeof sa !== 'object') {
         payload.serviceAccount = sa
@@ -223,10 +231,12 @@ export default {
     async onEditTemplate (template) {
       this.$q.dialog({
         component: TemplateEditor,
+       componentProps: {
         parent: this,
         existing: this.pruneTemplateObject(template)
+       }
       }).onOk(async () => {
-        await new Promise((resolve, reject) => setTimeout(resolve, 300))
+        await new Promise((resolve) => setTimeout(resolve, 300))
         this.refreshData()
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -236,8 +246,10 @@ export default {
     onConfirmDeleteTemplate (templateName) {
       this.$q.dialog({
         component: ConfirmDelete,
-        parent: this,
+        componentProps: {
+          parent: this,
         resourceName: templateName
+        }
       }).onOk(() => {
         this.doDeleteTemplate(templateName)
       }).onCancel(() => {
@@ -260,7 +272,7 @@ export default {
     },
 
     tagsToArray (tagsObj) {
-      const tags = []
+      const tags: string[] = []
       if (tagsObj === undefined || tagsObj === null) { return tags }
       Object.keys(tagsObj).forEach((key) => {
         tags.push(`${key}: ${tagsObj[key]}`)
@@ -270,17 +282,17 @@ export default {
 
     async doLaunchTemplate (payload) {
       try {
-        await this.$desktopSessions.dispatch('newSession', payload)
-        this.$root.$emit('set-control')
+        await this.desktopSessions.newSession( payload)
+        this.configStore.emitter.emit('set-control')
         this.$router.push('control')
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
     async doDeleteTemplate (templateName) {
       try {
-        await this.$axios.delete(`/api/templates/${templateName}`)
+        await this.configStore.axios.delete(`/api/templates/${templateName}`)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -289,25 +301,26 @@ export default {
         })
         this.fetchData()
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     },
 
     async refreshData () {
-      this.data = []
+    //  this.data.splice(0) // clear array
       this.refreshLoading = true
-      await new Promise((resolve, reject) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500))
       this.fetchData()
       this.refreshLoading = false
     },
 
     async fetchData () {
       try {
-        this.data = []
-        const res = await this.$axios.get('/api/templates')
+       // this.data.splice(0) // clear array
+        const res = await this.configStore.axios.get('/api/templates')
         res.data.forEach((tmpl) => { this.data.push(tmpl) })
+        console.log(this.data)
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
   },
@@ -315,60 +328,69 @@ export default {
   async mounted () {
     await this.$nextTick()
     this.loading = true
-    await new Promise((resolve, reject) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     await this.fetchData()
     this.loading = false
   }
-}
+})
 </script>
 
-<style lang="sass" scoped>
-.tags-wrapper
-  position: relative
-  width: 40vh
+
+<style lang="scss" scoped>
+.tags-wrapper {
+  position: relative;
+  width: 40vh;
+}
 
 .inline-tags
-  display: inline
+  {display: inline;}
 
-.templates-table
+.templates-table {
 
-  background-color: $grey-3
+/*   background-color: $grey-3 */
 
   /* height or max-height is important */
-  max-height: 500px
+  max-height: 500px;
 
-  // /* specifying max-width so the example can
-  //   highlight the sticky column on any browser window */
+  // specifying max-width so the example can  highlight the sticky column on any browser window 
   // max-width: 600px
 
-  td:first-child
-    /* bg color is important for td; just specify one */
-    // background-color: #c1f4cd !important
 
-  tr th
-    position: sticky
+  tr th {
+    position: sticky;
     /* higher than z-index for td below */
-    z-index: 2
+    z-index: 2;
     /* bg color is important; just specify one */
-    background: #fff
+    background: #fff;
+  }
 
   /* this will be the loading indicator */
-  thead tr:last-child th
+  thead tr:last-child th {
+
     /* height of all previous header rows */
-    top: 48px
+    top: 48px;
     /* highest z-index */
-    z-index: 3
-  thead tr:first-child th
-    top: 0
-    z-index: 1
+    z-index: 3;
+  }
+  thead tr:first-child th {
+
+    top: 0;
+    z-index: 1;
+  }
   tr:first-child th:first-child
-    /* highest z-index */
-    z-index: 3
+  {
+      /* highest z-index */
+      z-index: 3;
+  }
 
-  td:first-child
-    z-index: 1
+  td:first-child {
+      z-index: 1;
+  }
 
-  td:first-child, th:first-child
-    position: sticky
-    left: 0
+  td:first-child, th:first-child {
+    position: sticky;
+    left: 0;
+  }
+}
 </style>
+ 

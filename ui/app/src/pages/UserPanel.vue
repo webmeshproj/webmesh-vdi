@@ -120,13 +120,13 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </div>
 </template>
 
-<script>
-import SkeletonTable from 'components/SkeletonTable.vue'
-import RuleDisplay from 'components/RuleDisplay.vue'
+<script lang="ts">
+import SkeletonTable from '../components/SkeletonTable.vue'
+import RuleDisplay from '../components/RuleDisplay.vue'
 
-import NewUserDialog from 'components/dialogs/NewUserDialog.vue'
-import EditUserDialog from 'components/dialogs/EditUserDialog.vue'
-import ConfirmDelete from 'components/dialogs/ConfirmDelete.vue'
+import NewUserDialog from '../components/dialogs/NewUserDialog.vue'
+import EditUserDialog from '../components/dialogs/EditUserDialog.vue'
+import ConfirmDelete from '../components/dialogs/ConfirmDelete.vue'
 
 const userColumns = [
   {},
@@ -157,31 +157,35 @@ const userColumns = [
   }
 ]
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from 'src/stores/config'
+export default defineComponent({
   name: 'UserPanel',
   components: { SkeletonTable, RuleDisplay },
 
-  data () {
+  setup () {
     return {
       loading: true,
       data: [],
       columns: userColumns,
       editUserDialog: false,
-      editUser: ''
+      editUser: '',
+      configStore: useConfigStore()
+      
     }
   },
 
   created () {
-    this.$root.$on('reload-users', this.fetchData)
+    this.configStore.emitter.on('reload-users', this.fetchData)
   },
 
-  beforeDestroy () {
-    this.$root.$off('reload-users', this.fetchData)
+  beforeUnmount () {
+    this.configStore.emitter.off('reload-users', this.fetchData)
   },
 
   computed: {
     editUsersDisabled () {
-      const auth = this.$configStore.getters.authMethod
+      const auth = this.configStore.authMethod
       if (auth === 'ldap') {
         return true
       }
@@ -193,7 +197,9 @@ export default {
     onNewUser () {
       this.$q.dialog({
         component: NewUserDialog,
-        parent: this
+        componentProps: {
+          parent: this
+        }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -203,8 +209,10 @@ export default {
     onEditUser (username) {
       this.$q.dialog({
         component: EditUserDialog,
+       componentProps: {
         parent: this,
         name: username
+       }
       }).onOk(() => {
       }).onCancel(() => {
       }).onDismiss(() => {
@@ -224,8 +232,10 @@ export default {
       }
       this.$q.dialog({
         component: ConfirmDelete,
-        parent: this,
-        resourceName: userName
+        componentProps: {
+          parent: this,
+            resourceName: userName
+        }
       }).onOk(() => {
         this.doDeleteUser(userName)
       }).onCancel(() => {
@@ -235,7 +245,7 @@ export default {
 
     async doDeleteUser (userName) {
       try {
-        await this.$axios.delete(`/api/users/${userName}`)
+        await this.configStore.axios.delete(`/api/users/${userName}`)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -243,17 +253,17 @@ export default {
           message: `Deleted user '${userName}'`
         })
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
       this.fetchData()
     },
 
     async fetchData () {
       try {
-        const res = await this.$axios.get('/api/users')
+        const res = await this.configStore.axios.get('/api/users')
         this.data = res.data
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
   },
@@ -261,52 +271,65 @@ export default {
   async mounted () {
     await this.$nextTick()
     this.loading = true
-    await new Promise((resolve, reject) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     await this.fetchData()
     this.loading = false
   }
-}
+})
 </script>
 
-<style lang="sass" scoped>
-.user-table
-  background-color: $grey-3
+<style lang="scss" scoped>
+.user-table {
+
+  /*  background-color: $grey-3 */
 
   /* height or max-height is important */
-  max-height: 500px
+  max-height: 500px;
 
   // /* specifying max-width so the example can
   //   highlight the sticky column on any browser window */
   // max-width: 600px
 
-  td:first-child
-    /* bg color is important for td; just specify one */
-    // background-color: #c1f4cd !important
 
-  tr th
-    position: sticky
-    /* higher than z-index for td below */
-    z-index: 2
-    /* bg color is important; just specify one */
-    background: #fff
+
+  tr th  {
+      position: sticky;
+      /* higher than z-index for td below */
+      z-index: 2;
+      /* bg color is important; just specify one */
+      background: #fff;
+    }
 
   /* this will be the loading indicator */
-  thead tr:last-child th
+  thead tr:last-child th {
+
     /* height of all previous header rows */
-    top: 48px
+    top: 48px;
     /* highest z-index */
-    z-index: 3
-  thead tr:first-child th
-    top: 0
-    z-index: 1
-  tr:first-child th:first-child
+    z-index: 3;
+  }
+  thead tr:first-child th {
+
+    top: 0;
+    z-index: 1;
+  }
+  tr:first-child th:first-child {
+
     /* highest z-index */
-    z-index: 3
+    z-index: 3;
+  }
 
-  td:first-child
-    z-index: 1
+  td:first-child {
 
-  td:first-child, th:first-child
-    position: sticky
-    left: 0
+    z-index: 1;
+  }
+
+  td:first-child, th:first-child {
+
+    position: sticky;
+    left: 0;
+  }
+}
+ 
 </style>
+ 

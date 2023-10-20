@@ -50,12 +50,13 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-page>
 </template>
 
-<script>
-import UserPanel from 'pages/UserPanel'
-import RolePanel from 'pages/RolePanel'
-import VDIConfigPanel from 'pages/VDIConfigPanel'
+<script lang="ts">
+import UserPanel from './UserPanel.vue'
+import RolePanel from './RolePanel.vue'
+import VDIConfigPanel from './VDIConfigPanel.vue'
 
-export default {
+import { defineComponent } from 'vue'
+export default defineComponent({
   name: 'Settings',
   components: {
     UserPanel,
@@ -67,5 +68,5 @@ export default {
       tab: 'users'
     }
   }
-}
+})
 </script>

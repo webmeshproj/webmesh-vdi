@@ -32,7 +32,7 @@ export default class DesktopAddressGetter {
   
     // _getToken returns the current authentication token.
     _getToken () {
-      return this.userStore.getters.token
+      return this.userStore.token
     }
   
     // _buildAddress builds a websocket address for the given desktop function (endpoint).

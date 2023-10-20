@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -193,7 +193,7 @@ SpiceImage.prototype =
             this.lz_rgb = new Object();
             this.lz_rgb.length = dv.getUint32(at, true); at += 4;
             var initial_at = at;
-            this.lz_rgb.magic = "";
+            this.lz_rgb.magic = '';
             for (var i = 3; i >= 0; i--)
                 this.lz_rgb.magic += String.fromCharCode(dv.getUint8(at + i));
             at += 4;
@@ -244,7 +244,7 @@ SpiceImage.prototype =
             this.jpeg_alpha.alpha = new Object();
             this.jpeg_alpha.alpha.length = this.jpeg_alpha.data_size - this.jpeg_alpha.jpeg_size;
             var initial_at = at;
-            this.jpeg_alpha.alpha.magic = "";
+            this.jpeg_alpha.alpha.magic = '';
             for (var i = 3; i >= 0; i--)
                 this.jpeg_alpha.alpha.magic += String.fromCharCode(dv.getUint8(at + i));
             at += 4;

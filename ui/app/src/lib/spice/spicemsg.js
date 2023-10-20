@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /*
    Copyright (C) 2012 by Jeremy P. White <jwhite@codeweavers.com>
 
@@ -60,7 +60,7 @@ SpiceLinkHeader.prototype =
     {
         at = at || 0;
         var dv = new SpiceDataView(a);
-        this.magic = "";
+        this.magic = '';
         for (var i = 0; i < 4; i++)
             this.magic += String.fromCharCode(dv.getUint8(at + i));
         at += 4;
@@ -608,7 +608,7 @@ VDAgentFileXferStatusMessage.prototype =
 function VDAgentFileXferStartMessage(id, name, size)
 {
     this.id = id;
-    this.string = "[vdagent-file-xfer]\n"+"name="+name+"\nsize="+size+"\n";
+    this.string = '[vdagent-file-xfer]\n'+'name='+name+'\nsize='+size+'\n';
 }
 
 VDAgentFileXferStartMessage.prototype =
@@ -672,7 +672,7 @@ SpiceMsgNotify.prototype =
         this.visibility = dv.getUint32(at, true); at += 4;
         this.what = dv.getUint32(at, true); at += 4;
         this.message_len = dv.getUint32(at, true); at += 4;
-        this.message = "";
+        this.message = '';
         for (i = 0; i < this.message_len; i++)
         {
             var c = dv.getUint8(at, true); at++;

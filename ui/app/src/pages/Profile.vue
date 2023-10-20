@@ -62,24 +62,29 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   </q-page>
 </template>
 
-<script>
-import PasswordInput from 'components/inputs/PasswordInput.vue'
-import MFAConfig from 'components/inputs/MFAConfig.vue'
+<script lang="ts">
+import PasswordInput from '../components/inputs/PasswordInput.vue'
+import MFAConfig from '../components/inputs/MFAConfig.vue'
 
-export default {
+import { defineComponent } from 'vue'
+import { useConfigStore } from 'src/stores/config';
+import { useUserStore } from 'src/stores/user'
+export default defineComponent({
   name: 'Profile',
   components: { PasswordInput, MFAConfig },
   mounted () { this.$refs.password.password = '*****************************' },
-  created () { this.$root.$on('edit-password', this.setEditPassword) },
-  beforeDestroy () { this.$root.$off('edit-password', this.setEditPassword) },
+  created () { this.configStore.emitter.on('edit-password', this.setEditPassword) },
+  beforeUnmount () { this.configStore.emitter.off('edit-password', this.setEditPassword) },
   data () {
     return {
-      passwordSubmitDisabled: true
+      passwordSubmitDisabled: true,
+      configStore: useConfigStore(),
+      userStore: useUserStore()
     }
   },
   computed: {
     username () {
-      return this.$userStore.getters.user.name
+      return this.userStore.user.name
     }
   },
   methods: {
@@ -98,7 +103,7 @@ export default {
       }
       const user = this.username
       try {
-        await this.$axios.put(`/api/users/${user}`, payload)
+        await this.configStore.axios.put(`/api/users/${user}`, payload)
         this.$q.notify({
           color: 'green-4',
           textColor: 'white',
@@ -107,14 +112,16 @@ export default {
         })
         this.resetPasswordInput()
       } catch (err) {
-        this.$root.$emit('notify-error', err)
+        this.configStore.emitter.emit('notify-error', err)
       }
     }
   }
-}
+})
 </script>
 
-<style scoped lang="sass">
-.wrapper
+<style scoped lang="scss">
+.wrapper {
   position: relative
+}
 </style>
+ 

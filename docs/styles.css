@@ -1,0 +1,22 @@
+.markdown-section {
+	padding: 2rem 20px;
+}
+/* scrollbar color */
+::-webkit-scrollbar {
+    background: #262e32;
+    width: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+.cover {
+    background-image: url("bg.gif") !important;
+    background-size: cover  !important;
+    background-color: unset !important;
+    height: 100vh;
+    padding:0;
+    margin:0;
+    --base-background-color: unset !important; 
+
+}

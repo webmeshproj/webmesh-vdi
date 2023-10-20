@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path"
 	"strings"
 
 	"github.com/go-jose/go-jose/v3/jwt"
@@ -82,18 +81,18 @@ type Claims struct {
 // Authenticate is called for API authentication requests. It should generate
 // a new JWTClaims object and serve an AuthResult back to the API.
 func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult, error) {
-	token := req.GetRequest().Header.Get("Authorization")
+	token := req.Password
 	if token == "" {
-		return nil, fmt.Errorf("no Authorization header provided")
+		return nil, fmt.Errorf("no password provided")
 	}
-	r, err := http.NewRequest("GET", path.Join(a.metadataURL, "id-tokens", "validate"), nil)
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s/id-tokens/validate", a.metadataURL), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating validation request: %w", err)
 	}
 	r.Header.Set("Authorization", token)
 	resp, err := http.DefaultClient.Do(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error validating token: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -102,11 +101,11 @@ func (a *AuthProvider) Authenticate(req *types.LoginRequest) (*types.AuthResult,
 	var claims Claims
 	err = json.NewDecoder(resp.Body).Decode(&claims)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error decoding claims: %w", err)
 	}
 	roles, err := a.cluster.GetRoles(a.client)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting roles: %w", err)
 	}
 	return &types.AuthResult{
 		User: &types.VDIUser{

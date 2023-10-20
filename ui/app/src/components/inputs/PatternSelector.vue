@@ -35,7 +35,7 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
   />
 </template>
 
-<script>
+<script lang="ts">
 export default {
   name: 'PatternSelector',
   data () {
