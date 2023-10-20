@@ -68,16 +68,20 @@ module.exports = configure(function (/* ctx */) {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: '/',
       // analyze: true,
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
-      // polyfillModulePreload: true,
-      // distDir
+      polyfillModulePreload: true,
+      distDir: 'dist',
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf) {
+        viteConf.build.polyfillModulePreload = true;
+        viteConf.build.outDir = 'dist';
+        viteConf.build.assetsDir = 'assets';
+      },
       // viteVuePluginOptions: {},
 
       
@@ -111,7 +115,7 @@ module.exports = configure(function (/* ctx */) {
       lang: 'en-US', // Quasar language pack
 
       components: [
-        "QIcon",
+        'QIcon',
       ],
       directives: [],
 
