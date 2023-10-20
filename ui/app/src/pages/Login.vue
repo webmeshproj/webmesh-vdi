@@ -124,7 +124,7 @@ export default defineComponent({
 
     async getAuthMethod(): Promise<string> {
       const res = await this.configStore.axios.get('/api/auth_methods')
-      const data = await res.data.JSON()
+      const data = res.data
       if (data.local) {
         return 'local'
       } else if (data.ldap) {
