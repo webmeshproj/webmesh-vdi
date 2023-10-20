@@ -141,10 +141,14 @@ export default defineComponent({
       this.configStore.emitter.emit('set-active-title', 'Login')
       const authMethod = this.configStore.authMethod
       if (authMethod === 'webmesh') {
-        // TODO: try webmesh id token login
         this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
-          console.log(res)
-        }).catch((err) => {
+          res.JSON().then((data: any) => {
+            console.log(data)
+            // Try to login in with the id-token
+            this.password = data.token
+            this.onSubmit()
+          })
+        }).catch((err: Error) => {
           console.error(err)
         })
       }
