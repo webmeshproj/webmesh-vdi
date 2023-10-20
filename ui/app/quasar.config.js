@@ -74,14 +74,11 @@ module.exports = configure(function (/* ctx */) {
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
-      polyfillModulePreload: true,
+      // polyfillModulePreload: true,
       distDir: 'dist',
 
-      extendViteConf (viteConf) {
-        viteConf.build.polyfillModulePreload = true;
-        viteConf.build.outDir = 'dist';
-        viteConf.build.assetsDir = 'assets';
-      },
+      // extendViteConf (viteConf) {
+      // },
       // viteVuePluginOptions: {},
 
       
