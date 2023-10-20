@@ -112,6 +112,9 @@ type AppConfig struct {
 	AuditLog bool `json:"auditLog,omitempty"`
 	// The number of app replicas to run
 	Replicas int32 `json:"replicas,omitempty"`
+	// ServiceName is the name of the service to create for the app instance.
+	// Defaults to `{vdi-name}-app`.
+	ServiceName string `json:"serviceName,omitempty"`
 	// The type of service to create in front of the app instance.
 	// Defaults to `LoadBalancer`.
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`

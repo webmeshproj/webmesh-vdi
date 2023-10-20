@@ -31,6 +31,9 @@ import (
 
 // GetAppName returns the name of the kVDI app deployment for this VDICluster.
 func (c *VDICluster) GetAppName() string {
+	if c.Spec.App != nil && c.Spec.App.ServiceName != "" {
+		return c.Spec.App.ServiceName
+	}
 	return fmt.Sprintf("%s-app", c.GetName())
 }
 

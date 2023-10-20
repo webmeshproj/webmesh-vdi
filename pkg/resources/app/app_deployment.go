@@ -103,7 +103,7 @@ func newAppContainerForCR(instance *appv1.VDICluster) corev1.Container {
 	if instance.EnableCORS() {
 		args = append(args, "--enable-cors")
 	}
-	if instance.Spec.App.TLS != nil && instance.Spec.App.TLS.Disable {
+	if instance.Spec.App != nil && instance.Spec.App.TLS != nil && instance.Spec.App.TLS.Disable {
 		args = append(args, "--disable-tls")
 	}
 	return corev1.Container{
