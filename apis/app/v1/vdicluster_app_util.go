@@ -37,6 +37,14 @@ func (c *VDICluster) GetAppName() string {
 	return fmt.Sprintf("%s-app", c.GetName())
 }
 
+// AppTLSIsDisabled returns true if TLS should be disabled for the app.
+func (c *VDICluster) AppTLSIsDisabled() bool {
+	if c.Spec.App != nil && c.Spec.App.TLS != nil {
+		return c.Spec.App.TLS.Disable
+	}
+	return false
+}
+
 // GetServiceAnnotations returns the annotations to apply to the kvdi app service.
 func (c *VDICluster) GetServiceAnnotations() map[string]string {
 	annotations := c.GetAnnotations()

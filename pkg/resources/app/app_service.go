@@ -20,12 +20,12 @@ along with kvdi.  If not, see <https://www.gnu.org/licenses/>.
 package app
 
 import (
-	appv1 "github.com/kvdi/kvdi/apis/app/v1"
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
 )
 
 func newAppServiceForCR(instance *appv1.VDICluster) *corev1.Service {
@@ -42,8 +42,13 @@ func newAppServiceForCR(instance *appv1.VDICluster) *corev1.Service {
 			Selector: instance.GetComponentLabels("app"),
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "web",
-					Port:       v1.PublicWebPort,
+					Name: "web",
+					Port: func() int32 {
+						if instance.AppTLSIsDisabled() {
+							return int32(v1.PublicWebPort)
+						}
+						return int32(v1.PublicTLSWebPort)
+					}(),
 					TargetPort: intstr.FromInt(v1.WebPort),
 				},
 			},
