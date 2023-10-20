@@ -122,6 +122,22 @@ export default defineComponent({
       this.password = null
     },
 
+    async getAuthMethod(): Promise<string> {
+      const res = await this.configStore.axios.get('/api/auth_methods')
+      const data = await res.data.JSON()
+      if (data.local) {
+        return 'local'
+      } else if (data.ldap) {
+        return 'ldap'
+      } else if (data.oidc) {
+        return 'oidc'
+      } else if (data.webmesh) {
+        return 'webmesh'
+      } else {
+        return 'local'
+      }
+    },
+
     async notifyLoggedIn () {
       await this.configStore.getServerConfig()
       this.configStore.emitter.emit('set-logged-in', this.username)
@@ -139,19 +155,20 @@ export default defineComponent({
   mounted () {
     this.$nextTick().then(() => {
       this.configStore.emitter.emit('set-active-title', 'Login')
-      const authMethod = this.configStore.authMethod
-      if (authMethod === 'webmesh') {
-        this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
-          res.JSON().then((data: any) => {
-            console.log(data)
-            // Try to login in with the id-token
-            this.password = data.token
-            this.onSubmit()
+      this.getAuthMethod().then((authMethod) => {
+        if (authMethod === 'webmesh') {
+          this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
+            res.data.JSON().then((data: any) => {
+              console.log(data)
+              // Try to login in with the id-token
+              this.password = data.token
+              this.onSubmit()
+            })
+          }).catch((err: Error) => {
+            console.error(err)
           })
-        }).catch((err: Error) => {
-          console.error(err)
-        })
-      }
+        }
+      })
     })
   }
 })

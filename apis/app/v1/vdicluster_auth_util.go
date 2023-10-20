@@ -52,7 +52,7 @@ func (c *VDICluster) AnonymousAllowed() bool {
 // if no other options are defined.
 func (c *VDICluster) IsUsingLocalAuth() bool {
 	if c.Spec.Auth != nil {
-		return c.Spec.Auth.LocalAuth != nil && !c.IsUsingLDAPAuth() && !c.IsUsingOIDCAuth()
+		return c.Spec.Auth.LocalAuth != nil && !c.IsUsingLDAPAuth() && !c.IsUsingOIDCAuth() && !c.IsUsingWebmeshAuth()
 	}
 	return true
 }
