@@ -114,7 +114,7 @@ func newServer(cfg *rest.Config, vdiCluster string, enableCORS bool) (*http.Serv
 	// api routes
 	r.PathPrefix("/api").Handler(apiRouter)
 	// vue frontend
-	r.PathPrefix("/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("/static"))))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("/static/")))
 	wrappedRouter := handlers.ProxyHeaders(
 		handlers.CompressHandler(
 			handlers.CustomLoggingHandler(os.Stdout, r, formatLog),
