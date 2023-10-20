@@ -128,6 +128,9 @@ type TLSConfig struct {
 	// A pre-existing TLS secret to use for the HTTPS listener. If not defined,
 	// a certificate is generated.
 	ServerSecret string `json:"serverSecret,omitempty"`
+	// Disable serving the app over HTTPS. This is not recommended for production
+	// environments unless network encryption is handled on a different layer.
+	Disable bool `json:"disable,omitempty"`
 }
 
 // MetricsConfig contains configuration options for gathering metrics.

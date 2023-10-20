@@ -91,6 +91,11 @@ spec:
                   tls:
                     description: TLS configurations for the app instance
                     properties:
+                      disable:
+                        description: Disable serving the app over HTTPS. This is not
+                          recommended for production environments unless network encryption
+                          is handled on a different layer.
+                        type: boolean
                       serverSecret:
                         description: A pre-existing TLS secret to use for the HTTPS
                           listener. If not defined, a certificate is generated.

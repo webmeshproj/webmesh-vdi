@@ -47,6 +47,8 @@ var applogger = logf.Log.WithName("app")
 func main() {
 	var vdiCluster string
 	var enableCORS bool
+	var disableTLS bool
+	flag.BoolVar(&disableTLS, "disable-tls", false, "Disable TLS")
 	flag.StringVar(&vdiCluster, "vdi-cluster", "", "The VDICluster this application is serving")
 	flag.BoolVar(&enableCORS, "enable-cors", false, "Add CORS headers to requests")
 	common.ParseFlagsAndSetupLogging()
@@ -69,9 +71,16 @@ func main() {
 
 	// serve
 	applogger.Info(fmt.Sprintf("Starting VDI cluster frontend on :%d", v1.WebPort))
-	if err := srvr.ListenAndServeTLS(tlsutil.ServerKeypair()); err != nil {
-		applogger.Error(err, "Failed to start https server")
-		os.Exit(1)
+	if !disableTLS {
+		if err := srvr.ListenAndServeTLS(tlsutil.ServerKeypair()); err != nil {
+			applogger.Error(err, "Failed to start https server")
+			os.Exit(1)
+		}
+	} else {
+		if err := srvr.ListenAndServe(); err != nil {
+			applogger.Error(err, "Failed to start http server")
+			os.Exit(1)
+		}
 	}
 }
 
