@@ -84,6 +84,10 @@ spec:
                       type: string
                     description: Extra annotations to apply to the app service.
                     type: object
+                  serviceName:
+                    description: ServiceName is the name of the service to create
+                      for the app instance. Defaults to `{vdi-name}-app`.
+                    type: string
                   serviceType:
                     description: The type of service to create in front of the app
                       instance. Defaults to `LoadBalancer`.
