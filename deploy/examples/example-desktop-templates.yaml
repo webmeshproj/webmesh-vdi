@@ -32,7 +32,7 @@ spec:
     allowFileTransfer: true
   tags:
     os: ubuntu
-    desktop: xfce4
+    desktop: kde
     applications: minimal
 ---
 apiVersion: desktops.kvdi.io/v1
