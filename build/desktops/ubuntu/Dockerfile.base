@@ -1,7 +1,5 @@
 FROM ubuntu:rolling as base-system
 
-RUN sed -i 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
-
 # Core Dependencies
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
