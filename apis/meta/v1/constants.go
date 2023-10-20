@@ -71,8 +71,10 @@ const (
 	RefreshTokensSecretKey = "refreshTokens"
 	// WebPort is the port that web services will listen on internally
 	WebPort = 8443
+	// PublicTLSWebPort is the port for the app service
+	PublicTLSWebPort = 443
 	// PublicWebPort is the port for the app service
-	PublicWebPort = 443
+	PublicWebPort = 80
 	// DesktopRunDir is the dir mounted for internal runtime files
 	DesktopRunDir = "/var/run/kvdi"
 	// DefaultDisplaySocketAddr is the default path used for the display unix socket

@@ -103,7 +103,7 @@ func newAppContainerForCR(instance *appv1.VDICluster) corev1.Container {
 	if instance.EnableCORS() {
 		args = append(args, "--enable-cors")
 	}
-	if instance.Spec.App != nil && instance.Spec.App.TLS != nil && instance.Spec.App.TLS.Disable {
+	if instance.AppTLSIsDisabled() {
 		args = append(args, "--disable-tls")
 	}
 	return corev1.Container{
@@ -139,9 +139,14 @@ func newAppContainerForCR(instance *appv1.VDICluster) corev1.Container {
 		ReadinessProbe: &corev1.Probe{
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
-					Path:   "/api/readyz",
-					Port:   intstr.FromInt(v1.WebPort),
-					Scheme: "HTTPS",
+					Path: "/api/readyz",
+					Port: intstr.FromInt(v1.WebPort),
+					Scheme: func() corev1.URIScheme {
+						if instance.AppTLSIsDisabled() {
+							return "HTTP"
+						}
+						return "HTTPS"
+					}(),
 				},
 			},
 		},
