@@ -22,14 +22,14 @@ package app
 import (
 	"fmt"
 
-	appv1 "github.com/kvdi/kvdi/apis/app/v1"
-	v1 "github.com/kvdi/kvdi/apis/meta/v1"
-	"github.com/kvdi/kvdi/pkg/util/common"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	appv1 "github.com/kvdi/kvdi/apis/app/v1"
+	v1 "github.com/kvdi/kvdi/apis/meta/v1"
+	"github.com/kvdi/kvdi/pkg/util/common"
 )
 
 func newAppDeploymentForCR(instance *appv1.VDICluster) *appsv1.Deployment {
@@ -102,6 +102,9 @@ func newAppContainerForCR(instance *appv1.VDICluster) corev1.Container {
 	args := []string{"--vdi-cluster", instance.GetName()}
 	if instance.EnableCORS() {
 		args = append(args, "--enable-cors")
+	}
+	if instance.Spec.App.TLS != nil && instance.Spec.App.TLS.Disable {
+		args = append(args, "--disable-tls")
 	}
 	return corev1.Container{
 		Name:            "app",
