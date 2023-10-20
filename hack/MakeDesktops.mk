@@ -23,15 +23,13 @@ build-dosbox:
 build-ubuntu-%: build-ubuntu-base
 	cd build/desktops/ubuntu && docker build . \
 		-f Dockerfile.desktop \
-		--build-arg BASE_IMAGE=${UBUNTU_BASE_IMAGE} \
 		--build-arg DESKTOP_PACKAGE=$* \
 		-t ${REPO}/desktop-ubuntu-base-$*:latest
 
 build-app-%:
 	cd build/desktops/app-profiles && docker build . \
 		-f Dockerfile.$* \
-		--build-arg BASE_IMAGE=${APP_PROFILE_BASE_IMAGE} \
-		-t ${REPO}/app-$*:latest
+		-t ${REPO}/desktop-app-$*:latest
 
 # Pushers
 
