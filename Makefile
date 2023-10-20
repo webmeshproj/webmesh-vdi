@@ -104,8 +104,8 @@ BUNDLE := $(CURDIR)/deploy/bundle.yaml
 # Create a single yaml file bundle
 bundle: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${MANAGER_IMAGE}
-	$(KUSTOMIZE) build config/crd > "$(BUNDLE)"
-	$(KUSTOMIZE) build config/default >> "$(BUNDLE)"
+	# $(KUSTOMIZE) build config/crd > "$(BUNDLE)"
+	$(KUSTOMIZE) build config/default > "$(BUNDLE)"
 
 
 ##

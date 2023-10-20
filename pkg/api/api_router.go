@@ -26,10 +26,11 @@ import (
 	"net/url"
 
 	"github.com/gorilla/mux"
-	"github.com/kvdi/kvdi/pkg/util/apiutil"
-	"github.com/kvdi/kvdi/pkg/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/websocket"
+
+	"github.com/kvdi/kvdi/pkg/util/apiutil"
+	"github.com/kvdi/kvdi/pkg/version"
 )
 
 type proxyLogger struct{}
@@ -54,6 +55,24 @@ func (d *desktopAPI) buildRouter() error {
 			"version":   version.Version,
 			"gitCommit": version.GitCommit,
 		}, w)
+	}).Methods("GET")
+
+	// handler for retrieving auth methods
+	r.PathPrefix("/api/auth_methods").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		out := map[string]string{}
+		if d.vdiCluster.IsUsingLocalAuth() {
+			out["local"] = "true"
+		}
+		if d.vdiCluster.IsUsingOIDCAuth() {
+			out["oidc"] = "true"
+		}
+		if d.vdiCluster.IsUsingLDAPAuth() {
+			out["ldap"] = "true"
+		}
+		if d.vdiCluster.IsUsingWebmeshAuth() {
+			out["webmesh"] = "true"
+		}
+		apiutil.WriteJSON(out, w)
 	}).Methods("GET")
 
 	// metrics
