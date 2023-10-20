@@ -158,12 +158,10 @@ export default defineComponent({
       this.getAuthMethod().then((authMethod) => {
         if (authMethod === 'webmesh') {
           this.configStore.axios.get('http://169.254.169.254/id-tokens/issue').then((res) => {
-            res.data.JSON().then((data: any) => {
-              console.log(data)
+              console.log(res.data)
               // Try to login in with the id-token
-              this.password = data.token
+              this.password = res.data.token
               this.onSubmit()
-            })
           }).catch((err: Error) => {
             console.error(err)
           })
